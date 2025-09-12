@@ -1,45 +1,62 @@
 <template>
-  <div class="card w-full">
-    <div class="w-full overflow-x-auto">
-      <table class="table">
+  <div
+    class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+  >
+    <div class="max-w-full overflow-x-auto custom-scrollbar">
+      <table class="min-w-full">
         <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Status</th>
-            <th>Date</th>
-            <th>Actions</th>
+          <tr class="border-b border-gray-200 dark:border-gray-700">
+            <th class="px-5 py-3 text-left w-2/11 sm:px-6">
+              <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Code</p>
+            </th>
+            <th class="px-5 py-3 text-left w-4/11 sm:px-6">
+              <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Name</p>
+            </th>
+            <th class="px-5 py-3 text-left w-2/11 sm:px-6">
+              <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">UOM</p>
+            </th>
+            <th class="px-5 py-3 text-left w-2/11 sm:px-6">
+              <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Qty</p>
+            </th>
+            <th class="px-5 py-3 text-left w-1/11 sm:px-6">
+              <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Actions</p>
+            </th>
           </tr>
         </thead>
-        <tbody>
-          <!-- Rows -->
-          <tr v-for="(user, index) in users" :key="index">
-            <td>{{ user.name }}</td>
-            <td>{{ user.email }}</td>
-            <td>
-              <span class="badge badge-soft text-xs" :class="{
-                'badge-success': user.status === 'Professional' || user.status === 'Active',
-                'badge-error': user.status === 'Rejected' || user.status === 'Cancel',
-                'badge-info': user.status === 'Applied' || user.status === 'Pending',
-                'badge-primary': user.status === 'Current',
-              }">
-                {{ user.status }}
+        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+          <tr
+            v-for="(item, index) in data"
+            :key="index"
+            class="border-t border-gray-100 dark:border-gray-800"
+          >
+            <td class="px-5 py-4 sm:px-6">
+              <span class="font-mono text-sm font-medium text-gray-800 dark:text-white/90">
+                {{ item.code }}
               </span>
             </td>
-            <td>{{ user.date }}</td>
-            <td>
-              <button class="btn btn-circle btn-text btn-sm" aria-label="Edit">
-                <iconify-icon icon="tabler:pencil" class="size-4"></iconify-icon>
-              </button>
-
-              <button class="btn btn-circle btn-text btn-sm btn-error" aria-label="Delete">
-                <iconify-icon icon="tabler:trash" class="size-4"></iconify-icon>
-              </button>
-
-              <button class="btn btn-circle btn-text btn-sm" aria-label="More">
-                <iconify-icon icon="tabler:dots-vertical" class="size-4"></iconify-icon>
-              </button>
-
+            <td class="px-5 py-4 sm:px-6">
+              <p class="text-gray-800 text-theme-sm font-medium dark:text-white/90">{{ item.name }}</p>
+            </td>
+            <td class="px-5 py-4 sm:px-6">
+              <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                {{ item.uom }}
+              </span>
+            </td>
+            <td class="px-5 py-4 sm:px-6">
+              <p class="text-gray-800 text-theme-sm font-semibold dark:text-white/90">{{ item.qty }}</p>
+            </td>
+            <td class="px-5 py-4 sm:px-6">
+              <div class="flex items-center gap-1">
+                <button class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" aria-label="Edit">
+                  <iconify-icon icon="tabler:pencil" class="size-4"></iconify-icon>
+                </button>
+                <button class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors" aria-label="Delete">
+                  <iconify-icon icon="tabler:trash" class="size-4"></iconify-icon>
+                </button>
+                <button class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" aria-label="More">
+                  <iconify-icon icon="tabler:dots-vertical" class="size-4"></iconify-icon>
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -47,11 +64,11 @@
 
       <!-- Loading -->
       <div v-if="loading" class="p-4 text-center text-gray-500 text-sm">
-        Loading users...
+        Loading data...
       </div>
 
-      <!-- Error (still show table with mock data) -->
-      <div v-if="error" class="p-2 text-center text-red-500 text-xs">
+      <!-- Error -->
+      <div v-if="error" class="p-4 text-center text-red-500 text-sm">
         {{ error }}
       </div>
     </div>
@@ -61,51 +78,56 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 
-const users = ref([])
+const data = ref([])
 const loading = ref(false)
 const error = ref(null)
 
-const mockUsers = [
-  {
-    name: "John Doe",
-    email: "johndoe@example.com",
-    status: "Professional",
-    date: "March 1, 2024",
-  },
-  {
-    name: "Jane Smith",
-    email: "janesmith@example.com",
-    status: "Rejected",
-    date: "March 2, 2024",
-  },
-  {
-    name: "Alice Johnson",
-    email: "alicejohnson@example.com",
-    status: "Applied",
-    date: "March 3, 2024",
-  },
-  {
-    name: "Bob Brown",
-    email: "bobrown@example.com",
-    status: "Current",
-    date: "March 4, 2024",
-  },
-]
-
-const fetchUsers = async () => {
+const fetchData = async () => {
   loading.value = true
   error.value = null
   try {
-    const res = await fetch('/api/users')
-    if (!res.ok) throw new Error('Failed to fetch users')
-    users.value = await res.json()
+    // Use the proxied endpoint
+    const res = await fetch('/api/materials')
+    if (!res.ok) throw new Error('Failed to fetch data')
+    data.value = await res.json()
   } catch (err) {
-    error.value = "API Error: " + err.message + " → showing mock data"
-    users.value = mockUsers
+    error.value = "API Error: " + err.message
   } finally {
     loading.value = false
   }
 }
 
-onMounted(fetchUsers)
+
+onMounted(fetchData)
 </script>
+
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.text-theme-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.text-theme-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+</style>
