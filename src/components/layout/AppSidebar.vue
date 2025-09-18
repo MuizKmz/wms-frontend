@@ -1,242 +1,237 @@
 <template>
-  <aside
-    :class="[
-      'fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-99999 border-r border-gray-200',
-      {
-        'lg:w-[290px]': isExpanded || isMobileOpen || isHovered,
-        'lg:w-[90px]': !isExpanded && !isHovered,
-        'translate-x-0 w-[290px]': isMobileOpen,
-        '-translate-x-full': !isMobileOpen,
-        'lg:translate-x-0': true,
-      },
-    ]"
-    @mouseenter="!isExpanded && (isHovered = true)"
-    @mouseleave="isHovered = false"
-  >
-    <div
-      :class="[
-        'py-8 flex',
-        !isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start',
-      ]"
+  <div class="flex">
+    <!-- Black Sidebar (Always 70px width) -->
+    <aside
+      class="fixed mt-16 lg:mt-0 top-0 left-0 
+             bg-gray-900 text-white 
+             dark:bg-gray-950 dark:text-gray-200
+             h-screen z-40 w-[70px] flex flex-col"
     >
-      <router-link to="/">
-        <img
-          v-if="isExpanded || isHovered || isMobileOpen"
-          class="dark:hidden"
-          src="/images/logo/logo.svg"
-          alt="Logo"
-          width="150"
-          height="40"
-        />
-        <img
-          v-if="isExpanded || isHovered || isMobileOpen"
-          class="hidden dark:block"
-          src="/images/logo/logo-dark.svg"
-          alt="Logo"
-          width="150"
-          height="40"
-        />
-        <img
-          v-else
-          src="/images/logo/logo-icon.svg"
-          alt="Logo"
-          width="32"
-          height="32"
-        />
-      </router-link>
-    </div>
-    <div
-      class="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar"
-    >
-      <nav class="mb-6">
-        <div class="flex flex-col gap-4">
-          <div v-for="(menuGroup, groupIndex) in menuGroups" :key="groupIndex">
-            <h2
-              :class="[
-                'mb-4 text-xs uppercase flex leading-[20px] text-gray-400',
-                !isExpanded && !isHovered
-                  ? 'lg:justify-center'
-                  : 'justify-start',
-              ]"
-            >
-              <template v-if="isExpanded || isHovered || isMobileOpen">
-                {{ menuGroup.title }}
-              </template>
-              <HorizontalDots v-else />
-            </h2>
-            <ul class="flex flex-col gap-4">
-              <li v-for="(item, index) in menuGroup.items" :key="item.name">
-                <button
-                  v-if="item.subItems"
-                  @click="toggleSubmenu(groupIndex, index)"
-                  :class="[
-                    'menu-item group w-full',
-                    {
-                      'menu-item-active': isSubmenuOpen(groupIndex, index),
-                      'menu-item-inactive': !isSubmenuOpen(groupIndex, index),
-                    },
-                    !isExpanded && !isHovered
-                      ? 'lg:justify-center'
-                      : 'lg:justify-start',
-                  ]"
-                >
-                  <span
-                    :class="[
-                      isSubmenuOpen(groupIndex, index)
-                        ? 'menu-item-icon-active'
-                        : 'menu-item-icon-inactive',
-                    ]"
-                  >
-                    <component :is="item.icon" />
-                  </span>
-                  <span
-                    v-if="isExpanded || isHovered || isMobileOpen"
-                    class="menu-item-text"
-                    >{{ item.name }}</span
-                  >
-                  <ChevronDownIcon
-                    v-if="isExpanded || isHovered || isMobileOpen"
-                    :class="[
-                      'ml-auto w-5 h-5 transition-transform duration-200',
-                      {
-                        'rotate-180 text-brand-500': isSubmenuOpen(
-                          groupIndex,
-                          index
-                        ),
-                      },
-                    ]"
-                  />
-                </button>
-                <router-link
-                  v-else-if="item.path"
-                  :to="item.path"
-                  :class="[
-                    'menu-item group',
-                    {
-                      'menu-item-active': isActive(item.path),
-                      'menu-item-inactive': !isActive(item.path),
-                    },
-                  ]"
-                >
-                  <span
-                    :class="[
-                      isActive(item.path)
-                        ? 'menu-item-icon-active'
-                        : 'menu-item-icon-inactive',
-                    ]"
-                  >
-                    <component :is="item.icon" />
-                  </span>
-                  <span
-                    v-if="isExpanded || isHovered || isMobileOpen"
-                    class="menu-item-text"
-                    >{{ item.name }}</span
-                  >
-                </router-link>
-                <transition
-                  @enter="startTransition"
-                  @after-enter="endTransition"
-                  @before-leave="startTransition"
-                  @after-leave="endTransition"
-                >
-                  <div
-                    v-show="
-                      isSubmenuOpen(groupIndex, index) &&
-                      (isExpanded || isHovered || isMobileOpen)
-                    "
-                  >
-                    <ul class="mt-2 space-y-1 ml-9">
-                      <li v-for="subItem in item.subItems" :key="subItem.name">
-                        <router-link
-                          :to="subItem.path"
-                          :class="[
-                            'menu-dropdown-item',
-                            {
-                              'menu-dropdown-item-active': isActive(
-                                subItem.path
-                              ),
-                              'menu-dropdown-item-inactive': !isActive(
-                                subItem.path
-                              ),
-                            },
-                          ]"
-                        >
-                          {{ subItem.name }}
-                          <span class="flex items-center gap-1 ml-auto">
-                            <span
-                              v-if="subItem.new"
-                              :class="[
-                                'menu-dropdown-badge',
-                                {
-                                  'menu-dropdown-badge-active': isActive(
-                                    subItem.path
-                                  ),
-                                  'menu-dropdown-badge-inactive': !isActive(
-                                    subItem.path
-                                  ),
-                                },
-                              ]"
-                            >
-                              new
-                            </span>
-                            <span
-                              v-if="subItem.pro"
-                              :class="[
-                                'menu-dropdown-badge',
-                                {
-                                  'menu-dropdown-badge-active': isActive(
-                                    subItem.path
-                                  ),
-                                  'menu-dropdown-badge-inactive': !isActive(
-                                    subItem.path
-                                  ),
-                                },
-                              ]"
-                            >
-                              pro
-                            </span>
-                          </span>
-                        </router-link>
-                      </li>
-                    </ul>
-                  </div>
-                </transition>
-              </li>
-            </ul>
+      <!-- Logo Section -->
+      <div class="py-4 mt-1 flex justify-center px-4 border-b border-gray-700 dark:border-gray-800">
+        <router-link to="/" class="relative" @mouseenter="showTooltip = 'logo'" @mouseleave="showTooltip = null">
+          <img
+            src="/images/logo/logo-icon.svg"
+            alt="Logo"
+            width="32"
+            height="32"
+            class="text-white"
+          />
+          <!-- Logo Tooltip -->
+          <div 
+            v-show="showTooltip === 'logo'"
+            class="fixed bg-gray-800 text-white text-sm px-3 py-2 rounded-md shadow-lg whitespace-nowrap z-50
+                   dark:bg-gray-900 dark:text-gray-100"
+            :style="{ left: '80px', top: '50%', transform: 'translateY(-50%)' }"
+          >
+            Dashboard
           </div>
+        </router-link>
+      </div>
+
+      <!-- Navigation Section -->
+      <div class="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar flex-1">
+        <nav class="py-4">
+          <ul class="flex flex-col">
+            <li v-for="(item, index) in menuGroups[0].items" :key="item.name" class="relative">
+              <!-- Main Menu Item with Tooltip -->
+              <button
+                v-if="item.subItems"
+                @click="handleItemClick(0, index, item)"
+                @mouseenter="showTooltip = `item-${index}`" 
+                @mouseleave="showTooltip = null"
+                :class="[ 
+                  'w-full flex items-center justify-center py-3 px-4 text-gray-300 hover:text-white hover:bg-gray-800 transition-colors duration-200 relative',
+                  'dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800',
+                  {
+                    'text-white bg-gray-800 dark:bg-gray-800': isSubmenuOpen(0, index),
+                  }
+                ]"
+              >
+                <span class="flex items-center justify-center w-6 h-6">
+                  <component :is="item.icon" class="w-5 h-5" />
+                </span>
+                <!-- Tooltip -->
+                <div 
+                  v-show="showTooltip === `item-${index}`"
+                  class="fixed bg-gray-800 text-white text-sm px-3 py-2 rounded-md shadow-lg whitespace-nowrap z-50
+                         dark:bg-gray-900 dark:text-gray-100"
+                  :style="{ left: '80px', top: getTooltipPosition(index) }"
+                >
+                  {{ item.name }}
+                </div>
+              </button>
+               
+              <router-link
+                v-else-if="item.path"
+                :to="item.path"
+                @click="handleDirectNavigation()"
+                @mouseenter="showTooltip = `item-${index}`" 
+                @mouseleave="showTooltip = null"
+                :class="[ 
+                  'w-full flex items-center justify-center py-3 px-4 text-gray-300 hover:text-white hover:bg-gray-800 transition-colors duration-200 relative',
+                  'dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800',
+                  {
+                    'text-white bg-gray-800 dark:bg-gray-800': isActive(item.path),
+                  }
+                ]"
+              >
+                <span class="flex items-center justify-center w-6 h-6">
+                  <component :is="item.icon" class="w-5 h-5" />
+                </span>
+                <!-- Tooltip -->
+                <div 
+                  v-show="showTooltip === `item-${index}`"
+                  class="fixed bg-gray-800 text-white text-sm px-3 py-2 rounded-md shadow-lg whitespace-nowrap z-50
+                         dark:bg-gray-900 dark:text-gray-100"
+                  :style="{ left: '80px', top: getTooltipPosition(index) }"
+                >
+                  {{ item.name }}
+                </div>
+              </router-link>
+            </li>
+          </ul>
+        </nav>
+      </div>
+
+      <!-- User Footer -->
+      <div class="px-2 py-3 border-t border-gray-800 flex flex-col items-center sticky bottom-0 
+                  bg-gray-900 dark:bg-gray-950 dark:border-gray-800">
+        <!-- Settings -->
+        <router-link
+          to="/settings"
+          class="w-full flex items-center justify-center mb-2 py-2 rounded-lg 
+                 text-gray-300 hover:text-white hover:bg-gray-800 
+                 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800"
+          @mouseenter="showTooltip = 'settings'"
+          @mouseleave="showTooltip = null"
+        >
+          <SettingsIcon class="w-5 h-5" />
+        </router-link>
+
+        <!-- Logout -->
+        <button
+          @click="signOut"
+          class="w-full flex items-center justify-center py-2 rounded-lg 
+                 text-gray-300 hover:text-white hover:bg-gray-800
+                 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800"
+          @mouseenter="showTooltip = 'logout'"
+          @mouseleave="showTooltip = null"
+        >
+          <LogoutIcon class="w-5 h-5" />
+        </button>
+
+        <!-- Tooltips -->
+        <div
+          v-show="showTooltip === 'settings'"
+          class="fixed bg-gray-800 text-white text-sm px-3 py-2 rounded-md shadow-lg whitespace-nowrap z-50
+                 dark:bg-gray-900 dark:text-gray-100"
+          :style="{ left: '80px', bottom: '60px' }"
+        >
+          Settings
         </div>
-      </nav>
-      <SidebarWidget v-if="isExpanded || isHovered || isMobileOpen" />
-    </div>
-  </aside>
+
+        <div
+          v-show="showTooltip === 'logout'"
+          class="fixed bg-gray-800 text-white text-sm px-3 py-2 rounded-md shadow-lg whitespace-nowrap z-50
+                 dark:bg-gray-900 dark:text-gray-100"
+          :style="{ left: '80px', bottom: '20px' }"
+        >
+          Sign out
+        </div>
+      </div>
+    </aside>
+
+    <!-- White Expanded Submenu Panel -->
+    <aside
+      v-if="hasOpenSubmenu"
+      class="fixed mt-16 lg:mt-0 top-0 left-[70px] 
+             bg-white text-gray-900 
+             dark:bg-gray-900 dark:text-gray-100
+             h-screen z-30 w-[220px] shadow-xl border-r border-gray-200 dark:border-gray-700"
+    >
+      <!-- Panel Header -->
+      <div class="py-4 mt-2 px-6 border-b border-gray-200 dark:border-gray-700">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          {{ activeSubmenuTitle }}
+        </h3>
+      </div>
+
+      <!-- Panel Navigation -->
+      <div class="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar flex-1">
+        <nav class="py-4">
+          <ul class="flex flex-col space-y-1">
+            <li v-for="subItem in activeSubmenuItems" :key="subItem.name">
+              <router-link
+                :to="subItem.path"
+                :class="[ 
+                  'flex items-center justify-between px-6 py-3 text-sm transition-colors duration-150 group',
+                  'hover:bg-gray-50 dark:hover:bg-gray-800',
+                  {
+                    'bg-blue-50 text-blue-700 border-r-4 border-blue-500 dark:bg-blue-900 dark:text-blue-300': isActive(subItem.path),
+                    'text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100': !isActive(subItem.path),
+                  }
+                ]"
+              >
+                <span class="flex items-center">
+                  <span class="w-2 h-2 rounded-full bg-gray-400 mr-3 group-hover:bg-gray-600 dark:bg-gray-500 dark:group-hover:bg-gray-300"></span>
+                  {{ subItem.name }}
+                </span>
+                <div class="flex items-center gap-1">
+                  <span
+                    v-if="subItem.new"
+                    class="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full 
+                           dark:bg-green-900 dark:text-green-300"
+                  >
+                    new
+                  </span>
+                  <span
+                    v-if="subItem.pro"
+                    class="px-2 py-1 text-xs font-medium text-purple-700 bg-purple-100 rounded-full 
+                           dark:bg-purple-900 dark:text-purple-300"
+                  >
+                    pro
+                  </span>
+                </div>
+              </router-link>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </aside>
+  </div>
 </template>
+
 
 <script setup>
 import { ref, computed } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 import {
   GridIcon,
   CalenderIcon,
   UserCircleIcon,
-  ChatIcon,
-  MailIcon,
-  DocsIcon,
-  PieChartIcon,
-  ChevronDownIcon,
-  HorizontalDots,
   PageIcon,
   TableIcon,
   ListIcon,
-  PlugInIcon,
+  LogoutIcon,
+  SettingsIcon,
 } from "../../icons";
 import SidebarWidget from "./SidebarWidget.vue";
 import BoxCubeIcon from "@/icons/BoxCubeIcon.vue";
 import { useSidebar } from "@/composables/useSidebar";
 
 const route = useRoute();
+const router = useRouter();
 
-const { isExpanded, isMobileOpen, isHovered, openSubmenu } = useSidebar();
+const { isExpanded, isMobileOpen, openSubmenu } = useSidebar();
+
+// Local state for tooltips
+const showTooltip = ref(null);
+
+const userName = ref('Musharof Chowdhury');
+const userEmail = ref('randomuser@pimjo.com');
+const userAvatar = ref('/images/user/owner.jpg');
 
 const menuGroups = [
   {
@@ -252,12 +247,11 @@ const menuGroups = [
         name: "Calendar",
         path: "/calendar",
       },
-      {
-        icon: UserCircleIcon,
-        name: "User Profile",
-        path: "/profile",
-      },
-
+      // {
+      //   icon: UserCircleIcon,
+      //   name: "User Profile",
+      //   path: "/profile",
+      // },
       {
         name: "Forms",
         icon: ListIcon,
@@ -274,84 +268,76 @@ const menuGroups = [
         name: "Pages",
         icon: PageIcon,
         subItems: [
-          { name: "Black Page", path: "/blank", pro: false },
+          { name: "Blank Page", path: "/blank", pro: false },
           { name: "404 Page", path: "/error-404", pro: false },
         ],
       },
-    ],
-  },
-  {
-    title: "Others",
-    items: [
-      {
-        icon: PieChartIcon,
-        name: "Charts",
-        subItems: [
-          { name: "Line Chart", path: "/line-chart", pro: false },
-          { name: "Bar Chart", path: "/bar-chart", pro: false },
-        ],
-      },
-      {
-        icon: BoxCubeIcon,
-        name: "Ui Elements",
-        subItems: [
-          { name: "Alerts", path: "/alerts", pro: false },
-          { name: "Avatars", path: "/avatars", pro: false },
-          { name: "Badge", path: "/badge", pro: false },
-          { name: "Buttons", path: "/buttons", pro: false },
-          { name: "Images", path: "/images", pro: false },
-          { name: "Videos", path: "/videos", pro: false },
-        ],
-      },
-      {
-        icon: PlugInIcon,
-        name: "Authentication",
-        subItems: [
-          { name: "Signin", path: "/signin", pro: false },
-          { name: "Signup", path: "/signup", pro: false },
-        ],
-      },
-      // ... Add other menu items here
     ],
   },
 ];
 
 const isActive = (path) => route.path === path;
 
-const toggleSubmenu = (groupIndex, itemIndex) => {
-  const key = `${groupIndex}-${itemIndex}`;
-  openSubmenu.value = openSubmenu.value === key ? null : key;
+const handleItemClick = (groupIndex, itemIndex, item) => {
+  if (item.subItems) {
+    const key = `${groupIndex}-${itemIndex}`;
+    openSubmenu.value = key;
+    
+    // Auto navigate to first submenu item
+    if (item.subItems.length > 0) {
+      const firstSubItem = item.subItems[0];
+      router.push(firstSubItem.path);
+    }
+  }
 };
 
-const isAnySubmenuRouteActive = computed(() => {
-  return menuGroups.some((group) =>
-    group.items.some(
-      (item) =>
-        item.subItems && item.subItems.some((subItem) => isActive(subItem.path))
-    )
-  );
-});
+const handleDirectNavigation = () => {
+  // Close white panel when clicking items without subitems
+  openSubmenu.value = null;
+};
 
 const isSubmenuOpen = (groupIndex, itemIndex) => {
   const key = `${groupIndex}-${itemIndex}`;
-  return (
-    openSubmenu.value === key ||
-    (isAnySubmenuRouteActive.value &&
-      menuGroups[groupIndex].items[itemIndex].subItems?.some((subItem) =>
-        isActive(subItem.path)
-      ))
-  );
+  return openSubmenu.value === key;
 };
 
-const startTransition = (el) => {
-  el.style.height = "auto";
-  const height = el.scrollHeight;
-  el.style.height = "0px";
-  el.offsetHeight; // force reflow
-  el.style.height = height + "px";
+const hasOpenSubmenu = computed(() => {
+  return openSubmenu.value !== null;
+});
+
+const activeSubmenuTitle = computed(() => {
+  if (!openSubmenu.value) return '';
+  const [groupIndex, itemIndex] = openSubmenu.value.split('-').map(Number);
+  return menuGroups[groupIndex]?.items[itemIndex]?.name || '';
+});
+
+const activeSubmenuItems = computed(() => {
+  if (!openSubmenu.value) return [];
+  const [groupIndex, itemIndex] = openSubmenu.value.split('-').map(Number);
+  return menuGroups[groupIndex]?.items[itemIndex]?.subItems || [];
+});
+
+const getTooltipPosition = (index) => {
+  // Calculate tooltip position based on item index
+  const baseTop = 90; // Starting position after logo
+  const itemHeight = 48; // Height of each menu item
+  return `${baseTop + (index * itemHeight)}px`;
 };
 
-const endTransition = (el) => {
-  el.style.height = "";
+const signOut = () => {
+  console.log('Signing out...');
+  router.push('/signin');
 };
 </script>
+
+<style scoped>
+/* Custom scrollbar for the sidebar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>

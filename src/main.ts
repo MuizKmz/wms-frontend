@@ -5,7 +5,7 @@ import 'swiper/css/navigation'
 import 'swiper/css/pagination'
 import 'jsvectormap/dist/jsvectormap.css'
 import 'flatpickr/dist/flatpickr.css'
-import 'iconify-icon'
+//import 'iconify-icon'
 
 import { createApp } from 'vue'
 import App from './App.vue'
