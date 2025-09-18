@@ -216,6 +216,9 @@ import {
   ListIcon,
   LogoutIcon,
   SettingsIcon,
+  BagIcon,
+  MenuIcon,
+  HomeIcon,
 } from "../../icons";
 import SidebarWidget from "./SidebarWidget.vue";
 import BoxCubeIcon from "@/icons/BoxCubeIcon.vue";
@@ -229,18 +232,27 @@ const { isExpanded, isMobileOpen, openSubmenu } = useSidebar();
 // Local state for tooltips
 const showTooltip = ref(null);
 
-const userName = ref('Musharof Chowdhury');
-const userEmail = ref('randomuser@pimjo.com');
-const userAvatar = ref('/images/user/owner.jpg');
-
 const menuGroups = [
   {
     title: "Menu",
     items: [
       {
-        icon: GridIcon,
+        icon: HomeIcon,
         name: "Dashboard",
         subItems: [{ name: "Ecommerce", path: "/", pro: false }],
+      },
+      {
+        icon: BagIcon,
+        name: "Work Order Management",
+        path: "/workorder",
+      },
+      {
+        icon: MenuIcon,
+        name: "Bill Of Material Management",
+        subItems: [
+          { name: "BOM List", path: "/bom", pro: false },
+          { name: "Compounding List", path: "/error-404", pro: false },
+        ],
       },
       {
         icon: CalenderIcon,

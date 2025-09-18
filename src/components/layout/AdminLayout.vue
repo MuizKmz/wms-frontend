@@ -12,9 +12,12 @@
       <app-header />
 
       <!-- Page Content -->
-      <div class="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">
+      <div class="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6 mb-20">
         <slot></slot>
       </div>
+
+      <!-- Footer -->
+      <app-footer />
     </div>
   </div>
 </template>
@@ -22,6 +25,7 @@
 <script setup>
 import AppSidebar from './AppSidebar.vue'
 import AppHeader from './AppHeader.vue'
+import AppFooter from './AppFooter.vue'
 import { useSidebar } from '@/composables/useSidebar'
 import Backdrop from './Backdrop.vue'
 import { computed } from 'vue'

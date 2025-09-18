@@ -15,6 +15,22 @@ const router = createRouter({
       },
     },
     {
+      path: '/workorder',
+      name: 'Work Order Management',
+      component: () => import('../views/WorkOrderMgt/WorkOrder.vue'),
+      meta: {
+        title: 'Work Order Management',
+      },
+    },
+    {
+      path: '/bom',
+      name: 'Bill Of Material Management',
+      component: () => import('../views/BOMMgt/BOM.vue'),
+      meta: {
+        title: 'Bill Of Material Management',
+      },
+    },
+    {
       path: '/calendar',
       name: 'Calendar',
       component: () => import('../views/Others/Calendar.vue'),
@@ -146,6 +162,6 @@ const router = createRouter({
 export default router
 
 router.beforeEach((to, from, next) => {
-  document.title = `Vue.js ${to.meta.title} | TailAdmin - Vue.js Tailwind CSS Dashboard Template`
+  document.title = `${to.meta.title} | MES`
   next()
 })

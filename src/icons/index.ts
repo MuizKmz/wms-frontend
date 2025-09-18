@@ -1,4 +1,5 @@
 import BoxCubeIcon from "./BoxCubeIcon.vue";
+import BagIcon from './BagIcon.vue';
 import GridIcon from "./GridIcon.vue";
 import CalenderIcon from "./CalenderIcon.vue";
 import TaskIcon from "./TaskIcon.vue";
@@ -48,6 +49,7 @@ import BarChartIcon from "./BarChartIcon.vue";
 
 export {
   BellIcon,
+  BagIcon,
   BarChartIcon,
   LayoutDashboardIcon,
   UserGroupIcon,
