@@ -24,10 +24,26 @@ const router = createRouter({
     },
     {
       path: '/bom',
-      name: 'Bill Of Material Management',
+      name: 'Bill of Material Management',
       component: () => import('../views/BOMMgt/BOM.vue'),
       meta: {
         title: 'Bill Of Material Management',
+      },
+    },
+    {
+      path: '/compoundinglist',
+      name: 'Compounding List',
+      component: () => import('../views/BOMMgt/CompoundingList.vue'),
+      meta: {
+        title: 'Compounding List',
+      },
+    },
+    {
+      path: '/wip',
+      name: 'Work-in-Progress Management',
+      component: () => import('../views/WIPMgt/WIP.vue'),
+      meta: {
+        title: 'Work-in-Progress',
       },
     },
     {

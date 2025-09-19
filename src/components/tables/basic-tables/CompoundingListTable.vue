@@ -3,7 +3,7 @@
     <!-- Results count -->
     <div class="mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        Showing {{ filteredData.length }} work orders
+        Showing {{ filteredData.length }} material items
       </p>
     </div>
 
@@ -11,42 +11,52 @@
       <table class="min-w-full">
         <thead>
           <tr class="border-b border-gray-200 dark:border-gray-700">
-          <th>
-            <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="product" />
-          </th>
+            <th>
+              <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select all" />
+            </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Work Order ID
+                Material Code
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Compounding Lot No.
+                Compound Lot Number
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Status
+                Quantity Required (kg)
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Priority
+                Issued By
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Acknowledgment
+                Date Issued
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Created By
+                Material Name
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Created Date
+                Preparation Status
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+                Verification Status
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+                Approval Status
               </p>
             </th>
             <th class="px-6 py-3 text-left">
@@ -57,66 +67,81 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-          <!-- 🔹 Use paginatedData instead of filteredData -->
+          <!-- Use paginatedData instead of filteredData -->
           <tr v-for="(item, index) in paginatedData" :key="index"
             class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                      <th>
-            <label>
-              <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="product" />
-            </label>
-          </th>
-            <!-- Work Order ID -->
+            <th>
+              <label>
+                <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select item" />
+              </label>
+            </th>
+            
+            <!-- Material Code -->
             <td class="px-6 py-4">
               <span
                 class="font-mono text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
-                {{ item.workOrderId }}
+                {{ item.materialCode }}
               </span>
             </td>
 
-            <!-- Compounding Lot No. -->
+            <!-- Compound Lot Number -->
             <td class="px-6 py-4">
               <span
                 class="font-mono text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
-                {{ item.compoundingLot }}
+                {{ item.compoundLotNumber }}
               </span>
             </td>
 
-            <!-- Status -->
-            <td class="px-6 py-4">
-              <span :class="getStatusClass(item.status)"
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
-                {{ item.status }}
-              </span>
-            </td>
-
-            <!-- Priority -->
-            <td class="px-6 py-4">
-              <span :class="getPriorityClass(item.priority)"
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
-                {{ item.priority }}
-              </span>
-            </td>
-
-            <!-- Acknowledgment -->
-            <td class="px-6 py-4">
-              <span :class="getAcknowledgmentClass(item.acknowledgment)"
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
-                {{ item.acknowledgment }}
-              </span>
-            </td>
-
-            <!-- Created By -->
+            <!-- Quantity Required -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.createdBy }}
+                {{ item.quantityRequired }}
               </p>
             </td>
 
-            <!-- Created Date -->
+            <!-- Issued By -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.createdDate }}
+                {{ item.issuedBy }}
               </p>
+            </td>
+
+            <!-- Date Issued -->
+            <td class="px-6 py-4">
+              <p class="text-sm text-gray-900 dark:text-white">
+                {{ item.dateIssued }}
+              </p>
+            </td>
+
+            <!-- Material Name -->
+            <td class="px-6 py-4">
+              <p class="text-sm text-gray-900 dark:text-white">
+                {{ item.materialName }}
+              </p>
+            </td>
+
+            <!-- Preparation Status -->
+            <td class="px-6 py-4">
+              <span :class="getPreparationStatusClass(item.preparationStatus)"
+                class="inline-flex items-center text-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                {{ item.preparationStatus }}
+              </span>
+            </td>
+
+            <!-- Verification Status -->
+            <td class="px-6 py-4">
+              <span :class="getVerificationStatusClass(item.verificationStatus)"
+                class="inline-flex items-center text-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                {{ item.verificationStatus }}
+              </span>
+            </td>
+
+            <!-- Approval Status -->
+            <td class="px-6 py-4">
+              <span :class="getApprovalStatusClass(item.approvalStatus)"
+                class="inline-flex items-center text-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                {{ item.approvalStatus }}
+              </span>
             </td>
 
             <!-- Actions -->
@@ -151,7 +176,7 @@
         </tbody>
       </table>
 
-      <!-- 🔹 FlyonUI Pagination -->
+      <!-- FlyonUI Pagination -->
       <div v-if="totalPages > 1" class="mt-6 flex justify-center">
         <nav class="flex items-center gap-x-1">
           <!-- Previous -->
@@ -181,7 +206,7 @@
       <!-- Loading -->
       <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
         <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
-        <p>Loading work orders...</p>
+        <p>Loading material items...</p>
       </div>
 
       <!-- Empty State -->
@@ -191,10 +216,10 @@
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
         <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
-          No work orders found
+          No material items found
         </p>
         <p class="text-sm text-gray-500 dark:text-gray-400">
-          Try adjusting your filters or create a new work order.
+          Try adjusting your filters or create a new material item.
         </p>
       </div>
 
@@ -204,7 +229,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z" />
         </svg>
-        <p class="font-medium">Error loading work orders</p>
+        <p class="font-medium">Error loading material items</p>
         <p class="text-xs mt-1">{{ error }}</p>
       </div>
     </div>
@@ -226,61 +251,73 @@ const data = ref([])
 const loading = ref(false)
 const error = ref(null)
 
-// Mock data for work orders
+// Mock data for material items based on the image
 const mockData = [
   {
-    workOrderId: "JO-2024-0510-0001",
-    compoundingLot: "CLOT-2024-A-001",
-    status: "Issued",
-    priority: "High",
-    acknowledgment: "Acknowledged",
-    createdBy: "Alice Smith",
-    createdDate: "2024-05-10"
+    materialCode: "SWRM-SIL-60BK8",
+    compoundLotNumber: "MYCP250814001",
+    quantityRequired: "1.20",
+    issuedBy: "Alice Smith",
+    dateIssued: "2024-05-20",
+    materialName: "MCD0100 MHB564",
+    preparationStatus: "Material Preparation Done",
+    verificationStatus: "Verified Material Preparation",
+    approvalStatus: "Approved"
   },
   {
-    workOrderId: "PRD-2024-0511-0002",
-    compoundingLot: "CLOT-2024-W-002",
-    status: "Draft",
-    priority: "Medium",
-    acknowledgment: "Rejected",
-    createdBy: "Bob Johnson",
-    createdDate: "2024-05-11"
+    materialCode: "SWRM-SIL-07BK",
+    compoundLotNumber: "MYCP250814002",
+    quantityRequired: "2.48",
+    issuedBy: "Jane Doe",
+    dateIssued: "2024-05-21",
+    materialName: "MKL9600 CHN2400 CKL24",
+    preparationStatus: "Material Preparation Done",
+    verificationStatus: "Reject Material Preparation",
+    approvalStatus: "Reject"
   },
   {
-    workOrderId: "RE-2024-0512-0003",
-    compoundingLot: "CLOT-2024-Q-003",
-    status: "Completed",
-    priority: "Low",
-    acknowledgment: "Not yet acknowledge",
-    createdBy: "Charlie Brown",
-    createdDate: "2024-05-12"
+    materialCode: "SWRM-6BK8",
+    compoundLotNumber: "MYCP250814003",
+    quantityRequired: "5.44",
+    issuedBy: "John Smith",
+    dateIssued: "2024-05-22",
+    materialName: "MCD0100 MHB564",
+    preparationStatus: "Material Preparation in process",
+    verificationStatus: "Material Preparation in QC",
+    approvalStatus: "Waiting for Approval"
   },
   {
-    workOrderId: "JO-2024-0513-0004",
-    compoundingLot: "CLOT-2024-A-004",
-    status: "Issued",
-    priority: "Medium",
-    acknowledgment: "Acknowledged",
-    createdBy: "Alice Smith",
-    createdDate: "2024-05-13"
+    materialCode: "SWRM-SIL-12BK",
+    compoundLotNumber: "MYCP250814004",
+    quantityRequired: "3.75",
+    issuedBy: "Alice Smith",
+    dateIssued: "2024-05-23",
+    materialName: "MKL9600 CHN2400",
+    preparationStatus: "Material Preparation Done",
+    verificationStatus: "Verified Material Preparation",
+    approvalStatus: "Approved"
   },
   {
-    workOrderId: "PRD-2024-0514-0005",
-    compoundingLot: "CLOT-2024-P-005",
-    status: "Draft",
-    priority: "Low",
-    acknowledgment: "Rejected",
-    createdBy: "Bob Johnson",
-    createdDate: "2024-05-14"
+    materialCode: "SWRM-SIL-08BK",
+    compoundLotNumber: "MYCP250814005",
+    quantityRequired: "1.85",
+    issuedBy: "Bob Johnson",
+    dateIssued: "2024-05-24",
+    materialName: "MCD0100 ABC123",
+    preparationStatus: "Material Preparation in process",
+    verificationStatus: "Material Preparation in QC",
+    approvalStatus: "Waiting for Approval"
   },
   {
-    workOrderId: "JO-2024-0515-0006",
-    compoundingLot: "CLOT-2024-W-006",
-    status: "Cancelled",
-    priority: "High",
-    acknowledgment: "Not yet acknowledge",
-    createdBy: "Charlie Brown",
-    createdDate: "2024-05-15"
+    materialCode: "SWRM-SIL-15BK",
+    compoundLotNumber: "MYCP250814006",
+    quantityRequired: "4.20",
+    issuedBy: "Charlie Brown",
+    dateIssued: "2024-05-25",
+    materialName: "MKL9600 XYZ789",
+    preparationStatus: "Material Preparation Done",
+    verificationStatus: "Reject Material Preparation",
+    approvalStatus: "Reject"
   }
 ]
 
@@ -290,8 +327,8 @@ const fetchData = async (filters = {}) => {
 
   try {
     // Try to fetch from API first
-    const res = await fetch("/api/work-orders")
-    if (!res.ok) throw new Error("Failed to fetch work orders")
+    const res = await fetch("/api/material-items")
+    if (!res.ok) throw new Error("Failed to fetch material items")
 
     const apiData = await res.json()
     data.value = apiData
@@ -313,41 +350,30 @@ const filteredData = computed(() => {
     const filters = props.filters
 
     if (
-      filters.workOrder &&
-      !item.workOrderId
+      filters.compoundingOrderId &&
+      !item.compoundLotNumber
         .toLowerCase()
-        .includes(filters.workOrder.toLowerCase())
+        .includes(filters.compoundingOrderId.toLowerCase())
     ) {
       return false
     }
     if (
-      filters.compoundingLot &&
-      !item.compoundingLot
+      filters.materialCode &&
+      !item.materialCode
         .toLowerCase()
-        .includes(filters.compoundingLot.toLowerCase())
+        .includes(filters.materialCode.toLowerCase())
     ) {
       return false
     }
     if (
-      filters.status &&
-      item.status.toLowerCase() !== filters.status.toLowerCase()
+      filters.issuedBy &&
+      !item.issuedBy
+        .toLowerCase()
+        .includes(filters.issuedBy.toLowerCase())
     ) {
       return false
     }
-    if (
-      filters.priority &&
-      item.priority.toLowerCase() !== filters.priority.toLowerCase()
-    ) {
-      return false
-    }
-    if (
-      filters.acknowledgement &&
-      item.acknowledgment.toLowerCase() !==
-      filters.acknowledgement.toLowerCase()
-    ) {
-      return false
-    }
-    if (filters.createdDate && item.createdDate !== filters.createdDate) {
+    if (filters.dateIssued && item.dateIssued !== filters.dateIssued) {
       return false
     }
 
@@ -355,7 +381,7 @@ const filteredData = computed(() => {
   })
 })
 
-// 🔹 Pagination
+// Pagination
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
 const totalPages = computed(() =>
@@ -372,48 +398,38 @@ const changePage = (page) => {
   }
 }
 
-// Status styling
-const getStatusClass = (status) => {
-  switch (status.toLowerCase()) {
-    case "issued":
-      return "bg-green-100 text-green-800 border border-green-200 dark:bg-green-900 dark:text-green-300"
-    case "draft":
-      return "bg-yellow-100 text-yellow-800 border border-yellow-200 dark:bg-yellow-900 dark:text-yellow-300"
-    case "completed":
-      return "bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-900 dark:text-blue-300"
-    case "cancelled":
-      return "bg-red-100 text-red-800 border border-red-200 dark:bg-red-900 dark:text-red-300"
-    default:
-      return "bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300"
+// Preparation Status styling
+const getPreparationStatusClass = (status) => {
+  if (status.toLowerCase().includes('done')) {
+    return "bg-green-100 text-green-800 border border-green-200 dark:bg-green-900 dark:text-green-300"
+  } else if (status.toLowerCase().includes('process')) {
+    return "bg-yellow-100 text-yellow-800 border border-yellow-200 dark:bg-yellow-900 dark:text-yellow-300"
   }
+  return "bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300"
 }
 
-// Priority styling
-const getPriorityClass = (priority) => {
-  switch (priority.toLowerCase()) {
-    case "high":
-      return "bg-red-100 text-red-800 border border-red-200 dark:bg-red-900 dark:text-red-300"
-    case "medium":
-      return "bg-yellow-100 text-yellow-800 border border-yellow-200 dark:bg-yellow-900 dark:text-yellow-300"
-    case "low":
-      return "bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-900 dark:text-blue-300"
-    default:
-      return "bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300"
+// Verification Status styling
+const getVerificationStatusClass = (status) => {
+  if (status.toLowerCase().includes('verified')) {
+    return "bg-green-100 text-green-800 border border-green-200 dark:bg-green-900 dark:text-green-300"
+  } else if (status.toLowerCase().includes('reject')) {
+    return "bg-red-100 text-red-800 border border-red-200 dark:bg-red-900 dark:text-red-300"
+  } else if (status.toLowerCase().includes('qc')) {
+    return "bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-900 dark:text-blue-300"
   }
+  return "bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300"
 }
 
-// Acknowledgment styling
-const getAcknowledgmentClass = (acknowledgment) => {
-  switch (acknowledgment.toLowerCase()) {
-    case "acknowledged":
-      return "bg-green-100 text-green-800 border border-green-200 dark:bg-green-900 dark:text-green-300"
-    case "rejected":
-      return "bg-red-100 text-red-800 border border-red-200 dark:bg-red-900 dark:text-red-300"
-    case "not yet acknowledge":
-      return "bg-orange-100 text-orange-800 border border-orange-200 dark:bg-orange-900 dark:text-orange-300"
-    default:
-      return "bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300"
+// Approval Status styling
+const getApprovalStatusClass = (status) => {
+  if (status.toLowerCase() === 'approved') {
+    return "bg-green-100 text-green-800 border border-green-200 dark:bg-green-900 dark:text-green-300"
+  } else if (status.toLowerCase() === 'reject') {
+    return "bg-red-100 text-red-800 border border-red-200 dark:bg-red-900 dark:text-red-300"
+  } else if (status.toLowerCase().includes('waiting')) {
+    return "bg-yellow-100 text-yellow-800 border border-yellow-200 dark:bg-yellow-900 dark:text-yellow-300"
   }
+  return "bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300"
 }
 
 // Watch for filter changes

@@ -3,7 +3,7 @@
     <!-- Results count -->
     <div class="mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        Showing {{ filteredData.length }} work orders
+        Showing {{ filteredData.length }} BOM items
       </p>
     </div>
 
@@ -11,42 +11,42 @@
       <table class="min-w-full">
         <thead>
           <tr class="border-b border-gray-200 dark:border-gray-700">
-          <th>
-            <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="product" />
-          </th>
+            <th>
+              <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select all" />
+            </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Work Order ID
+                BOM ID
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Compounding Lot No.
+                BOM Name
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Status
+                Product Code
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Priority
+                Product Name
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Acknowledgment
+                Revision No.
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Created By
+                Process Step
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Created Date
+                Usage Stage
               </p>
             </th>
             <th class="px-6 py-3 text-left">
@@ -57,66 +57,66 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-          <!-- 🔹 Use paginatedData instead of filteredData -->
+          <!-- Use paginatedData instead of filteredData -->
           <tr v-for="(item, index) in paginatedData" :key="index"
             class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                      <th>
-            <label>
-              <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="product" />
-            </label>
-          </th>
-            <!-- Work Order ID -->
+            <th>
+              <label>
+                <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select item" />
+              </label>
+            </th>
+            
+            <!-- BOM ID -->
             <td class="px-6 py-4">
               <span
                 class="font-mono text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
-                {{ item.workOrderId }}
+                {{ item.bomId }}
               </span>
             </td>
 
-            <!-- Compounding Lot No. -->
+            <!-- BOM Name -->
+            <td class="px-6 py-4">
+              <p class="text-sm text-gray-900 dark:text-white">
+                {{ item.bomName }}
+              </p>
+            </td>
+
+            <!-- Product Code -->
             <td class="px-6 py-4">
               <span
                 class="font-mono text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
-                {{ item.compoundingLot }}
+                {{ item.productCode }}
               </span>
             </td>
 
-            <!-- Status -->
-            <td class="px-6 py-4">
-              <span :class="getStatusClass(item.status)"
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
-                {{ item.status }}
-              </span>
-            </td>
-
-            <!-- Priority -->
-            <td class="px-6 py-4">
-              <span :class="getPriorityClass(item.priority)"
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
-                {{ item.priority }}
-              </span>
-            </td>
-
-            <!-- Acknowledgment -->
-            <td class="px-6 py-4">
-              <span :class="getAcknowledgmentClass(item.acknowledgment)"
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
-                {{ item.acknowledgment }}
-              </span>
-            </td>
-
-            <!-- Created By -->
+            <!-- Product Name -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.createdBy }}
+                {{ item.productName }}
               </p>
             </td>
 
-            <!-- Created Date -->
+            <!-- Revision No. -->
+            <td class="px-6 py-4">
+              <span
+                class="font-mono text-sm font-medium text-gray-900 dark:text-white">
+                {{ item.revisionNo }}
+              </span>
+            </td>
+
+            <!-- Process Step -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.createdDate }}
+                {{ item.processStep }}
               </p>
+            </td>
+
+            <!-- Usage Stage -->
+            <td class="px-6 py-4">
+              <span :class="getUsageStageClass(item.usageStage)"
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                {{ item.usageStage }}
+              </span>
             </td>
 
             <!-- Actions -->
@@ -151,7 +151,7 @@
         </tbody>
       </table>
 
-      <!-- 🔹 FlyonUI Pagination -->
+      <!-- FlyonUI Pagination -->
       <div v-if="totalPages > 1" class="mt-6 flex justify-center">
         <nav class="flex items-center gap-x-1">
           <!-- Previous -->
@@ -181,7 +181,7 @@
       <!-- Loading -->
       <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
         <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
-        <p>Loading work orders...</p>
+        <p>Loading BOM items...</p>
       </div>
 
       <!-- Empty State -->
@@ -191,10 +191,10 @@
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
         <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
-          No work orders found
+          No BOM items found
         </p>
         <p class="text-sm text-gray-500 dark:text-gray-400">
-          Try adjusting your filters or create a new work order.
+          Try adjusting your filters or create a new BOM item.
         </p>
       </div>
 
@@ -204,7 +204,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z" />
         </svg>
-        <p class="font-medium">Error loading work orders</p>
+        <p class="font-medium">Error loading BOM items</p>
         <p class="text-xs mt-1">{{ error }}</p>
       </div>
     </div>
@@ -226,61 +226,61 @@ const data = ref([])
 const loading = ref(false)
 const error = ref(null)
 
-// Mock data for work orders
+// Mock data for BOM items based on the image
 const mockData = [
   {
-    workOrderId: "JO-2024-0510-0001",
-    compoundingLot: "CLOT-2024-A-001",
-    status: "Issued",
-    priority: "High",
-    acknowledgment: "Acknowledged",
-    createdBy: "Alice Smith",
-    createdDate: "2024-05-10"
+    bomId: "BOM-100",
+    bomName: "Motor Assembly V1",
+    productCode: "PRD-00100",
+    productName: "DC Motor V1",
+    revisionNo: "REV-01",
+    processStep: "Winding Step",
+    usageStage: "Beginning"
   },
   {
-    workOrderId: "PRD-2024-0511-0002",
-    compoundingLot: "CLOT-2024-W-002",
-    status: "Draft",
-    priority: "Medium",
-    acknowledgment: "Rejected",
-    createdBy: "Bob Johnson",
-    createdDate: "2024-05-11"
+    bomId: "BOM-101",
+    bomName: "PCB Module Alpha",
+    productCode: "PRD-00101",
+    productName: "Controller Board A",
+    revisionNo: "REV-02",
+    processStep: "Soldering Step",
+    usageStage: "Mid"
   },
   {
-    workOrderId: "RE-2024-0512-0003",
-    compoundingLot: "CLOT-2024-Q-003",
-    status: "Completed",
-    priority: "Low",
-    acknowledgment: "Not yet acknowledge",
-    createdBy: "Charlie Brown",
-    createdDate: "2024-05-12"
+    bomId: "BOM-102",
+    bomName: "Sensor Mount V2",
+    productCode: "PRD-00102",
+    productName: "IR Sensor Holder",
+    revisionNo: "REV-01",
+    processStep: "Assembly",
+    usageStage: "End"
   },
   {
-    workOrderId: "JO-2024-0513-0004",
-    compoundingLot: "CLOT-2024-A-004",
-    status: "Issued",
-    priority: "Medium",
-    acknowledgment: "Acknowledged",
-    createdBy: "Alice Smith",
-    createdDate: "2024-05-13"
+    bomId: "BOM-103",
+    bomName: "Power Supply Unit",
+    productCode: "PRD-00103",
+    productName: "24V Power Module",
+    revisionNo: "REV-03",
+    processStep: "Testing Step",
+    usageStage: "Beginning"
   },
   {
-    workOrderId: "PRD-2024-0514-0005",
-    compoundingLot: "CLOT-2024-P-005",
-    status: "Draft",
-    priority: "Low",
-    acknowledgment: "Rejected",
-    createdBy: "Bob Johnson",
-    createdDate: "2024-05-14"
+    bomId: "BOM-104",
+    bomName: "Housing Shell Beta",
+    productCode: "PRD-00104",
+    productName: "Protective Case B",
+    revisionNo: "REV-01",
+    processStep: "Molding Step",
+    usageStage: "Mid"
   },
   {
-    workOrderId: "JO-2024-0515-0006",
-    compoundingLot: "CLOT-2024-W-006",
-    status: "Cancelled",
-    priority: "High",
-    acknowledgment: "Not yet acknowledge",
-    createdBy: "Charlie Brown",
-    createdDate: "2024-05-15"
+    bomId: "BOM-105",
+    bomName: "Cable Harness",
+    productCode: "PRD-00105",
+    productName: "Wiring Harness Kit",
+    revisionNo: "REV-02",
+    processStep: "Crimping Step",
+    usageStage: "End"
   }
 ]
 
@@ -290,8 +290,8 @@ const fetchData = async (filters = {}) => {
 
   try {
     // Try to fetch from API first
-    const res = await fetch("/api/work-orders")
-    if (!res.ok) throw new Error("Failed to fetch work orders")
+    const res = await fetch("/api/bom-items")
+    if (!res.ok) throw new Error("Failed to fetch BOM items")
 
     const apiData = await res.json()
     data.value = apiData
@@ -313,41 +313,57 @@ const filteredData = computed(() => {
     const filters = props.filters
 
     if (
-      filters.workOrder &&
-      !item.workOrderId
+      filters.bomId &&
+      !item.bomId
         .toLowerCase()
-        .includes(filters.workOrder.toLowerCase())
+        .includes(filters.bomId.toLowerCase())
     ) {
       return false
     }
     if (
-      filters.compoundingLot &&
-      !item.compoundingLot
+      filters.bomName &&
+      !item.bomName
         .toLowerCase()
-        .includes(filters.compoundingLot.toLowerCase())
+        .includes(filters.bomName.toLowerCase())
     ) {
       return false
     }
     if (
-      filters.status &&
-      item.status.toLowerCase() !== filters.status.toLowerCase()
+      filters.productCode &&
+      !item.productCode
+        .toLowerCase()
+        .includes(filters.productCode.toLowerCase())
     ) {
       return false
     }
     if (
-      filters.priority &&
-      item.priority.toLowerCase() !== filters.priority.toLowerCase()
+      filters.productName &&
+      !item.productName
+        .toLowerCase()
+        .includes(filters.productName.toLowerCase())
     ) {
       return false
     }
     if (
-      filters.acknowledgement &&
-      item.acknowledgment.toLowerCase() !==
-      filters.acknowledgement.toLowerCase()
+      filters.revisionNo &&
+      !item.revisionNo
+        .toLowerCase()
+        .includes(filters.revisionNo.toLowerCase())
     ) {
       return false
     }
-    if (filters.createdDate && item.createdDate !== filters.createdDate) {
+    if (
+      filters.processStep &&
+      !item.processStep
+        .toLowerCase()
+        .includes(filters.processStep.toLowerCase())
+    ) {
+      return false
+    }
+    if (
+      filters.usageStage &&
+      item.usageStage.toLowerCase() !== filters.usageStage.toLowerCase()
+    ) {
       return false
     }
 
@@ -355,7 +371,7 @@ const filteredData = computed(() => {
   })
 })
 
-// 🔹 Pagination
+// Pagination
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
 const totalPages = computed(() =>
@@ -372,45 +388,15 @@ const changePage = (page) => {
   }
 }
 
-// Status styling
-const getStatusClass = (status) => {
-  switch (status.toLowerCase()) {
-    case "issued":
+// Usage Stage styling
+const getUsageStageClass = (usageStage) => {
+  switch (usageStage.toLowerCase()) {
+    case "beginning":
       return "bg-green-100 text-green-800 border border-green-200 dark:bg-green-900 dark:text-green-300"
-    case "draft":
+    case "mid":
       return "bg-yellow-100 text-yellow-800 border border-yellow-200 dark:bg-yellow-900 dark:text-yellow-300"
-    case "completed":
+    case "end":
       return "bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-900 dark:text-blue-300"
-    case "cancelled":
-      return "bg-red-100 text-red-800 border border-red-200 dark:bg-red-900 dark:text-red-300"
-    default:
-      return "bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300"
-  }
-}
-
-// Priority styling
-const getPriorityClass = (priority) => {
-  switch (priority.toLowerCase()) {
-    case "high":
-      return "bg-red-100 text-red-800 border border-red-200 dark:bg-red-900 dark:text-red-300"
-    case "medium":
-      return "bg-yellow-100 text-yellow-800 border border-yellow-200 dark:bg-yellow-900 dark:text-yellow-300"
-    case "low":
-      return "bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-900 dark:text-blue-300"
-    default:
-      return "bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300"
-  }
-}
-
-// Acknowledgment styling
-const getAcknowledgmentClass = (acknowledgment) => {
-  switch (acknowledgment.toLowerCase()) {
-    case "acknowledged":
-      return "bg-green-100 text-green-800 border border-green-200 dark:bg-green-900 dark:text-green-300"
-    case "rejected":
-      return "bg-red-100 text-red-800 border border-red-200 dark:bg-red-900 dark:text-red-300"
-    case "not yet acknowledge":
-      return "bg-orange-100 text-orange-800 border border-orange-200 dark:bg-orange-900 dark:text-orange-300"
     default:
       return "bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300"
   }

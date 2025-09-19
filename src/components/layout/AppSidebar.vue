@@ -219,6 +219,7 @@ import {
   BagIcon,
   MenuIcon,
   HomeIcon,
+  WIPIcon,
 } from "../../icons";
 import SidebarWidget from "./SidebarWidget.vue";
 import BoxCubeIcon from "@/icons/BoxCubeIcon.vue";
@@ -248,11 +249,16 @@ const menuGroups = [
       },
       {
         icon: MenuIcon,
-        name: "Bill Of Material Management",
+        name: "Bill of Material Management",
         subItems: [
           { name: "BOM List", path: "/bom", pro: false },
-          { name: "Compounding List", path: "/error-404", pro: false },
+          { name: "Compounding List", path: "/compoundinglist", pro: false },
         ],
+      },
+      {
+        icon: WIPIcon,
+        name: "WIP Management",
+        path: "/wip",
       },
       {
         icon: CalenderIcon,

@@ -8,7 +8,7 @@
       <ComponentCard title="All Work Orders" desc="Overview of all created work orders">
         <!-- Button in header slot -->
         <template #headerAction>
-          <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+          <button class="px-4 py-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
             New Job Order
           </button>
         </template>
