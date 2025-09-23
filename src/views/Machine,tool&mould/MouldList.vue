@@ -5,7 +5,7 @@
     <WorkOrderFilters @filter-change="handleFilterChange" />
     
     <div class="space-y-5 sm:space-y-6">
-      <ComponentCard title="All Tools List" desc="Overview of all Tools List">
+      <ComponentCard title="All Mould List" desc="Overview of all Mould List">
         <!-- Button in header slot -->
         <template #headerAction>
           <button class="px-4 py-2  btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
@@ -14,7 +14,7 @@
         </template>
         
         <!-- Table in main slot -->
-        <WorkOrderTable :filters="activeFilters" />
+        <MouldListTable :filters="activeFilters" />
       </ComponentCard>
     </div>
   </AdminLayout>
@@ -27,7 +27,7 @@ import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
 import PageTitle from "@/components/common/PageTitle.vue"; 
 import WorkOrderFilters from "@/components/common/WorkOrderFilters.vue"; // Add this import
-import WorkOrderTable from "@/components/tables/basic-tables/WorkOrderTable.vue";
+import MouldListTable from "@/components/tables/basic-tables/MouldListTable.vue";
 
 const currentPageTitle = ref("Machine Management");
 const activeFilters = ref({});

@@ -2,7 +2,7 @@
   <AdminLayout>
     <PageBreadcrumb :pageTitle="currentPageTitle" />
     <PageTitle title="Material Management"/>
-    <WorkOrderFilters @filter-change="handleFilterChange" />
+    <MaterialListFilters @filter-change="handleFilterChange" />
     
     <div class="space-y-5 sm:space-y-6">
       <ComponentCard title="All Material List" desc="Overview of all Material List">
@@ -20,7 +20,7 @@
         </template>
         
         <!-- Table in main slot -->
-        <WorkOrderTable :filters="activeFilters" />
+        <MaterialListTable :filters="activeFilters" />
       </ComponentCard>
     </div>
   </AdminLayout>
@@ -32,8 +32,8 @@ import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
 import PageTitle from "@/components/common/PageTitle.vue"; 
-import WorkOrderFilters from "@/components/common/WorkOrderFilters.vue"; // Add this import
-import WorkOrderTable from "@/components/tables/basic-tables/WorkOrderTable.vue";
+import MaterialListFilters from "@/components/common/MaterialListFilters.vue"; // Add this import
+import MaterialListTable from "@/components/tables/basic-tables/MaterialListTable.vue";
 
 const currentPageTitle = ref("Material Management");
 const activeFilters = ref({});
