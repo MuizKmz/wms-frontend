@@ -47,6 +47,46 @@ const router = createRouter({
       },
     },
     {
+      path: '/materialmgt/materialList',
+      name: 'Material List',
+      component: () => import('../views/MaterialMgt/Materiallist.vue'),
+      meta: {
+        title: 'Material List',
+      },
+    },
+    {
+      path: '/materialmgt/materialRequisition',
+      name: 'Material Requisition',
+      component: () => import('../views/MaterialMgt/Materialrequisition.vue'),
+      meta: {
+        title: 'Material Requisition',
+      },
+    },
+    {
+      path: '/machinemgt/machineList',
+      name: 'Machine List',
+      component: () => import('../views/Machine,tool&mould/MachineList.vue'),
+      meta: {
+        title: 'Machine List',
+      },
+    },
+    {
+      path: '/machinemgt/mouldList',
+      name: 'Mould List',
+      component: () => import('../views/Machine,tool&mould/MouldList.vue'),
+      meta: {
+        title: 'Mould List',
+      },
+    },
+    {
+      path: '/machinemgt/toolList',
+      name: 'Tool List',
+      component: () => import('../views/Machine,tool&mould/ToolsList.vue'),
+      meta: {
+        title: 'Tool List',
+      },
+    },
+    {
       path: '/calendar',
       name: 'Calendar',
       component: () => import('../views/Others/Calendar.vue'),

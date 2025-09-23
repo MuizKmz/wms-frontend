@@ -1,24 +1,20 @@
 <template>
   <AdminLayout>
     <PageBreadcrumb :pageTitle="currentPageTitle" />
-    <PageTitle title="Work-in-Progress Management"/>
-    <WIPFilters @filter-change="handleFilterChange" />
-    
-    <!-- Dashboard Cards Section -->
-    <div class="mb-6">
-      <WIPCard />
-    </div>
+    <PageTitle title="Machine Management"/>
+    <WorkOrderFilters @filter-change="handleFilterChange" />
     
     <div class="space-y-5 sm:space-y-6">
-      <ComponentCard title="All Work-in-Progress" desc="Overview of all created Work-in-Progress">
+      <ComponentCard title="All Tools List" desc="Overview of all Tools List">
         <!-- Button in header slot -->
         <template #headerAction>
-          <button class="px-4 py-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
-            Open Operator Module
+          <button class="px-4 py-2  btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
+            Add New Mould
           </button>
         </template>
         
-        <WIPStatusCard :filters="activeFilters" />
+        <!-- Table in main slot -->
+        <WorkOrderTable :filters="activeFilters" />
       </ComponentCard>
     </div>
   </AdminLayout>
@@ -30,11 +26,10 @@ import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
 import PageTitle from "@/components/common/PageTitle.vue"; 
-import WIPFilters from "@/components/common/WIPFilters.vue";
-import WIPCard from "@/components/common/WIPCard.vue";
-import WIPStatusCard from "@/components/common/WIPStatusCard.vue";
+import WorkOrderFilters from "@/components/common/WorkOrderFilters.vue"; // Add this import
+import WorkOrderTable from "@/components/tables/basic-tables/WorkOrderTable.vue";
 
-const currentPageTitle = ref("Work-in-Progress Management");
+const currentPageTitle = ref("Machine Management");
 const activeFilters = ref({});
 
 const handleFilterChange = (filters) => {

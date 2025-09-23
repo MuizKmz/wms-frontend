@@ -47,11 +47,17 @@ import UserGroupIcon from "./UserGroupIcon.vue";
 import BellIcon from "./BellIcon.vue";
 import BarChartIcon from "./BarChartIcon.vue";
 import WIPIcon from "./WIPIcon.vue";
+import MaterialIcon from "./MaterialIcon.vue";
+import MaintenanceIcon from "./MaintenanceIcon.vue";
+import QualityIcon from "./QualityIcon.vue";
+import RejectIcon from "./RejectIcon.vue";
+import ReportsIcon from "./ReportsIcon.vue";
 
 export {
   BellIcon,
   BagIcon,
   BarChartIcon,
+  MaterialIcon,
   WIPIcon,
   LayoutDashboardIcon,
   UserGroupIcon,
@@ -98,4 +104,8 @@ export {
   MailBox,
   SendIcon,
   DraftIcon,
+  MaintenanceIcon,
+  QualityIcon,
+  RejectIcon,
+  ReportsIcon,
 };
