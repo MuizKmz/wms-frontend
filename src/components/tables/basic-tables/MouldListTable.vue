@@ -83,21 +83,21 @@
             <!-- Machine Name -->
             <td class="px-6 py-4">
               <span class="text-sm font-medium text-gray-900 dark:text-white">
-                {{ item.machineName || 'N/A' }}
+                {{ item.machine?.name || 'N/A' }}
               </span>
             </td>
 
             <!-- Mould Name -->
             <td class="px-6 py-4">
               <span class="text-sm font-medium text-gray-900 dark:text-white">
-                {{ item.mouldName || 'N/A' }}
+                {{ item.name || 'N/A' }}
               </span>
             </td>
 
             <!-- Mould Code -->
             <td class="px-6 py-4">
               <span class="font-mono text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
-                {{ item.mouldCode || 'N/A' }}
+                {{ item.code || 'N/A' }}
               </span>
             </td>
 
@@ -350,7 +350,7 @@ const fetchData = async (filters = {}) => {
 const filteredData = computed(() => {
   console.log("Computing filtered data, raw data:", data.value)
   console.log("Current filters:", props.filters)
-  
+
   if (!props.filters) return data.value
 
   return data.value.filter((item) => {
@@ -429,9 +429,9 @@ const getRemainingLifeClass = (remainingLife, lifeLimit) => {
   if (!remainingLife || !lifeLimit) {
     return "text-gray-500 dark:text-gray-400"
   }
-  
+
   const percentage = (remainingLife / lifeLimit) * 100
-  
+
   if (percentage <= 10) {
     return "text-red-600 dark:text-red-400 font-bold"
   } else if (percentage <= 25) {
@@ -454,7 +454,7 @@ watch(
 onMounted(() => {
   console.log("Component mounted, mock data:", mockData)
   fetchData()
-  
+
   // Debug: Check data after a short delay
   setTimeout(() => {
     console.log("Data after fetchData:", data.value)
