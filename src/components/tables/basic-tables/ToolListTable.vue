@@ -34,9 +34,14 @@
                 Tool Type
               </p>
             </th>
-            <th class="px-6 py-3 text-left">
+            <!-- <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
                 Start Usage Date
+              </p>
+            </th> -->
+            <th class="px-6 py-3 text-left">
+              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+                Cycle Limit
               </p>
             </th>
             <th class="px-6 py-3 text-left">
@@ -46,19 +51,14 @@
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Cycle Limit
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
                 Remaining Life
               </p>
             </th>
-            <th class="px-6 py-3 text-left">
+            <!-- <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
                 Last Maintenance Date
               </p>
-            </th>
+            </th> -->
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
                 Status
@@ -80,57 +80,56 @@
                 <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select item" />
               </label>
             </th>
-            
+
             <!-- Tool ID -->
             <td class="px-6 py-4">
               <span
                 class="font-mono text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
-                {{ item.toolId }}
+                {{ item.code }}
               </span>
             </td>
 
             <!-- Tool Name -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white font-medium">
-                {{ item.toolName }}
+                {{ item.name }}
               </p>
             </td>
 
             <!-- Machine Name -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.machineName }}
+                {{ item.machine?.name || 'N/A' }}
               </p>
             </td>
 
             <!-- Tool Type -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.toolType }}
+                {{ item.type }}
               </p>
             </td>
 
             <!-- Start Usage Date -->
-            <td class="px-6 py-4">
+            <!-- <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
                 {{ item.startUsageDate }}
+              </p>
+            </td> -->
+
+            <!-- Cycle Limit -->
+            <td class="px-6 py-4">
+              <p class="text-sm text-gray-900 dark:text-white">
+                {{ (item.lifeLimit || 0).toLocaleString() }}
               </p>
             </td>
 
             <!-- Total Cycle Used -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white font-medium">
-                {{ (item.totalCycleUsed || 0).toLocaleString() }}
+                {{ (item.totalCycles || 0).toLocaleString() }}
               </p>
             </td>
-
-            <!-- Cycle Limit -->
-            <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ (item.cycleLimit || 0).toLocaleString() }}
-              </p>
-            </td>
-
             <!-- Remaining Life -->
             <td class="px-6 py-4">
               <p class="text-sm font-medium" :class="getRemainingLifeClass(item.remainingLife || 0)">
@@ -139,11 +138,11 @@
             </td>
 
             <!-- Last Maintenance Date -->
-            <td class="px-6 py-4">
+            <!-- <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
                 {{ item.lastMaintenanceDate }}
               </p>
-            </td>
+            </td> -->
 
             <!-- Status -->
             <td class="px-6 py-4">
@@ -342,7 +341,7 @@ const fetchData = async (filters = {}) => {
 
   try {
     // Try to fetch from API first
-    const res = await fetch("/api/toolstry")
+    const res = await fetch("/api/tools")
     if (!res.ok) throw new Error("Failed to fetch tools")
 
     const apiData = await res.json()
