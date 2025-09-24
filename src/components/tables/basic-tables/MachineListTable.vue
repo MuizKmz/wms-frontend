@@ -71,7 +71,7 @@
             <!-- Machine Name -->
             <td class="px-6 py-4">
               <span class="text-sm font-medium text-gray-900 dark:text-white">
-                {{ item.machineName }}
+                {{ item.name }}
               </span>
             </td>
 
@@ -300,10 +300,10 @@ const filteredData = computed(() => {
       return false
     }
     if (
-      filters.machineName &&
-      !item.machineName
+      filters.name &&
+      !item.name
         .toLowerCase()
-        .includes(filters.machineName.toLowerCase())
+        .includes(filters.name.toLowerCase())
     ) {
       return false
     }
