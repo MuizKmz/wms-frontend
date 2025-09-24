@@ -1,20 +1,20 @@
 <template>
   <AdminLayout>
     <PageBreadcrumb :pageTitle="currentPageTitle" />
-    <PageTitle title="Material Management"/>
-    <MaterialRequisitionFilters @filter-change="handleFilterChange" />
+    <PageTitle title="Quality Control"/>
+    <ToolListFilters @filter-change="handleFilterChange" />
     
     <div class="space-y-5 sm:space-y-6">
-      <ComponentCard title="All Material Requisition Lists" desc="Overview of all Material Requisition Lists">
+      <ComponentCard title="All OQC List" desc="Overview of all OQC List">
         <!-- Button in header slot -->
         <template #headerAction>
-          <button class="px-4 py-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
-            Add New Material Requisition
+          <button class="px-4 py-2  btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
+            New OQC Entry
           </button>
         </template>
         
         <!-- Table in main slot -->
-        <MaterialRequisitionTable :filters="activeFilters" />
+        <!-- <ToolListTable :filters="activeFilters" /> -->
       </ComponentCard>
     </div>
   </AdminLayout>
@@ -26,10 +26,10 @@ import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
 import PageTitle from "@/components/common/PageTitle.vue"; 
-import MaterialRequisitionFilters from "@/components/common/MaterialRequisitionFilters.vue"; // Add this import
-import MaterialRequisitionTable from "@/components/tables/basic-tables/MaterialRequisitionTable.vue";
+import ToolListFilters from "@/components/common/ToolListFilters.vue"; // Add this import
+import ToolListTable from "@/components/tables/basic-tables/ToolListTable.vue";
 
-const currentPageTitle = ref("Material Management");
+const currentPageTitle = ref("Quality Control");
 const activeFilters = ref({});
 
 const handleFilterChange = (filters) => {

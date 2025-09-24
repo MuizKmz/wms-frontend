@@ -42,6 +42,6 @@ export default {
     StatisticsChart,
     RecentOrders,
   },
-  name: 'Ecommerce',
+  name: 'MES',
 }
 </script>

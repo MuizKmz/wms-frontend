@@ -8,10 +8,10 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'Ecommerce',
+      name: 'Dashboard',
       component: () => import('../views/Ecommerce.vue'),
       meta: {
-        title: 'eCommerce Dashboard',
+        title: 'Dashboard',
       },
     },
     {
@@ -84,6 +84,62 @@ const router = createRouter({
       component: () => import('../views/Machine,tool&mould/ToolsList.vue'),
       meta: {
         title: 'Tool List',
+      },
+    },
+    {
+      path: '/maintenancemgt/maintenanceList',
+      name: 'Maintenance List',
+      component: () => import('../views/Maintenance&downtime/MaintenanceList.vue'),
+      meta: {
+        title: 'Maintenance List',
+      },
+    },
+    {
+      path: '/maintenancemgt/downtimeList',
+      name: 'Downtime List',
+      component: () => import('../views/Maintenance&downtime/DowntimeList.vue'),
+      meta: {
+        title: 'Downtime List',
+      },
+    },
+    {
+      path: '/qualitycontrol/ipqc',
+      name: 'In Progress Quality Control',
+      component: () => import('../views/QualityControl/InProgressQC.vue'),
+      meta: {
+        title: 'In Progress Quality Control',
+      },
+    },
+    {
+      path: '/qualitycontrol/oqc',
+      name: 'OutGoing Quality Control',
+      component: () => import('../views/QualityControl/OutGoingQC.vue'),
+      meta: {
+        title: 'OutGoing Quality Control',
+      },
+    },
+    {
+      path: '/packingmgt/packingList',
+      name: 'Packing Management',
+      component: () => import('../views/PackingMgt/PackingList.vue'),
+      meta: {
+        title: 'Packing Management',
+      },
+    },
+    {
+      path: '/reject&scrap/rejectList',
+      name: 'Reject Product List',
+      component: () => import('../views/Reject&scrap/RejectProductList.vue'),
+      meta: {
+        title: 'Reject Product List',
+      },
+    },
+    {
+      path: '/reject&scrap/scrapList',
+      name: 'Scrap Product List',
+      component: () => import('../views/Reject&scrap/ScrapProductList.vue'),
+      meta: {
+        title: 'Scrap Product List',
       },
     },
     {

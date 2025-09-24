@@ -2,7 +2,7 @@
   <AdminLayout>
     <PageBreadcrumb :pageTitle="currentPageTitle" />
     <PageTitle title="Machine Management"/>
-    <WorkOrderFilters @filter-change="handleFilterChange" />
+    <ToolListFilters @filter-change="handleFilterChange" />
     
     <div class="space-y-5 sm:space-y-6">
       <ComponentCard title="All Tools List" desc="Overview of all Tools List">
@@ -14,7 +14,7 @@
         </template>
         
         <!-- Table in main slot -->
-        <WorkOrderTable :filters="activeFilters" />
+        <ToolListTable :filters="activeFilters" />
       </ComponentCard>
     </div>
   </AdminLayout>
@@ -26,8 +26,8 @@ import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
 import PageTitle from "@/components/common/PageTitle.vue"; 
-import WorkOrderFilters from "@/components/common/WorkOrderFilters.vue"; // Add this import
-import WorkOrderTable from "@/components/tables/basic-tables/WorkOrderTable.vue";
+import ToolListFilters from "@/components/common/ToolListFilters.vue"; // Add this import
+import ToolListTable from "@/components/tables/basic-tables/ToolListTable.vue";
 
 const currentPageTitle = ref("Machine Management");
 const activeFilters = ref({});

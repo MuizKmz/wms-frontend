@@ -191,7 +191,7 @@ const menuGroups = [
       {
         icon: HomeIcon,
         name: "Dashboard",
-        subItems: [{ name: "Ecommerce", path: "/", pro: false }],
+        subItems: [{ name: "Dashboard", path: "/", pro: false }],
       },
       {
         icon: BagIcon,
@@ -232,29 +232,29 @@ const menuGroups = [
         icon: MaintenanceIcon,
         name: "Maintenance & Downtime Management",
         subItems: [
-          { name: "Material List", path: "/bom", pro: false },
-          { name: "Material Requisition", path: "/compoundinglist", pro: false },
+          { name: "Maintenance List", path: "/maintenancemgt/maintenanceList", pro: false },
+          { name: "Downtime List", path: "/maintenancemgt/downtimeList", pro: false },
         ],
       },
       {
         icon: QualityIcon,
         name: "Quality Control",
         subItems: [
-          { name: "Material List", path: "/bom", pro: false },
-          { name: "Material Requisition", path: "/compoundinglist", pro: false },
+          { name: "In Progress QC", path: "/qualitycontrol/ipqc", pro: false },
+          { name: "OutGoing QC", path: "/qualitycontrol/oqc", pro: false },
         ],
       },
       {
         icon: BoxIcon,
         name: "Packing Management",
-        path: "/workorder",
+        path: "/packingmgt/packingList",
       },
       {
         icon: RejectIcon,
         name: "Reject & Scrap Management",
         subItems: [
-          { name: "Material List", path: "/bom", pro: false },
-          { name: "Material Requisition", path: "/compoundinglist", pro: false },
+          { name: "Reject Product List", path: "/reject&scrap/rejectList", pro: false },
+          { name: "Scrap Product List", path: "/reject&scrap/scrapList", pro: false },
         ],
       },
       {
@@ -265,36 +265,36 @@ const menuGroups = [
           { name: "Material Requisition", path: "/compoundinglist", pro: false },
         ],
       },
-      {
-        icon: CalenderIcon,
-        name: "Calendar",
-        path: "/calendar",
-      },
+      // {
+      //   icon: CalenderIcon,
+      //   name: "Calendar",
+      //   path: "/calendar",
+      // },
       // {
       //   icon: UserCircleIcon,
       //   name: "User Profile",
       //   path: "/profile",
       // },
-      {
-        name: "Forms",
-        icon: ListIcon,
-        subItems: [
-          { name: "Form Elements", path: "/form-elements", pro: false },
-        ],
-      },
-      {
-        name: "Tables",
-        icon: TableIcon,
-        subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
-      },
-      {
-        name: "Pages",
-        icon: PageIcon,
-        subItems: [
-          { name: "Blank Page", path: "/blank", pro: false },
-          { name: "404 Page", path: "/error-404", pro: false },
-        ],
-      },
+      // {
+      //   name: "Forms",
+      //   icon: ListIcon,
+      //   subItems: [
+      //     { name: "Form Elements", path: "/form-elements", pro: false },
+      //   ],
+      // },
+      // {
+      //   name: "Tables",
+      //   icon: TableIcon,
+      //   subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
+      // },
+      // {
+      //   name: "Pages",
+      //   icon: PageIcon,
+      //   subItems: [
+      //     { name: "Blank Page", path: "/blank", pro: false },
+      //     { name: "404 Page", path: "/error-404", pro: false },
+      //   ],
+      // },
     ],
   },
 ];

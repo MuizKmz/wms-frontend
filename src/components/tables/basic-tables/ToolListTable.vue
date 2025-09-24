@@ -3,7 +3,7 @@
     <!-- Results count -->
     <div class="mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        Showing {{ filteredData.length }} requisitions
+        Showing {{ filteredData.length }} tools
       </p>
     </div>
 
@@ -16,37 +16,47 @@
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Requisition ID
+                Tool ID
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Requested Date
+                Tool Name
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Requested By
+                Machine Name
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Department
+                Tool Type
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Job Order ID
+                Start Usage Date
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Material Name
+                Total Cycle Used
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Quantity
+                Cycle Limit
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+                Remaining Life
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+                Last Maintenance Date
               </p>
             </th>
             <th class="px-6 py-3 text-left">
@@ -71,65 +81,74 @@
               </label>
             </th>
             
-            <!-- Requisition ID -->
+            <!-- Tool ID -->
             <td class="px-6 py-4">
               <span
                 class="font-mono text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
-                {{ item.requisitionId }}
+                {{ item.toolId }}
               </span>
             </td>
 
-            <!-- Requested Date -->
+            <!-- Tool Name -->
             <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.requestedDate }}
+              <p class="text-sm text-gray-900 dark:text-white font-medium">
+                {{ item.toolName }}
               </p>
             </td>
 
-            <!-- Requested By -->
+            <!-- Machine Name -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.requestedBy }}
+                {{ item.machineName }}
               </p>
             </td>
 
-            <!-- Department -->
+            <!-- Tool Type -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.department }}
+                {{ item.toolType }}
               </p>
             </td>
 
-            <!-- Job Order ID -->
+            <!-- Start Usage Date -->
             <td class="px-6 py-4">
-              <span
-                class="font-mono text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
-                {{ item.jobOrderId }}
-              </span>
+              <p class="text-sm text-gray-900 dark:text-white">
+                {{ item.startUsageDate }}
+              </p>
             </td>
 
-            <!-- Material Name -->
+            <!-- Total Cycle Used -->
             <td class="px-6 py-4">
-              <div class="text-sm">
-                <div v-for="(material, idx) in item.materials" :key="idx" class="mb-1 last:mb-0">
-                  <p class="text-gray-900 dark:text-white font-medium">{{ material.name }}</p>
-                </div>
-              </div>
+              <p class="text-sm text-gray-900 dark:text-white font-medium">
+                {{ (item.totalCycleUsed || 0).toLocaleString() }}
+              </p>
             </td>
 
-            <!-- Quantity -->
+            <!-- Cycle Limit -->
             <td class="px-6 py-4">
-              <div class="text-sm">
-                <div v-for="(material, idx) in item.materials" :key="idx" class="mb-1 last:mb-0">
-                  <p class="text-gray-900 dark:text-white">{{ material.quantity }}</p>
-                </div>
-              </div>
+              <p class="text-sm text-gray-900 dark:text-white">
+                {{ (item.cycleLimit || 0).toLocaleString() }}
+              </p>
+            </td>
+
+            <!-- Remaining Life -->
+            <td class="px-6 py-4">
+              <p class="text-sm font-medium" :class="getRemainingLifeClass(item.remainingLife || 0)">
+                {{ (item.remainingLife || 0).toLocaleString() }}
+              </p>
+            </td>
+
+            <!-- Last Maintenance Date -->
+            <td class="px-6 py-4">
+              <p class="text-sm text-gray-900 dark:text-white">
+                {{ item.lastMaintenanceDate }}
+              </p>
             </td>
 
             <!-- Status -->
             <td class="px-6 py-4">
               <span :class="getStatusClass(item.status)"
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                class="inline-flex items-center text-center px-2.5 py-0.5 rounded-full text-xs font-medium">
                 {{ item.status }}
               </span>
             </td>
@@ -196,20 +215,20 @@
       <!-- Loading -->
       <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
         <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
-        <p>Loading requisitions...</p>
+        <p>Loading tools...</p>
       </div>
 
       <!-- Empty State -->
       <div v-if="!loading && filteredData.length === 0" class="p-8 text-center text-gray-500">
         <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
         </svg>
         <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
-          No requisitions found
+          No tools found
         </p>
         <p class="text-sm text-gray-500 dark:text-gray-400">
-          Try adjusting your filters or create a new requisition.
+          Try adjusting your filters or add a new tool.
         </p>
       </div>
 
@@ -219,7 +238,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z" />
         </svg>
-        <p class="font-medium">Error loading requisitions</p>
+        <p class="font-medium">Error loading tools</p>
         <p class="text-xs mt-1">{{ error }}</p>
       </div>
     </div>
@@ -241,72 +260,79 @@ const data = ref([])
 const loading = ref(false)
 const error = ref(null)
 
-// Mock data for material requisitions based on the image
+// Mock data for tool management based on the image
 const mockData = [
   {
-    requisitionId: "MRQ250501001",
-    requestedDate: "2025-06-28",
-    requestedBy: "Azmi",
-    department: "Compounding",
-    jobOrderId: "JO250501001",
-    materials: [
-      { name: "Carbon Black N330", quantity: "100 kg" },
-      { name: "Zinc Oxide", quantity: "5 kg" },
-      { name: "Stearic Acid", quantity: "10 kg" }
-    ],
-    status: "Pending"
+    toolId: "T-001",
+    toolName: "Core Pin A1",
+    machineName: "Injection Press 1",
+    toolType: "Core Pin",
+    startUsageDate: "2024-12-01",
+    totalCycleUsed: 12500,
+    cycleLimit: 20000,
+    remainingLife: 7500,
+    lastMaintenanceDate: "2025-06-01",
+    status: "Normal"
   },
   {
-    requisitionId: "MRQ250501002",
-    requestedDate: "2025-06-01",
-    requestedBy: "Ravi",
-    department: "Molding",
-    jobOrderId: "JO250501002",
-    materials: [
-      { name: "Rubber Compound A", quantity: "80 kg" },
-      { name: "Silicone Oil", quantity: "2 L" },
-      { name: "Accelerator MBTS", quantity: "2 kg" },
-      { name: "Rubber Mold B", quantity: "2 sets" }
-    ],
-    status: "Rejected"
+    toolId: "T-002",
+    toolName: "Curing Tool B2",
+    machineName: "Curing Machine 2",
+    toolType: "Curing Tool",
+    startUsageDate: "2025-01-15",
+    totalCycleUsed: 18200,
+    cycleLimit: 20000,
+    remainingLife: 1800,
+    lastMaintenanceDate: "2025-05-28",
+    status: "Replace Soon"
   },
   {
-    requisitionId: "MRQ250501003",
-    requestedDate: "2025-12-08",
-    requestedBy: "Lisa",
-    department: "Finishing",
-    jobOrderId: "JO250501003",
-    materials: [
-      { name: "Mold Release Agent", quantity: "3 L" },
-      { name: "Finishing Powder", quantity: "1.5 kg" },
-      { name: "Cleaning Solvent", quantity: "5 L" }
-    ],
-    status: "Approved"
+    toolId: "T-003",
+    toolName: "Cutter Blade C3",
+    machineName: "Trimming Station 1",
+    toolType: "Cutter Blade",
+    startUsageDate: "2025-02-10",
+    totalCycleUsed: 9000,
+    cycleLimit: 10000,
+    remainingLife: 1000,
+    lastMaintenanceDate: "2025-06-10",
+    status: "Warning"
   },
   {
-    requisitionId: "MRQ250501004",
-    requestedDate: "2025-11-08",
-    requestedBy: "Hafiz",
-    department: "Curing",
-    jobOrderId: "JO250501004",
-    materials: [
-      { name: "Sulfur", quantity: "4 kg" },
-      { name: "Anti-Tack Agent", quantity: "3 L" }
-    ],
-    status: "Pending"
+    toolId: "T-004",
+    toolName: "Nozzle Insert D4",
+    machineName: "Injection Press 2",
+    toolType: "Nozzle Insert",
+    startUsageDate: "2024-11-20",
+    totalCycleUsed: 20000,
+    cycleLimit: 20000,
+    remainingLife: 0,
+    lastMaintenanceDate: "2025-06-05",
+    status: "Replace Soon"
   },
   {
-    requisitionId: "MRQ250501005",
-    requestedDate: "2025-11-23",
-    requestedBy: "Azmi",
-    department: "Packing",
-    jobOrderId: "JO250501005",
-    materials: [
-      { name: "Inner Plastic Bag", quantity: "500 pcs" },
-      { name: "Outer Carton Box", quantity: "100 pcs" },
-      { name: "Barcode Sticker", quantity: "1000 pcs" }
-    ],
-    status: "Approved"
+    toolId: "T-005",
+    toolName: "Spindle Clamp E5",
+    machineName: "Compression M2",
+    toolType: "Clamp",
+    startUsageDate: "2025-03-01",
+    totalCycleUsed: 2000,
+    cycleLimit: 15000,
+    remainingLife: 13000,
+    lastMaintenanceDate: "2025-06-12",
+    status: "Normal"
+  },
+  {
+    toolId: "T-006",
+    toolName: "Plate Spacer F6",
+    machineName: "Auto Press",
+    toolType: "Spacer",
+    startUsageDate: "2025-01-01",
+    totalCycleUsed: 14700,
+    cycleLimit: 15000,
+    remainingLife: 300,
+    lastMaintenanceDate: "2025-06-14",
+    status: "Warning"
   }
 ]
 
@@ -316,8 +342,8 @@ const fetchData = async (filters = {}) => {
 
   try {
     // Try to fetch from API first
-    const res = await fetch("/api/material-requisitions")
-    if (!res.ok) throw new Error("Failed to fetch requisitions")
+    const res = await fetch("/api/toolstry")
+    if (!res.ok) throw new Error("Failed to fetch tools")
 
     const apiData = await res.json()
     data.value = apiData
@@ -339,32 +365,32 @@ const filteredData = computed(() => {
     const filters = props.filters
 
     if (
-      filters.requisitionId &&
-      !item.requisitionId
+      filters.toolId &&
+      !item.toolId
         .toLowerCase()
-        .includes(filters.requisitionId.toLowerCase())
+        .includes(filters.toolId.toLowerCase())
     ) {
       return false
     }
     if (
-      filters.requestedBy &&
-      !item.requestedBy
+      filters.toolName &&
+      !item.toolName
         .toLowerCase()
-        .includes(filters.requestedBy.toLowerCase())
+        .includes(filters.toolName.toLowerCase())
     ) {
       return false
     }
     if (
-      filters.department &&
-      item.department.toLowerCase() !== filters.department.toLowerCase()
+      filters.machineName &&
+      !item.machineName
+        .toLowerCase()
+        .includes(filters.machineName.toLowerCase())
     ) {
       return false
     }
     if (
-      filters.jobOrderId &&
-      !item.jobOrderId
-        .toLowerCase()
-        .includes(filters.jobOrderId.toLowerCase())
+      filters.toolType &&
+      item.toolType.toLowerCase() !== filters.toolType.toLowerCase()
     ) {
       return false
     }
@@ -374,7 +400,7 @@ const filteredData = computed(() => {
     ) {
       return false
     }
-    if (filters.requestedDate && item.requestedDate !== filters.requestedDate) {
+    if (filters.startUsageDate && item.startUsageDate !== filters.startUsageDate) {
       return false
     }
 
@@ -402,15 +428,28 @@ const changePage = (page) => {
 // Status styling
 const getStatusClass = (status) => {
   switch (status.toLowerCase()) {
-    case "pending":
-      return "bg-yellow-100 text-yellow-800 border border-yellow-200 dark:bg-yellow-900 dark:text-yellow-300"
-    case "approved":
-      return "bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-900 dark:text-blue-300"
-    case "rejected":
+    case "normal":
+      return "bg-green-100 text-green-800 border border-green-200 dark:bg-green-900 dark:text-green-300"
+    case "replace soon":
+      return "bg-orange-100 text-orange-800 border border-orange-200 dark:bg-orange-900 dark:text-orange-300"
+    case "warning":
       return "bg-red-100 text-red-800 border border-red-200 dark:bg-red-900 dark:text-red-300"
     default:
       return "bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300"
   }
+}
+
+// Remaining life color styling
+const getRemainingLifeClass = (remainingLife) => {
+  const life = remainingLife || 0
+  if (life === 0) {
+    return "text-red-600 dark:text-red-400"
+  } else if (life <= 1000) {
+    return "text-orange-600 dark:text-orange-400"
+  } else if (life <= 2000) {
+    return "text-yellow-600 dark:text-yellow-400"
+  }
+  return "text-gray-900 dark:text-white"
 }
 
 // Watch for filter changes
