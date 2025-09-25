@@ -73,14 +73,14 @@
             <!-- Material Code -->
             <td class="px-6 py-4">
               <span class="font-mono text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
-                {{ item.materialCode || 'N/A' }}
+                {{ item.material?.materialCode || 'N/A' }}
               </span>
             </td>
 
             <!-- Material Name -->
             <td class="px-6 py-4">
               <span class="text-sm font-medium text-gray-900 dark:text-white">
-                {{ item.materialName || 'N/A' }}
+                {{ item.material?.materialName || 'N/A' }}
               </span>
             </td>
 
@@ -94,7 +94,7 @@
             <!-- Stock Quantity -->
             <td class="px-6 py-4">
               <span class="text-sm text-gray-900 dark:text-white">
-                {{ item.stockQuantity || 'N/A' }}
+                {{ item.qtyAvailable || 'N/A' }}
               </span>
             </td>
 
@@ -116,14 +116,14 @@
             <!-- Supplier -->
             <td class="px-6 py-4">
               <span class="text-sm text-gray-900 dark:text-white">
-                {{ item.supplier || 'N/A' }}
+                {{ item.material?.supplier?.supplierName || 'N/A' }}
               </span>
             </td>
 
             <!-- Batch Number -->
             <td class="px-6 py-4">
               <span class="text-sm text-gray-900 dark:text-white">
-                {{ item.batchNumber || 'N/A' }}
+                {{ item.batchNo || 'N/A' }}
               </span>
             </td>
 
@@ -284,7 +284,7 @@ const fetchData = async (filters = {}) => {
 
   try {
     // Try to fetch from API first
-    const res = await fetch("/api/materialstry")
+    const res = await fetch("/api/materials")
     if (!res.ok) throw new Error("Failed to fetch materials")
 
     const apiData = await res.json()
@@ -305,7 +305,7 @@ const fetchData = async (filters = {}) => {
 const filteredData = computed(() => {
   console.log("Computing filtered data, raw data:", data.value)
   console.log("Current filters:", props.filters)
-  
+
   if (!props.filters) return data.value
 
   return data.value.filter((item) => {
@@ -395,12 +395,12 @@ const getReorderLevelClass = (item) => {
   if (!item || !item.stockQuantity || !item.reorderLevel) {
     return "bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300"
   }
-  
+
   // Safely extract numeric value from stock quantity string
   const stockStr = String(item.stockQuantity)
   const stockNum = parseInt(stockStr.replace(/[^0-9]/g, '')) || 0
   const reorderNum = Number(item.reorderLevel) || 0
-  
+
   if (stockNum <= reorderNum) {
     return "bg-red-100 text-red-800 border border-red-200 dark:bg-red-900 dark:text-red-300"
   } else if (stockNum <= reorderNum * 1.5) {
@@ -423,7 +423,7 @@ watch(
 onMounted(() => {
   console.log("Component mounted, mock data:", mockData)
   fetchData()
-  
+
   // Debug: Check data after a short delay
   setTimeout(() => {
     console.log("Data after fetchData:", data.value)
