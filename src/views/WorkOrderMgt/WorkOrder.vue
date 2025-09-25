@@ -26,8 +26,8 @@ import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
 import PageTitle from "@/components/common/PageTitle.vue"; 
-import WorkOrderFilters from "@/components/common/WorkOrderFilters.vue"; // Add this import
-import WorkOrderTable from "@/components/tables/basic-tables/WorkOrderTable.vue";
+import WorkOrderFilters from "@/views/WorkOrderMgt/component/WorkOrderFilters.vue"; // Add this import
+import WorkOrderTable from "@/views/WorkOrderMgt/component/WorkOrderTable.vue";
 
 const currentPageTitle = ref("Work Order Management");
 const activeFilters = ref({});

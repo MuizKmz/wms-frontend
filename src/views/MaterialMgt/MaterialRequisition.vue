@@ -26,8 +26,8 @@ import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
 import PageTitle from "@/components/common/PageTitle.vue"; 
-import MaterialRequisitionFilters from "@/components/common/MaterialRequisitionFilters.vue"; // Add this import
-import MaterialRequisitionTable from "@/components/tables/basic-tables/MaterialRequisitionTable.vue";
+import MaterialRequisitionFilters from "@//views/MaterialMgt/component/MaterialRequisitionFilters.vue"; // Add this import
+import MaterialRequisitionTable from "@/views/MaterialMgt/component/MaterialRequisitionTable.vue";
 
 const currentPageTitle = ref("Material Management");
 const activeFilters = ref({});

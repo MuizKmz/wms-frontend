@@ -30,9 +30,9 @@ import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
 import PageTitle from "@/components/common/PageTitle.vue"; 
-import WIPFilters from "@/components/common/WIPFilters.vue";
-import WIPCard from "@/components/common/WIPCard.vue";
-import WIPStatusCard from "@/components/common/WIPStatusCard.vue";
+import WIPFilters from "@/views/WIPMgt/component/WIPFilters.vue";
+import WIPCard from "@/views/WIPMgt/component/WIPCard.vue";
+import WIPStatusCard from "@/views/WIPMgt/component/WIPStatusCard.vue";
 
 const currentPageTitle = ref("Work-in-Progress Management");
 const activeFilters = ref({});

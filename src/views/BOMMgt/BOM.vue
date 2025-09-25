@@ -29,8 +29,8 @@ import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
 import PageTitle from "@/components/common/PageTitle.vue"; 
-import BOMListFilters from "@/components/common/BOMListFilters.vue"; // Add this import
-import BOMListTable from "@/components/tables/basic-tables/BOMListTable.vue";
+import BOMListFilters from "@/views/BOMMgt/component/BOMListFilters.vue"; // Add this import
+import BOMListTable from "@/views/BOMMgt/component/BOMListTable.vue";
 
 const currentPageTitle = ref("Bill of Material Management");
 const activeFilters = ref({});

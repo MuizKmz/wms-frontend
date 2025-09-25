@@ -26,8 +26,8 @@ import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
 import PageTitle from "@/components/common/PageTitle.vue"; 
-import ToolListFilters from "@/components/common/ToolListFilters.vue"; // Add this import
-import ToolListTable from "@/components/tables/basic-tables/ToolListTable.vue";
+// import ToolListFilters from "@/components/common/ToolListFilters.vue"; // Add this import
+// import ToolListTable from "@/components/tables/basic-tables/ToolListTable.vue";
 
 const currentPageTitle = ref("Quality Control");
 const activeFilters = ref({});

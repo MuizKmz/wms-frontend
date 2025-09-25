@@ -26,8 +26,8 @@ import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
 import PageTitle from "@/components/common/PageTitle.vue"; 
-import WorkOrderFilters from "@/components/common/WorkOrderFilters.vue"; // Add this import
-import MouldListTable from "@/components/tables/basic-tables/MouldListTable.vue";
+// import WorkOrderFilters from "@/components/common/WorkOrderFilters.vue"; // Add this import
+import MouldListTable from "@/views/Machine,tool&mould/component/MouldListTable.vue";
 
 const currentPageTitle = ref("Machine Management");
 const activeFilters = ref({});
