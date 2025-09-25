@@ -9,7 +9,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'Dashboard',
-      component: () => import('../views/Ecommerce.vue'),
+      component: () => import('../views/Dashboard/Dashboard.vue'),
       meta: {
         title: 'Dashboard',
       },
