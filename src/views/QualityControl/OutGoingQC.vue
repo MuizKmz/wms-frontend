@@ -14,7 +14,7 @@
         </template>
         
         <!-- Table in main slot -->
-        <!-- <ToolListTable :filters="activeFilters" /> -->
+        <OQCTable :filters="activeFilters" />
       </ComponentCard>
     </div>
   </AdminLayout>
@@ -27,8 +27,7 @@ import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
 import PageTitle from "@/components/common/PageTitle.vue"; 
 // import ToolListFilters from "@/components/common/ToolListFilters.vue"; // Add this import
-// import ToolListTable from "@/components/tables/basic-tables/ToolListTable.vue";
-
+import OQCTable from "./component/OQCTable.vue";
 const currentPageTitle = ref("Quality Control");
 const activeFilters = ref({});
 

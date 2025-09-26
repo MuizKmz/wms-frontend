@@ -1,9 +1,10 @@
 <template>
   <div class="overflow-hidden">
+    
     <!-- Results count -->
     <div class="mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        Showing {{ filteredData.length }} machine list
+        Showing {{ filteredData.length }} reject product items
       </p>
     </div>
 
@@ -16,7 +17,22 @@
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Machine Code
+                Reject ID
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+                Date
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+                Job Order ID
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+                Product Code / Name
               </p>
             </th>
             <th class="px-6 py-3 text-left">
@@ -26,12 +42,17 @@
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Type
+                Inspector
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Department
+                Reject Reason
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+                Quantity
               </p>
             </th>
             <th class="px-6 py-3 text-left">
@@ -41,66 +62,84 @@
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Location
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Actions
+                Action
               </p>
             </th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-          <!-- 🔹 Use paginatedData instead of filteredData -->
+          <!-- Use paginatedData instead of filteredData -->
           <tr v-for="(item, index) in paginatedData" :key="index"
             class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
             <th>
               <label>
-                <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select machine" />
+                <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select item" />
               </label>
             </th>
-
-            <!-- Machine Code -->
+            
+            <!-- Reject ID -->
             <td class="px-6 py-4">
-              <span class="font-mono text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
-                {{ item.machineCode }}
+              <span
+                class="font-mono text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
+                {{ item.rejectId }}
               </span>
+            </td>
+
+            <!-- Date -->
+            <td class="px-6 py-4">
+              <p class="text-sm text-gray-900 dark:text-white">
+                {{ item.date }}
+              </p>
+            </td>
+
+            <!-- Job Order ID -->
+            <td class="px-6 py-4">
+              <span
+                class="font-mono text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
+                {{ item.jobOrderId }}
+              </span>
+            </td>
+
+            <!-- Product Code / Name -->
+            <td class="px-6 py-4">
+              <p class="text-sm text-gray-900 dark:text-white">
+                {{ item.productCodeName }}
+              </p>
             </td>
 
             <!-- Machine Name -->
             <td class="px-6 py-4">
-              <span class="text-sm font-medium text-gray-900 dark:text-white">
-                {{ item.name }}
-              </span>
+              <p class="text-sm text-gray-900 dark:text-white">
+                {{ item.machineName }}
+              </p>
             </td>
 
-            <!-- Type -->
+            <!-- Inspector -->
             <td class="px-6 py-4">
-              <span class="text-sm text-gray-900 dark:text-white">
-                {{ item.type }}
-              </span>
+              <p class="text-sm text-gray-900 dark:text-white">
+                {{ item.inspector }}
+              </p>
             </td>
 
-            <!-- Department -->
+            <!-- Reject Reason -->
             <td class="px-6 py-4">
-              <span class="text-sm text-gray-900 dark:text-white">
-                {{ item.department }}
-              </span>
+              <p class="text-sm text-gray-900 dark:text-white">
+                {{ item.rejectReason }}
+              </p>
+            </td>
+
+            <!-- Quantity -->
+            <td class="px-6 py-4">
+              <p class="text-sm text-gray-900 dark:text-white">
+                {{ item.quantity }}
+              </p>
             </td>
 
             <!-- Status -->
             <td class="px-6 py-4">
               <span :class="getStatusClass(item.status)"
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                class="inline-flex items-center text-center px-2.5 py-0.5 rounded-full text-xs font-medium">
                 {{ item.status }}
-              </span>
-            </td>
-
-            <!-- Location -->
-            <td class="px-6 py-4">
-              <span class="text-sm text-gray-900 dark:text-white">
-                {{ item.location }}
               </span>
             </td>
 
@@ -136,7 +175,7 @@
         </tbody>
       </table>
 
-      <!-- 🔹 FlyonUI Pagination -->
+      <!-- FlyonUI Pagination -->
       <div v-if="totalPages > 1" class="mt-6 flex justify-center">
         <nav class="flex items-center gap-x-1">
           <!-- Previous -->
@@ -166,7 +205,7 @@
       <!-- Loading -->
       <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
         <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
-        <p>Loading machines...</p>
+        <p>Loading reject product items...</p>
       </div>
 
       <!-- Empty State -->
@@ -176,10 +215,10 @@
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
         <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
-          No machines found
+          No reject product items found
         </p>
         <p class="text-sm text-gray-500 dark:text-gray-400">
-          Try adjusting your filters or add a new machine.
+          Try adjusting your filters or create a new reject product item.
         </p>
       </div>
 
@@ -189,7 +228,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z" />
         </svg>
-        <p class="font-medium">Error loading machines</p>
+        <p class="font-medium">Error loading reject product items</p>
         <p class="text-xs mt-1">{{ error }}</p>
       </div>
     </div>
@@ -211,55 +250,84 @@ const data = ref([])
 const loading = ref(false)
 const error = ref(null)
 
-// Mock data for machines based on the image
+// Mock data for reject product items based on the image
 const mockData = [
   {
-    machineCode: "MC-001",
-    name: "Rubber Mixer A1",
-    type: "Mixer",
-    department: "Compounding",
-    status: "Active",
-    location: "Floor 1 - Line A"
+    rejectId: "RJT-0001",
+    date: "2025-06-15",
+    jobOrderId: "JO-240601",
+    productCodeName: "PRD-1001 / Rubber Seal A",
+    machineName: "Press Molder 01",
+    inspector: "Aiman Syahmi",
+    rejectReason: "Flashing on edges",
+    quantity: "25 pcs",
+    status: "Rejected"
   },
   {
-    machineCode: "MC-002",
-    name: "Vulcanizer B2",
-    type: "Vulcanizing Press",
-    department: "Production",
-    status: "Out of Service",
-    location: "Floor 2 - Line B"
+    rejectId: "RJT-0002",
+    date: "2025-06-15",
+    jobOrderId: "JO-240602",
+    productCodeName: "PRD-1002 / Gasket Ring B",
+    machineName: "Extruder 03",
+    inspector: "Tan Mei Ling",
+    rejectReason: "Length out of spec",
+    quantity: "40 pcs",
+    status: "Under Review"
   },
   {
-    machineCode: "MC-003",
-    name: "Cutter C3",
-    type: "Cutter",
-    department: "Finishing",
-    status: "Under Maintenance",
-    location: "Floor 1 - Line C"
+    rejectId: "RJT-0003",
+    date: "2025-06-16",
+    jobOrderId: "JO-240603",
+    productCodeName: "PRD-1003 / Valve Cap C",
+    machineName: "Mixer 02",
+    inspector: "Wong Jin",
+    rejectReason: "Contamination (black dot)",
+    quantity: "15 pcs",
+    status: "Rejected"
   },
   {
-    machineCode: "MC-004",
-    name: "Injection Mould D4",
-    type: "Injection Moulder",
-    department: "Molding",
-    status: "Active",
-    location: "Floor 3 - Line D"
+    rejectId: "RJT-0004",
+    date: "2025-06-16",
+    jobOrderId: "JO-240604",
+    productCodeName: "PRD-1004 / Washer D",
+    machineName: "Injection Mld 02",
+    inspector: "Siti Aisyah",
+    rejectReason: "Short molding",
+    quantity: "60 pcs",
+    status: "Hold"
   },
   {
-    machineCode: "MC-005",
-    name: "Conveyor E5",
-    type: "Conveyor Belt",
-    department: "Packing",
-    status: "Out of Service",
-    location: "Floor 2 - Line E"
+    rejectId: "RJT-0005",
+    date: "2025-06-17",
+    jobOrderId: "JO-240605",
+    productCodeName: "PRD-1005 / O-Ring E",
+    machineName: "Conveyor Line B",
+    inspector: "Karthik Rao",
+    rejectReason: "Poor surface finish",
+    quantity: "18 pcs",
+    status: "Rejected"
   },
   {
-    machineCode: "MC-006",
-    name: "Grinder F6",
-    type: "Grinder",
-    department: "Tool Room",
-    status: "Under Maintenance",
-    location: "Floor 1 - Tooling"
+    rejectId: "RJT-0006",
+    date: "2025-06-17",
+    jobOrderId: "JO-240606",
+    productCodeName: "PRD-1006 / Cover Cap F",
+    machineName: "Trimming Unit 05",
+    inspector: "Nurul Amirah",
+    rejectReason: "Off-color",
+    quantity: "30 pcs",
+    status: "Rejected"
+  },
+  {
+    rejectId: "RJT-0007",
+    date: "2025-06-18",
+    jobOrderId: "JO-240607",
+    productCodeName: "PRD-1007 / Seal G",
+    machineName: "Feeder System 01",
+    inspector: "Ahmad Zaki",
+    rejectReason: "Incomplete product",
+    quantity: "22 pcs",
+    status: "Under Review"
   }
 ]
 
@@ -269,8 +337,8 @@ const fetchData = async (filters = {}) => {
 
   try {
     // Try to fetch from API first
-    const res = await fetch("/api/machines")
-    if (!res.ok) throw new Error("Failed to fetch machines")
+    const res = await fetch("/api/reject-product-items")
+    if (!res.ok) throw new Error("Failed to fetch reject product items")
 
     const apiData = await res.json()
     data.value = apiData
@@ -292,44 +360,53 @@ const filteredData = computed(() => {
     const filters = props.filters
 
     if (
-      filters.machineCode &&
-      !item.machineCode
+      filters.rejectId &&
+      !item.rejectId
         .toLowerCase()
-        .includes(filters.machineCode.toLowerCase())
+        .includes(filters.rejectId.toLowerCase())
     ) {
       return false
     }
     if (
-      filters.name &&
-      !item.name
+      filters.jobOrderId &&
+      !item.jobOrderId
         .toLowerCase()
-        .includes(filters.name.toLowerCase())
+        .includes(filters.jobOrderId.toLowerCase())
     ) {
       return false
     }
     if (
-      filters.type &&
-      item.type.toLowerCase() !== filters.type.toLowerCase()
+      filters.productCodeName &&
+      !item.productCodeName
+        .toLowerCase()
+        .includes(filters.productCodeName.toLowerCase())
     ) {
       return false
     }
     if (
-      filters.department &&
-      item.department.toLowerCase() !== filters.department.toLowerCase()
+      filters.inspector &&
+      !item.inspector
+        .toLowerCase()
+        .includes(filters.inspector.toLowerCase())
     ) {
+      return false
+    }
+    if (filters.date && item.date !== filters.date) {
       return false
     }
     if (
       filters.status &&
-      item.status.toLowerCase() !== filters.status.toLowerCase()
+      !item.status
+        .toLowerCase()
+        .includes(filters.status.toLowerCase())
     ) {
       return false
     }
     if (
-      filters.location &&
-      !item.location
+      filters.machineName &&
+      !item.machineName
         .toLowerCase()
-        .includes(filters.location.toLowerCase())
+        .includes(filters.machineName.toLowerCase())
     ) {
       return false
     }
@@ -338,7 +415,7 @@ const filteredData = computed(() => {
   })
 })
 
-// 🔹 Pagination
+// Pagination
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
 const totalPages = computed(() =>
@@ -357,16 +434,14 @@ const changePage = (page) => {
 
 // Status styling
 const getStatusClass = (status) => {
-  switch (status.toLowerCase()) {
-    case "active":
-      return "bg-green-100 text-green-800 border border-green-200 dark:bg-green-900 dark:text-green-300"
-    case "out of service":
-      return "bg-red-100 text-red-800 border border-red-200 dark:bg-red-900 dark:text-red-300"
-    case "under maintenance":
-      return "bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-900 dark:text-blue-300"
-    default:
-      return "bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300"
+  if (status.toLowerCase() === 'rejected') {
+    return "bg-red-100 text-red-800 border border-red-200 dark:bg-red-900 dark:text-red-300"
+  } else if (status.toLowerCase() === 'under review') {
+    return "bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-900 dark:text-blue-300"
+  } else if (status.toLowerCase() === 'hold') {
+    return "bg-yellow-100 text-yellow-800 border border-yellow-200 dark:bg-yellow-900 dark:text-yellow-300"
   }
+  return "bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300"
 }
 
 // Watch for filter changes

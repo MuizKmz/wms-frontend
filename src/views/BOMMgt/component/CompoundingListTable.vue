@@ -3,7 +3,7 @@
     <!-- Results count -->
     <div class="mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        Showing {{ filteredData.length }} material items
+        Showing {{ filteredData.length }} compunding items
       </p>
     </div>
 
@@ -206,7 +206,7 @@
       <!-- Loading -->
       <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
         <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
-        <p>Loading material items...</p>
+        <p>Loading compounding items...</p>
       </div>
 
       <!-- Empty State -->
