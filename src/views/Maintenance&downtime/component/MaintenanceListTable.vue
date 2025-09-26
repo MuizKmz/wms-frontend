@@ -33,7 +33,7 @@
             <!-- Maintenance ID -->
             <td class="px-6 py-4">
               <span class="font-mono text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
-                {{ item.maintenanceId || 'N/A' }}
+                {{ item.id || 'N/A' }}
               </span>
             </td>
 
@@ -41,10 +41,10 @@
             <td class="px-6 py-4"><span class="text-sm text-gray-900 dark:text-white">{{ item.scheduledDate || 'N/A' }}</span></td>
 
             <!-- Machine Name -->
-            <td class="px-6 py-4"><span class="text-sm font-medium text-gray-900 dark:text-white">{{ item.machineName || 'N/A' }}</span></td>
+            <td class="px-6 py-4"><span class="text-sm font-medium text-gray-900 dark:text-white">{{ item.machine?.name || 'N/A' }}</span></td>
 
             <!-- Department -->
-            <td class="px-6 py-4"><span class="text-sm text-gray-900 dark:text-white">{{ item.department || 'N/A' }}</span></td>
+            <td class="px-6 py-4"><span class="text-sm text-gray-900 dark:text-white">{{ item.machine?.department || 'N/A' }}</span></td>
 
             <!-- Maintenance Type -->
             <td class="px-6 py-4"><span class="text-sm text-gray-900 dark:text-white">{{ item.maintenanceType || 'N/A' }}</span></td>
@@ -181,7 +181,7 @@ const fetchData = async () => {
   loading.value = true
   error.value = null
   try {
-    const res = await fetch("/api/maintenance")
+    const res = await fetch("/api/maintenances")
     if (!res.ok) throw new Error("Failed to fetch maintenance data")
     const apiData = await res.json()
     data.value = apiData
