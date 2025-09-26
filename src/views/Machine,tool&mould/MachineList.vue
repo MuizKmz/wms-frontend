@@ -22,7 +22,7 @@
     </div>
     
     <!-- Add Machine Modal -->
-<AddNewMachine ref="addMachineModalRef" />
+  <AddNewMachine ref="addMachineModalRef" />
 
   </AdminLayout>
 </template>

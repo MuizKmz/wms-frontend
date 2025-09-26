@@ -215,7 +215,7 @@ const error = ref(null)
 const mockData = [
   {
     machineCode: "MC-001",
-    machineName: "Rubber Mixer A1",
+    name: "Rubber Mixer A1",
     type: "Mixer",
     department: "Compounding",
     status: "Active",
@@ -223,7 +223,7 @@ const mockData = [
   },
   {
     machineCode: "MC-002",
-    machineName: "Vulcanizer B2",
+    name: "Vulcanizer B2",
     type: "Vulcanizing Press",
     department: "Production",
     status: "Out of Service",
@@ -231,7 +231,7 @@ const mockData = [
   },
   {
     machineCode: "MC-003",
-    machineName: "Cutter C3",
+    name: "Cutter C3",
     type: "Cutter",
     department: "Finishing",
     status: "Under Maintenance",
@@ -239,7 +239,7 @@ const mockData = [
   },
   {
     machineCode: "MC-004",
-    machineName: "Injection Mould D4",
+    name: "Injection Mould D4",
     type: "Injection Moulder",
     department: "Molding",
     status: "Active",
@@ -247,7 +247,7 @@ const mockData = [
   },
   {
     machineCode: "MC-005",
-    machineName: "Conveyor E5",
+    name: "Conveyor E5",
     type: "Conveyor Belt",
     department: "Packing",
     status: "Out of Service",
@@ -255,7 +255,7 @@ const mockData = [
   },
   {
     machineCode: "MC-006",
-    machineName: "Grinder F6",
+    name: "Grinder F6",
     type: "Grinder",
     department: "Tool Room",
     status: "Under Maintenance",

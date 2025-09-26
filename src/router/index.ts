@@ -143,6 +143,14 @@ const router = createRouter({
       },
     },
     {
+      path: '/operator/index',
+      name: 'Operator Dashboard',
+      component: () => import('../views/OperatorModule/index.vue'),
+      meta: {
+        title: 'Operator Dashboard',
+      },
+    },
+    {
       path: '/calendar',
       name: 'Calendar',
       component: () => import('../views/Others/Calendar.vue'),
