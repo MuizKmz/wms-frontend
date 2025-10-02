@@ -3,22 +3,27 @@
     class="sticky top-0 bg-white border-b border-gray-200 z-50 dark:border-gray-800 dark:bg-gray-900"
   >
     <div class="flex items-center justify-between px-4 py-3 lg:px-6">
-      <!-- LEFT: Date -->
-      <div class="text-sm text-gray-700 dark:text-gray-300">
-        {{ currentDate }}
+      <!-- LEFT: Hamburger + Date -->
+      <div class="flex items-center gap-3">
+        <div class="text-sm text-gray-700 dark:text-gray-300 sm:block">
+          {{ currentDate }}
+        </div>
       </div>
 
       <!-- CENTER: Logo + Title -->
       <div class="flex items-center gap-2">
         <!-- <HeaderLogo /> -->
-        <h1 class="text-base font-semibold text-gray-900 dark:text-white">
-          Manufacturing Execution System
+        <h1 class="text-base font-semibold text-gray-900 dark:text-white hidden md:block">
+          Warehouse Management System
+        </h1>
+        <h1 class="text-sm font-semibold text-gray-900 dark:text-white md:hidden">
+          WMS
         </h1>
       </div>
 
       <!-- RIGHT: Clock + Theme/Notifications -->
-      <div class="flex items-center gap-4">
-        <div class="text-sm font-mono text-gray-700 dark:text-gray-300">
+      <div class="flex items-center gap-2 sm:gap-4">
+        <div class="text-sm font-mono text-gray-700 dark:text-gray-300 hidden sm:block">
           {{ currentTime }}
         </div>
         <ThemeToggler />
@@ -28,12 +33,14 @@
   </header>
 </template>
 
-
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import ThemeToggler from '../common/ThemeToggler.vue'
 import HeaderLogo from './header/HeaderLogo.vue'
 import NotificationMenu from './header/NotificationMenu.vue'
+import { useSidebar } from '@/composables/useSidebar'
+
+const { isMobileOpen, toggleMobileSidebar } = useSidebar()
 
 const currentDate = ref('')
 const currentTime = ref('')

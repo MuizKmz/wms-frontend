@@ -15,6 +15,14 @@ const router = createRouter({
       },
     },
     {
+      path: '/supplier',
+      name: 'Supplier Management',
+      component: () => import('../views/Supplier/SupplierList.vue'),
+      meta: {
+        title: 'Supplier Management',
+      },
+    },
+    {
       path: '/workorder',
       name: 'Work Order Management',
       component: () => import('../views/WorkOrderMgt/WorkOrder.vue'),
