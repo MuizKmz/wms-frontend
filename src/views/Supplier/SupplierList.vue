@@ -6,7 +6,9 @@
       <ComponentCard title="All Supplier List" desc="Overview of all Supplier List">
         <!-- Button in header slot -->
         <template #headerAction>
-          <button class="px-4 py-2  btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
+          <button
+            @click="openAddMachineModal"
+            class="px-4 py-2  btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
             Add New Supplier
           </button>
         </template>
@@ -15,6 +17,8 @@
         <SupplierListTable :filters="activeFilters" />
       </ComponentCard>
     </div>
+
+    <AddNewSupplier ref="addMachineModalRef" />
   </AdminLayout>
 </template>
 
@@ -26,12 +30,26 @@ import ComponentCard from "@/components/common/ComponentCard.vue";
 import PageTitle from "@/components/common/PageTitle.vue"; 
 // import ToolListFilters from "@/components/common/ToolListFilters.vue"; // Add this import
 import SupplierListTable from "./component/SupplierListTable.vue";
+import AddNewSupplier from "./component/AddNewSupplier.vue";
 
 const currentPageTitle = ref("Supplier Management");
 const activeFilters = ref({});
+const addMachineModalRef = ref(null);
 
 const handleFilterChange = (filters) => {
   activeFilters.value = filters;
   console.log('Filters applied:', filters); // For debugging
+};
+
+const openAddMachineModal = () => {
+  console.log('Button clicked'); // Add this
+  console.log('Modal ref:', addMachineModalRef.value); // Add this
+  
+  if (addMachineModalRef.value) {
+    console.log('Calling openModal'); // Add this
+    addMachineModalRef.value.openModal();
+  } else {
+    console.log('Modal ref is null'); // Add this
+  }
 };
 </script>

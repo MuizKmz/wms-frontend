@@ -186,7 +186,7 @@ const menuGroups = [
       },
       {
         icon: BagIcon,
-        name: "Supplier Management",
+        name: "Supplier",
         path: "/supplier",
       },
       {
