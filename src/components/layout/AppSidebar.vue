@@ -145,26 +145,14 @@ import { useRoute, useRouter } from "vue-router";
 import { useSidebar } from "@/composables/useSidebar";
 
 import {
-  GridIcon,
-  CalenderIcon,
-  UserCircleIcon,
-  PageIcon,
-  TableIcon,
-  ListIcon,
+
   LogoutIcon,
   SettingsIcon,
   BagIcon,
   MenuIcon,
   HomeIcon,
-  WIPIcon,
-  MaterialIcon,
-  BoxIcon,
-  MaintenanceIcon,
-  QualityIcon,
-  RejectIcon,
   ReportsIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
+
 } from "../../icons";
 
 const route = useRoute();
@@ -177,12 +165,21 @@ const openSubmenu = ref(null);
 
 const menuGroups = [
   {
-    title: "STOCK",
     items: [
       {
         icon: HomeIcon,
         name: "Dashboard",
         path: "/",
+      },
+    ]
+  },
+  {
+    title: "STOCK",
+    items: [
+      {
+        icon: BagIcon,
+        name: "Warehouse",
+        path: "/warehouse",
       },
       {
         icon: BagIcon,
@@ -191,67 +188,13 @@ const menuGroups = [
       },
       {
         icon: BagIcon,
+        name: "Category",
+        path: "/category",
+      },
+      {
+        icon: BagIcon,
         name: "Work Order Management",
         path: "/workorder",
-      },
-      {
-        icon: MenuIcon,
-        name: "Bill of Material Management",
-        subItems: [
-          { name: "BOM List", path: "/bom", pro: false },
-          { name: "Compounding List", path: "/compoundinglist", pro: false },
-        ],
-      },
-      {
-        icon: WIPIcon,
-        name: "WIP Management",
-        path: "/wip",
-      },
-      {
-        icon: MaterialIcon,
-        name: "Material Management",
-        subItems: [
-          { name: "Material List", path: "/materialmgt/materiallist", pro: false },
-          { name: "Material Requisition", path: "/materialmgt/materialrequisition", pro: false },
-        ],
-      },
-      {
-        icon: SettingsIcon,
-        name: "Machine, Tool & Mould",
-        subItems: [
-          { name: "Machine List", path: "/machinemgt/machineList", pro: false },
-          { name: "Mould List", path: "/machinemgt/mouldList", pro: false },
-          { name: "Tools List", path: "/machinemgt/toolList", pro: false },
-        ],
-      },
-      {
-        icon: MaintenanceIcon,
-        name: "Maintenance & Downtime",
-        subItems: [
-          { name: "Maintenance List", path: "/maintenancemgt/maintenanceList", pro: false },
-          { name: "Downtime List", path: "/maintenancemgt/downtimeList", pro: false },
-        ],
-      },
-      {
-        icon: QualityIcon,
-        name: "Quality Control",
-        subItems: [
-          { name: "In Progress QC", path: "/qualitycontrol/ipqc", pro: false },
-          { name: "OutGoing QC", path: "/qualitycontrol/oqc", pro: false },
-        ],
-      },
-      {
-        icon: BoxIcon,
-        name: "Packing Management",
-        path: "/packingmgt/packingList",
-      },
-      {
-        icon: RejectIcon,
-        name: "Reject & Scrap",
-        subItems: [
-          { name: "Reject Product List", path: "/reject&scrap/rejectList", pro: false },
-          { name: "Scrap Product List", path: "/reject&scrap/scrapList", pro: false },
-        ],
       },
     ],
   },

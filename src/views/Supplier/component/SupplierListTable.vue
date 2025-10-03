@@ -58,7 +58,6 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-          <!-- Use paginatedData instead of filteredData -->
           <tr v-for="(item, index) in paginatedData" :key="index"
             class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
             <th>
@@ -84,21 +83,21 @@
             <!-- PIC's Name -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.picName }}
+                {{ item.manager }}
               </p>
             </td>
 
             <!-- Contact Number -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.contactNumber }}
+                {{ item.contactPhone || item.contact }}
               </p>
             </td>
 
             <!-- Email -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.email }}
+                {{ item.email || item.emailAddress }}
               </p>
             </td>
 
@@ -107,7 +106,8 @@
               <span :class="{
                 'px-3 py-1 text-xs rounded-full font-medium': true,
                 'bg-green-100 text-green-600': item.status === 'Active',
-                'bg-blue-100 text-blue-600': item.status === 'Inactive'
+                'bg-blue-100 text-blue-600': item.status === 'Inactive',
+                'bg-yellow-100 text-yellow-600': item.status === 'Pending'
               }">
                 {{ item.status }}
               </span>
@@ -116,31 +116,30 @@
             <!-- Remark -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.remark || '-' }}
+                {{ item.remark || item.remarks || '-' }}
               </p>
             </td>
 
             <!-- Actions -->
             <td class="px-6 py-4">
               <div class="flex items-center gap-2">
-                <button class="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                  aria-label="View">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                </button>
-                <button class="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
-                  aria-label="Edit">
+                <button 
+                  @click="editSupplier(item)"
+                  class="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
+                  aria-label="Edit"
+                  title="Edit Supplier"
+                >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                 </button>
-                <button class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                  aria-label="Delete">
+                <button 
+                  @click="deleteSupplier(item)"
+                  class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                  aria-label="Delete"
+                  title="Delete Supplier"
+                >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -223,45 +222,17 @@ const props = defineProps({
   }
 })
 
+// Emits for parent component
+const emit = defineEmits(['edit-supplier', 'delete-supplier'])
+
 const data = ref([])
 const loading = ref(false)
 const error = ref(null)
 
 // API endpoint for suppliers
-const API_URL = '/api/suppliers' // Replace with your actual API endpoint
+const API_URL = '/api/supplier'
 
-// Mock data for fallback
-const mockData = [
-  {
-    supplierCode: "S000000001",
-    supplierName: "Zenith Global Traders 01",
-    picName: "Tom",
-    contactNumber: "0123456789",
-    email: "test@gmail.com",
-    status: "Active",
-    remark: "-"
-  },
-  {
-    supplierCode: "S000000002",
-    supplierName: "Zenith Global Traders 02",
-    picName: "Jerry",
-    contactNumber: "0198765432",
-    email: "demo@gmail.com",
-    status: "Inactive",
-    remark: "-"
-  },
-  {
-    supplierCode: "S000000003",
-    supplierName: "Zenith Global Traders 03",
-    picName: "Sam",
-    contactNumber: "0112233445",
-    email: "sample@gmail.com",
-    status: "Active",
-    remark: "-"
-  }
-]
-
-// Function to fetch suppliers from the API with fallback
+// Function to fetch suppliers from the API
 const fetchSuppliers = async () => {
   loading.value = true
   error.value = null
@@ -271,13 +242,10 @@ const fetchSuppliers = async () => {
     if (!response.ok) throw new Error("Failed to fetch suppliers")
 
     const json = await response.json()
-
-    // If API returns empty data, use mock data
-    data.value = json && json.length > 0 ? json : mockData
+    data.value = json || []
   } catch (e) {
     error.value = e.message
-    // fallback to mock data on error
-    data.value = mockData
+    console.error('Error fetching suppliers:', e)
   } finally {
     loading.value = false
   }
@@ -321,7 +289,7 @@ const filteredData = computed(() => {
     }
     if (
       filters.email &&
-      !item.email
+      !(item.email || item.emailAddress)
         .toLowerCase()
         .includes(filters.email.toLowerCase())
     ) {
@@ -352,6 +320,23 @@ const changePage = (page) => {
   }
 }
 
+const editSupplier = (supplier) => {
+  emit('edit-supplier', supplier)
+}
+
+const deleteSupplier = (supplier) => {
+  emit('delete-supplier', supplier)
+  console.log('Delete supplier:', supplier)
+  // You can implement delete confirmation here
+}
+
+// Expose refresh method for parent component
+const refreshData = () => {
+  fetchSuppliers()
+}
+
+defineExpose({ refreshData })
+
 // Watch for filter changes
 watch(
   () => props.filters,
@@ -362,7 +347,6 @@ watch(
   { deep: true }
 )
 </script>
-
 
 <style scoped>
 .custom-scrollbar::-webkit-scrollbar {

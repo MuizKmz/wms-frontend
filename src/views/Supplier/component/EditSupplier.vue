@@ -41,7 +41,7 @@
               <!-- header -->
               <div class="flex items-center justify-between p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">
-                  Add New Supplier
+                  Edit Supplier
                 </h2>
                 <button
                   type="button"
@@ -149,7 +149,7 @@
                     <div class="dropdown relative inline-flex w-32" ref="countryDropdownRef">
                       <button
                         type="button"
-                        :class="['dropdown-toggle btn btn-outline justify-between dark:bg-gray-700 dark:text-gray-400 w-full', { 'btn-error': errors.contactPhone }]"
+                        :class="['dropdown-toggle btn btn-outline justify-between dark:bg-gray-700 dark:text-gray-400 w-full', { 'btn-error': errors.contact }]"
                         :aria-expanded="openDropdowns.country"
                         @click.stop="toggleDropdown('country')"
                       >
@@ -181,10 +181,10 @@
                       v-model="form.phoneNumber"
                       type="tel"
                       placeholder="Enter phone number"
-                      maxlength="10"
+                      maxlength="15"
                       @input="formatPhoneNumber"
                       @keypress="onlyNumbers"
-                      :class="['input input-bordered flex-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.contactPhone }]"
+                      :class="['input input-bordered flex-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.contact }]"
                     />
                   </div>
                   <transition
@@ -195,8 +195,8 @@
                     leave-from-class="opacity-100 translate-y-0"
                     leave-to-class="opacity-0 -translate-y-1"
                   >
-                    <div v-if="errors.contactPhone" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.contactPhone }}</p>
+                    <div v-if="errors.contact" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.contact }}</p>
                     </div>
                   </transition>
                 </div>
@@ -309,7 +309,7 @@
                 </button>
                 <button @click="submitForm" class="btn btn-primary" :disabled="isSubmitting">
                   <span v-if="isSubmitting" class="loading loading-spinner loading-sm"></span>
-                  {{ isSubmitting ? 'Saving...' : 'Save' }}
+                  {{ isSubmitting ? 'Updating...' : 'Update' }}
                 </button>
               </div>
             </div>
@@ -329,6 +329,7 @@ const isSubmitting = ref(false)
 const panelRef = ref(null)
 const statusDropdownRef = ref(null)
 const countryDropdownRef = ref(null)
+const supplierId = ref(null)
 
 const form = reactive({
   supplierCode: '',
@@ -345,14 +346,14 @@ const errors = reactive({
   supplierCode: '',
   supplierName: '',
   manager: '',
-  contactPhone: '',
+  contact: '',
   emailAddress: '',
   status: '',
   remarks: '',
   submit: ''
 })
 
-const statusOptions = ['Active', 'Inactive',]
+const statusOptions = ['Active', 'Inactive', 'Pending']
 const openDropdowns = reactive({ status: false, country: false })
 
 // Popular countries for phone numbers
@@ -450,16 +451,16 @@ const validateForm = () => {
 
   // Contact validation
   if (!form.phoneNumber.trim()) {
-    errors.contactPhone = 'Contact Number is required'
+    errors.contact = 'Contact Number is required'
     isValid = false
   } else if (!/^\d+$/.test(form.phoneNumber)) {
-    errors.contactPhone = 'Contact Number must contain only numbers'
+    errors.contact = 'Contact Number must contain only numbers'
     isValid = false
   } else if (form.phoneNumber.length < 8) {
-    errors.contactPhone = 'Contact Number must have at least 8 digits'
+    errors.contact = 'Contact Number must have at least 8 digits'
     isValid = false
-  } else if (form.phoneNumber.length > 10) {
-    errors.contactPhone = 'Contact Number cannot exceed 10 digits'
+  } else if (form.phoneNumber.length > 15) {
+    errors.contact = 'Contact Number cannot exceed 15 digits'
     isValid = false
   }
 
@@ -494,8 +495,8 @@ const validateForm = () => {
 watch(() => form.supplierCode, () => { if (errors.supplierCode) errors.supplierCode = '' })
 watch(() => form.supplierName, () => { if (errors.supplierName) errors.supplierName = '' })
 watch(() => form.manager, () => { if (errors.manager) errors.manager = '' })
-watch(() => form.phoneNumber, () => { if (errors.contactPhone) errors.contactPhone = '' })
-watch(() => form.countryCode, () => { if (errors.contactPhone) errors.contactPhone = '' })
+watch(() => form.phoneNumber, () => { if (errors.contact) errors.contact = '' })
+watch(() => form.countryCode, () => { if (errors.contact) errors.contact = '' })
 watch(() => form.emailAddress, () => { if (errors.emailAddress) errors.emailAddress = '' })
 watch(() => form.status, () => { if (errors.status) errors.status = '' })
 watch(() => form.remarks, () => { if (errors.remarks) errors.remarks = '' })
@@ -551,17 +552,40 @@ const handleClickOutside = (event) => {
   }
 }
 
+// Parse contact number to extract country code and phone number
+const parseContactNumber = (contact) => {
+  if (!contact) return { countryCode: '+60', phoneNumber: '' }
+  
+  // Find matching country code
+  for (const country of countries) {
+    if (contact.startsWith(country.dialCode)) {
+      return {
+        countryCode: country.dialCode,
+        phoneNumber: contact.substring(country.dialCode.length)
+      }
+    }
+  }
+  
+  // Default if no match
+  return { countryCode: '+60', phoneNumber: contact.replace(/^\+/, '') }
+}
+
 /* open/close modal */
-const openModal = async () => {
-  // Reset form
-  form.supplierCode = ''
-  form.supplierName = ''
-  form.manager = ''
-  form.countryCode = '+60'
-  form.phoneNumber = ''
-  form.emailAddress = ''
-  form.status = ''
-  form.remarks = ''
+const openModal = async (supplierData) => {
+  supplierId.value = supplierData.id || supplierData.supplierCode
+  
+  // Parse contact number
+  const { countryCode, phoneNumber } = parseContactNumber(supplierData.contact || supplierData.contactPhone)
+  
+  // Prefill form with existing data
+  form.supplierCode = supplierData.supplierCode || ''
+  form.supplierName = supplierData.supplierName || ''
+  form.manager = supplierData.manager || ''
+  form.countryCode = countryCode
+  form.phoneNumber = phoneNumber
+  form.emailAddress = supplierData.email || supplierData.emailAddress || ''
+  form.status = supplierData.status || ''
+  form.remarks = supplierData.remark || supplierData.remarks || ''
   
   // Reset errors
   Object.keys(errors).forEach(key => errors[key] = '')
@@ -573,7 +597,7 @@ const openModal = async () => {
 }
 
 const closeModal = () => {
-  if (isSubmitting.value) return // Prevent closing while submitting
+  if (isSubmitting.value) return
   openDropdowns.status = false
   openDropdowns.country = false
   isOpen.value = false
@@ -592,16 +616,16 @@ const submitForm = async () => {
     // Prepare data with full phone number
     const submissionData = {
       ...form,
-      contactPhone: `${form.countryCode}${form.phoneNumber}` // Combine country code + phone number
+      contact: `${form.countryCode}${form.phoneNumber}`
     }
     
     // Remove individual phone fields from submission
     delete submissionData.countryCode
     delete submissionData.phoneNumber
     
-    // Replace with your actual API endpoint
-    const response = await fetch('/api/suppliers', {
-      method: 'POST',
+    // Replace with your actual API endpoint - use PUT or PATCH for updates
+    const response = await fetch(`/api/suppliers/${supplierId.value}`, {
+      method: 'PUT', // or 'PATCH'
       headers: {
         'Content-Type': 'application/json',
       },
@@ -610,21 +634,21 @@ const submitForm = async () => {
 
     if (!response.ok) {
       const errorData = await response.json()
-      throw new Error(errorData.message || 'Failed to create supplier')
+      throw new Error(errorData.message || 'Failed to update supplier')
     }
 
     const data = await response.json()
-    console.log('Supplier created successfully:', data)
+    console.log('Supplier updated successfully:', data)
     
-    // Success - close modal
+    // Success - close modal and emit event
     closeModal()
     
-    // You might want to emit an event here to refresh the supplier list
-    // emit('supplier-created', data)
+    // Emit event to parent to refresh the table
+    // You can handle this in your parent component
     
   } catch (error) {
-    console.error('Error creating supplier:', error)
-    errors.submit = error.message || 'Failed to create supplier. Please try again.'
+    console.error('Error updating supplier:', error)
+    errors.submit = error.message || 'Failed to update supplier. Please try again.'
   } finally {
     isSubmitting.value = false
   }

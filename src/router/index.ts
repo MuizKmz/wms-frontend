@@ -15,11 +15,27 @@ const router = createRouter({
       },
     },
     {
+      path: '/warehouse',
+      name: 'Warehouse Management',
+      component: () => import('../views/Warehouse/Warehouse.vue'),
+      meta: {
+        title: 'Warehouse',
+      },
+    },
+    {
       path: '/supplier',
       name: 'Supplier Management',
       component: () => import('../views/Supplier/SupplierList.vue'),
       meta: {
-        title: 'Supplier Management',
+        title: 'Supplier',
+      },
+    },
+    {
+      path: '/category',
+      name: 'Category Management',
+      component: () => import('../views/Category/Category.vue'),
+      meta: {
+        title: 'Category',
       },
     },
     {
