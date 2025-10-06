@@ -1,14 +1,7 @@
 <template>
   <div class="overflow-hidden">
 
-    <!-- Results count -->
-    <div class="mb-4">
-      <p class="text-sm text-gray-500 dark:text-gray-400">
-        Showing {{ filteredData.length }} supplier items
-      </p>
-    </div>
-
-    <div class="max-w-full overflow-x-auto custom-scrollbar">
+    <div class="max-w-full overflow-x-auto custom-scrollbar mt-5">
       <table class="min-w-full">
         <thead>
           <tr class="border-b border-gray-200 dark:border-gray-700">

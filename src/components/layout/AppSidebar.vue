@@ -193,6 +193,16 @@ const menuGroups = [
       },
       {
         icon: BagIcon,
+        name: "Product",
+        path: "/product",
+      },
+      {
+        icon: BagIcon,
+        name: "EPC",
+        path: "/epc",
+      },
+      {
+        icon: BagIcon,
         name: "Work Order Management",
         path: "/workorder",
       },

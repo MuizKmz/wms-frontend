@@ -39,6 +39,30 @@ const router = createRouter({
       },
     },
     {
+      path: '/product',
+      name: 'Product Management',
+      component: () => import('../views/Product/Product.vue'),
+      meta: {
+        title: 'Product',
+      },
+    },
+    {
+      path: '/epc',
+      name: 'EPC Management',
+      component: () => import('../views/EPC/EPC.vue'),
+      meta: {
+        title: 'EPC',
+      },
+    },
+    {
+      path: '/inventory',
+      name: 'Inventory Management',
+      component: () => import('../views/Inventory/Inventory.vue'),
+      meta: {
+        title: 'Inventory',
+      },
+    },
+    {
       path: '/workorder',
       name: 'Work Order Management',
       component: () => import('../views/WorkOrderMgt/WorkOrder.vue'),
