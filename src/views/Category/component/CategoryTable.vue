@@ -404,35 +404,60 @@ const editCategory = (category) => {
 }
 
 const deleteSupplier = async (item) => {
-  // Rename to deleteCategory in a real app for clarity
-  if (!confirm(`Are you sure you want to delete category ${item.name}? This will also delete its nested subcategories.`)) {
-    return
-  }
+  // Rename to deleteCategory in a real app for clarity
+  if (!confirm(`Are you sure you want to delete category ${item.name}? This will also delete its nested subcategories.`)) {
+    return
+  }
 
-  try {
-    const response = await fetch(`api/category/${item.id}`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' }
-    })
+  try {
+    const response = await fetch(`${API_URL}/${item.id}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' }
+    })
 
-    if (!response.ok) {
-      throw new Error('Failed to delete category')
-    }
+    // Try to parse JSON body if present
+    let body = null
+    try {
+      body = await response.json()
+    } catch (e) {
+      // ignore parse errors
+    }
 
-    emit('delete-category', { success: true, data: { name: item.name, id: item.id } })
+    if (!response.ok) {
+      const msg = (body && (body.message || body.error)) ? (body.message || body.error) : 'Failed to delete category'
+      console.error('Delete failed:', msg, body)
+      emit('delete-category', { success: false, error: msg, details: body })
+      return
+    }
 
-    // Clear selection for deleted item
-    const index = selectedItems.value.indexOf(item.id)
-    if (index > -1) {
-      selectedItems.value.splice(index, 1)
-    }
+    // If backend reports blocked categories (due to products), surface that to parent
+    if (body && Array.isArray(body.blocked) && body.blocked.length > 0) {
+      // Remove any successfully deleted ids from selection
+      const deletedIds = Array.isArray(body.deletedIds) ? body.deletedIds : []
+      if (deletedIds.length) {
+        selectedItems.value = selectedItems.value.filter(id => !deletedIds.includes(id))
+      }
 
-    // Refresh the table
-    await fetchCategories()
-  } catch (error) {
-    console.error('Error deleting category:', error)
-    emit('delete-category', { success: false, error: error.message })
-  }
+      emit('delete-category', { success: false, blocked: body.blocked, deletedIds: deletedIds })
+      // Refresh to reflect any deletions that did occur
+      await fetchCategories()
+      return
+    }
+
+    // Success: either body.deletedIds or assume the requested id deleted
+    const deletedIds = body && Array.isArray(body.deletedIds) && body.deletedIds.length ? body.deletedIds : [item.id]
+
+    // Clear selection for deleted ids
+    selectedItems.value = selectedItems.value.filter(id => !deletedIds.includes(id))
+
+    emit('delete-category', { success: true, deletedIds, data: { name: item.name, id: item.id } })
+
+    // Refresh the table
+    await fetchCategories()
+  } catch (error) {
+    console.error('Error deleting category:', error)
+    emit('delete-category', { success: false, error: error.message })
+  }
 }
 
 // Expose refresh method for parent component
