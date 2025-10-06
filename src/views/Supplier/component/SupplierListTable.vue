@@ -1,7 +1,6 @@
 <template>
   <div class="overflow-hidden">
 
-    <!-- Results count -->
     <div class="mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
         Showing {{ filteredData.length }} supplier items
@@ -12,8 +11,9 @@
       <table class="min-w-full">
         <thead>
           <tr class="border-b border-gray-200 dark:border-gray-700">
-            <th>
-              <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select all" />
+            <th class="px-6 py-3 text-left w-12">
+              <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select all"
+                :checked="selectAll" @change="toggleSelectAll" />
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
@@ -58,50 +58,43 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-          <tr v-for="(item, index) in paginatedData" :key="index"
+          <tr v-for="item in paginatedData" :key="item.id"
             class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-            <th>
-              <label>
-                <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select item" />
-              </label>
-            </th>
+            <td class="px-6 py-4">
+              <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select item"
+                :checked="isSelected(item.id)" @change="toggleItemSelection(item.id)" />
+            </td>
 
-            <!-- Supplier Code -->
             <td class="px-6 py-4">
               <span class="font-mono text-sm text-gray-900 dark:text-white">
                 {{ item.supplierCode }}
               </span>
             </td>
 
-            <!-- Supplier Name -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
                 {{ item.supplierName }}
               </p>
             </td>
 
-            <!-- PIC's Name -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
                 {{ item.manager }}
               </p>
             </td>
 
-            <!-- Contact Number -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
                 {{ item.contactPhone || item.contact }}
               </p>
             </td>
 
-            <!-- Email -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
                 {{ item.email || item.emailAddress }}
               </p>
             </td>
 
-            <!-- Status -->
             <td class="px-6 py-4">
               <span :class="{
                 'px-3 py-1 text-xs rounded-full font-medium': true,
@@ -113,14 +106,12 @@
               </span>
             </td>
 
-            <!-- Remark -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
                 {{ item.remark || item.remarks || '-' }}
               </p>
             </td>
 
-            <!-- Actions -->
             <td class="px-6 py-4">
               <div class="flex items-center gap-2">
                 <button
@@ -151,16 +142,13 @@
         </tbody>
       </table>
 
-      <!-- FlyonUI Pagination -->
       <div v-if="totalPages > 1" class="mt-6 flex justify-center">
         <nav class="flex items-center gap-x-1">
-          <!-- Previous -->
           <button type="button" class="btn btn-text dark:text-gray-300" :disabled="currentPage === 1"
             @click="changePage(currentPage - 1)">
             Previous
           </button>
 
-          <!-- Pages -->
           <div class="flex items-center gap-x-1">
             <button v-for="page in totalPages" :key="page" type="button"
               class="btn btn-text btn-square aria-[current='page']:text-bg-primary dark:text-gray-300"
@@ -170,7 +158,6 @@
             </button>
           </div>
 
-          <!-- Next -->
           <button type="button" class="btn btn-text dark:text-gray-300" :disabled="currentPage === totalPages"
             @click="changePage(currentPage + 1)">
             Next
@@ -178,13 +165,11 @@
         </nav>
       </div>
 
-      <!-- Loading -->
       <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
         <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
         <p>Loading suppliers...</p>
       </div>
 
-      <!-- Empty State -->
       <div v-if="!loading && filteredData.length === 0" class="p-8 text-center text-gray-500">
         <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
@@ -198,7 +183,6 @@
         </p>
       </div>
 
-      <!-- Error -->
       <div v-if="error" class="p-8 text-center text-red-500 text-sm">
         <svg class="mx-auto h-12 w-12 text-red-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
@@ -225,9 +209,12 @@ const props = defineProps({
 // Emits for parent component
 const emit = defineEmits(['edit-supplier', 'delete-supplier'])
 
+// State for data and UI
 const data = ref([])
 const loading = ref(false)
 const error = ref(null)
+const selectedItems = ref([])
+const selectAll = ref(false) // State for the select all checkbox
 
 // API endpoint for suppliers
 const API_URL = '/api/supplier'
@@ -256,12 +243,69 @@ onMounted(() => {
   fetchSuppliers()
 })
 
+// --- Checkbox/Selection Logic ---
+
+// Computed list of IDs for currently visible (paginated) data
+const visibleItemIds = computed(() => {
+  return paginatedData.value.map(item => item.id)
+})
+
+// Update select all checkbox state
+const updateSelectAllState = () => {
+  const visibleIds = visibleItemIds.value
+  if (visibleIds.length === 0) {
+    selectAll.value = false
+    return
+  }
+  // Check if every visible item ID is present in selectedItems
+  selectAll.value = visibleIds.every(id => selectedItems.value.includes(id))
+}
+
+// Check if item is selected
+const isSelected = (itemId) => {
+  return selectedItems.value.includes(itemId)
+}
+
+// Toggle individual item selection
+const toggleItemSelection = (itemId) => {
+  const index = selectedItems.value.indexOf(itemId)
+  if (index > -1) {
+    selectedItems.value.splice(index, 1) // Deselect
+  } else {
+    selectedItems.value.push(itemId) // Select
+  }
+  updateSelectAllState()
+}
+
+// Toggle select all
+const toggleSelectAll = () => {
+  if (selectAll.value) {
+    // Deselect all visible items
+    selectedItems.value = selectedItems.value.filter(id => !visibleItemIds.value.includes(id))
+    selectAll.value = false
+  } else {
+    // Select all visible items
+    const visibleIds = visibleItemIds.value
+    visibleIds.forEach(id => {
+      if (!selectedItems.value.includes(id)) {
+        selectedItems.value.push(id)
+      }
+    })
+    selectAll.value = true
+  }
+}
+
+// --- Data and Filtering ---
+
 // Computed property for filtered data
 const filteredData = computed(() => {
   if (!props.filters) return data.value
 
   return data.value.filter((item) => {
     const filters = props.filters
+
+    // Note: The template is using item.manager, contactPhone/contact, and email/emailAddress,
+    // but the filter logic uses filters.picName and filters.email. Using a fallback for checks.
 
     if (
       filters.supplierCode &&
@@ -279,17 +323,21 @@ const filteredData = computed(() => {
     ) {
       return false
     }
+    // PIC Name filter
+    const picName = item.manager || '' // Assuming manager holds PIC's Name
     if (
       filters.picName &&
-      !item.picName
+      !picName
         .toLowerCase()
         .includes(filters.picName.toLowerCase())
     ) {
       return false
     }
+    // Email filter
+    const email = item.email || item.emailAddress || ''
     if (
       filters.email &&
-      !(item.email || item.emailAddress)
+      !email
         .toLowerCase()
         .includes(filters.email.toLowerCase())
     ) {
@@ -303,7 +351,7 @@ const filteredData = computed(() => {
   })
 })
 
-// Pagination
+// --- Pagination ---
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
 const totalPages = computed(() =>
@@ -320,6 +368,15 @@ const changePage = (page) => {
   }
 }
 
+// Watch for filter changes and pagination changes to update 'select all' state
+watch([() => props.filters, currentPage], () => {
+  // Use a timeout to ensure paginatedData is updated before running logic
+  setTimeout(updateSelectAllState, 0)
+}, { deep: true })
+
+
+// --- Actions ---
+
 const editSupplier = (supplier) => {
   emit('edit-supplier', supplier)
 }
@@ -330,7 +387,13 @@ const deleteSupplier = async (supplier) => {
   }
 
   try {
-    const response = await fetch(`api/supplier/${supplier.id}`, {
+    // Check if supplier has an ID property
+    const supplierId = supplier.id || supplier.supplierCode; 
+    if (!supplierId) {
+        throw new Error('Supplier identifier not found.');
+    }
+    
+    const response = await fetch(`api/supplier/${supplierId}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json'
@@ -342,7 +405,13 @@ const deleteSupplier = async (supplier) => {
     }
 
     // Emit event to parent for toast notification
-    emit('delete-supplier', { success: true, data: supplier })
+    emit('delete-supplier', { success: true, data: { supplierName: supplier.supplierName, id: supplier.id } })
+
+    // Remove deleted item from selectedItems if present
+    const index = selectedItems.value.indexOf(supplier.id)
+    if (index > -1) {
+      selectedItems.value.splice(index, 1)
+    }
 
     // Refresh the table
     await fetchSuppliers()
@@ -352,12 +421,14 @@ const deleteSupplier = async (supplier) => {
   }
 }
 
-// Expose refresh method for parent component
+// Expose methods/state for parent component (e.g., for Bulk Delete)
 const refreshData = () => {
   fetchSuppliers()
+  selectedItems.value = [] // Clear selection on refresh
+  selectAll.value = false
 }
 
-defineExpose({ refreshData })
+defineExpose({ refreshData, selectedItems })
 
 // Watch for filter changes
 watch(
