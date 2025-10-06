@@ -400,8 +400,8 @@ watch(() => form.status, () => { if (errors.status) errors.status = '' })
 
 /* helpers */
 const toggleDropdown = (name: 'status' | 'parentCategory') => {
-  Object.keys(openDropdowns).forEach(k => { 
-    if (k !== name) openDropdowns[k as keyof typeof openDropdowns] = false 
+  Object.keys(openDropdowns).forEach(k => {
+    if (k !== name) openDropdowns[k as keyof typeof openDropdowns] = false
   })
   openDropdowns[name] = !openDropdowns[name]
 }
@@ -482,13 +482,14 @@ const submitForm = async () => {
 
   try {
     // Format the data to match the backend schema
-    const submissionData = {
-      categoryCode: form.categoryCode.toUpperCase(),
-      name: form.name,
-      parentCategoryId: form.parentCategoryId,
-      storageRequirements: form.storageRequirements || null,
-      status: form.status
-    }
+      const submissionData = {
+        categoryCode: form.categoryCode.toUpperCase(),
+        name: form.name,
+        parentCategoryId: form.parentCategoryId,
+        level: form.parentCategoryId ? 2 : 1, // Add this line
+        storageRequirements: form.storageRequirements || null,
+        status: form.status
+      }
 
     // Make the API call to the correct endpoint
     const response = await fetch('/api/category', {
