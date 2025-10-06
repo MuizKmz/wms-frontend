@@ -31,6 +31,14 @@ const router = createRouter({
       },
     },
     {
+      path: '/receiving',
+      name: 'Receiving Management',
+      component: () => import('../views/Receiving/Receiving.vue'),
+      meta: {
+        title: 'Receiving',
+      },
+    },
+    {
       path: '/category',
       name: 'Category Management',
       component: () => import('../views/Category/Category.vue'),
@@ -60,6 +68,30 @@ const router = createRouter({
       component: () => import('../views/Inventory/Inventory.vue'),
       meta: {
         title: 'Inventory',
+      },
+    },
+    {
+      path: '/order',
+      name: 'Order Management',
+      component: () => import('../views/Order/Order.vue'),
+      meta: {
+        title: 'Order',
+      },
+    },
+    {
+      path: '/shipping',
+      name: 'Shipping Management',
+      component: () => import('../views/Shipping/Shipping.vue'),
+      meta: {
+        title: 'Shipping',
+      },
+    },
+    {
+      path: '/customer',
+      name: 'Customer Management',
+      component: () => import('../views/Customer/Customer.vue'),
+      meta: {
+        title: 'Customer',
       },
     },
     {

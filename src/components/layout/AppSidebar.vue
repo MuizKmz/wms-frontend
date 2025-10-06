@@ -188,6 +188,11 @@ const menuGroups = [
       },
       {
         icon: BagIcon,
+        name: "Receiving",
+        path: "/receiving",
+      },
+      {
+        icon: BagIcon,
         name: "Category",
         path: "/category",
       },
@@ -200,6 +205,26 @@ const menuGroups = [
         icon: BagIcon,
         name: "EPC",
         path: "/epc",
+      },
+      {
+        icon: BagIcon,
+        name: "Inventory",
+        path: "/inventory",
+      },
+      {
+        icon: BagIcon,
+        name: "Order",
+        path: "/order",
+      },
+      {
+        icon: BagIcon,
+        name: "Shipping",
+        path: "/shipping",
+      },
+      {
+        icon: BagIcon,
+        name: "Customer",
+        path: "/customer",
       },
       {
         icon: BagIcon,

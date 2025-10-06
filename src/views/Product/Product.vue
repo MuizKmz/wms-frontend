@@ -49,7 +49,7 @@
             <button
               @click="handleBulkDelete"
               class="px-4 py-2 btn btn-error text-white text-sm font-medium rounded-lg transition-colors duration-200">
-              Bulk Delete
+              Delete
             </button>
             <button 
               @click="handleImportProduct"

@@ -18,42 +18,31 @@
       <ComponentCard title="All Supplier List" desc="Overview of all Supplier List">
         <!-- Button in header slot -->
         <template #headerAction>
-          <button
-            @click="handleBulkDelete"
-            class="px-4 py-2 mr-2 btn btn-error text-white text-sm font-medium rounded-lg transition-colors duration-200">
-            Delete
-          </button>
-          <button
-            @click="openAddSupplierModal"
+          <button @click="openAddSupplierModal"
             class="px-4 py-2 mr-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
             Add New Supplier
           </button>
-          <button
-            @click="handleImportSupplier"
+          <button @click="handleBulkDelete"
+            class="px-4 py-2 mr-2 btn btn-error text-white text-sm font-medium rounded-lg transition-colors duration-200">
+            Delete
+          </button>
+          <button @click="handleImportSupplier"
             class="px-4 py-2 btn btn-secondary text-white text-sm font-medium rounded-lg transition-colors duration-200">
             Import Supplier
           </button>
         </template>
 
         <!-- Table in main slot -->
-        <SupplierListTable
-          ref="supplierTableRef"
-          :filters="activeFilters"
-          @edit-supplier="openEditSupplierModal"
-          @view-supplier="handleViewSupplier"
-          @delete-supplier="handleDeleteSupplier"
-        />
+        <SupplierListTable ref="supplierTableRef" :filters="activeFilters" @edit-supplier="openEditSupplierModal"
+          @view-supplier="handleViewSupplier" @delete-supplier="handleDeleteSupplier" />
       </ComponentCard>
     </div>
 
     <!-- Add New Supplier Modal -->
-    <AddNewSupplier
-      ref="addSupplierModalRef"
-      @supplier-created="handleSupplierCreated"
-    />
+    <AddNewSupplier ref="addSupplierModalRef" @supplier-created="handleSupplierCreated" />
 
-  <!-- Edit Supplier Modal -->
-  <EditSupplier ref="editSupplierModalRef" @supplier-updated="handleSupplierUpdated" />
+    <!-- Edit Supplier Modal -->
+    <EditSupplier ref="editSupplierModalRef" @supplier-updated="handleSupplierUpdated" />
   </AdminLayout>
 </template>
 
@@ -146,7 +135,6 @@ const handleViewSupplier = (supplier: Supplier) => {
 const handleDeleteSupplier = async (result: any) => {
   // Single delete success
   if (result.success) {
-    showToastMessage(`Supplier ${result.data?.supplierName || 'unknown'} has been deleted successfully`, 'success');
     if (supplierTableRef.value) {
       await supplierTableRef.value.refreshData();
     }
@@ -157,33 +145,26 @@ const handleDeleteSupplier = async (result: any) => {
   if (result.data && (result.data.count || result.data.deletedCount || result.data.blocked)) {
     const deleted = result.data.count || result.data.deletedCount || (result.data.deletedIds ? result.data.deletedIds.length : 0)
     const blocked = result.data.blocked ? result.data.blocked.length : 0
-    if (deleted > 0) {
-      showToastMessage(`${deleted} supplier(s) deleted; ${blocked} supplier(s) could not be deleted due to related records`, 'success')
-    }
-    if (blocked > 0) {
-      showToastMessage(`${blocked} supplier(s) blocked due to existing relations. Please remove dependent records first.`, 'error')
-    }
+
     if (supplierTableRef.value) {
       await supplierTableRef.value.refreshData();
     }
     return
   }
 
-  showToastMessage(result.error || 'Failed to delete supplier', 'error');
+  console.error(result.error || 'Failed to delete supplier');
 };
 
 const handleBulkDelete = async () => {
   if (!supplierTableRef.value || !supplierTableRef.value.bulkDelete) {
-    showToastMessage('Bulk delete not available', 'error');
+    console.error('Bulk delete not available');
     return;
   }
 
   const result = await supplierTableRef.value.bulkDelete()
 
-  if (result.success) {
-    showToastMessage(`Deleted ${result.data?.count || 'selected'} supplier(s)`, 'success')
-  } else {
-    showToastMessage(result.error || 'Failed to delete selected suppliers', 'error')
+  if (!result.success) {
+    console.error(result.error || 'Failed to delete selected suppliers');
   }
 };
 
