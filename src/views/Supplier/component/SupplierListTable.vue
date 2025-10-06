@@ -421,6 +421,55 @@ const deleteSupplier = async (supplier) => {
   }
 }
 
+// Bulk delete selected suppliers
+const bulkDelete = async () => {
+  if (!selectedItems.value || selectedItems.value.length === 0) {
+    return { success: false, error: 'No suppliers selected' }
+  }
+
+  if (!confirm(`Are you sure you want to delete ${selectedItems.value.length} selected supplier(s)?`)) {
+    return { success: false, error: 'Cancelled by user' }
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/bulk-delete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: selectedItems.value })
+    })
+
+    if (!response.ok) {
+      const err = await response.text()
+      throw new Error(err || 'Failed to bulk delete suppliers')
+    }
+
+    const result = await response.json()
+
+    // Clear selection and refresh
+    const deletedCount = Array.isArray(result.deletedIds) ? result.deletedIds.length : 0
+    const blocked = result.blocked || []
+
+    selectedItems.value = []
+    selectAll.value = false
+    await fetchSuppliers()
+
+    // Emit event to parent for toast
+    if (deletedCount > 0 && blocked.length === 0) {
+      emit('delete-supplier', { success: true, data: { count: deletedCount } })
+      return { success: true, data: result }
+    }
+
+    // Partial success: some deleted, some blocked
+    const message = `${deletedCount} deleted, ${blocked.length} blocked due to existing relations`;
+    emit('delete-supplier', { success: false, error: message, data: { deletedCount, blocked } })
+    return { success: false, error: message, data: result }
+  } catch (error) {
+    console.error('Error bulk deleting suppliers:', error)
+    emit('delete-supplier', { success: false, error: error.message })
+    return { success: false, error: error.message }
+  }
+}
+
 // Expose methods/state for parent component (e.g., for Bulk Delete)
 const refreshData = () => {
   fetchSuppliers()
@@ -428,7 +477,7 @@ const refreshData = () => {
   selectAll.value = false
 }
 
-defineExpose({ refreshData, selectedItems })
+defineExpose({ refreshData, selectedItems, bulkDelete })
 
 // Watch for filter changes
 watch(

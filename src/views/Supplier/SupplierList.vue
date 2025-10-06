@@ -143,21 +143,48 @@ const handleViewSupplier = (supplier: Supplier) => {
   // Implement view modal or navigate to detail page
 };
 
-const handleDeleteSupplier = async (result: Result) => {
+const handleDeleteSupplier = async (result: any) => {
+  // Single delete success
   if (result.success) {
     showToastMessage(`Supplier ${result.data?.supplierName || 'unknown'} has been deleted successfully`, 'success');
-    // Refresh table to show updated data
     if (supplierTableRef.value) {
       await supplierTableRef.value.refreshData();
     }
-  } else {
-    showToastMessage(result.error || 'Failed to delete supplier', 'error');
+    return
   }
+
+  // Partial/ bulk delete handling
+  if (result.data && (result.data.count || result.data.deletedCount || result.data.blocked)) {
+    const deleted = result.data.count || result.data.deletedCount || (result.data.deletedIds ? result.data.deletedIds.length : 0)
+    const blocked = result.data.blocked ? result.data.blocked.length : 0
+    if (deleted > 0) {
+      showToastMessage(`${deleted} supplier(s) deleted; ${blocked} supplier(s) could not be deleted due to related records`, 'success')
+    }
+    if (blocked > 0) {
+      showToastMessage(`${blocked} supplier(s) blocked due to existing relations. Please remove dependent records first.`, 'error')
+    }
+    if (supplierTableRef.value) {
+      await supplierTableRef.value.refreshData();
+    }
+    return
+  }
+
+  showToastMessage(result.error || 'Failed to delete supplier', 'error');
 };
 
-const handleBulkDelete = () => {
-  console.log('Bulk delete clicked');
-  // Implement bulk delete functionality
+const handleBulkDelete = async () => {
+  if (!supplierTableRef.value || !supplierTableRef.value.bulkDelete) {
+    showToastMessage('Bulk delete not available', 'error');
+    return;
+  }
+
+  const result = await supplierTableRef.value.bulkDelete()
+
+  if (result.success) {
+    showToastMessage(`Deleted ${result.data?.count || 'selected'} supplier(s)`, 'success')
+  } else {
+    showToastMessage(result.error || 'Failed to delete selected suppliers', 'error')
+  }
 };
 
 const handleImportSupplier = () => {
