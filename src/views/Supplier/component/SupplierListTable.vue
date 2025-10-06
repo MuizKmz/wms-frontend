@@ -388,11 +388,11 @@ const deleteSupplier = async (supplier) => {
 
   try {
     // Check if supplier has an ID property
-    const supplierId = supplier.id || supplier.supplierCode; 
+    const supplierId = supplier.id || supplier.supplierCode;
     if (!supplierId) {
         throw new Error('Supplier identifier not found.');
     }
-    
+
     const response = await fetch(`api/supplier/${supplierId}`, {
       method: 'DELETE',
       headers: {
