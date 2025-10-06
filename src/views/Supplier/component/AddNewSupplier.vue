@@ -323,6 +323,8 @@
 <script setup>
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 
+const emit = defineEmits(['supplier-created'])
+
 /* state */
 const isOpen = ref(false)
 const isSubmitting = ref(false)
@@ -337,7 +339,7 @@ const form = reactive({
   countryCode: '+60',
   phoneNumber: '',
   emailAddress: '',
-  status: '',
+  status: 'Active', // Default to Active
   remarks: ''
 })
 
@@ -385,7 +387,7 @@ const getScrollbarWidth = () => {
 const lockScroll = () => {
   scrollY = window.scrollY
   scrollbarWidth = getScrollbarWidth()
-  
+
   document.body.style.paddingRight = `${scrollbarWidth}px`
   document.body.style.position = 'fixed'
   document.body.style.top = `-${scrollY}px`
@@ -399,7 +401,7 @@ const unlockScroll = () => {
   document.body.style.top = ''
   document.body.style.width = ''
   document.body.style.overflow = ''
-  
+
   requestAnimationFrame(() => {
     window.scrollTo(0, scrollY)
   })
@@ -416,11 +418,8 @@ const validateForm = () => {
   if (!form.supplierCode.trim()) {
     errors.supplierCode = 'Supplier Code is required'
     isValid = false
-  } else if (form.supplierCode.length < 2) {
-    errors.supplierCode = 'Supplier Code must be at least 2 characters'
-    isValid = false
-  } else if (form.supplierCode.length > 20) {
-    errors.supplierCode = 'Supplier Code cannot exceed 20 characters'
+  } else if (!form.supplierCode.match(/^SUP-\d{3}$/)) {
+    errors.supplierCode = 'Supplier Code must be in format SUP-XXX (where X is a number)'
     isValid = false
   }
 
@@ -528,12 +527,12 @@ const onlyNumbers = (event) => {
 const formatPhoneNumber = (event) => {
   // Remove all non-numeric characters
   let value = event.target.value.replace(/\D/g, '')
-  
+
   // Limit to 15 digits
   if (value.length > 15) {
     value = value.slice(0, 15)
   }
-  
+
   form.phoneNumber = value
 }
 
@@ -541,11 +540,11 @@ const formatPhoneNumber = (event) => {
 const handleClickOutside = (event) => {
   const statusDd = statusDropdownRef.value
   const countryDd = countryDropdownRef.value
-  
+
   if (statusDd && !statusDd.contains(event.target)) {
     openDropdowns.status = false
   }
-  
+
   if (countryDd && !countryDd.contains(event.target)) {
     openDropdowns.country = false
   }
@@ -562,21 +561,34 @@ const openModal = async () => {
   form.emailAddress = ''
   form.status = ''
   form.remarks = ''
-  
+
   // Reset errors
   Object.keys(errors).forEach(key => errors[key] = '')
-  
+
   isOpen.value = true
   lockScroll()
   await nextTick()
   panelRef.value?.querySelector('input,select,textarea,button')?.focus()
 }
 
-const closeModal = () => {
-  if (isSubmitting.value) return // Prevent closing while submitting
+const closeModal = async () => {
   openDropdowns.status = false
   openDropdowns.country = false
   isOpen.value = false
+
+  // Reset form after modal is closed
+  await nextTick()
+  form.supplierCode = ''
+  form.supplierName = ''
+  form.manager = ''
+  form.countryCode = '+60'
+  form.phoneNumber = ''
+  form.emailAddress = ''
+  form.status = ''
+  form.remarks = ''
+
+  // Reset errors
+  Object.keys(errors).forEach(key => errors[key] = '')
 }
 
 /* submit */
@@ -589,18 +601,19 @@ const submitForm = async () => {
   errors.submit = ''
 
   try {
-    // Prepare data with full phone number
+    // Format the data to match the backend schema
     const submissionData = {
-      ...form,
-      contactPhone: `${form.countryCode}${form.phoneNumber}` // Combine country code + phone number
+      supplierCode: form.supplierCode.toUpperCase(), // Ensure code is uppercase
+      supplierName: form.supplierName,
+      manager: form.manager,
+      contactPhone: `${form.countryCode}${form.phoneNumber}`,
+      email: form.emailAddress,
+      status: form.status === 'Active' ? 'Active' : 'Inactive', // Ensure proper status
+      remark: form.remarks || null
     }
-    
-    // Remove individual phone fields from submission
-    delete submissionData.countryCode
-    delete submissionData.phoneNumber
-    
-    // Replace with your actual API endpoint
-    const response = await fetch('/api/suppliers', {
+
+    // Make the API call to the correct endpoint
+    const response = await fetch('http://localhost:3000/supplier', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -614,17 +627,19 @@ const submitForm = async () => {
     }
 
     const data = await response.json()
-    console.log('Supplier created successfully:', data)
-    
-    // Success - close modal
-    closeModal()
-    
-    // You might want to emit an event here to refresh the supplier list
-    // emit('supplier-created', data)
-    
+    console.log('Server response:', data) // Debug log
+
+    // Only close and reset after successful API call
+    await closeModal()
+
+    // Emit event to parent component with success status
+    emit('supplier-created', { success: true, data })
+
   } catch (error) {
     console.error('Error creating supplier:', error)
     errors.submit = error.message || 'Failed to create supplier. Please try again.'
+    // Emit event to parent component with error status
+    emit('supplier-created', { success: false, error: error.message || 'Failed to create supplier' })
   } finally {
     isSubmitting.value = false
   }

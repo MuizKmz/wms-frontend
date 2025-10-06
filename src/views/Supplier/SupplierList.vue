@@ -1,4 +1,16 @@
 <template>
+  <!-- Toast Notification -->
+  <div v-if="showToast" class="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+    <div :class="[
+      'rounded-lg px-6 py-4 shadow-lg flex items-center transform transition-all duration-300',
+      toastType === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    ]">
+      <span v-if="toastType === 'success'" class="mr-2">✓</span>
+      <span v-else class="mr-2">⚠</span>
+      {{ toastMessage }}
+    </div>
+  </div>
+
   <AdminLayout>
     <PageBreadcrumb :pageTitle="currentPageTitle" />
     <ToolListFilters @filter-change="handleFilterChange" />
@@ -11,7 +23,7 @@
             class="px-4 py-2 mr-2 btn btn-error text-white text-sm font-medium rounded-lg transition-colors duration-200">
             Delete
           </button>
-          <button 
+          <button
             @click="openAddSupplierModal"
             class="px-4 py-2 mr-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
             Add New Supplier
@@ -24,7 +36,7 @@
         </template>
 
         <!-- Table in main slot -->
-        <SupplierListTable 
+        <SupplierListTable
           ref="supplierTableRef"
           :filters="activeFilters"
           @edit-supplier="openEditSupplierModal"
@@ -35,8 +47,11 @@
     </div>
 
     <!-- Add New Supplier Modal -->
-    <AddNewSupplier ref="addSupplierModalRef" />
-    
+    <AddNewSupplier
+      ref="addSupplierModalRef"
+      @supplier-created="handleSupplierCreated"
+    />
+
     <!-- Edit Supplier Modal -->
     <EditSupplier ref="editSupplierModalRef" />
   </AdminLayout>
@@ -51,6 +66,35 @@ import SupplierListTable from "./component/SupplierListTable.vue";
 import AddNewSupplier from "./component/AddNewSupplier.vue";
 import EditSupplier from "./component/EditSupplier.vue";
 
+// Toast state
+const showToast = ref(false);
+const toastMessage = ref('');
+const toastType = ref('success');
+
+// Function to show toast
+const showToastMessage = (message, type = 'success') => {
+  toastMessage.value = message;
+  toastType.value = type;
+  showToast.value = true;
+
+  // Hide toast after 2 seconds
+  setTimeout(() => {
+    showToast.value = false;
+  }, 2000);
+};
+
+// Handle supplier creation response
+const handleSupplierCreated = async (result) => {
+  if (result.success) {
+    showToastMessage('Supplier has been successfully added', 'success');
+    // Refresh the supplier list if needed
+    if (supplierTableRef.value) {
+      await supplierTableRef.value.refreshData();
+    }
+  } else {
+    showToastMessage(result.error, 'error');
+  }
+};
 const currentPageTitle = ref("Supplier Management");
 const activeFilters = ref({});
 const addSupplierModalRef = ref(null);
@@ -94,7 +138,7 @@ const handleDeleteSupplier = async (supplier) => {
     }
 
     console.log('Supplier deleted successfully');
-    
+
     // Refresh the table
     if (supplierTableRef.value) {
       supplierTableRef.value.refreshData();
