@@ -324,10 +324,32 @@ const editSupplier = (supplier) => {
   emit('edit-supplier', supplier)
 }
 
-const deleteSupplier = (supplier) => {
-  emit('delete-supplier', supplier)
-  console.log('Delete supplier:', supplier)
-  // You can implement delete confirmation here
+const deleteSupplier = async (supplier) => {
+  if (!confirm(`Are you sure you want to delete supplier ${supplier.supplierName}?`)) {
+    return
+  }
+
+  try {
+    const response = await fetch(`http://localhost:3000/supplier/${supplier.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to delete supplier')
+    }
+
+    // Emit event to parent for toast notification
+    emit('delete-supplier', { success: true, data: supplier })
+    
+    // Refresh the table
+    await fetchSuppliers()
+  } catch (error) {
+    console.error('Error deleting supplier:', error)
+    emit('delete-supplier', { success: false, error: error.message })
+  }
 }
 
 // Expose refresh method for parent component

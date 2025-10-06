@@ -57,9 +57,27 @@
   </AdminLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from "vue";
 import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
+
+interface Supplier {
+  id?: number;
+  supplierCode?: string;
+  supplierName: string;
+}
+
+interface Result {
+  success: boolean;
+  error?: string;
+  data?: {
+    supplierName: string;
+  };
+}
+
+interface Filters {
+  [key: string]: string | number | boolean | undefined;
+}
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
 import SupplierListTable from "./component/SupplierListTable.vue";
@@ -72,7 +90,7 @@ const toastMessage = ref('');
 const toastType = ref('success');
 
 // Function to show toast
-const showToastMessage = (message, type = 'success') => {
+const showToastMessage = (message: string, type: 'success' | 'error' = 'success') => {
   toastMessage.value = message;
   toastType.value = type;
   showToast.value = true;
@@ -84,7 +102,7 @@ const showToastMessage = (message, type = 'success') => {
 };
 
 // Handle supplier creation response
-const handleSupplierCreated = async (result) => {
+const handleSupplierCreated = async (result: Result) => {
   if (result.success) {
     showToastMessage('Supplier has been successfully added', 'success');
     // Refresh the supplier list if needed
@@ -92,16 +110,18 @@ const handleSupplierCreated = async (result) => {
       await supplierTableRef.value.refreshData();
     }
   } else {
-    showToastMessage(result.error, 'error');
+    showToastMessage(result.error || 'Failed to create supplier', 'error');
   }
 };
-const currentPageTitle = ref("Supplier Management");
-const activeFilters = ref({});
-const addSupplierModalRef = ref(null);
-const editSupplierModalRef = ref(null);
-const supplierTableRef = ref(null);
 
-const handleFilterChange = (filters) => {
+// Handle supplier deletion response
+const currentPageTitle = ref("Supplier Management");
+const activeFilters = ref<Filters>({});
+const addSupplierModalRef = ref<InstanceType<typeof AddNewSupplier> | null>(null);
+const editSupplierModalRef = ref<InstanceType<typeof EditSupplier> | null>(null);
+const supplierTableRef = ref<InstanceType<typeof SupplierListTable> | null>(null);
+
+const handleFilterChange = (filters: Filters) => {
   activeFilters.value = filters;
   console.log('Filters applied:', filters);
 };
@@ -112,40 +132,26 @@ const openAddSupplierModal = () => {
   }
 };
 
-const openEditSupplierModal = (supplier) => {
+const openEditSupplierModal = (supplier: Supplier) => {
   if (editSupplierModalRef.value) {
     editSupplierModalRef.value.openModal(supplier);
   }
 };
 
-const handleViewSupplier = (supplier) => {
+const handleViewSupplier = (supplier: Supplier) => {
   console.log('View supplier:', supplier);
   // Implement view modal or navigate to detail page
 };
 
-const handleDeleteSupplier = async (supplier) => {
-  if (!confirm(`Are you sure you want to delete supplier "${supplier.supplierName}"?`)) {
-    return;
-  }
-
-  try {
-    const response = await fetch(`/api/suppliers/${supplier.id || supplier.supplierCode}`, {
-      method: 'DELETE'
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to delete supplier');
-    }
-
-    console.log('Supplier deleted successfully');
-
-    // Refresh the table
+const handleDeleteSupplier = async (result: Result) => {
+  if (result.success) {
+    showToastMessage(`Supplier ${result.data?.supplierName || 'unknown'} has been deleted successfully`, 'success');
+    // Refresh table to show updated data
     if (supplierTableRef.value) {
-      supplierTableRef.value.refreshData();
+      await supplierTableRef.value.refreshData();
     }
-  } catch (error) {
-    console.error('Error deleting supplier:', error);
-    alert('Failed to delete supplier. Please try again.');
+  } else {
+    showToastMessage(result.error || 'Failed to delete supplier', 'error');
   }
 };
 
