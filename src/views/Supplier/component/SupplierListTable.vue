@@ -1,6 +1,6 @@
 <template>
   <div class="overflow-hidden">
-    
+
     <!-- Results count -->
     <div class="mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -65,7 +65,7 @@
                 <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select item" />
               </label>
             </th>
-            
+
             <!-- Supplier Code -->
             <td class="px-6 py-4">
               <span class="font-mono text-sm text-gray-900 dark:text-white">
@@ -123,7 +123,7 @@
             <!-- Actions -->
             <td class="px-6 py-4">
               <div class="flex items-center gap-2">
-                <button 
+                <button
                   @click="editSupplier(item)"
                   class="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
                   aria-label="Edit"
@@ -134,7 +134,7 @@
                       d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                 </button>
-                <button 
+                <button
                   @click="deleteSupplier(item)"
                   class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                   aria-label="Delete"
@@ -343,7 +343,7 @@ const deleteSupplier = async (supplier) => {
 
     // Emit event to parent for toast notification
     emit('delete-supplier', { success: true, data: supplier })
-    
+
     // Refresh the table
     await fetchSuppliers()
   } catch (error) {
