@@ -197,6 +197,7 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from "vue"
+import Swal from 'sweetalert2' 
 
 // Props for receiving filters
 const props = defineProps({
@@ -353,7 +354,8 @@ const filteredData = computed(() => {
 
 // --- Pagination ---
 const currentPage = ref(1)
-const itemsPerPage = ref(10)
+const itemsPerPage = ref(5)
+
 const totalPages = computed(() =>
   Math.ceil(filteredData.value.length / itemsPerPage.value)
 )
@@ -382,10 +384,21 @@ const editSupplier = (supplier) => {
 }
 
 const deleteSupplier = async (supplier) => {
-  if (!confirm(`Are you sure you want to delete supplier ${supplier.supplierName}?`)) {
-    return
+  const result = await Swal.fire({
+    title: 'Are you sure?',
+    text: `You are about to delete supplier: ${supplier.supplierName}. This action cannot be undone.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33', // Red color for delete
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, delete it!'
+  })
+
+  if (!result.isConfirmed) {
+    return // User cancelled the operation
   }
 
+  // --- Deletion Logic (only runs if confirmed) ---
   try {
     // Check if supplier has an ID property
     const supplierId = supplier.id || supplier.supplierCode;
@@ -404,6 +417,15 @@ const deleteSupplier = async (supplier) => {
       throw new Error('Failed to delete supplier')
     }
 
+    // Show success notification
+    Swal.fire({
+      title: 'Deleted!',
+      text: `Supplier ${supplier.supplierName} has been deleted.`,
+      icon: 'success',
+      timer: 2000,
+      showConfirmButton: false
+    })
+
     // Emit event to parent for toast notification
     emit('delete-supplier', { success: true, data: { supplierName: supplier.supplierName, id: supplier.id } })
 
@@ -418,19 +440,34 @@ const deleteSupplier = async (supplier) => {
   } catch (error) {
     console.error('Error deleting supplier:', error)
     emit('delete-supplier', { success: false, error: error.message })
+    // Show error notification
+    Swal.fire('Error', `Failed to delete supplier: ${error.message}`, 'error')
   }
 }
 
 // Bulk delete selected suppliers
 const bulkDelete = async () => {
   if (!selectedItems.value || selectedItems.value.length === 0) {
+    Swal.fire('No Selection', 'Please select at least one supplier to delete.', 'info');
     return { success: false, error: 'No suppliers selected' }
   }
 
-  if (!confirm(`Are you sure you want to delete ${selectedItems.value.length} selected supplier(s)?`)) {
+  // 👈 SweetAlert2 Confirmation for bulk delete
+  const confirmResult = await Swal.fire({
+    title: 'Confirm Bulk Deletion',
+    text: `Are you sure you want to delete ${selectedItems.value.length} selected supplier(s)? This cannot be undone.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33', // Red color for delete
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, proceed with bulk delete'
+  })
+
+  if (!confirmResult.isConfirmed) {
     return { success: false, error: 'Cancelled by user' }
   }
 
+  // --- Bulk Deletion Logic (only runs if confirmed) ---
   try {
     const response = await fetch(`${API_URL}/bulk-delete`, {
       method: 'POST',
@@ -453,19 +490,27 @@ const bulkDelete = async () => {
     selectAll.value = false
     await fetchSuppliers()
 
-    // Emit event to parent for toast
+    // Handle success/partial success/failure with SweetAlert2
     if (deletedCount > 0 && blocked.length === 0) {
       emit('delete-supplier', { success: true, data: { count: deletedCount } })
+      Swal.fire('Success', `${deletedCount} suppliers deleted successfully.`, 'success')
       return { success: true, data: result }
+    } else if (deletedCount > 0 && blocked.length > 0) {
+      const message = `${deletedCount} deleted, ${blocked.length} blocked due to existing relations`;
+      emit('delete-supplier', { success: false, error: message, data: { deletedCount, blocked } })
+      Swal.fire('Partial Success', message, 'warning')
+      return { success: false, error: message, data: result }
+    } else {
+        const message = blocked.length > 0 ? `${blocked.length} suppliers were blocked from deletion due to existing relations.` : 'No suppliers were deleted.';
+        emit('delete-supplier', { success: false, error: message, data: result })
+        Swal.fire('Deletion Failed', message, 'error')
+        return { success: false, error: message }
     }
 
-    // Partial success: some deleted, some blocked
-    const message = `${deletedCount} deleted, ${blocked.length} blocked due to existing relations`;
-    emit('delete-supplier', { success: false, error: message, data: { deletedCount, blocked } })
-    return { success: false, error: message, data: result }
   } catch (error) {
     console.error('Error bulk deleting suppliers:', error)
     emit('delete-supplier', { success: false, error: error.message })
+    Swal.fire('Error', `Failed to bulk delete suppliers: ${error.message}`, 'error')
     return { success: false, error: error.message }
   }
 }

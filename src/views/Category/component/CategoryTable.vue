@@ -1,10 +1,9 @@
 <template>
   <div class="overflow-hidden">
 
-    <!-- Results count -->
     <div class="mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        Showing {{ filteredData.length }} category items
+        Showing {{ filteredData.length }} top-level categories
       </p>
     </div>
 
@@ -43,165 +42,97 @@
             </th>
           </tr>
         </thead>
+        
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-          <template v-for="(item, index) in paginatedData" :key="item.id">
-            <!-- Parent/Main Category Row -->
-            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-              <td class="px-6 py-4">
-                <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select item"
-                  :checked="isSelected(item.id)" @change="toggleItemSelection(item.id)" />
-              </td>
+          <tr v-for="row in visibleCategoryRows" :key="row.id" :class="{
+              'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors': true,
+              // Apply background/style based on depth
+              'bg-gray-25 dark:bg-gray-900/30': row.depth > 0,
+          }">
+            <td class="px-6 py-4">
+              <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select item"
+                :checked="isSelected(row.id)" @change="toggleItemSelection(row.id)" />
+            </td>
 
-              <!-- Category Name with expand/collapse -->
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-2">
-                  <button v-if="hasSubcategories(item.id)" @click="toggleExpand(item.id)"
-                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                    <svg class="w-4 h-4 transition-transform"
-                      :class="{ 'rotate-90': expandedCategories.includes(item.id) }" fill="none" stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                  <span class="text-sm font-medium text-gray-900 dark:text-white">
-                    {{ item.name }}
-                  </span>
-                </div>
-              </td>
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2" :style="{ 'padding-left': (row.depth * 2) + 'rem' }">
+                <button v-if="row.hasChildren" @click="toggleExpand(row.id)"
+                  class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                  <svg class="w-4 h-4 transition-transform"
+                    :class="{ 'rotate-90': row.isExpanded }" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+                <div v-else class="w-4 h-4" :class="{ 'ml-6': row.depth > 0 }"></div> 
 
-              <!-- Category Code -->
-              <td class="px-6 py-4">
-                <span class="font-mono text-sm text-gray-900 dark:text-white">
-                  {{ item.categoryCode }}
-                </span>
-              </td>
-
-              <!-- Status -->
-              <td class="px-6 py-4">
-                <span :class="{
-                  'px-3 py-1 text-xs rounded-full font-medium': true,
-                  'bg-green-100 text-green-600': item.status === 'Active',
-                  'bg-blue-100 text-blue-600': item.status === 'Inactive',
-                  'bg-yellow-100 text-yellow-600': item.status === 'Pending'
+                <span class="text-sm" :class="{
+                    // Text color based on depth
+                    'text-gray-900 dark:text-white': row.depth === 0,
+                    'text-gray-700 dark:text-gray-300': row.depth > 0,
+                    // BOLD ONLY PARENT CATEGORIES
+                    'font-medium': row.depth === 0,
+                    'font-normal': row.depth > 0
                 }">
-                  {{ item.status }}
+                  {{ row.name }}
                 </span>
-              </td>
+              </div>
+            </td>
 
-              <!-- Remarks -->
-              <td class="px-6 py-4">
-                <p class="text-sm text-gray-900 dark:text-white">
-                  {{ item.storageRequirements || '-' }}
-                </p>
-              </td>
+            <td class="px-6 py-4">
+              <span class="font-mono text-sm text-gray-900 dark:text-white">
+                {{ row.categoryCode }}
+              </span>
+            </td>
 
-              <!-- Actions -->
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-2">
-                  <button @click="editCategory(item)"
-                    class="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                    aria-label="Edit" title="Edit Category">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </button>
-                                  <button
-                  @click="deleteSupplier(item)"
+            <td class="px-6 py-4">
+              <span :class="{
+                'px-3 py-1 text-xs rounded-full font-medium': true,
+                'bg-green-100 text-green-600': row.status === 'Active',
+                'bg-blue-100 text-blue-600': row.status === 'Inactive',
+                'bg-yellow-100 text-yellow-600': row.status === 'Pending'
+              }">
+                {{ row.status }}
+              </span>
+            </td>
+
+            <td class="px-6 py-4">
+              <p class="text-sm text-gray-900 dark:text-white">
+                {{ row.storageRequirements || '-' }}
+              </p>
+            </td>
+
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2">
+                <button @click="editCategory(row)"
+                  class="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                  aria-label="Edit" title="Edit Category">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+                <button @click="deleteSupplier(row)"
                   class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                  aria-label="Delete"
-                  title="Delete Supplier"
-                >
+                  aria-label="Delete" title="Delete Supplier">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 </button>
-                </div>
-              </td>
-            </tr>
-
-            <!-- Subcategories (shown when expanded) -->
-            <template v-if="expandedCategories.includes(item.id)">
-              <tr v-for="sub in getSubcategories(item.id)" :key="sub.id"
-                class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors bg-gray-25 dark:bg-gray-900/30">
-                <td class="px-6 py-4">
-                  <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select item"
-                    :checked="isSelected(sub.id)" @change="toggleItemSelection(sub.id)" />
-                </td>
-
-                <!-- Subcategory Name (indented) -->
-                <td class="px-6 py-4">
-                  <div class="flex items-center gap-2 ml-8">
-                    <span class="text-sm text-gray-700 dark:text-gray-300">
-                      {{ sub.name }}
-                    </span>
-                  </div>
-                </td>
-
-                <!-- Subcategory Code -->
-                <td class="px-6 py-4">
-                  <span class="font-mono text-sm text-gray-900 dark:text-white">
-                    {{ sub.categoryCode }}
-                  </span>
-                </td>
-
-                <!-- Status -->
-                <td class="px-6 py-4">
-                  <span :class="{
-                    'px-3 py-1 text-xs rounded-full font-medium': true,
-                    'bg-green-100 text-green-600': sub.status === 'Active',
-                    'bg-blue-100 text-blue-600': sub.status === 'Inactive',
-                    'bg-yellow-100 text-yellow-600': sub.status === 'Pending'
-                  }">
-                    {{ sub.status }}
-                  </span>
-                </td>
-
-                <!-- Remarks -->
-                <td class="px-6 py-4">
-                  <p class="text-sm text-gray-700 dark:text-gray-300">
-                    {{ sub.storageRequirements || '-' }}
-                  </p>
-                </td>
-
-                <!-- Actions -->
-                <td class="px-6 py-4">
-                  <div class="flex items-center gap-2">
-                    <button @click="editCategory(sub)"
-                      class="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                      aria-label="Edit" title="Edit Category">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                    <button @click="deleteSupplier(item)"
-                      class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                      aria-label="Delete" title="Delete Supplier">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </template>
-          </template>
+              </div>
+            </td>
+          </tr>
         </tbody>
       </table>
 
-      <!-- FlyonUI Pagination -->
       <div v-if="totalPages > 1" class="mt-6 flex justify-center">
         <nav class="flex items-center gap-x-1">
-          <!-- Previous -->
           <button type="button" class="btn btn-text dark:text-gray-300" :disabled="currentPage === 1"
             @click="changePage(currentPage - 1)">
             Previous
           </button>
 
-          <!-- Pages -->
           <div class="flex items-center gap-x-1">
             <button v-for="page in totalPages" :key="page" type="button"
               class="btn btn-text btn-square aria-[current='page']:text-bg-primary dark:text-gray-300"
@@ -211,7 +142,6 @@
             </button>
           </div>
 
-          <!-- Next -->
           <button type="button" class="btn btn-text dark:text-gray-300" :disabled="currentPage === totalPages"
             @click="changePage(currentPage + 1)">
             Next
@@ -219,13 +149,11 @@
         </nav>
       </div>
 
-      <!-- Loading -->
       <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
         <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
         <p>Loading categories...</p>
       </div>
 
-      <!-- Empty State -->
       <div v-if="!loading && filteredData.length === 0" class="p-8 text-center text-gray-500">
         <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
@@ -239,7 +167,6 @@
         </p>
       </div>
 
-      <!-- Error -->
       <div v-if="error" class="p-8 text-center text-red-500 text-sm">
         <svg class="mx-auto h-12 w-12 text-red-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
@@ -257,10 +184,10 @@ import { ref, onMounted, computed, watch } from "vue"
 
 // Props for receiving filters
 const props = defineProps({
-  filters: {
-    type: Object,
-    default: () => ({})
-  }
+  filters: {
+    type: Object,
+    default: () => ({})
+  }
 })
 
 // Emits for parent component
@@ -278,236 +205,252 @@ const API_URL = '/api/category'
 
 // Function to fetch categories from the API
 const fetchCategories = async () => {
-  loading.value = true
-  error.value = null
-  try {
-    const response = await fetch(API_URL)
+  loading.value = true
+  error.value = null
+  try {
+    const response = await fetch(API_URL)
 
-    if (!response.ok) throw new Error("Failed to fetch categories")
+    if (!response.ok) throw new Error("Failed to fetch categories")
 
-    const json = await response.json()
-    // Assuming the API returns a flat array of all categories and subcategories
-    data.value = json || []
-  } catch (e) {
-    error.value = e.message
-    console.error('Error fetching categories:', e)
-  } finally {
-    loading.value = false
-  }
+    const json = await response.json()
+    data.value = json || []
+  } catch (e) {
+    error.value = e.message
+    console.error('Error fetching categories:', e)
+  } finally {
+    loading.value = false
+  }
 }
 
 // Fetch data on component mount
 onMounted(() => {
-  fetchCategories()
+  fetchCategories()
 })
 
-// --- Category Structure Logic ---
+// ------------------------------------------------
+// --- Category Structure & Recursion Logic ---
+// ------------------------------------------------
 
 // Check if category has subcategories (looks across all fetched data)
 const hasSubcategories = (categoryId) => {
-  return data.value.some(cat => cat.parentCategoryId === categoryId)
+  return data.value.some(cat => cat.parentCategoryId === categoryId)
 }
 
 // Get subcategories for a parent category (looks across all fetched data)
 const getSubcategories = (parentId) => {
-  // We use data.value here to find ALL subcategories, even if the parent is filtered out.
-  // This is correct as we only iterate over paginatedData (top-level) in the template.
-  return data.value.filter(cat => cat.parentCategoryId === parentId)
-        .sort((a, b) => a.name.localeCompare(b.name)); // Optional: sort subcategories
+  return data.value.filter(cat => cat.parentCategoryId === parentId)
+        .sort((a, b) => a.name.localeCompare(b.name));
 }
+
+/**
+ * Recursively generates a flat array of categories, including nested children 
+ * that are currently marked as expanded.
+ */
+const getNestedCategories = (categories, depth = 0) => {
+    const rows = [];
+    categories.forEach(category => {
+        // 1. Add the current category with its metadata (depth, expanded state)
+        rows.push({
+            ...category,
+            depth: depth,
+            isExpanded: expandedCategories.value.includes(category.id),
+            hasChildren: hasSubcategories(category.id)
+        });
+
+        // 2. If expanded, recursively get and add its children
+        if (expandedCategories.value.includes(category.id)) {
+            const subcategories = getSubcategories(category.id);
+            if (subcategories.length) {
+                // Merge the result of the recursive call
+                rows.push(...getNestedCategories(subcategories, depth + 1));
+            }
+        }
+    });
+    return rows;
+};
 
 // Toggle expand/collapse for categories with subcategories
 const toggleExpand = (categoryId) => {
-  const index = expandedCategories.value.indexOf(categoryId)
-  if (index > -1) {
-    expandedCategories.value.splice(index, 1)
-  } else {
-    expandedCategories.value.push(categoryId)
-  }
-  // Recalculate selectAll state when expansion changes
-  setTimeout(updateSelectAllState, 0) 
+  const index = expandedCategories.value.indexOf(categoryId)
+  if (index > -1) {
+    expandedCategories.value.splice(index, 1)
+  } else {
+    expandedCategories.value.push(categoryId)
+  }
+  // Recalculate selectAll state immediately after expansion change
+  setTimeout(updateSelectAllState, 0)
 }
 
-// --- Filtering (Only affects top-level categories) ---
+// ------------------------------------------------
+// --- Filtering & Pagination Logic ---
+// ------------------------------------------------
 
-// Computed property for filtered data (only top-level categories)
+// 1. Filtered data (only top-level categories)
 const filteredData = computed(() => {
-  // Start with only top-level categories (parentCategoryId is null)
-  let categories = data.value.filter(cat => cat.parentCategoryId === null)
+  // Start with only top-level categories (parentCategoryId is null)
+  let categories = data.value.filter(cat => cat.parentCategoryId === null)
 
-  if (!props.filters || Object.keys(props.filters).length === 0) return categories
+  if (!props.filters || Object.keys(props.filters).length === 0) return categories
 
-  // Apply filters only to top-level categories
-  return categories.filter((item) => {
-    const filters = props.filters
-
-    // Filter by Category Name (case-insensitive)
-    if (
-      filters.categoryName &&
-      !item.name
-        .toLowerCase()
-        .includes(filters.categoryName.toLowerCase())
-    ) {
-      return false
-    }
-    // Filter by Category Code (case-insensitive)
-    if (
-      filters.categoryCode &&
-      !item.categoryCode
-        .toLowerCase()
-        .includes(filters.categoryCode.toLowerCase())
-    ) {
-      return false
-    }
-    // Filter by Status (exact match)
-    if (filters.status && item.status !== filters.status) {
-      return false
-    }
-
-    return true
-  })
+  // Apply filters only to top-level categories
+  return categories.filter((item) => {
+    const filters = props.filters
+    if (
+      filters.categoryName &&
+      !item.name.toLowerCase().includes(filters.categoryName.toLowerCase())
+    ) return false
+    if (
+      filters.categoryCode &&
+      !item.categoryCode.toLowerCase().includes(filters.categoryCode.toLowerCase())
+    ) return false
+    if (filters.status && item.status !== filters.status) return false
+    return true
+  })
 })
 
-// --- Pagination ---
 const currentPage = ref(1)
-const itemsPerPage = ref(10)
-const totalPages = computed(() =>
-  // Pagination is based on the count of filtered top-level items
-  Math.ceil(filteredData.value.length / itemsPerPage.value)
-)
-const paginatedData = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage.value
-  const end = start + itemsPerPage.value
-  return filteredData.value.slice(start, end)
+const itemsPerPage = ref(5)
+
+// 2. Paginated top-level data
+const paginatedTopLevelData = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  return filteredData.value.slice(start, end)
 })
+
+// 3. The final list of visible rows (parents + all expanded children)
+const visibleCategoryRows = computed(() => {
+    // Start the recursion with the paginated top-level data
+    return getNestedCategories(paginatedTopLevelData.value);
+});
+
+
+const totalPages = computed(() =>
+  // Pagination logic remains based on the count of filtered top-level items
+  Math.ceil(filteredData.value.length / itemsPerPage.value)
+)
+
 const changePage = (page) => {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page
-  }
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+  }
 }
 
-// --- Checkbox/Selection Logic (Adjusted for nested structure) ---
+// ------------------------------------------------
+// --- Checkbox/Selection Logic ---
+// ------------------------------------------------
 
-// Get all currently visible item IDs, including expanded subcategories
+// Get all currently visible item IDs (including expanded children)
 const allVisibleItemIds = computed(() => {
-  const ids = []
-  paginatedData.value.forEach(item => {
-    ids.push(item.id)
-    if (expandedCategories.value.includes(item.id)) {
-      getSubcategories(item.id).forEach(sub => {
-        ids.push(sub.id)
-      })
-    }
-  })
-  return ids
+  // Simple lookup of the flat list generated by the recursive computed property
+  return visibleCategoryRows.value.map(row => row.id)
 })
 
 // Toggle select all
 const toggleSelectAll = () => {
-  const visibleIds = allVisibleItemIds.value
-  if (selectAll.value) {
-    // Deselect all visible items
-    selectedItems.value = selectedItems.value.filter(id => !visibleIds.includes(id))
-    selectAll.value = false
-  } else {
-    // Select all visible items
-    visibleIds.forEach(id => {
-      if (!selectedItems.value.includes(id)) {
-        selectedItems.value.push(id)
-      }
-    })
-    selectAll.value = true
-  }
+  const visibleIds = allVisibleItemIds.value
+  if (selectAll.value) {
+    // Deselect all visible items
+    selectedItems.value = selectedItems.value.filter(id => !visibleIds.includes(id))
+    selectAll.value = false
+  } else {
+    // Select all visible items
+    visibleIds.forEach(id => {
+      if (!selectedItems.value.includes(id)) {
+        selectedItems.value.push(id)
+      }
+    })
+    selectAll.value = true
+  }
 }
 
 // Toggle individual item selection
 const toggleItemSelection = (itemId) => {
-  const index = selectedItems.value.indexOf(itemId)
-  if (index > -1) {
-    selectedItems.value.splice(index, 1)
-  } else {
-    selectedItems.value.push(itemId)
-  }
-  updateSelectAllState()
+  const index = selectedItems.value.indexOf(itemId)
+  if (index > -1) {
+    selectedItems.value.splice(index, 1)
+  } else {
+    selectedItems.value.push(itemId)
+  }
+  updateSelectAllState()
 }
 
 // Check if item is selected
 const isSelected = (itemId) => {
-  return selectedItems.value.includes(itemId)
+  return selectedItems.value.includes(itemId)
 }
 
 // Update select all checkbox state
 const updateSelectAllState = () => {
-  const visibleIds = allVisibleItemIds.value
-  if (visibleIds.length === 0) {
-      selectAll.value = false;
-      return;
-  }
-  // Check if every visible item ID is present in selectedItems
-  selectAll.value = visibleIds.every(id => selectedItems.value.includes(id))
+  const visibleIds = allVisibleItemIds.value
+  if (visibleIds.length === 0) {
+      selectAll.value = false;
+      return;
+  }
+  // Check if every visible item ID is present in selectedItems
+  selectAll.value = visibleIds.every(id => selectedItems.value.includes(id))
 }
 
 // Watch for changes in paginated data or expanded categories to update 'select all'
-watch([paginatedData, expandedCategories], updateSelectAllState, { deep: true, immediate: true })
+watch([paginatedTopLevelData, expandedCategories], updateSelectAllState, { deep: true, immediate: true })
 
 
-// --- Actions ---
+// ------------------------------------------------
+// --- Actions & Exposed Methods ---
+// ------------------------------------------------
 
 const editCategory = (category) => {
-  emit('edit-category', category)
+  emit('edit-category', category)
 }
 
 const deleteSupplier = async (item) => {
-  // You might want to rename this function to deleteCategory
-  if (!confirm(`Are you sure you want to delete category ${item.name}? This will also delete its subcategories.`)) {
-    return
-  }
+  // Rename to deleteCategory in a real app for clarity
+  if (!confirm(`Are you sure you want to delete category ${item.name}? This will also delete its nested subcategories.`)) {
+    return
+  }
 
-  try {
-    const response = await fetch(`api/category/${item.id}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
+  try {
+    const response = await fetch(`api/category/${item.id}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' }
+    })
 
-    if (!response.ok) {
-      throw new Error('Failed to delete category')
-    }
+    if (!response.ok) {
+      throw new Error('Failed to delete category')
+    }
 
-    emit('delete-category', { success: true, data: { name: item.name, id: item.id } })
+    emit('delete-category', { success: true, data: { name: item.name, id: item.id } })
 
-    // Clear selection for deleted item
-    const index = selectedItems.value.indexOf(item.id)
-    if (index > -1) {
-      selectedItems.value.splice(index, 1)
-    }
+    // Clear selection for deleted item
+    const index = selectedItems.value.indexOf(item.id)
+    if (index > -1) {
+      selectedItems.value.splice(index, 1)
+    }
 
-    // Refresh the table
-    await fetchCategories()
-  } catch (error) {
-    console.error('Error deleting category:', error)
-    emit('delete-category', { success: false, error: error.message })
-  }
+    // Refresh the table
+    await fetchCategories()
+  } catch (error) {
+    console.error('Error deleting category:', error)
+    emit('delete-category', { success: false, error: error.message })
+  }
 }
 
 // Expose refresh method for parent component
 const refreshData = () => {
-  fetchCategories()
-  selectedItems.value = []
-  selectAll.value = false
+  fetchCategories()
+  selectedItems.value = []
+  selectAll.value = false
 }
 
 defineExpose({ refreshData, selectedItems })
 
 // Watch for filter changes
 watch(
-  () => props.filters,
-  (newFilters) => {
-    console.log("Filters updated:", newFilters)
-    currentPage.value = 1 // reset to first page on filter change
-  },
-  { deep: true }
+  () => props.filters,
+  (newFilters) => {
+    currentPage.value = 1 // reset to first page on filter change
+  },
+  { deep: true }
 )
 </script>
 
