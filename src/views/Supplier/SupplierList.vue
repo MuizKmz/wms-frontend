@@ -52,8 +52,8 @@
       @supplier-created="handleSupplierCreated"
     />
 
-    <!-- Edit Supplier Modal -->
-    <EditSupplier ref="editSupplierModalRef" />
+  <!-- Edit Supplier Modal -->
+  <EditSupplier ref="editSupplierModalRef" @supplier-updated="handleSupplierUpdated" />
   </AdminLayout>
 </template>
 
@@ -163,5 +163,17 @@ const handleBulkDelete = () => {
 const handleImportSupplier = () => {
   console.log('Import supplier clicked');
   // Implement import functionality
+};
+
+// Handle supplier update response
+const handleSupplierUpdated = async (result: Result) => {
+  if (result.success) {
+    showToastMessage('Supplier has been successfully updated', 'success');
+    if (supplierTableRef.value) {
+      await supplierTableRef.value.refreshData();
+    }
+  } else {
+    showToastMessage(result.error || 'Failed to update supplier', 'error');
+  }
 };
 </script>

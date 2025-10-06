@@ -323,6 +323,8 @@
 <script setup>
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 
+const emit = defineEmits(['supplier-updated'])
+
 /* state */
 const isOpen = ref(false)
 const isSubmitting = ref(false)
@@ -386,7 +388,7 @@ const getScrollbarWidth = () => {
 const lockScroll = () => {
   scrollY = window.scrollY
   scrollbarWidth = getScrollbarWidth()
-  
+
   document.body.style.paddingRight = `${scrollbarWidth}px`
   document.body.style.position = 'fixed'
   document.body.style.top = `-${scrollY}px`
@@ -400,7 +402,7 @@ const unlockScroll = () => {
   document.body.style.top = ''
   document.body.style.width = ''
   document.body.style.overflow = ''
-  
+
   requestAnimationFrame(() => {
     window.scrollTo(0, scrollY)
   })
@@ -529,12 +531,12 @@ const onlyNumbers = (event) => {
 const formatPhoneNumber = (event) => {
   // Remove all non-numeric characters
   let value = event.target.value.replace(/\D/g, '')
-  
+
   // Limit to 15 digits
   if (value.length > 15) {
     value = value.slice(0, 15)
   }
-  
+
   form.phoneNumber = value
 }
 
@@ -542,11 +544,11 @@ const formatPhoneNumber = (event) => {
 const handleClickOutside = (event) => {
   const statusDd = statusDropdownRef.value
   const countryDd = countryDropdownRef.value
-  
+
   if (statusDd && !statusDd.contains(event.target)) {
     openDropdowns.status = false
   }
-  
+
   if (countryDd && !countryDd.contains(event.target)) {
     openDropdowns.country = false
   }
@@ -555,7 +557,7 @@ const handleClickOutside = (event) => {
 // Parse contact number to extract country code and phone number
 const parseContactNumber = (contact) => {
   if (!contact) return { countryCode: '+60', phoneNumber: '' }
-  
+
   // Find matching country code
   for (const country of countries) {
     if (contact.startsWith(country.dialCode)) {
@@ -565,31 +567,48 @@ const parseContactNumber = (contact) => {
       }
     }
   }
-  
+
   // Default if no match
   return { countryCode: '+60', phoneNumber: contact.replace(/^\+/, '') }
 }
 
 /* open/close modal */
 const openModal = async (supplierData) => {
-  supplierId.value = supplierData.id || supplierData.supplierCode
-  
-  // Parse contact number
-  const { countryCode, phoneNumber } = parseContactNumber(supplierData.contact || supplierData.contactPhone)
-  
+  // supplierData may contain only an id from the table row; fetch full details if possible
+  supplierId.value = supplierData?.id || supplierData?.supplierCode || null
+
+  let dataToUse = supplierData || {}
+
+  if (supplierId.value && supplierData && Object.keys(supplierData).length === 1) {
+    // If only id was passed, fetch full supplier details from backend
+    try {
+      const resp = await fetch(`api/supplier/${supplierId.value}`)
+      if (resp.ok) {
+        dataToUse = await resp.json()
+      } else {
+        console.warn('Failed to fetch supplier details, falling back to passed data')
+      }
+    } catch (err) {
+      console.warn('Error fetching supplier details:', err)
+    }
+  }
+
+  // Parse contact number - support both contact and contactPhone fields
+  const { countryCode, phoneNumber } = parseContactNumber(dataToUse.contact || dataToUse.contactPhone)
+
   // Prefill form with existing data
-  form.supplierCode = supplierData.supplierCode || ''
-  form.supplierName = supplierData.supplierName || ''
-  form.manager = supplierData.manager || ''
+  form.supplierCode = dataToUse.supplierCode || dataToUse.code || ''
+  form.supplierName = dataToUse.supplierName || ''
+  form.manager = dataToUse.manager || ''
   form.countryCode = countryCode
   form.phoneNumber = phoneNumber
-  form.emailAddress = supplierData.email || supplierData.emailAddress || ''
-  form.status = supplierData.status || ''
-  form.remarks = supplierData.remark || supplierData.remarks || ''
-  
+  form.emailAddress = dataToUse.email || dataToUse.emailAddress || ''
+  form.status = dataToUse.status || ''
+  form.remarks = dataToUse.remark || dataToUse.remarks || ''
+
   // Reset errors
   Object.keys(errors).forEach(key => errors[key] = '')
-  
+
   isOpen.value = true
   lockScroll()
   await nextTick()
@@ -613,19 +632,20 @@ const submitForm = async () => {
   errors.submit = ''
 
   try {
-    // Prepare data with full phone number
+    // Prepare data to match backend schema (same shape used in AddNewSupplier)
     const submissionData = {
-      ...form,
-      contact: `${form.countryCode}${form.phoneNumber}`
+      supplierCode: form.supplierCode?.toUpperCase(),
+      supplierName: form.supplierName,
+      manager: form.manager,
+      contactPhone: `${form.countryCode}${form.phoneNumber}`,
+      email: form.emailAddress,
+      status: form.status === 'Active' ? 'Active' : 'Inactive',
+      remark: form.remarks || null
     }
-    
-    // Remove individual phone fields from submission
-    delete submissionData.countryCode
-    delete submissionData.phoneNumber
-    
-    // Replace with your actual API endpoint - use PUT or PATCH for updates
-    const response = await fetch(`/api/suppliers/${supplierId.value}`, {
-      method: 'PUT', // or 'PATCH'
+
+    // Call update endpoint
+    const response = await fetch(`api/supplier/${supplierId.value}`, {
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -637,15 +657,14 @@ const submitForm = async () => {
       throw new Error(errorData.message || 'Failed to update supplier')
     }
 
-    const data = await response.json()
-    console.log('Supplier updated successfully:', data)
-    
-    // Success - close modal and emit event
-    closeModal()
-    
-    // Emit event to parent to refresh the table
-    // You can handle this in your parent component
-    
+  const data = await response.json()
+  console.log('Supplier updated successfully:', data)
+
+  // Success - stop submitting so modal can close, then close modal and emit event
+  isSubmitting.value = false
+  await closeModal()
+  emit('supplier-updated', { success: true, data })
+
   } catch (error) {
     console.error('Error updating supplier:', error)
     errors.submit = error.message || 'Failed to update supplier. Please try again.'
