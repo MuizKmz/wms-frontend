@@ -32,8 +32,8 @@
             </a>
           </li>
           <li v-for="category in categories" :key="category.id">
-            <a 
-              class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" 
+            <a
+              class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer"
               @click="selectCategory(category.id, `${category.categoryCode} - ${category.name}`)"
               :title="`${category.categoryCode} - ${category.name}`"
             >
@@ -194,8 +194,8 @@ const selectedCategoryName = ref('All Categories')
 const isCategoryDropdownOpen = ref(false)
 const categoryDropdownRef = ref(null)
 
-// API endpoint - adjust according to your needs
-const API_URL = '/api/products' // or '/api/inventory' depending on your backend
+// API endpoint - use inventory endpoint which includes product and rack relations
+const API_URL = '/api/inventory'
 const CATEGORY_API_URL = '/api/category'
 
 // Function to fetch categories
@@ -218,12 +218,25 @@ const fetchData = async () => {
   loading.value = true
   error.value = null
   try {
-    const response = await fetch(API_URL)
+    // Append category filter if selected
+    const url = selectedCategoryId.value ? `${API_URL}?categoryId=${selectedCategoryId.value}` : API_URL
+    const response = await fetch(url)
 
     if (!response.ok) throw new Error("Failed to fetch data")
 
     const json = await response.json()
-    data.value = json || []
+    // Normalize inventory items for the UI
+    data.value = (json || []).map(inv => ({
+      id: inv.id,
+      product: inv.product ? (inv.product.name || inv.product.productCode) : (inv.productName || null),
+      productId: inv.product?.id || inv.productId,
+      categoryId: inv.product?.category?.id || inv.product?.categoryId || null,
+      quantity: inv.quantity || 0,
+      status: inv.product?.status || inv.status || (inv.quantity > 0 ? 'In Stock' : 'Out of Stock'),
+      rack: inv.rack ? (inv.rack.rackName || inv.rack.rackCode) : (inv.rackLocation || null),
+      warehouse: inv.warehouse,
+      raw: inv
+    }))
   } catch (e) {
     error.value = e.message
     console.error('Error fetching data:', e)
@@ -244,8 +257,8 @@ const filteredData = computed(() => {
 
   // Filter by selected category
   if (selectedCategoryId.value !== null) {
-    filtered = filtered.filter(item => 
-      item.categoryId === selectedCategoryId.value || 
+    filtered = filtered.filter(item =>
+      item.categoryId === selectedCategoryId.value ||
       item.category?.id === selectedCategoryId.value
     )
   }
@@ -313,6 +326,8 @@ const selectCategory = (id, name) => {
   selectedCategoryName.value = name
   isCategoryDropdownOpen.value = false
   currentPage.value = 1 // Reset to first page when category changes
+  // Fetch inventory filtered by category immediately
+  fetchData()
 }
 
 // Close dropdown when clicking outside
