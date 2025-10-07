@@ -13,7 +13,7 @@
 
   <AdminLayout>
     <PageBreadcrumb :pageTitle="currentPageTitle" />
-    <ToolListFilters @filter-change="handleFilterChange" />
+  
     
     <div class="space-y-5 sm:space-y-6">
       <ComponentCard 
@@ -24,6 +24,7 @@
         <div>
           <!-- Tab Navigation -->
           <div class="border-b border-gray-200 dark:border-gray-700 -mx-6 px-6 -mt-14">
+            <CategoryListFilters @filter-change="handleFilterChange" />
             <div class="flex gap-1">
               <button
                 v-for="tab in categoryTabs"
@@ -101,6 +102,7 @@ import CategoryTable from "./component/CategoryTable.vue";
 import CategoryListOverview from "./component/CategoryListOverview.vue";
 import AddNewCategory from "./component/AddNewCategory.vue";
 import EditCategory from "./component/EditCategory.vue";
+import CategoryListFilters from "./component/CategoryListFilters.vue";
 
 interface Category {
   id?: number;

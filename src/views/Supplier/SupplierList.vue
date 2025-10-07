@@ -12,7 +12,6 @@
 
   <AdminLayout>
     <PageBreadcrumb :pageTitle="currentPageTitle" />
-    <ToolListFilters @filter-change="handleFilterChange" />
 
     <div class="space-y-5 sm:space-y-6">
       <ComponentCard 
@@ -21,6 +20,7 @@
       >
         <div>
           <div class="border-b border-gray-200 dark:border-gray-700 -mx-6 px-6 -mt-14">
+            <SupplierListFilters @filter-change="handleFilterChange" />
             <div class="flex gap-1">
               <button
                 @click="handleTabChange('table')"
@@ -82,6 +82,7 @@ import ComponentCard from "@/components/common/ComponentCard.vue";
 import SupplierListTable from "./component/SupplierListTable.vue";
 import AddNewSupplier from "./component/AddNewSupplier.vue";
 import EditSupplier from "./component/EditSupplier.vue";
+import SupplierListFilters from "./component/SupplierListFilters.vue";
 
 // Interface definitions
 interface Supplier {
@@ -108,7 +109,7 @@ const activeFilters = ref<Filters>({});
 const addSupplierModalRef = ref<InstanceType<typeof AddNewSupplier> | null>(null);
 const editSupplierModalRef = ref<InstanceType<typeof EditSupplier> | null>(null);
 const supplierTableRef = ref<InstanceType<typeof SupplierListTable> | null>(null);
-const activeTab = ref('table'); // State for active tab
+const activeTab = ref('table'); 
 
 // --- Tab Logic ---
 // Define the single tab with its component

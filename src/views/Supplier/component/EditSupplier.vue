@@ -355,7 +355,7 @@ const errors = reactive({
   submit: ''
 })
 
-const statusOptions = ['Active', 'Inactive', 'Pending']
+const statusOptions = ['Active', 'Inactive']
 const openDropdowns = reactive({ status: false, country: false })
 
 // Popular countries for phone numbers
