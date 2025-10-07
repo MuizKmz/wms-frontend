@@ -45,6 +45,12 @@
             </div>
           </div>
 
+          <!-- Edit Category Modal -->
+          <EditCategory
+            ref="editCategoryModalRef"
+            @category-updated="handleCategoryUpdated"
+          />
+
           <!-- Action Buttons below tabs -->
           <div v-if="activeTab === 'table'" class="flex gap-2 my-6">
             <button 
@@ -66,6 +72,7 @@
             ref="categoryTableRef"
             :filters="activeFilters"
             @delete-category="handleDeleteCategory"
+            @edit-category="handleEditCategory"
           />
         </div>
       </ComponentCard>
@@ -75,6 +82,12 @@
     <AddNewCategory 
       ref="addCategoryModalRef"
       @category-created="handleCategoryCreated"
+    />
+
+    <!-- Edit Category Modal -->
+    <EditCategory
+      ref="editCategoryModalRef"
+      @category-updated="handleCategoryUpdated"
     />
   </AdminLayout>
 </template>
@@ -87,6 +100,7 @@ import ComponentCard from "@/components/common/ComponentCard.vue";
 import CategoryTable from "./component/CategoryTable.vue";
 import CategoryListOverview from "./component/CategoryListOverview.vue";
 import AddNewCategory from "./component/AddNewCategory.vue";
+import EditCategory from "./component/EditCategory.vue";
 
 interface Category {
   id?: number;
@@ -109,6 +123,7 @@ interface Filters {
 const currentPageTitle = ref("Category");
 const activeFilters = ref<Filters>({});
 const addCategoryModalRef = ref<InstanceType<typeof AddNewCategory> | null>(null);
+const editCategoryModalRef = ref<InstanceType<typeof EditCategory> | null>(null);
 const categoryTableRef = ref<InstanceType<typeof CategoryTable> | null>(null);
 const activeTab = ref('table');
 
@@ -144,14 +159,8 @@ const handleCategoryCreated = async (result: Result) => {
 
 // Handle category deletion response
 const handleDeleteCategory = async (result: Result) => {
-  if (result.success) {
-    showToastMessage(`Category ${result.data?.categoryName || 'unknown'} has been deleted successfully`, 'success');
-    // Refresh table to show updated data
-    if (categoryTableRef.value) {
-      await categoryTableRef.value.refreshData();
-    }
-  } else {
-    showToastMessage(result.error || 'Failed to delete category', 'error');
+  if (result.success && categoryTableRef.value) {
+    await categoryTableRef.value.refreshData();
   }
 };
 
@@ -188,8 +197,29 @@ const openAddCategoryModal = () => {
   }
 };
 
-const handleBulkDelete = () => {
-  console.log('Bulk delete clicked');
-  // Implement bulk delete functionality
+const handleBulkDelete = async () => {
+  if (!categoryTableRef.value || !categoryTableRef.value.bulkDelete) {
+    return;
+  }
+  await categoryTableRef.value.bulkDelete();
+};
+
+// Handle edit category action
+const handleEditCategory = (category: any) => {
+  if (editCategoryModalRef.value) {
+    editCategoryModalRef.value.openModal(category);
+  }
+};
+
+// Handle category update response
+const handleCategoryUpdated = async (result: Result) => {
+  if (result.success) {
+    showToastMessage('Category has been successfully updated', 'success');
+    if (categoryTableRef.value) {
+      await categoryTableRef.value.refreshData();
+    }
+  } else {
+    showToastMessage(result.error || 'Failed to update category', 'error');
+  }
 };
 </script>

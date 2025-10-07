@@ -105,14 +105,14 @@
             <td class="px-6 py-4">
               <div class="flex items-center gap-2">
                 <button @click="editCategory(row)"
-                  class="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                  class="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
                   aria-label="Edit" title="Edit Category">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                 </button>
-                <button @click="deleteSupplier(row)"
+                <button @click="deleteCategory(row)"
                   class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                   aria-label="Delete" title="Delete Supplier">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -181,6 +181,7 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from "vue"
+import Swal from 'sweetalert2'
 
 // Props for receiving filters
 const props = defineProps({
@@ -403,10 +404,19 @@ const editCategory = (category) => {
   emit('edit-category', category)
 }
 
-const deleteSupplier = async (item) => {
-  // Rename to deleteCategory in a real app for clarity
-  if (!confirm(`Are you sure you want to delete category ${item.name}? This will also delete its nested subcategories.`)) {
-    return
+const deleteCategory = async (item) => {
+  const result = await Swal.fire({
+    title: 'Are you sure?',
+    text: `You are about to delete category: ${item.name}. This will also delete its nested subcategories. This action cannot be undone.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, delete it!'
+  })
+
+  if (!result.isConfirmed) {
+    return // User cancelled the operation
   }
 
   try {
@@ -415,7 +425,6 @@ const deleteSupplier = async (item) => {
       headers: { 'Content-Type': 'application/json' }
     })
 
-    // Try to parse JSON body if present
     let body = null
     try {
       body = await response.json()
@@ -426,20 +435,25 @@ const deleteSupplier = async (item) => {
     if (!response.ok) {
       const msg = (body && (body.message || body.error)) ? (body.message || body.error) : 'Failed to delete category'
       console.error('Delete failed:', msg, body)
+      Swal.fire('Error', msg, 'error')
       emit('delete-category', { success: false, error: msg, details: body })
       return
     }
 
     // If backend reports blocked categories (due to products), surface that to parent
     if (body && Array.isArray(body.blocked) && body.blocked.length > 0) {
-      // Remove any successfully deleted ids from selection
       const deletedIds = Array.isArray(body.deletedIds) ? body.deletedIds : []
       if (deletedIds.length) {
         selectedItems.value = selectedItems.value.filter(id => !deletedIds.includes(id))
       }
 
+      Swal.fire({
+        title: 'Partial Deletion',
+        text: `Some categories could not be deleted because they have associated products.`,
+        icon: 'warning'
+      })
+
       emit('delete-category', { success: false, blocked: body.blocked, deletedIds: deletedIds })
-      // Refresh to reflect any deletions that did occur
       await fetchCategories()
       return
     }
@@ -450,12 +464,22 @@ const deleteSupplier = async (item) => {
     // Clear selection for deleted ids
     selectedItems.value = selectedItems.value.filter(id => !deletedIds.includes(id))
 
+    // Show success notification
+    Swal.fire({
+      title: 'Deleted!',
+      text: `Category ${item.name} has been deleted.`,
+      icon: 'success',
+      timer: 2000,
+      showConfirmButton: false
+    })
+
     emit('delete-category', { success: true, deletedIds, data: { name: item.name, id: item.id } })
 
     // Refresh the table
     await fetchCategories()
   } catch (error) {
     console.error('Error deleting category:', error)
+    Swal.fire('Error', `Failed to delete category: ${error.message}`, 'error')
     emit('delete-category', { success: false, error: error.message })
   }
 }
@@ -467,7 +491,71 @@ const refreshData = () => {
   selectAll.value = false
 }
 
-defineExpose({ refreshData, selectedItems })
+// Bulk delete selected categories
+const bulkDelete = async () => {
+  if (!selectedItems.value || selectedItems.value.length === 0) {
+    Swal.fire('No Selection', 'Please select at least one category to delete.', 'info');
+    return { success: false, error: 'No categories selected' }
+  }
+
+  const confirmResult = await Swal.fire({
+    title: 'Confirm Bulk Deletion',
+    text: `Are you sure you want to delete ${selectedItems.value.length} selected category(ies) and their subcategories? This cannot be undone.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, proceed with bulk delete'
+  })
+
+  if (!confirmResult.isConfirmed) {
+    return { success: false, error: 'Cancelled by user' }
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/bulk-delete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: selectedItems.value })
+    })
+
+    let result = await response.json()
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Failed to bulk delete categories')
+    }
+
+    // Clear selection and refresh
+    const deletedCount = Array.isArray(result.deletedIds) ? result.deletedIds.length : 0
+    const blocked = result.blocked || []
+
+    selectedItems.value = []
+    selectAll.value = false
+    await fetchCategories()
+
+    if (deletedCount > 0 && blocked.length === 0) {
+      Swal.fire('Success', `${deletedCount} categories deleted successfully.`, 'success')
+      return { success: true, data: result }
+    } else if (deletedCount > 0 && blocked.length > 0) {
+      const message = `${deletedCount} deleted, ${blocked.length} blocked due to associated products`;
+      Swal.fire('Partial Success', message, 'warning')
+      return { success: false, error: message, data: result }
+    } else {
+      const message = blocked.length > 0 
+        ? `${blocked.length} categories were blocked from deletion due to associated products.` 
+        : 'No categories were deleted.';
+      Swal.fire('Deletion Failed', message, 'error')
+      return { success: false, error: message }
+    }
+
+  } catch (error) {
+    console.error('Error bulk deleting categories:', error)
+    Swal.fire('Error', `Failed to bulk delete categories: ${error.message}`, 'error')
+    return { success: false, error: error.message }
+  }
+}
+
+defineExpose({ refreshData, selectedItems, bulkDelete })
 
 // Watch for filter changes
 watch(
