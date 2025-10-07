@@ -214,7 +214,7 @@ const data = ref([])
 const loading = ref(false)
 const error = ref(null)
 const selectedItems = ref([])
-const selectAll = ref(false) // State for the select all checkbox
+const selectAll = ref(false)
 
 // API endpoint for suppliers
 const API_URL = '/api/supplier'
@@ -257,7 +257,6 @@ const updateSelectAllState = () => {
     selectAll.value = false
     return
   }
-  // Check if every visible item ID is present in selectedItems
   selectAll.value = visibleIds.every(id => selectedItems.value.includes(id))
 }
 
@@ -270,9 +269,9 @@ const isSelected = (itemId) => {
 const toggleItemSelection = (itemId) => {
   const index = selectedItems.value.indexOf(itemId)
   if (index > -1) {
-    selectedItems.value.splice(index, 1) // Deselect
+    selectedItems.value.splice(index, 1)
   } else {
-    selectedItems.value.push(itemId) // Select
+    selectedItems.value.push(itemId)
   }
   updateSelectAllState()
 }
@@ -280,11 +279,9 @@ const toggleItemSelection = (itemId) => {
 // Toggle select all
 const toggleSelectAll = () => {
   if (selectAll.value) {
-    // Deselect all visible items
     selectedItems.value = selectedItems.value.filter(id => !visibleItemIds.value.includes(id))
     selectAll.value = false
   } else {
-    // Select all visible items
     const visibleIds = visibleItemIds.value
     visibleIds.forEach(id => {
       if (!selectedItems.value.includes(id)) {
@@ -304,9 +301,6 @@ const filteredData = computed(() => {
   return data.value.filter((item) => {
     const filters = props.filters
 
-    // Note: The template is using item.manager, contactPhone/contact, and email/emailAddress,
-    // but the filter logic uses filters.picName and filters.email. Using a fallback for checks.
-
     if (
       filters.supplierCode &&
       !item.supplierCode
@@ -323,8 +317,7 @@ const filteredData = computed(() => {
     ) {
       return false
     }
-    // PIC Name filter
-    const picName = item.manager || '' // Assuming manager holds PIC's Name
+    const picName = item.manager || ''
     if (
       filters.picName &&
       !picName
@@ -333,7 +326,6 @@ const filteredData = computed(() => {
     ) {
       return false
     }
-    // Email filter
     const email = item.email || item.emailAddress || ''
     if (
       filters.email &&
@@ -369,9 +361,20 @@ const changePage = (page) => {
   }
 }
 
+// Helper function to adjust page after deletion
+const adjustPageAfterDeletion = () => {
+  // Calculate if current page will be empty after refresh
+  const totalItems = filteredData.value.length
+  const maxPage = Math.ceil(totalItems / itemsPerPage.value) || 1
+  
+  // If current page exceeds max pages, adjust to the last valid page
+  if (currentPage.value > maxPage) {
+    currentPage.value = maxPage
+  }
+}
+
 // Watch for filter changes and pagination changes to update 'select all' state
 watch([() => props.filters, currentPage], () => {
-  // Use a timeout to ensure paginatedData is updated before running logic
   setTimeout(updateSelectAllState, 0)
 }, { deep: true })
 
@@ -388,18 +391,16 @@ const deleteSupplier = async (supplier) => {
     text: `You are about to delete supplier: ${supplier.supplierName}. This action cannot be undone.`,
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonColor: '#d33', // Red color for delete
+    confirmButtonColor: '#d33',
     cancelButtonColor: '#3085d6',
     confirmButtonText: 'Yes, delete it!'
   })
 
   if (!result.isConfirmed) {
-    return // User cancelled the operation
+    return
   }
 
-  // --- Deletion Logic (only runs if confirmed) ---
   try {
-    // Check if supplier has an ID property
     const supplierId = supplier.id || supplier.supplierCode;
     if (!supplierId) {
         throw new Error('Supplier identifier not found.');
@@ -416,7 +417,6 @@ const deleteSupplier = async (supplier) => {
       throw new Error('Failed to delete supplier')
     }
 
-    // Show success notification
     Swal.fire({
       title: 'Deleted!',
       text: `Supplier ${supplier.supplierName} has been deleted.`,
@@ -425,21 +425,19 @@ const deleteSupplier = async (supplier) => {
       showConfirmButton: false
     })
 
-    // Emit event to parent for toast notification
     emit('delete-supplier', { success: true, data: { supplierName: supplier.supplierName, id: supplier.id } })
 
-    // Remove deleted item from selectedItems if present
     const index = selectedItems.value.indexOf(supplier.id)
     if (index > -1) {
       selectedItems.value.splice(index, 1)
     }
 
-    // Refresh the table
     await fetchSuppliers()
+    
+    adjustPageAfterDeletion()
   } catch (error) {
     console.error('Error deleting supplier:', error)
     emit('delete-supplier', { success: false, error: error.message })
-    // Show error notification
     Swal.fire('Error', `Failed to delete supplier: ${error.message}`, 'error')
   }
 }
@@ -451,13 +449,12 @@ const bulkDelete = async () => {
     return { success: false, error: 'No suppliers selected' }
   }
 
-  // 👈 SweetAlert2 Confirmation for bulk delete
   const confirmResult = await Swal.fire({
     title: 'Confirm Bulk Deletion',
     text: `Are you sure you want to delete ${selectedItems.value.length} selected supplier(s)? This cannot be undone.`,
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonColor: '#d33', // Red color for delete
+    confirmButtonColor: '#d33',
     cancelButtonColor: '#3085d6',
     confirmButtonText: 'Yes, proceed with bulk delete'
   })
@@ -466,7 +463,6 @@ const bulkDelete = async () => {
     return { success: false, error: 'Cancelled by user' }
   }
 
-  // --- Bulk Deletion Logic (only runs if confirmed) ---
   try {
     const response = await fetch(`${API_URL}/bulk-delete`, {
       method: 'POST',
@@ -481,15 +477,15 @@ const bulkDelete = async () => {
 
     const result = await response.json()
 
-    // Clear selection and refresh
     const deletedCount = Array.isArray(result.deletedIds) ? result.deletedIds.length : 0
     const blocked = result.blocked || []
 
     selectedItems.value = []
     selectAll.value = false
     await fetchSuppliers()
+    
+    adjustPageAfterDeletion()
 
-    // Handle success/partial success/failure with SweetAlert2
     if (deletedCount > 0 && blocked.length === 0) {
       emit('delete-supplier', { success: true, data: { count: deletedCount } })
       Swal.fire('Success', `${deletedCount} suppliers deleted successfully.`, 'success')
@@ -514,21 +510,19 @@ const bulkDelete = async () => {
   }
 }
 
-// Expose methods/state for parent component (e.g., for Bulk Delete)
 const refreshData = () => {
   fetchSuppliers()
-  selectedItems.value = [] // Clear selection on refresh
+  selectedItems.value = []
   selectAll.value = false
 }
 
 defineExpose({ refreshData, selectedItems, bulkDelete })
 
-// Watch for filter changes
 watch(
   () => props.filters,
   (newFilters) => {
     console.log("Filters updated:", newFilters)
-    currentPage.value = 1 // reset to first page on filter change
+    currentPage.value = 1
   },
   { deep: true }
 )

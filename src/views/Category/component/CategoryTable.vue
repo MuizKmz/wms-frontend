@@ -112,9 +112,9 @@
                       d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                 </button>
-                <button @click="deleteSupplier(row)"
+                <button @click="deleteCategory(row)"
                   class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                  aria-label="Delete" title="Delete Supplier">
+                  aria-label="Delete" title="Delete Category">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -181,13 +181,14 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from "vue"
+import Swal from 'sweetalert2' 
 
 // Props for receiving filters
 const props = defineProps({
-  filters: {
-    type: Object,
-    default: () => ({})
-  }
+  filters: {
+    type: Object,
+    default: () => ({})
+  }
 })
 
 // Emits for parent component
@@ -205,26 +206,26 @@ const API_URL = '/api/category'
 
 // Function to fetch categories from the API
 const fetchCategories = async () => {
-  loading.value = true
-  error.value = null
-  try {
-    const response = await fetch(API_URL)
+  loading.value = true
+  error.value = null
+  try {
+    const response = await fetch(API_URL)
 
-    if (!response.ok) throw new Error("Failed to fetch categories")
+    if (!response.ok) throw new Error("Failed to fetch categories")
 
-    const json = await response.json()
-    data.value = json || []
-  } catch (e) {
-    error.value = e.message
-    console.error('Error fetching categories:', e)
-  } finally {
-    loading.value = false
-  }
+    const json = await response.json()
+    data.value = json || []
+  } catch (e) {
+    error.value = e.message
+    console.error('Error fetching categories:', e)
+  } finally {
+    loading.value = false
+  }
 }
 
 // Fetch data on component mount
 onMounted(() => {
-  fetchCategories()
+  fetchCategories()
 })
 
 // ------------------------------------------------
@@ -233,13 +234,13 @@ onMounted(() => {
 
 // Check if category has subcategories (looks across all fetched data)
 const hasSubcategories = (categoryId) => {
-  return data.value.some(cat => cat.parentCategoryId === categoryId)
+  return data.value.some(cat => cat.parentCategoryId === categoryId)
 }
 
 // Get subcategories for a parent category (looks across all fetched data)
 const getSubcategories = (parentId) => {
-  return data.value.filter(cat => cat.parentCategoryId === parentId)
-        .sort((a, b) => a.name.localeCompare(b.name));
+  return data.value.filter(cat => cat.parentCategoryId === parentId)
+        .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /**
@@ -249,92 +250,190 @@ const getSubcategories = (parentId) => {
 const getNestedCategories = (categories, depth = 0) => {
     const rows = [];
     categories.forEach(category => {
-        // 1. Add the current category with its metadata (depth, expanded state)
-        rows.push({
-            ...category,
-            depth: depth,
-            isExpanded: expandedCategories.value.includes(category.id),
-            hasChildren: hasSubcategories(category.id)
-        });
+      // 1. Add the current category with its metadata (depth, expanded state)
+      rows.push({
+          ...category,
+          depth: depth,
+          isExpanded: expandedCategories.value.includes(category.id),
+          hasChildren: hasSubcategories(category.id)
+      });
 
-        // 2. If expanded, recursively get and add its children
-        if (expandedCategories.value.includes(category.id)) {
-            const subcategories = getSubcategories(category.id);
-            if (subcategories.length) {
-                // Merge the result of the recursive call
-                rows.push(...getNestedCategories(subcategories, depth + 1));
-            }
-        }
+      // 2. If expanded, recursively get and add its children
+      if (expandedCategories.value.includes(category.id)) {
+          const subcategories = getSubcategories(category.id);
+          if (subcategories.length) {
+              // Merge the result of the recursive call
+              rows.push(...getNestedCategories(subcategories, depth + 1));
+          }
+      }
     });
     return rows;
 };
 
 // Toggle expand/collapse for categories with subcategories
 const toggleExpand = (categoryId) => {
-  const index = expandedCategories.value.indexOf(categoryId)
-  if (index > -1) {
-    expandedCategories.value.splice(index, 1)
-  } else {
-    expandedCategories.value.push(categoryId)
-  }
-  // Recalculate selectAll state immediately after expansion change
-  setTimeout(updateSelectAllState, 0)
+  const index = expandedCategories.value.indexOf(categoryId)
+  if (index > -1) {
+    expandedCategories.value.splice(index, 1)
+  } else {
+    expandedCategories.value.push(categoryId)
+  }
+  // Recalculate selectAll state immediately after expansion change
+  setTimeout(updateSelectAllState, 0)
 }
 
 // ------------------------------------------------
 // --- Filtering & Pagination Logic ---
 // ------------------------------------------------
 
-// 1. Filtered data (only top-level categories)
+// Helper function to check if any filters are active
+const areFiltersActive = computed(() => {
+    const filters = props.filters;
+    return filters.categoryName || filters.categoryCode || filters.status;
+});
+
+// Helper function to get the root ID of any category
+const getRootId = (categoryId) => {
+    let current = data.value.find(cat => cat.id === categoryId);
+    while (current && current.parentCategoryId !== null) {
+        current = data.value.find(cat => cat.id === current.parentCategoryId);
+    }
+    return current ? current.id : null;
+};
+
+// 1. Filtered data (results in a list of top-level categories that contain a match)
 const filteredData = computed(() => {
-  // Start with only top-level categories (parentCategoryId is null)
-  let categories = data.value.filter(cat => cat.parentCategoryId === null)
+  // If no filters are active, return ALL top-level categories for default view
+  if (!areFiltersActive.value) {
+    return data.value.filter(cat => cat.parentCategoryId === null)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
 
-  if (!props.filters || Object.keys(props.filters).length === 0) return categories
+  const filters = props.filters;
+  
+  // 1. Find ALL categories (including subcategories) that match the filter criteria
+  const matchingCategories = data.value.filter((item) => {
+    if (
+      filters.categoryName &&
+      !item.name.toLowerCase().includes(filters.categoryName.toLowerCase())
+    ) return false
+    if (
+      filters.categoryCode &&
+      !item.categoryCode.toLowerCase().includes(filters.categoryCode.toLowerCase())
+    ) return false
+    if (filters.status && item.status !== filters.status) return false
+    return true
+  })
 
-  // Apply filters only to top-level categories
-  return categories.filter((item) => {
-    const filters = props.filters
-    if (
-      filters.categoryName &&
-      !item.name.toLowerCase().includes(filters.categoryName.toLowerCase())
-    ) return false
-    if (
-      filters.categoryCode &&
-      !item.categoryCode.toLowerCase().includes(filters.categoryCode.toLowerCase())
-    ) return false
-    if (filters.status && item.status !== filters.status) return false
-    return true
-  })
-})
+  // 2. Identify the unique root-level parents for all matching categories
+  const parentIdsToDisplay = new Set();
+  matchingCategories.forEach(item => {
+      const rootId = getRootId(item.id);
+      if (rootId) {
+          parentIdsToDisplay.add(rootId);
+      }
+  });
+
+  // 3. The final result is the list of top-level categories whose children contained a match
+  return data.value
+    .filter(cat => cat.parentCategoryId === null)
+    .filter(cat => parentIdsToDisplay.has(cat.id))
+    .sort((a, b) => a.name.localeCompare(b.name));
+});
 
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
 
 // 2. Paginated top-level data
 const paginatedTopLevelData = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage.value
-  const end = start + itemsPerPage.value
-  return filteredData.value.slice(start, end)
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  return filteredData.value.slice(start, end)
 })
 
 // 3. The final list of visible rows (parents + all expanded children)
 const visibleCategoryRows = computed(() => {
     // Start the recursion with the paginated top-level data
-    return getNestedCategories(paginatedTopLevelData.value);
+    const rows = getNestedCategories(paginatedTopLevelData.value);
+
+    // If filters are active, filter the rows to only show the path to the match
+    if (areFiltersActive.value) {
+        const matchingIds = new Set(data.value.filter(item => {
+             // Re-evaluate the filter match for visibility
+             const filters = props.filters;
+             if (filters.categoryName && !item.name.toLowerCase().includes(filters.categoryName.toLowerCase())) return false
+             if (filters.categoryCode && !item.categoryCode.toLowerCase().includes(filters.categoryCode.toLowerCase())) return false
+             if (filters.status && item.status !== filters.status) return false
+             return true;
+        }).map(item => item.id));
+
+        // In a filter mode, we only want to show the path *down* to the matching row.
+        // We iterate backward to ensure the parent is included before the child.
+        const visibleRows = [];
+        let i = rows.length - 1;
+        while (i >= 0) {
+            const row = rows[i];
+            
+            // Check if the row itself or any descendant we've already added is a match
+            const shouldShow = matchingIds.has(row.id) || 
+                              visibleRows.some(vr => vr.parentCategoryId === row.id);
+            
+            if (shouldShow) {
+                visibleRows.unshift(row);
+            }
+            i--;
+        }
+        return visibleRows;
+    }
+
+    return rows;
 });
 
 
 const totalPages = computed(() =>
-  // Pagination logic remains based on the count of filtered top-level items
-  Math.ceil(filteredData.value.length / itemsPerPage.value)
+  // Pagination logic remains based on the count of filtered top-level items
+  Math.ceil(filteredData.value.length / itemsPerPage.value)
 )
 
 const changePage = (page) => {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page
-  }
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+  }
 }
+
+// Watch filters to automatically expand matching branches
+watch(() => props.filters, (newFilters) => {
+    currentPage.value = 1 // reset to first page on filter change
+    
+    // Auto-expand logic (only when filters are active)
+    if (areFiltersActive.value) {
+        const filters = newFilters;
+        const matchingIds = data.value.filter(item => {
+            if (filters.categoryName && !item.name.toLowerCase().includes(filters.categoryName.toLowerCase())) return false
+            if (filters.categoryCode && !item.categoryCode.toLowerCase().includes(filters.categoryCode.toLowerCase())) return false
+            if (filters.status && item.status !== filters.status) return false
+            return true;
+        }).map(item => item.id);
+
+        const newExpanded = new Set();
+
+        // For every matching item, add all its ancestors to the expandedCategories list
+        matchingIds.forEach(id => {
+            let current = data.value.find(cat => cat.id === id);
+            while (current && current.parentCategoryId !== null) {
+                newExpanded.add(current.parentCategoryId);
+                current = data.value.find(cat => cat.id === current.parentCategoryId);
+            }
+        });
+
+        // Set the new expanded list
+        expandedCategories.value = Array.from(newExpanded);
+    } else {
+        // Clear expansion when filters are cleared
+        expandedCategories.value = [];
+    }
+}, { deep: true, immediate: true });
+
 
 // ------------------------------------------------
 // --- Checkbox/Selection Logic ---
@@ -342,53 +441,53 @@ const changePage = (page) => {
 
 // Get all currently visible item IDs (including expanded children)
 const allVisibleItemIds = computed(() => {
-  // Simple lookup of the flat list generated by the recursive computed property
-  return visibleCategoryRows.value.map(row => row.id)
+  // Simple lookup of the flat list generated by the recursive computed property
+  return visibleCategoryRows.value.map(row => row.id)
 })
 
 // Toggle select all
 const toggleSelectAll = () => {
-  const visibleIds = allVisibleItemIds.value
-  if (selectAll.value) {
-    // Deselect all visible items
-    selectedItems.value = selectedItems.value.filter(id => !visibleIds.includes(id))
-    selectAll.value = false
-  } else {
-    // Select all visible items
-    visibleIds.forEach(id => {
-      if (!selectedItems.value.includes(id)) {
-        selectedItems.value.push(id)
-      }
-    })
-    selectAll.value = true
-  }
+  const visibleIds = allVisibleItemIds.value
+  if (selectAll.value) {
+    // Deselect all visible items
+    selectedItems.value = selectedItems.value.filter(id => !visibleIds.includes(id))
+    selectAll.value = false
+  } else {
+    // Select all visible items
+    visibleIds.forEach(id => {
+      if (!selectedItems.value.includes(id)) {
+        selectedItems.value.push(id)
+      }
+    })
+    selectAll.value = true
+  }
 }
 
 // Toggle individual item selection
 const toggleItemSelection = (itemId) => {
-  const index = selectedItems.value.indexOf(itemId)
-  if (index > -1) {
-    selectedItems.value.splice(index, 1)
-  } else {
-    selectedItems.value.push(itemId)
-  }
-  updateSelectAllState()
+  const index = selectedItems.value.indexOf(itemId)
+  if (index > -1) {
+    selectedItems.value.splice(index, 1)
+  } else {
+    selectedItems.value.push(itemId)
+  }
+  updateSelectAllState()
 }
 
 // Check if item is selected
 const isSelected = (itemId) => {
-  return selectedItems.value.includes(itemId)
+  return selectedItems.value.includes(itemId)
 }
 
 // Update select all checkbox state
 const updateSelectAllState = () => {
-  const visibleIds = allVisibleItemIds.value
-  if (visibleIds.length === 0) {
-      selectAll.value = false;
-      return;
-  }
-  // Check if every visible item ID is present in selectedItems
-  selectAll.value = visibleIds.every(id => selectedItems.value.includes(id))
+  const visibleIds = allVisibleItemIds.value
+  if (visibleIds.length === 0) {
+      selectAll.value = false;
+      return;
+  }
+  // Check if every visible item ID is present in selectedItems
+  selectAll.value = visibleIds.every(id => selectedItems.value.includes(id))
 }
 
 // Watch for changes in paginated data or expanded categories to update 'select all'
@@ -400,15 +499,25 @@ watch([paginatedTopLevelData, expandedCategories], updateSelectAllState, { deep:
 // ------------------------------------------------
 
 const editCategory = (category) => {
-  emit('edit-category', category)
+  emit('edit-category', category)
 }
 
-const deleteSupplier = async (item) => {
-  // Rename to deleteCategory in a real app for clarity
-  if (!confirm(`Are you sure you want to delete category ${item.name}? This will also delete its nested subcategories.`)) {
-    return
+const deleteCategory = async (item) => {
+  const result = await Swal.fire({
+    title: 'Are you sure?',
+    text: `You are about to delete category: ${item.name}. This will also delete its nested subcategories. This action cannot be undone.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33', // Red color for delete
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, delete it!'
+  })
+
+  if (!result.isConfirmed) {
+    return // User cancelled the operation
   }
 
+  // --- Deletion Logic (only runs if confirmed) ---
   try {
     const response = await fetch(`${API_URL}/${item.id}`, {
       method: 'DELETE',
@@ -427,6 +536,7 @@ const deleteSupplier = async (item) => {
       const msg = (body && (body.message || body.error)) ? (body.message || body.error) : 'Failed to delete category'
       console.error('Delete failed:', msg, body)
       emit('delete-category', { success: false, error: msg, details: body })
+      Swal.fire('Error', `Failed to delete category: ${msg}`, 'error')
       return
     }
 
@@ -438,9 +548,18 @@ const deleteSupplier = async (item) => {
         selectedItems.value = selectedItems.value.filter(id => !deletedIds.includes(id))
       }
 
+      const message = deletedIds.length > 0 
+        ? `${deletedIds.length} categories deleted, but ${body.blocked.length} categories were blocked due to existing products.`
+        : `${body.blocked.length} categories were blocked from deletion due to existing products.`
+      
       emit('delete-category', { success: false, blocked: body.blocked, deletedIds: deletedIds })
+      Swal.fire('Partial Success', message, 'warning')
+      
       // Refresh to reflect any deletions that did occur
       await fetchCategories()
+      
+      // Adjust page if current page is now empty
+      adjustPageAfterDeletion()
       return
     }
 
@@ -450,55 +569,124 @@ const deleteSupplier = async (item) => {
     // Clear selection for deleted ids
     selectedItems.value = selectedItems.value.filter(id => !deletedIds.includes(id))
 
+    // Show success notification
+    Swal.fire({
+      title: 'Deleted!',
+      text: `Category ${item.name} has been deleted.`,
+      icon: 'success',
+      timer: 2000,
+      showConfirmButton: false
+    })
+
     emit('delete-category', { success: true, deletedIds, data: { name: item.name, id: item.id } })
 
     // Refresh the table
     await fetchCategories()
+    
+    // Adjust page if current page is now empty
+    adjustPageAfterDeletion()
   } catch (error) {
     console.error('Error deleting category:', error)
     emit('delete-category', { success: false, error: error.message })
+    Swal.fire('Error', `Failed to delete category: ${error.message}`, 'error')
+  }
+}
+
+// Bulk delete selected categories
+const bulkDelete = async () => {
+  if (!selectedItems.value || selectedItems.value.length === 0) {
+    Swal.fire('No Selection', 'Please select at least one category to delete.', 'info');
+    return { success: false, error: 'No categories selected' }
+  }
+
+  // SweetAlert2 Confirmation for bulk delete
+  const confirmResult = await Swal.fire({
+    title: 'Confirm Bulk Deletion',
+    text: `Are you sure you want to delete ${selectedItems.value.length} selected categor${selectedItems.value.length > 1 ? 'ies' : 'y'}? This will also delete nested subcategories and cannot be undone.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33', // Red color for delete
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, proceed with bulk delete'
+  })
+
+  if (!confirmResult.isConfirmed) {
+    return { success: false, error: 'Cancelled by user' }
+  }
+
+  // --- Bulk Deletion Logic (only runs if confirmed) ---
+  try {
+    const response = await fetch(`${API_URL}/bulk-delete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: selectedItems.value })
+    })
+
+    if (!response.ok) {
+      const err = await response.text()
+      throw new Error(err || 'Failed to bulk delete categories')
+    }
+
+    const result = await response.json()
+
+    // Clear selection and refresh
+    const deletedCount = Array.isArray(result.deletedIds) ? result.deletedIds.length : 0
+    const blocked = result.blocked || []
+
+    selectedItems.value = []
+    selectAll.value = false
+    await fetchCategories()
+    
+    // Adjust page if current page is now empty
+    adjustPageAfterDeletion()
+
+    // Handle success/partial success/failure with SweetAlert2
+    if (deletedCount > 0 && blocked.length === 0) {
+      emit('delete-category', { success: true, data: { count: deletedCount } })
+      Swal.fire('Success', `${deletedCount} categories deleted successfully.`, 'success')
+      return { success: true, data: result }
+    } else if (deletedCount > 0 && blocked.length > 0) {
+      const message = `${deletedCount} deleted, ${blocked.length} blocked due to existing products`;
+      emit('delete-category', { success: false, error: message, data: { deletedCount, blocked } })
+      Swal.fire('Partial Success', message, 'warning')
+      return { success: false, error: message, data: result }
+    } else {
+        const message = blocked.length > 0 ? `${blocked.length} categories were blocked from deletion due to existing products.` : 'No categories were deleted.';
+        emit('delete-category', { success: false, error: message, data: result })
+        Swal.fire('Deletion Failed', message, 'error')
+        return { success: false, error: message }
+    }
+
+  } catch (error) {
+    console.error('Error bulk deleting categories:', error)
+    emit('delete-category', { success: false, error: error.message })
+    Swal.fire('Error', `Failed to bulk delete categories: ${error.message}`, 'error')
+    return { success: false, error: error.message }
+  }
+}
+
+// Helper function to adjust page after deletion
+const adjustPageAfterDeletion = () => {
+  // Calculate if current page will be empty after refresh
+  const totalItems = filteredData.value.length
+  const maxPage = Math.ceil(totalItems / itemsPerPage.value) || 1
+  
+  // If current page exceeds max pages, adjust to the last valid page
+  if (currentPage.value > maxPage) {
+    currentPage.value = maxPage
   }
 }
 
 // Expose refresh method for parent component
 const refreshData = () => {
-  fetchCategories()
-  selectedItems.value = []
-  selectAll.value = false
+  fetchCategories()
+  selectedItems.value = []
+  selectAll.value = false
 }
 
-defineExpose({ refreshData, selectedItems })
-
-// Watch for filter changes
-watch(
-  () => props.filters,
-  (newFilters) => {
-    currentPage.value = 1 // reset to first page on filter change
-  },
-  { deep: true }
-)
+defineExpose({ refreshData, selectedItems, bulkDelete })
 </script>
 
-<style scoped>
-/* (Style section remains the same) */
-.custom-scrollbar::-webkit-scrollbar {
-  height: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-</style>
 <style scoped>
 .custom-scrollbar::-webkit-scrollbar {
   height: 6px;

@@ -512,7 +512,7 @@ const submitForm = async () => {
 
     // Make the API call to update the category
     const response = await fetch(`/api/category/${currentCategoryId.value}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
       },
