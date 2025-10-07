@@ -500,8 +500,8 @@ watch(() => form.remark, () => { if (errors.remark) errors.remark = '' })
 
 /* helpers */
 const toggleDropdown = (name: 'status' | 'category' | 'supplier') => {
-  Object.keys(openDropdowns).forEach(k => { 
-    if (k !== name) openDropdowns[k as keyof typeof openDropdowns] = false 
+  Object.keys(openDropdowns).forEach(k => {
+    if (k !== name) openDropdowns[k as keyof typeof openDropdowns] = false
   })
   openDropdowns[name] = !openDropdowns[name]
 }
