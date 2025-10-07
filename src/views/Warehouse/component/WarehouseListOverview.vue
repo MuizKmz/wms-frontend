@@ -78,7 +78,7 @@
 
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.warehouseName }}
+                {{ item.name }}
               </p>
             </td>
 
@@ -325,12 +325,12 @@ const filteredData = computed(() => {
     ) {
       return false
     }
-    // Warehouse Name filter
+    // Warehouse Name filter (backend uses `name`)
     if (
-      filters.warehouseName &&
-      !item.warehouseName
+      filters.name &&
+      !item.name
         ?.toLowerCase()
-        .includes(filters.warehouseName.toLowerCase())
+        .includes(filters.name.toLowerCase())
     ) {
       return false
     }
@@ -398,7 +398,7 @@ const editItem = (item) => {
 const deleteItem = async (item) => {
   const result = await Swal.fire({
     title: 'Are you sure?',
-    text: `You are about to delete warehouse: ${item.warehouseName}. This action cannot be undone.`,
+  text: `You are about to delete warehouse: ${item.name}. This action cannot be undone.`,
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#d33', // Red color for delete
@@ -413,7 +413,7 @@ const deleteItem = async (item) => {
   // --- Deletion Logic (only runs if confirmed) ---
   try {
     // Use warehouseCode as fallback ID
-    const itemId = item.id || item.warehouseCode; 
+    const itemId = item.id || item.warehouseCode;
     if (!itemId) {
         throw new Error('Warehouse identifier not found.');
     }
@@ -432,14 +432,14 @@ const deleteItem = async (item) => {
     // Show success notification
     Swal.fire({
       title: 'Deleted!',
-      text: `Warehouse ${item.warehouseName} has been deleted.`,
+    text: `Warehouse ${item.name} has been deleted.`,
       icon: 'success',
       timer: 2000,
       showConfirmButton: false
     })
 
     // Emit event to parent for toast notification
-    emit('delete-item', { success: true, data: { itemName: item.warehouseName, id: item.id } }) // Changed 'supplierName' to 'itemName'
+  emit('delete-item', { success: true, data: { itemName: item.name, id: item.id } }) // Changed 'supplierName' to 'itemName'
 
     // Remove deleted item from selectedItems if present
     const index = selectedItems.value.indexOf(item.id)
@@ -535,7 +535,7 @@ const refreshData = () => {
 }
 
 // Renamed expose to match the previous component's functionality (bulkDelete)
-defineExpose({ refreshData, selectedItems, bulkDelete }) 
+defineExpose({ refreshData, selectedItems, bulkDelete })
 
 // Watch for filter changes
 watch(
