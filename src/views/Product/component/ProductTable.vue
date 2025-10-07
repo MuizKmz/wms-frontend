@@ -13,9 +13,9 @@
         <thead>
           <tr class="border-b border-gray-200 dark:border-gray-700">
             <th class="px-6 py-3 text-left w-12">
-              <input 
-                type="checkbox" 
-                class="checkbox checkbox-primary checkbox-sm" 
+              <input
+                type="checkbox"
+                class="checkbox checkbox-primary checkbox-sm"
                 aria-label="select all"
                 :checked="selectAll"
                 @change="toggleSelectAll"
@@ -69,15 +69,15 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-          <tr 
-            v-for="item in paginatedData" 
+          <tr
+            v-for="item in paginatedData"
             :key="item.id"
             class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
           >
             <td class="px-6 py-4">
-              <input 
-                type="checkbox" 
-                class="checkbox checkbox-primary checkbox-sm" 
+              <input
+                type="checkbox"
+                class="checkbox checkbox-primary checkbox-sm"
                 aria-label="select item"
                 :checked="isSelected(item.id)"
                 @change="toggleItemSelection(item.id)"
@@ -167,9 +167,9 @@
       <div v-if="totalPages > 1" class="mt-6 flex justify-center">
         <nav class="flex items-center gap-x-1">
           <!-- Previous -->
-          <button 
-            type="button" 
-            class="btn btn-text dark:text-gray-300" 
+          <button
+            type="button"
+            class="btn btn-text dark:text-gray-300"
             :disabled="currentPage === 1"
             @click="changePage(currentPage - 1)"
           >
@@ -178,12 +178,12 @@
 
           <!-- Pages -->
           <div class="flex items-center gap-x-1">
-            <button 
-              v-for="page in totalPages" 
-              :key="page" 
+            <button
+              v-for="page in totalPages"
+              :key="page"
               type="button"
               class="btn btn-text btn-square aria-[current='page']:text-bg-primary dark:text-gray-300"
-              :class="{ 'text-bg-primary': page === currentPage }" 
+              :class="{ 'text-bg-primary': page === currentPage }"
               :aria-current="page === currentPage ? 'page' : null"
               @click="changePage(page)"
             >
@@ -192,9 +192,9 @@
           </div>
 
           <!-- Next -->
-          <button 
-            type="button" 
-            class="btn btn-text dark:text-gray-300" 
+          <button
+            type="button"
+            class="btn btn-text dark:text-gray-300"
             :disabled="currentPage === totalPages"
             @click="changePage(currentPage + 1)"
           >
@@ -257,7 +257,7 @@ const selectedItems = ref([])
 const selectAll = ref(false)
 
 // API endpoint for products
-const API_URL = '/api/products'
+const API_URL = '/api/product'
 
 // Function to fetch products from the API
 const fetchProducts = async () => {
@@ -269,7 +269,27 @@ const fetchProducts = async () => {
     if (!response.ok) throw new Error("Failed to fetch products")
 
     const json = await response.json()
-    data.value = json || []
+    // Normalize server product objects to the shape used by the table
+    data.value = (json || []).map((p) => {
+      // compute quantity if inventory relation is included
+      let quantity = 0
+      if (Array.isArray(p.inventory)) {
+        quantity = p.inventory.reduce((sum, it) => sum + (it.quantity || 0), 0)
+      }
+
+      return {
+        id: p.id,
+        productName: p.name || p.productName || '',
+        skuCode: p.skuCode || p.sku || '',
+        category: p.category ? (p.category.name || p.category.categoryCode) : (p.category || ''),
+        supplierName: p.supplier ? (p.supplier.supplierName || p.supplier.supplierCode || p.supplier.name) : (p.supplierName || ''),
+        quantity,
+        status: p.status,
+        remark: p.remarks || p.remark || p.remark || '',
+        createdTime: p.createdAt || p.createdTime,
+        raw: p,
+      }
+    })
   } catch (e) {
     error.value = e.message
     console.error('Error fetching products:', e)

@@ -210,7 +210,10 @@
                       :class="{ 'opacity-100 pointer-events-auto': openDropdowns.supplier, 'opacity-0 pointer-events-none': !openDropdowns.supplier }"
                       role="menu"
                     >
-                      <li v-for="supplier in suppliers" :key="supplier.id">
+                      <li v-if="loadingSuppliers" class="px-4 py-2 text-sm text-gray-500">Loading...</li>
+                      <li v-else-if="suppliersError" class="px-4 py-2 text-sm text-red-500">Error: {{ suppliersError }}</li>
+                      <li v-else-if="suppliers.length === 0" class="px-4 py-2 text-sm text-gray-500">No suppliers found</li>
+                      <li v-else v-for="supplier in suppliers" :key="supplier.id">
                         <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('supplierName', supplier.name)">
                           {{ supplier.name }}
                         </a>
@@ -341,6 +344,7 @@ const isOpen = ref(false)
 const isSubmitting = ref(false)
 const loadingCategories = ref(false)
 const loadingSuppliers = ref(false)
+const suppliersError = ref<string | null>(null)
 const panelRef = ref<HTMLElement | null>(null)
 const statusDropdownRef = ref<HTMLElement | null>(null)
 const categoryDropdownRef = ref<HTMLElement | null>(null)
@@ -390,12 +394,19 @@ const fetchCategories = async () => {
 const fetchSuppliers = async () => {
   loadingSuppliers.value = true
   try {
-    const response = await fetch('/api/suppliers')
+    suppliersError.value = null
+    // backend route is /api/supplier (singular) and returns supplier objects
+    const response = await fetch('/api/supplier')
     if (!response.ok) throw new Error('Failed to fetch suppliers')
     const data = await response.json()
-    suppliers.value = data
+    // normalize to { id, name } so the dropdown uses supplier.name
+    suppliers.value = (data || []).map((s: any) => ({
+      id: s.id,
+      name: s.supplierName || s.supplier_name || s.name || ''
+    }))
   } catch (error) {
     console.error('Error fetching suppliers:', error)
+    suppliersError.value = error instanceof Error ? error.message : String(error)
   } finally {
     loadingSuppliers.value = false
   }
@@ -586,7 +597,7 @@ const submitForm = async () => {
     }
 
     // Make the API call to the correct endpoint
-    const response = await fetch('/api/products', {
+  const response = await fetch('/api/product', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
