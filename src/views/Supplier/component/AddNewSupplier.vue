@@ -204,7 +204,7 @@
                 <!-- Email Address -->
                 <div class="relative">
                   <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    Email Address
+                    <span class="text-red-500">*</span> Email Address
                   </label>
                   <input
                     v-model="form.emailAddress"

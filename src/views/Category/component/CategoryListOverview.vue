@@ -1,36 +1,63 @@
 <template>
   <div class="overflow-hidden">
 
+    <!-- Category Dropdown Filter -->
+    <div class="mb-4 flex items-center gap-2 mt-5">
+      <label class="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+        Category :
+      </label>
+      <div class="dropdown relative inline-flex w-64" ref="categoryDropdownRef">
+        <button
+          type="button"
+          class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400 text-left"
+          :aria-expanded="isCategoryDropdownOpen"
+          @click.stop="toggleCategoryDropdown"
+          :disabled="loadingCategories"
+        >
+          <span class="truncate pr-2">{{ selectedCategoryName || 'Select Category' }}</span>
+          <span
+            class="icon-[tabler--chevron-down] size-4 transition-transform flex-shrink-0"
+            :class="{ 'rotate-180': isCategoryDropdownOpen }"
+          ></span>
+        </button>
+
+        <ul
+          class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
+          :class="{ 'opacity-100 pointer-events-auto': isCategoryDropdownOpen, 'opacity-0 pointer-events-none': !isCategoryDropdownOpen }"
+          role="menu"
+        >
+          <li>
+            <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectCategory(null, 'All Categories')">
+              All Categories
+            </a>
+          </li>
+          <li v-for="category in categories" :key="category.id">
+            <a 
+              class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" 
+              @click="selectCategory(category.id, `${category.categoryCode} - ${category.name}`)"
+              :title="`${category.categoryCode} - ${category.name}`"
+            >
+              <div class="truncate">
+                {{ category.categoryCode }} - {{ category.name }}
+              </div>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
     <div class="max-w-full overflow-x-auto custom-scrollbar mt-5">
       <table class="min-w-full">
         <thead>
           <tr class="border-b border-gray-200 dark:border-gray-700">
-            <th>
-              <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select all" />
-            </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Supplier Code
+                Product
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Supplier Name
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                PIC's Name
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Contact Number
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Email
+                Quantity
               </p>
             </th>
             <th class="px-6 py-3 text-left">
@@ -40,12 +67,7 @@
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Remark
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Action
+                Rack
               </p>
             </th>
           </tr>
@@ -53,44 +75,18 @@
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
           <tr v-for="(item, index) in paginatedData" :key="index"
             class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-            <th>
-              <label>
-                <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select item" />
-              </label>
-            </th>
 
-            <!-- Supplier Code -->
-            <td class="px-6 py-4">
-              <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ item.supplierCode }}
-              </span>
-            </td>
-
-            <!-- Supplier Name -->
+            <!-- Product -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.supplierName }}
+                {{ item.product || item.productName || '-' }}
               </p>
             </td>
 
-            <!-- PIC's Name -->
+            <!-- Quantity -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.manager }}
-              </p>
-            </td>
-
-            <!-- Contact Number -->
-            <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.contactPhone || item.contact }}
-              </p>
-            </td>
-
-            <!-- Email -->
-            <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.email || item.emailAddress }}
+                {{ item.quantity || 0 }}
               </p>
             </td>
 
@@ -98,47 +94,20 @@
             <td class="px-6 py-4">
               <span :class="{
                 'px-3 py-1 text-xs rounded-full font-medium': true,
-                'bg-green-100 text-green-600': item.status === 'Active',
+                'bg-green-100 text-green-600': item.status === 'Active' || item.status === 'In Stock',
                 'bg-blue-100 text-blue-600': item.status === 'Inactive',
-                'bg-yellow-100 text-yellow-600': item.status === 'Pending'
+                'bg-yellow-100 text-yellow-600': item.status === 'Pending' || item.status === 'Low Stock',
+                'bg-red-100 text-red-600': item.status === 'Out of Stock'
               }">
-                {{ item.status }}
+                {{ item.status || '-' }}
               </span>
             </td>
 
-            <!-- Remark -->
+            <!-- Rack -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.remark || item.remarks || '-' }}
+                {{ item.rack || item.rackLocation || '-' }}
               </p>
-            </td>
-
-            <!-- Actions -->
-            <td class="px-6 py-4">
-              <div class="flex items-center gap-2">
-                <button
-                  @click="editSupplier(item)"
-                  class="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
-                  aria-label="Edit"
-                  title="Edit Supplier"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                </button>
-                <button
-                  @click="deleteSupplier(item)"
-                  class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                  aria-label="Delete"
-                  title="Delete Supplier"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </div>
             </td>
           </tr>
         </tbody>
@@ -174,7 +143,7 @@
       <!-- Loading -->
       <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
         <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
-        <p>Loading suppliers...</p>
+        <p>Loading data...</p>
       </div>
 
       <!-- Empty State -->
@@ -184,10 +153,10 @@
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
         <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
-          No suppliers found
+          No data found
         </p>
         <p class="text-sm text-gray-500 dark:text-gray-400">
-          Try adjusting your filters or create a new supplier.
+          Try adjusting your filters.
         </p>
       </div>
 
@@ -197,7 +166,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z" />
         </svg>
-        <p class="font-medium">Error loading suppliers</p>
+        <p class="font-medium">Error loading data</p>
         <p class="text-xs mt-1">{{ error }}</p>
       </div>
     </div>
@@ -205,7 +174,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from "vue"
+import { ref, onMounted, computed, watch, onBeforeUnmount } from "vue"
 
 // Props for receiving filters
 const props = defineProps({
@@ -215,30 +184,49 @@ const props = defineProps({
   }
 })
 
-// Emits for parent component
-const emit = defineEmits(['edit-supplier', 'delete-supplier'])
-
 const data = ref([])
 const loading = ref(false)
 const error = ref(null)
+const categories = ref([])
+const loadingCategories = ref(false)
+const selectedCategoryId = ref(null)
+const selectedCategoryName = ref('All Categories')
+const isCategoryDropdownOpen = ref(false)
+const categoryDropdownRef = ref(null)
 
-// API endpoint for suppliers
-const API_URL = '/api/supplier'
+// API endpoint - adjust according to your needs
+const API_URL = '/api/products' // or '/api/inventory' depending on your backend
+const CATEGORY_API_URL = '/api/category'
 
-// Function to fetch suppliers from the API
-const fetchSuppliers = async () => {
+// Function to fetch categories
+const fetchCategories = async () => {
+  loadingCategories.value = true
+  try {
+    const response = await fetch(CATEGORY_API_URL)
+    if (!response.ok) throw new Error('Failed to fetch categories')
+    const json = await response.json()
+    categories.value = json || []
+  } catch (e) {
+    console.error('Error fetching categories:', e)
+  } finally {
+    loadingCategories.value = false
+  }
+}
+
+// Function to fetch data from the API
+const fetchData = async () => {
   loading.value = true
   error.value = null
   try {
     const response = await fetch(API_URL)
 
-    if (!response.ok) throw new Error("Failed to fetch suppliers")
+    if (!response.ok) throw new Error("Failed to fetch data")
 
     const json = await response.json()
     data.value = json || []
   } catch (e) {
     error.value = e.message
-    console.error('Error fetching suppliers:', e)
+    console.error('Error fetching data:', e)
   } finally {
     loading.value = false
   }
@@ -246,49 +234,51 @@ const fetchSuppliers = async () => {
 
 // Fetch data on component mount
 onMounted(() => {
-  fetchSuppliers()
+  fetchCategories()
+  fetchData()
 })
 
 // Computed property for filtered data
 const filteredData = computed(() => {
-  if (!props.filters) return data.value
+  let filtered = data.value
 
-  return data.value.filter((item) => {
+  // Filter by selected category
+  if (selectedCategoryId.value !== null) {
+    filtered = filtered.filter(item => 
+      item.categoryId === selectedCategoryId.value || 
+      item.category?.id === selectedCategoryId.value
+    )
+  }
+
+  // Apply other filters
+  if (!props.filters || Object.keys(props.filters).length === 0) return filtered
+
+  return filtered.filter((item) => {
     const filters = props.filters
 
     if (
-      filters.supplierCode &&
-      !item.supplierCode
+      filters.product &&
+      !(item.product || item.productName || '')
         .toLowerCase()
-        .includes(filters.supplierCode.toLowerCase())
+        .includes(filters.product.toLowerCase())
     ) {
       return false
     }
     if (
-      filters.supplierName &&
-      !item.supplierName
-        .toLowerCase()
-        .includes(filters.supplierName.toLowerCase())
-    ) {
-      return false
-    }
-    if (
-      filters.picName &&
-      !item.picName
-        .toLowerCase()
-        .includes(filters.picName.toLowerCase())
-    ) {
-      return false
-    }
-    if (
-      filters.email &&
-      !(item.email || item.emailAddress)
-        .toLowerCase()
-        .includes(filters.email.toLowerCase())
+      filters.quantity &&
+      item.quantity !== parseInt(filters.quantity)
     ) {
       return false
     }
     if (filters.status && item.status !== filters.status) {
+      return false
+    }
+    if (
+      filters.rack &&
+      !(item.rack || item.rackLocation || '')
+        .toLowerCase()
+        .includes(filters.rack.toLowerCase())
+    ) {
       return false
     }
 
@@ -313,41 +303,40 @@ const changePage = (page) => {
   }
 }
 
-const editSupplier = (supplier) => {
-  emit('edit-supplier', supplier)
+// Category dropdown functions
+const toggleCategoryDropdown = () => {
+  isCategoryDropdownOpen.value = !isCategoryDropdownOpen.value
 }
 
-const deleteSupplier = async (supplier) => {
-  if (!confirm(`Are you sure you want to delete supplier ${supplier.supplierName}?`)) {
-    return
-  }
+const selectCategory = (id, name) => {
+  selectedCategoryId.value = id
+  selectedCategoryName.value = name
+  isCategoryDropdownOpen.value = false
+  currentPage.value = 1 // Reset to first page when category changes
+}
 
-  try {
-    const response = await fetch(`api/supplier/${supplier.id}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-
-    if (!response.ok) {
-      throw new Error('Failed to delete supplier')
-    }
-
-    // Emit event to parent for toast notification
-    emit('delete-supplier', { success: true, data: supplier })
-
-    // Refresh the table
-    await fetchSuppliers()
-  } catch (error) {
-    console.error('Error deleting supplier:', error)
-    emit('delete-supplier', { success: false, error: error.message })
+// Close dropdown when clicking outside
+const handleClickOutside = (event) => {
+  if (categoryDropdownRef.value && !categoryDropdownRef.value.contains(event.target)) {
+    isCategoryDropdownOpen.value = false
   }
 }
+
+// Add event listener for clicking outside
+onMounted(() => {
+  fetchCategories()
+  fetchData()
+  document.addEventListener('click', handleClickOutside)
+})
+
+// Remove event listener on unmount
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 // Expose refresh method for parent component
 const refreshData = () => {
-  fetchSuppliers()
+  fetchData()
 }
 
 defineExpose({ refreshData })
