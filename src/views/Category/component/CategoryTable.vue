@@ -181,7 +181,7 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from "vue"
-import Swal from 'sweetalert2' 
+import Swal from 'sweetalert2'
 
 // Props for receiving filters
 const props = defineProps({
@@ -310,7 +310,7 @@ const filteredData = computed(() => {
   }
 
   const filters = props.filters;
-  
+
   // 1. Find ALL categories (including subcategories) that match the filter criteria
   const matchingCategories = data.value.filter((item) => {
     if (
@@ -373,11 +373,11 @@ const visibleCategoryRows = computed(() => {
         let i = rows.length - 1;
         while (i >= 0) {
             const row = rows[i];
-            
+
             // Check if the row itself or any descendant we've already added is a match
-            const shouldShow = matchingIds.has(row.id) || 
+            const shouldShow = matchingIds.has(row.id) ||
                               visibleRows.some(vr => vr.parentCategoryId === row.id);
-            
+
             if (shouldShow) {
                 visibleRows.unshift(row);
             }
@@ -404,7 +404,7 @@ const changePage = (page) => {
 // Watch filters to automatically expand matching branches
 watch(() => props.filters, (newFilters) => {
     currentPage.value = 1 // reset to first page on filter change
-    
+
     // Auto-expand logic (only when filters are active)
     if (areFiltersActive.value) {
         const filters = newFilters;
@@ -548,16 +548,16 @@ const deleteCategory = async (item) => {
         selectedItems.value = selectedItems.value.filter(id => !deletedIds.includes(id))
       }
 
-      const message = deletedIds.length > 0 
+      const message = deletedIds.length > 0
         ? `${deletedIds.length} categories deleted, but ${body.blocked.length} categories were blocked due to existing products.`
         : `${body.blocked.length} categories were blocked from deletion due to existing products.`
-      
+
       emit('delete-category', { success: false, blocked: body.blocked, deletedIds: deletedIds })
       Swal.fire('Partial Success', message, 'warning')
-      
+
       // Refresh to reflect any deletions that did occur
       await fetchCategories()
-      
+
       // Adjust page if current page is now empty
       adjustPageAfterDeletion()
       return
@@ -582,7 +582,7 @@ const deleteCategory = async (item) => {
 
     // Refresh the table
     await fetchCategories()
-    
+
     // Adjust page if current page is now empty
     adjustPageAfterDeletion()
   } catch (error) {
@@ -633,10 +633,16 @@ const bulkDelete = async () => {
     const deletedCount = Array.isArray(result.deletedIds) ? result.deletedIds.length : 0
     const blocked = result.blocked || []
 
+    // Map blocked ids to names where possible for better messaging
+    const blockedNames = blocked.map(b => {
+      const found = data.value.find(d => d.id === b.id)
+      return found ? `${found.name} (${b.productsCount})` : `${b.id} (${b.productsCount})`
+    })
+
     selectedItems.value = []
     selectAll.value = false
     await fetchCategories()
-    
+
     // Adjust page if current page is now empty
     adjustPageAfterDeletion()
 
@@ -648,7 +654,11 @@ const bulkDelete = async () => {
     } else if (deletedCount > 0 && blocked.length > 0) {
       const message = `${deletedCount} deleted, ${blocked.length} blocked due to existing products`;
       emit('delete-category', { success: false, error: message, data: { deletedCount, blocked } })
-      Swal.fire('Partial Success', message, 'warning')
+      Swal.fire({
+        title: 'Partial Success',
+        html: `${message}<br/><br/><strong>Blocked categories:</strong><br/>${blockedNames.join('<br/>')}`,
+        icon: 'warning'
+      })
       return { success: false, error: message, data: result }
     } else {
         const message = blocked.length > 0 ? `${blocked.length} categories were blocked from deletion due to existing products.` : 'No categories were deleted.';
@@ -670,7 +680,7 @@ const adjustPageAfterDeletion = () => {
   // Calculate if current page will be empty after refresh
   const totalItems = filteredData.value.length
   const maxPage = Math.ceil(totalItems / itemsPerPage.value) || 1
-  
+
   // If current page exceeds max pages, adjust to the last valid page
   if (currentPage.value > maxPage) {
     currentPage.value = maxPage

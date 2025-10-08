@@ -86,11 +86,11 @@
                     <span class="text-red-500">*</span> Product Name
                   </label>
                   <input
-                    v-model="form.productName"
+                    v-model="form.name"
                     type="text"
                     placeholder="Enter Product Name"
                     maxlength="100"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.productName }]"
+                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.name }]"
                   />
                   <transition
                     enter-active-class="transition-all duration-200 ease-out"
@@ -100,8 +100,8 @@
                     leave-from-class="opacity-100 translate-y-0"
                     leave-to-class="opacity-0 -translate-y-1"
                   >
-                    <div v-if="errors.productName" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.productName }}</p>
+                    <div v-if="errors.name" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.name }}</p>
                     </div>
                   </transition>
                 </div>
@@ -183,12 +183,12 @@
                   <div class="dropdown relative inline-flex w-full" ref="supplierDropdownRef">
                     <button
                       type="button"
-                      :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.supplierName }]"
+                      :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.supplier }]"
                       :aria-expanded="openDropdowns.supplier"
                       @click.stop="toggleDropdown('supplier')"
                       :disabled="loadingSuppliers"
                     >
-                      {{ form.supplierName || 'Select Supplier' }}
+                      {{ form.supplier || 'Select Supplier' }}
                       <span
                         class="icon-[tabler--chevron-down] size-4 transition-transform"
                         :class="{ 'rotate-180': openDropdowns.supplier }"
@@ -204,9 +204,9 @@
                       <li v-else-if="suppliersError" class="px-4 py-2 text-sm text-red-500">Error: {{ suppliersError }}</li>
                       <li v-else-if="suppliers.length === 0" class="px-4 py-2 text-sm text-gray-500">No suppliers found</li>
                       <li v-else v-for="supplier in suppliers" :key="supplier.id">
-                        <a 
-                          class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" 
-                          @click="selectOption('supplierName', supplier.name)"
+                        <a
+                          class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer"
+                          @click="selectOption('supplier', supplier.name)"
                         >
                           {{ supplier.name }}
                         </a>
@@ -221,8 +221,8 @@
                     leave-from-class="opacity-100 translate-y-0"
                     leave-to-class="opacity-0 -translate-y-1"
                   >
-                    <div v-if="errors.supplierName" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.supplierName }}</p>
+                    <div v-if="errors.supplier" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.supplier }}</p>
                     </div>
                   </transition>
                 </div>
@@ -342,20 +342,20 @@ const supplierDropdownRef = ref<HTMLElement | null>(null)
 
 const form = reactive({
   skuCode: '',
-  productName: '',
+  name: '',
   productCode: '',
   category: '',
-  supplierName: '',
+  supplier: '',
   status: '',
   remark: ''
 })
 
 const errors = reactive({
   skuCode: '',
-  productName: '',
+  name: '',
   productCode: '',
   category: '',
-  supplierName: '',
+  supplier: '',
   status: '',
   remark: '',
   submit: ''
@@ -448,8 +448,8 @@ const validateForm = () => {
   }
 
   // Product Name validation
-  if (!form.productName.trim()) {
-    errors.productName = 'Product Name is required'
+  if (!form.name.trim()) {
+    errors.name = 'Product Name is required'
     isValid = false
   }
 
@@ -466,8 +466,8 @@ const validateForm = () => {
   }
 
   // Supplier Name validation
-  if (!form.supplierName) {
-    errors.supplierName = 'Supplier Name is required'
+  if (!form.supplier) {
+    errors.supplier = 'Supplier Name is required'
     isValid = false
   }
 
@@ -482,10 +482,10 @@ const validateForm = () => {
 
 // Clear error when user types
 watch(() => form.skuCode, () => { if (errors.skuCode) errors.skuCode = '' })
-watch(() => form.productName, () => { if (errors.productName) errors.productName = '' })
+watch(() => form.name, () => { if (errors.name) errors.name = '' })
 watch(() => form.productCode, () => { if (errors.productCode) errors.productCode = '' })
 watch(() => form.category, () => { if (errors.category) errors.category = '' })
-watch(() => form.supplierName, () => { if (errors.supplierName) errors.supplierName = '' })
+watch(() => form.supplier, () => { if (errors.supplier) errors.supplier = '' })
 watch(() => form.status, () => { if (errors.status) errors.status = '' })
 watch(() => form.remark, () => { if (errors.remark) errors.remark = '' })
 
@@ -499,15 +499,15 @@ const toggleDropdown = (name: 'status' | 'category' | 'supplier') => {
 
 /**
  * FIX APPLIED HERE:
- * The selectOption function now correctly maps the `form` key ('supplierName') 
+ * The selectOption function now correctly maps the `form` key ('supplier')
  * to the `openDropdowns` key ('supplier') to ensure the dropdown closes.
  */
 const selectOption = (key: keyof typeof form, value: string) => {
   form[key] = value as never
-  
+
   // Determine which dropdown state key to close
   let dropdownKey: keyof typeof openDropdowns | null = null;
-  if (key === 'supplierName') {
+  if (key === 'supplier') {
     dropdownKey = 'supplier';
   } else if (key === 'category') {
     dropdownKey = 'category';
@@ -546,10 +546,10 @@ const openModal = async () => {
 
   // Reset form
   form.skuCode = ''
-  form.productName = ''
+  form.name = ''
   form.productCode = ''
   form.category = ''
-  form.supplierName = ''
+  form.supplier = ''
   form.status = ''
   form.remark = ''
 
@@ -571,10 +571,10 @@ const closeModal = async () => {
   // Reset form after modal is closed
   await nextTick()
   form.skuCode = ''
-  form.productName = ''
+  form.name = ''
   form.productCode = ''
   form.category = ''
-  form.supplierName = ''
+  form.supplier = ''
   form.status = ''
   form.remark = ''
 
@@ -595,10 +595,10 @@ const submitForm = async () => {
     // Format the data to match the backend schema
     const submissionData = {
       skuCode: form.skuCode.toUpperCase(),
-      productName: form.productName,
+      name: form.name,
       productCode: form.productCode.toUpperCase(),
       category: form.category,
-      supplierName: form.supplierName,
+      supplier: form.supplier,
       status: form.status,
       remark: form.remark || null,
       quantity: 0, // Default quantity
