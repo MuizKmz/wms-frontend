@@ -147,17 +147,40 @@
 
             <!-- Actions -->
             <td class="px-6 py-4">
-              <button
-                @click="generateEPC(item)"
-                class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium flex items-center gap-1 transition-colors"
-                title="Generate EPC"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Generate EPC
-              </button>
+              <div class="flex items-center gap-2">
+                <button
+                  @click="generateEPC(item)"
+                  class="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                  title="Generate EPC"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </button>
+                <button
+                  @click="editProduct(item)"
+                  class="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
+                  aria-label="Edit"
+                  title="Edit Product"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+                <button
+                  @click="deleteProduct(item)"
+                  class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                  aria-label="Delete"
+                  title="Delete Product"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -238,6 +261,7 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from "vue"
+import Swal from 'sweetalert2'
 
 // Props for receiving filters
 const props = defineProps({
@@ -248,7 +272,7 @@ const props = defineProps({
 })
 
 // Emits for parent component
-const emit = defineEmits(['generate-epc', 'edit-product'])
+const emit = defineEmits(['generate-epc', 'edit-product', 'delete-product'])
 
 const data = ref([])
 const loading = ref(false)
@@ -303,13 +327,35 @@ onMounted(() => {
   fetchProducts()
 })
 
+// --- Checkbox/Selection Logic ---
+
+// Computed list of IDs for currently visible (paginated) data
+const visibleItemIds = computed(() => {
+  return paginatedData.value.map(item => item.id)
+})
+
+// Update select all checkbox state
+const updateSelectAllState = () => {
+  const visibleIds = visibleItemIds.value
+  if (visibleIds.length === 0) {
+    selectAll.value = false
+    return
+  }
+  selectAll.value = visibleIds.every(id => selectedItems.value.includes(id))
+}
+
 // Toggle select all
 const toggleSelectAll = () => {
   if (selectAll.value) {
-    selectedItems.value = []
+    selectedItems.value = selectedItems.value.filter(id => !visibleItemIds.value.includes(id))
     selectAll.value = false
   } else {
-    selectedItems.value = paginatedData.value.map(item => item.id)
+    const visibleIds = visibleItemIds.value
+    visibleIds.forEach(id => {
+      if (!selectedItems.value.includes(id)) {
+        selectedItems.value.push(id)
+      }
+    })
     selectAll.value = true
   }
 }
@@ -330,12 +376,6 @@ const isSelected = (itemId) => {
   return selectedItems.value.includes(itemId)
 }
 
-// Update select all checkbox state
-const updateSelectAllState = () => {
-  const allVisibleIds = paginatedData.value.map(item => item.id)
-  selectAll.value = allVisibleIds.length > 0 && allVisibleIds.every(id => selectedItems.value.includes(id))
-}
-
 // Format date
 const formatDate = (dateString) => {
   if (!dateString) return '-'
@@ -348,9 +388,142 @@ const formatDate = (dateString) => {
   return `${year}-${month}-${day} ${hours}:${minutes}`
 }
 
-// Generate PO action
+// --- Actions ---
+
+// Generate EPC action
 const generateEPC = (product) => {
   emit('generate-epc', product)
+}
+
+// Edit product
+const editProduct = (product) => {
+  emit('edit-product', product)
+}
+
+// Delete product with SweetAlert2
+const deleteProduct = async (product) => {
+  const result = await Swal.fire({
+    title: 'Are you sure?',
+    text: `You are about to delete product: ${product.productName}. This action cannot be undone.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, delete it!'
+  })
+
+  if (!result.isConfirmed) {
+    return
+  }
+
+  try {
+    const productId = product.id
+    if (!productId) {
+      throw new Error('Product identifier not found.')
+    }
+
+    const response = await fetch(`${API_URL}/${productId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to delete product')
+    }
+
+    Swal.fire({
+      title: 'Deleted!',
+      text: `Product ${product.productName} has been deleted.`,
+      icon: 'success',
+      timer: 2000,
+      showConfirmButton: false
+    })
+
+    emit('delete-product', { success: true, data: { productName: product.productName, id: product.id } })
+
+    const index = selectedItems.value.indexOf(product.id)
+    if (index > -1) {
+      selectedItems.value.splice(index, 1)
+    }
+
+    await fetchProducts()
+    
+    adjustPageAfterDeletion()
+  } catch (error) {
+    console.error('Error deleting product:', error)
+    emit('delete-product', { success: false, error: error.message })
+    Swal.fire('Error', `Failed to delete product: ${error.message}`, 'error')
+  }
+}
+
+// Bulk delete selected products
+const bulkDelete = async () => {
+  if (!selectedItems.value || selectedItems.value.length === 0) {
+    Swal.fire('No Selection', 'Please select at least one product to delete.', 'info')
+    return { success: false, error: 'No products selected' }
+  }
+
+  const confirmResult = await Swal.fire({
+    title: 'Confirm Bulk Deletion',
+    text: `Are you sure you want to delete ${selectedItems.value.length} selected product(s)? This cannot be undone.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, proceed with bulk delete'
+  })
+
+  if (!confirmResult.isConfirmed) {
+    return { success: false, error: 'Cancelled by user' }
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/bulk-delete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: selectedItems.value })
+    })
+
+    if (!response.ok) {
+      const err = await response.text()
+      throw new Error(err || 'Failed to bulk delete products')
+    }
+
+    const result = await response.json()
+
+    const deletedCount = Array.isArray(result.deletedIds) ? result.deletedIds.length : 0
+    const blocked = result.blocked || []
+
+    selectedItems.value = []
+    selectAll.value = false
+    await fetchProducts()
+    
+    adjustPageAfterDeletion()
+
+    if (deletedCount > 0 && blocked.length === 0) {
+      emit('delete-product', { success: true, data: { count: deletedCount } })
+      Swal.fire('Success', `${deletedCount} products deleted successfully.`, 'success')
+      return { success: true, data: result }
+    } else if (deletedCount > 0 && blocked.length > 0) {
+      const message = `${deletedCount} deleted, ${blocked.length} blocked due to existing relations`
+      emit('delete-product', { success: false, error: message, data: { deletedCount, blocked } })
+      Swal.fire('Partial Success', message, 'warning')
+      return { success: false, error: message, data: result }
+    } else {
+      const message = blocked.length > 0 ? `${blocked.length} products were blocked from deletion due to existing relations.` : 'No products were deleted.'
+      emit('delete-product', { success: false, error: message, data: result })
+      Swal.fire('Deletion Failed', message, 'error')
+      return { success: false, error: message }
+    }
+
+  } catch (error) {
+    console.error('Error bulk deleting products:', error)
+    emit('delete-product', { success: false, error: error.message })
+    Swal.fire('Error', `Failed to bulk delete products: ${error.message}`, 'error')
+    return { success: false, error: error.message }
+  }
 }
 
 // Computed property for filtered data
@@ -387,6 +560,18 @@ const filteredData = computed(() => {
     if (filters.status && item.status !== filters.status) {
       return false
     }
+    if (filters.date && item.createdTime) {
+      const filterDate = new Date(filters.date)
+      const itemDate = new Date(item.createdTime)
+      // Compare year, month, and day only
+      if (
+        filterDate.getFullYear() !== itemDate.getFullYear() ||
+        filterDate.getMonth() !== itemDate.getMonth() ||
+        filterDate.getDate() !== itemDate.getDate()
+      ) {
+        return false
+      }
+    }
 
     return true
   })
@@ -394,7 +579,7 @@ const filteredData = computed(() => {
 
 // Pagination
 const currentPage = ref(1)
-const itemsPerPage = ref(10)
+const itemsPerPage = ref(5)
 const totalPages = computed(() =>
   Math.ceil(filteredData.value.length / itemsPerPage.value)
 )
@@ -409,6 +594,21 @@ const changePage = (page) => {
   }
 }
 
+// Helper function to adjust page after deletion
+const adjustPageAfterDeletion = () => {
+  const totalItems = filteredData.value.length
+  const maxPage = Math.ceil(totalItems / itemsPerPage.value) || 1
+  
+  if (currentPage.value > maxPage) {
+    currentPage.value = maxPage
+  }
+}
+
+// Watch for filter changes and pagination changes to update 'select all' state
+watch([() => props.filters, currentPage], () => {
+  setTimeout(updateSelectAllState, 0)
+}, { deep: true })
+
 // Expose refresh method for parent component
 const refreshData = () => {
   fetchProducts()
@@ -416,14 +616,14 @@ const refreshData = () => {
   selectAll.value = false
 }
 
-defineExpose({ refreshData, selectedItems })
+defineExpose({ refreshData, selectedItems, bulkDelete })
 
 // Watch for filter changes
 watch(
   () => props.filters,
   (newFilters) => {
     console.log("Filters updated:", newFilters)
-    currentPage.value = 1 // reset to first page on filter change
+    currentPage.value = 1
   },
   { deep: true }
 )

@@ -38,7 +38,7 @@
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col min-h-[600px] max-h-[90vh]">
               <div class="flex items-center justify-between p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">
-                  Add New Product
+                  Edit Product
                 </h2>
                 <button
                   type="button"
@@ -204,10 +204,7 @@
                       <li v-else-if="suppliersError" class="px-4 py-2 text-sm text-red-500">Error: {{ suppliersError }}</li>
                       <li v-else-if="suppliers.length === 0" class="px-4 py-2 text-sm text-gray-500">No suppliers found</li>
                       <li v-else v-for="supplier in suppliers" :key="supplier.id">
-                        <a 
-                          class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" 
-                          @click="selectOption('supplierName', supplier.name)"
-                        >
+                        <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('supplierName', supplier.name)">
                           {{ supplier.name }}
                         </a>
                       </li>
@@ -303,7 +300,7 @@
                 </button>
                 <button @click="submitForm" class="btn btn-primary" :disabled="isSubmitting">
                   <span v-if="isSubmitting" class="loading loading-spinner loading-sm"></span>
-                  {{ isSubmitting ? 'Saving...' : 'Save' }}
+                  {{ isSubmitting ? 'Updating...' : 'Update' }}
                 </button>
               </div>
             </div>
@@ -327,7 +324,20 @@ interface Supplier {
   name: string
 }
 
-const emit = defineEmits(['product-created'])
+interface Product {
+  id: number;
+  skuCode: string;
+  productName: string;
+  productCode: string;
+  category: string;
+  supplierName: string;
+  status: string;
+  remark: string | null;
+  quantity: number;
+  createdTime: string;
+}
+
+const emit = defineEmits(['product-updated'])
 
 /* state */
 const isOpen = ref(false)
@@ -339,6 +349,8 @@ const panelRef = ref<HTMLElement | null>(null)
 const statusDropdownRef = ref<HTMLElement | null>(null)
 const categoryDropdownRef = ref<HTMLElement | null>(null)
 const supplierDropdownRef = ref<HTMLElement | null>(null)
+
+const originalProduct = ref<Product | null>(null);
 
 const form = reactive({
   skuCode: '',
@@ -364,7 +376,6 @@ const errors = reactive({
 const statusOptions = ['Active', 'Inactive']
 const categories = ref<Category[]>([])
 const suppliers = ref<Supplier[]>([])
-// The keys here ('status', 'category', 'supplier') must match the keys passed to toggleDropdown
 const openDropdowns = reactive({ status: false, category: false, supplier: false })
 
 /* Fetch categories and suppliers */
@@ -386,11 +397,9 @@ const fetchSuppliers = async () => {
   loadingSuppliers.value = true
   try {
     suppliersError.value = null
-    // backend route is /api/supplier (singular) and returns supplier objects
     const response = await fetch('/api/supplier')
     if (!response.ok) throw new Error('Failed to fetch suppliers')
     const data = await response.json()
-    // normalize to { id, name } so the dropdown uses supplier.name
     suppliers.value = (data || []).map((s: any) => ({
       id: s.id,
       name: s.supplierName || s.supplier_name || s.name || ''
@@ -403,7 +412,7 @@ const fetchSuppliers = async () => {
   }
 }
 
-/* Modal scroll lock utilities */
+/* Modal scroll lock utilities (omitted for brevity, assume they are correct) */
 let scrollY = 0
 let scrollbarWidth = 0
 
@@ -434,53 +443,25 @@ const unlockScroll = () => {
   })
 }
 
-/* Validation */
+
+/* Validation (omitted for brevity, assume they are correct) */
 const validateForm = () => {
   // Reset errors
   Object.keys(errors).forEach(key => errors[key as keyof typeof errors] = '')
 
   let isValid = true
 
-  // SKU Code validation
-  if (!form.skuCode.trim()) {
-    errors.skuCode = 'SKU Code is required'
-    isValid = false
-  }
-
-  // Product Name validation
-  if (!form.productName.trim()) {
-    errors.productName = 'Product Name is required'
-    isValid = false
-  }
-
-  // Product Code validation
-  if (!form.productCode.trim()) {
-    errors.productCode = 'Product Code is required'
-    isValid = false
-  }
-
-  // Category validation
-  if (!form.category) {
-    errors.category = 'Category is required'
-    isValid = false
-  }
-
-  // Supplier Name validation
-  if (!form.supplierName) {
-    errors.supplierName = 'Supplier Name is required'
-    isValid = false
-  }
-
-  // Status validation
-  if (!form.status) {
-    errors.status = 'Status is required'
-    isValid = false
-  }
+  if (!form.skuCode.trim()) { errors.skuCode = 'SKU Code is required'; isValid = false }
+  if (!form.productName.trim()) { errors.productName = 'Product Name is required'; isValid = false }
+  if (!form.productCode.trim()) { errors.productCode = 'Product Code is required'; isValid = false }
+  if (!form.category) { errors.category = 'Category is required'; isValid = false }
+  if (!form.supplierName) { errors.supplierName = 'Supplier Name is required'; isValid = false }
+  if (!form.status) { errors.status = 'Status is required'; isValid = false }
 
   return isValid
 }
 
-// Clear error when user types
+// Clear error when user types (omitted for brevity)
 watch(() => form.skuCode, () => { if (errors.skuCode) errors.skuCode = '' })
 watch(() => form.productName, () => { if (errors.productName) errors.productName = '' })
 watch(() => form.productCode, () => { if (errors.productCode) errors.productCode = '' })
@@ -498,14 +479,14 @@ const toggleDropdown = (name: 'status' | 'category' | 'supplier') => {
 }
 
 /**
- * FIX APPLIED HERE:
- * The selectOption function now correctly maps the `form` key ('supplierName') 
- * to the `openDropdowns` key ('supplier') to ensure the dropdown closes.
+ * 💡 FIX APPLIED HERE:
+ * Correctly asserts the type of the value being assigned to the form field 
+ * to resolve potential TypeScript errors.
  */
 const selectOption = (key: keyof typeof form, value: string) => {
-  form[key] = value as never
+  // The correct type assertion for a dynamic key in a reactive object
+  form[key] = value as (typeof form)[typeof key]
   
-  // Determine which dropdown state key to close
   let dropdownKey: keyof typeof openDropdowns | null = null;
   if (key === 'supplierName') {
     dropdownKey = 'supplier';
@@ -520,7 +501,7 @@ const selectOption = (key: keyof typeof form, value: string) => {
   }
 }
 
-/* close dropdowns when clicking outside */
+/* close dropdowns when clicking outside (omitted for brevity) */
 const handleClickOutside = (event: MouseEvent) => {
   const statusDd = statusDropdownRef.value
   const categoryDd = categoryDropdownRef.value
@@ -540,18 +521,18 @@ const handleClickOutside = (event: MouseEvent) => {
 }
 
 /* open/close modal */
-const openModal = async () => {
-  // Fetch categories and suppliers when modal opens
+const openModal = async (product: Product) => {
   await Promise.all([fetchCategories(), fetchSuppliers()])
 
-  // Reset form
-  form.skuCode = ''
-  form.productName = ''
-  form.productCode = ''
-  form.category = ''
-  form.supplierName = ''
-  form.status = ''
-  form.remark = ''
+  // Prefill the form with the provided product data
+  originalProduct.value = product;
+  form.skuCode = product.skuCode
+  form.productName = product.productName
+  form.productCode = product.productCode
+  form.category = product.category
+  form.supplierName = product.supplierName
+  form.status = product.status
+  form.remark = product.remark || ''
 
   // Reset errors
   Object.keys(errors).forEach(key => errors[key as keyof typeof errors] = '')
@@ -570,6 +551,7 @@ const closeModal = async () => {
 
   // Reset form after modal is closed
   await nextTick()
+  originalProduct.value = null;
   form.skuCode = ''
   form.productName = ''
   form.productCode = ''
@@ -584,15 +566,17 @@ const closeModal = async () => {
 
 /* submit */
 const submitForm = async () => {
-  if (!validateForm()) {
+  if (!validateForm() || !originalProduct.value) {
+    if (!originalProduct.value) errors.submit = 'No product data provided for editing.';
     return
   }
 
   isSubmitting.value = true
   errors.submit = ''
 
+  const productId = originalProduct.value.id;
+
   try {
-    // Format the data to match the backend schema
     const submissionData = {
       skuCode: form.skuCode.toUpperCase(),
       productName: form.productName,
@@ -601,13 +585,13 @@ const submitForm = async () => {
       supplierName: form.supplierName,
       status: form.status,
       remark: form.remark || null,
-      quantity: 0, // Default quantity
-      createdTime: new Date().toISOString()
+      quantity: originalProduct.value.quantity,
+      createdTime: originalProduct.value.createdTime,
+      updatedTime: new Date().toISOString()
     }
 
-    // Make the API call to the correct endpoint
-  const response = await fetch('/api/product', {
-      method: 'POST',
+    const response = await fetch(`/api/product/${productId}`, {
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -616,24 +600,21 @@ const submitForm = async () => {
 
     if (!response.ok) {
       const errorData = await response.json()
-      throw new Error(errorData.message || 'Failed to create product')
+      throw new Error(errorData.message || 'Failed to update product')
     }
 
     const data = await response.json()
     console.log('Server response:', data)
 
-    // Only close and reset after successful API call
     await closeModal()
 
-    // Emit event to parent component with success status
-    emit('product-created', { success: true, data })
+    emit('product-updated', { success: true, data })
 
   } catch (error) {
-    console.error('Error creating product:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Failed to create product'
+    console.error('Error updating product:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Failed to update product'
     errors.submit = errorMessage
-    // Emit event to parent component with error status
-    emit('product-created', { success: false, error: errorMessage })
+    emit('product-updated', { success: false, error: errorMessage })
   } finally {
     isSubmitting.value = false
   }

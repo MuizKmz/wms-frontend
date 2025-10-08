@@ -21,6 +21,7 @@
       >
         <div>
           <div class="border-b border-gray-200 dark:border-gray-700 -mx-6 px-6 -mt-14">
+            <ProductListFilters @filter-change="handleFilterChange" />
             <div class="flex gap-1">
               <button
                 @click="handleTabChange('table')"
@@ -64,6 +65,7 @@
             ref="productTableRef"
             :filters="activeFilters"
             @delete-product="handleDeleteProduct"
+            @edit-product="handleEditProduct"
           />
         </div>
       </ComponentCard>
@@ -73,6 +75,11 @@
       ref="addProductModalRef"
       @product-created="handleProductCreated"
     />
+
+    <EditProduct
+      ref="editProductModalRef"
+      @product-updated="handleProductUpdated"
+    />
   </AdminLayout>
 </template>
 
@@ -81,10 +88,12 @@ import { ref, computed } from "vue";
 import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
-import ProductTable from "./component/ProductTable.vue"; // Assume this component exists
-import AddNewProduct from "./component/AddNewProduct.vue"; // Assume this component exists
+import ProductTable from "./component/ProductTable.vue";
+import AddNewProduct from "./component/AddNewProduct.vue";
+import EditProduct from "./component/EditProduct.vue";
+import ProductListFilters from "./component/ProductListFilters.vue";
 
-// Interface definitions based on the previous example
+// Interface definitions
 interface Product {
   id?: number;
   productCode?: string;
@@ -95,7 +104,9 @@ interface Result {
   success: boolean;
   error?: string;
   data?: {
-    productName: string;
+    productName?: string;
+    count?: number;
+    deletedCount?: number;
   };
 }
 
@@ -106,6 +117,7 @@ interface Filters {
 const currentPageTitle = ref("Product Management");
 const activeFilters = ref<Filters>({});
 const addProductModalRef = ref<InstanceType<typeof AddNewProduct> | null>(null);
+const editProductModalRef = ref<InstanceType<typeof EditProduct> | null>(null);
 const productTableRef = ref<InstanceType<typeof ProductTable> | null>(null);
 const activeTab = ref('table');
 
@@ -132,7 +144,6 @@ const handleProductCreated = async (result: Result) => {
     showToastMessage('Product has been successfully added', 'success');
     // Refresh the product list
     if (productTableRef.value) {
-      // Assuming ProductTable component has a refreshData method
       await productTableRef.value.refreshData();
     }
   } else {
@@ -140,17 +151,12 @@ const handleProductCreated = async (result: Result) => {
   }
 };
 
-// Handle product deletion response
+// Handle product deletion response (No toast here - SweetAlert handles it)
 const handleDeleteProduct = async (result: Result) => {
-  if (result.success) {
-    showToastMessage(`Product ${result.data?.productName || 'unknown'} has been deleted successfully`, 'success');
-    // Refresh table to show updated data
-    if (productTableRef.value) {
-      await productTableRef.value.refreshData();
-    }
-  } else {
-    showToastMessage(result.error || 'Failed to delete product', 'error');
-  }
+  // SweetAlert already shows the success/error message
+  // Just refresh if needed (already done in the table component)
+  // This handler can be used for additional logic if needed
+  console.log('Delete result:', result);
 };
 
 // Define the single tab with its component
@@ -158,12 +164,11 @@ const productTabs = [
   {
     id: 'table',
     label: 'List of Products',
-    component: ProductTable // Use the ProductTable component
+    component: ProductTable
   },
 ];
 
 const currentComponent = computed(() => {
-  // Since we only have one tab, it will always return ProductTable
   return productTabs.find(tab => tab.id === activeTab.value)?.component;
 });
 
@@ -172,26 +177,62 @@ const handleFilterChange = (filters: Filters) => {
   console.log('Filters applied:', filters);
 };
 
-// Although only one tab, keep the handler for consistency/future expansion
 const handleTabChange = (tabId: string) => {
   activeTab.value = tabId;
 };
 
 const openAddProductModal = () => {
   if (addProductModalRef.value) {
-    // Assuming AddNewProduct component has an openModal method
     addProductModalRef.value.openModal();
   }
 };
 
-const handleBulkDelete = () => {
-  // This would typically involve getting selected IDs from productTableRef
-  console.log('Bulk delete clicked - implementation needed');
-  showToastMessage('Bulk delete feature is currently unavailable', 'error');
+// Handle bulk delete
+const handleBulkDelete = async () => {
+  if (!productTableRef.value) {
+    console.error('Product table ref not available');
+    return;
+  }
+
+  // Check if there are selected items
+  const selectedItems = productTableRef.value.selectedItems || [];
+  
+  if (selectedItems.length === 0) {
+    // SweetAlert will show the "No Selection" message from bulkDelete function
+    await productTableRef.value.bulkDelete();
+    return;
+  }
+
+  // Call the bulkDelete method exposed by the ProductTable component
+  const result = await productTableRef.value.bulkDelete();
+  
+  // SweetAlert already handles all notifications in the table component
+  // No need for additional toast here
+  console.log('Bulk delete result:', result);
 };
 
 const handleImportProduct = () => {
   console.log('Import Product clicked - implementation needed');
   showToastMessage('Product import feature is not yet implemented', 'error');
+};
+
+// Handle opening the edit modal
+const handleEditProduct = (product: Product) => {
+  if (editProductModalRef.value) {
+    editProductModalRef.value.openModal(product);
+  }
+};
+
+// Handle product update response
+const handleProductUpdated = async (result: Result) => {
+  if (result.success) {
+    showToastMessage('Product has been successfully updated', 'success');
+    // Refresh the product list
+    if (productTableRef.value) {
+      await productTableRef.value.refreshData();
+    }
+  } else {
+    showToastMessage(result.error || 'Failed to update product', 'error');
+  }
 };
 </script>
