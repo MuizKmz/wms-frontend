@@ -1,58 +1,228 @@
 <template>
+  <div v-if="showToast" class="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+    <div :class="[
+      'rounded-lg px-6 py-4 shadow-lg flex items-center transform transition-all duration-300',
+      toastType === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    ]">
+      <span v-if="toastType === 'success'" class="mr-2">✓</span>
+      <span v-else class="mr-2">⚠</span>
+      {{ toastMessage }}
+    </div>
+  </div>
+
   <AdminLayout>
     <PageBreadcrumb :pageTitle="currentPageTitle" />
     <ToolListFilters @filter-change="handleFilterChange" />
-    <div class="space-y-5 sm:space-y-6">
-      <ComponentCard title="All Receiving List" desc="Overview of all Receiving List">
-        <!-- Button in header slot -->
-        <template #headerAction>
-          <button
-            class="px-4 py-2 mr-2 btn btn-error text-white text-sm font-medium rounded-lg transition-colors duration-200">
-            Delete
-          </button>
-          <button @click="openAddMachineModal"
-            class="px-4 py-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
-            Add New Receiving
-          </button>
-        </template>
 
-        <!-- Table in main slot
-        <SupplierListTable :filters="activeFilters" /> -->
+    <div class="space-y-5 sm:space-y-6">
+      <ComponentCard 
+        title="All Receiving List" 
+        desc="Overview of all Receiving List"
+      >
+        <div>
+          <div class="border-b border-gray-200 dark:border-gray-700 -mx-6 px-6 -mt-14">
+            <ReceivingListFilters @filter-change="handleFilterChange" />
+            <div class="flex gap-1">
+              <button
+                @click="handleTabChange('table')"
+                :class="[
+                  'px-4 py-3 font-medium text-sm transition-all relative',
+                  activeTab === 'table'
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                ]"
+              >
+                List of Receiving
+                <div
+                  v-if="activeTab === 'table'"
+                  class="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400 rounded-t"
+                />
+              </button>
+            </div>
+          </div>
+
+          <div class="flex gap-2 my-6">
+            <button 
+              @click="openAddReceivingModal"
+              class="px-4 py-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
+              Add New Receiving
+            </button>
+            <button
+              @click="handleBulkDelete"
+              class="px-4 py-2 btn btn-error text-white text-sm font-medium rounded-lg transition-colors duration-200">
+              Delete
+            </button>
+            <button 
+              @click="handleImportReceiving"
+              class="px-4 py-2 btn btn-secondary text-white text-sm font-medium rounded-lg transition-colors duration-200">
+              Import from PO
+            </button>
+          </div>
+
+          <component 
+            :is="currentComponent" 
+            v-if="currentComponent"
+            ref="receivingTableRef"
+            :filters="activeFilters"
+            @delete-receiving="handleDeleteReceiving"
+            @edit-receiving="handleEditReceiving"
+          />
+        </div>
       </ComponentCard>
     </div>
 
-    <!-- <AddNewSupplier ref="addMachineModalRef" /> -->
+    <AddNewReceiving 
+      ref="addReceivingModalRef"
+      @receiving-created="handleReceivingCreated"
+    />
+
+    <EditReceiving
+      ref="editReceivingModalRef"
+      @receiving-updated="handleReceivingUpdated"
+    />
   </AdminLayout>
 </template>
 
-<script setup>
-import { ref } from "vue";
+<script setup lang="ts">
+import { ref, computed } from "vue";
 import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
-import PageTitle from "@/components/common/PageTitle.vue";
-// import ToolListFilters from "@/components/common/ToolListFilters.vue"; // Add this import
-// import SupplierListTable from "./component/SupplierListTable.vue";
-// import AddNewSupplier from "./component/AddNewSupplier.vue";
+import ReceivingTable from "./component/ReceivingTable.vue";
+import AddNewReceiving from "./component/AddNewReceiving.vue";
+// import EditReceiving from "./component/EditReceiving.vue";
+ import ReceivingListFilters from "./component/ReceivingListFilters.vue";
+
+// Interface definitions
+interface Receiving {
+  id?: number;
+  receivingCode?: string;
+  receivingDate: string;
+}
+
+interface Result {
+  success: boolean;
+  error?: string;
+  data?: {
+    receivingCode?: string;
+    count?: number;
+    deletedCount?: number;
+  };
+}
+
+interface Filters {
+  [key: string]: string | number | boolean | undefined;
+}
 
 const currentPageTitle = ref("Receiving Management");
-const activeFilters = ref({});
-const addMachineModalRef = ref(null);
+const activeFilters = ref<Filters>({});
+const addReceivingModalRef = ref<InstanceType<typeof AddNewReceiving> | null>(null);
+const editReceivingModalRef = ref<InstanceType<typeof EditReceiving> | null>(null);
+const receivingTableRef = ref<InstanceType<typeof ReceivingTable> | null>(null);
+const activeTab = ref('table');
 
-const handleFilterChange = (filters) => {
-  activeFilters.value = filters;
-  console.log('Filters applied:', filters); // For debugging
+// Toast state
+const showToast = ref(false);
+const toastMessage = ref('');
+const toastType = ref<'success' | 'error'>('success');
+
+// Function to show toast
+const showToastMessage = (message: string, type: 'success' | 'error' = 'success') => {
+  toastMessage.value = message;
+  toastType.value = type;
+  showToast.value = true;
+
+  // Hide toast after 2 seconds
+  setTimeout(() => {
+    showToast.value = false;
+  }, 2000);
 };
 
-const openAddMachineModal = () => {
-  console.log('Button clicked'); // Add this
-  console.log('Modal ref:', addMachineModalRef.value); // Add this
-
-  if (addMachineModalRef.value) {
-    console.log('Calling openModal'); // Add this
-    addMachineModalRef.value.openModal();
+// Handle receiving creation response
+const handleReceivingCreated = async (result: Result) => {
+  if (result.success) {
+    showToastMessage('Receiving has been successfully added', 'success');
+    // Refresh the receiving list
+    if (receivingTableRef.value) {
+      await receivingTableRef.value.refreshData();
+    }
   } else {
-    console.log('Modal ref is null'); // Add this
+    showToastMessage(result.error || 'Failed to create receiving', 'error');
   }
+};
+
+// Handle receiving deletion response (No toast here - SweetAlert handles it)
+const handleDeleteReceiving = async (result: Result) => {
+  console.log('Delete result:', result);
+};
+
+// Handle receiving update response
+const handleReceivingUpdated = async (result: Result) => {
+  if (result.success) {
+    showToastMessage('Receiving has been successfully updated', 'success');
+    if (receivingTableRef.value) {
+      await receivingTableRef.value.refreshData();
+    }
+  } else {
+    showToastMessage(result.error || 'Failed to update receiving', 'error');
+  }
+};
+
+// Define the single tab with its component
+const receivingTabs = [
+  {
+    id: 'table',
+    label: 'List of Receiving',
+    component: ReceivingTable
+  },
+];
+
+const currentComponent = computed(() => {
+  return receivingTabs.find(tab => tab.id === activeTab.value)?.component;
+});
+
+const handleFilterChange = (filters: Filters) => {
+  activeFilters.value = filters;
+};
+
+const handleTabChange = (tabId: string) => {
+  activeTab.value = tabId;
+};
+
+const openAddReceivingModal = () => {
+  if (addReceivingModalRef.value) {
+    addReceivingModalRef.value.openModal();
+  }
+};
+
+const handleEditReceiving = (receiving: Receiving) => {
+  if (editReceivingModalRef.value) {
+    editReceivingModalRef.value.openModal(receiving);
+  }
+};
+
+// Handle bulk delete
+const handleBulkDelete = async () => {
+  if (!receivingTableRef.value) {
+    console.error('Receiving table ref not available');
+    return;
+  }
+
+  // Check if there are selected items
+  const selectedItems = receivingTableRef.value.selectedItems || [];
+  
+  if (selectedItems.length === 0) {
+    showToastMessage('Please select items to delete', 'error');
+    return;
+  }
+
+  // The actual bulk delete logic will be handled in the table component
+  await receivingTableRef.value.handleBulkDelete();
+};
+
+// Handle import receiving
+const handleImportReceiving = () => {
+  // Implement import logic here
+  console.log('Import receiving clicked');
 };
 </script>

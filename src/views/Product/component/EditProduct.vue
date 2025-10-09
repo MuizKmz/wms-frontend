@@ -86,11 +86,11 @@
                     <span class="text-red-500">*</span> Product Name
                   </label>
                   <input
-                    v-model="form.productName"
+                    v-model="form.name"
                     type="text"
                     placeholder="Enter Product Name"
                     maxlength="100"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.productName }]"
+                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.name }]"
                   />
                   <transition
                     enter-active-class="transition-all duration-200 ease-out"
@@ -100,8 +100,8 @@
                     leave-from-class="opacity-100 translate-y-0"
                     leave-to-class="opacity-0 -translate-y-1"
                   >
-                    <div v-if="errors.productName" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.productName }}</p>
+                    <div v-if="errors.name" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.name }}</p>
                     </div>
                   </transition>
                 </div>
@@ -183,12 +183,12 @@
                   <div class="dropdown relative inline-flex w-full" ref="supplierDropdownRef">
                     <button
                       type="button"
-                      :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.supplierName }]"
+                      :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.supplier }]"
                       :aria-expanded="openDropdowns.supplier"
                       @click.stop="toggleDropdown('supplier')"
                       :disabled="loadingSuppliers"
                     >
-                      {{ form.supplierName || 'Select Supplier' }}
+                      {{ form.supplier || 'Select Supplier' }}
                       <span
                         class="icon-[tabler--chevron-down] size-4 transition-transform"
                         :class="{ 'rotate-180': openDropdowns.supplier }"
@@ -204,7 +204,10 @@
                       <li v-else-if="suppliersError" class="px-4 py-2 text-sm text-red-500">Error: {{ suppliersError }}</li>
                       <li v-else-if="suppliers.length === 0" class="px-4 py-2 text-sm text-gray-500">No suppliers found</li>
                       <li v-else v-for="supplier in suppliers" :key="supplier.id">
-                        <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('supplierName', supplier.name)">
+                        <a
+                          class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer"
+                          @click="selectOption('supplier', supplier.name)"
+                        >
                           {{ supplier.name }}
                         </a>
                       </li>
@@ -218,8 +221,8 @@
                     leave-from-class="opacity-100 translate-y-0"
                     leave-to-class="opacity-0 -translate-y-1"
                   >
-                    <div v-if="errors.supplierName" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.supplierName }}</p>
+                    <div v-if="errors.supplier" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.supplier }}</p>
                     </div>
                   </transition>
                 </div>
@@ -273,11 +276,11 @@
                     Remarks
                   </label>
                   <input
-                    v-model="form.remark"
+                    v-model="form.remarks"
                     type="text"
                     placeholder="Enter Remarks"
                     maxlength="200"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.remark }]"
+                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.remarks }]"
                   />
                   <transition
                     enter-active-class="transition-all duration-200 ease-out"
@@ -287,8 +290,8 @@
                     leave-from-class="opacity-100 translate-y-0"
                     leave-to-class="opacity-0 -translate-y-1"
                   >
-                    <div v-if="errors.remark" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.remark }}</p>
+                    <div v-if="errors.remarks" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.remarks }}</p>
                     </div>
                   </transition>
                 </div>
@@ -325,16 +328,35 @@ interface Supplier {
 }
 
 interface Product {
-  id: number;
-  skuCode: string;
-  productName: string;
-  productCode: string;
-  category: string;
-  supplierName: string;
-  status: string;
-  remark: string | null;
-  quantity: number;
-  createdTime: string;
+  id: number
+  skuCode: string
+  productCode: string
+  name: string
+  categoryId: number
+  supplierId: number
+  status: string
+  remarks?: string
+  createdAt?: string
+  updatedAt?: string
+  supplier?: {
+    id: number
+    supplierCode: string
+    supplierName: string
+    manager: string
+    contactPhone: string
+    email: string
+    status: string
+    remark: string
+  }
+  category?: {
+    id: number
+    categoryCode: string
+    name: string
+    parentCategoryId: number | null
+    level: number
+    storageRequirements: string
+    status: string
+  }
 }
 
 const emit = defineEmits(['product-updated'])
@@ -349,27 +371,26 @@ const panelRef = ref<HTMLElement | null>(null)
 const statusDropdownRef = ref<HTMLElement | null>(null)
 const categoryDropdownRef = ref<HTMLElement | null>(null)
 const supplierDropdownRef = ref<HTMLElement | null>(null)
-
-const originalProduct = ref<Product | null>(null);
+const productId = ref<number | null>(null)
 
 const form = reactive({
   skuCode: '',
-  productName: '',
+  name: '',
   productCode: '',
   category: '',
-  supplierName: '',
+  supplier: '',
   status: '',
-  remark: ''
+  remarks: ''
 })
 
 const errors = reactive({
   skuCode: '',
-  productName: '',
+  name: '',
   productCode: '',
   category: '',
-  supplierName: '',
+  supplier: '',
   status: '',
-  remark: '',
+  remarks: '',
   submit: ''
 })
 
@@ -412,7 +433,7 @@ const fetchSuppliers = async () => {
   }
 }
 
-/* Modal scroll lock utilities (omitted for brevity, assume they are correct) */
+/* Modal scroll lock utilities */
 let scrollY = 0
 let scrollbarWidth = 0
 
@@ -443,32 +464,53 @@ const unlockScroll = () => {
   })
 }
 
-
-/* Validation (omitted for brevity, assume they are correct) */
+/* Validation */
 const validateForm = () => {
-  // Reset errors
   Object.keys(errors).forEach(key => errors[key as keyof typeof errors] = '')
 
   let isValid = true
 
-  if (!form.skuCode.trim()) { errors.skuCode = 'SKU Code is required'; isValid = false }
-  if (!form.productName.trim()) { errors.productName = 'Product Name is required'; isValid = false }
-  if (!form.productCode.trim()) { errors.productCode = 'Product Code is required'; isValid = false }
-  if (!form.category) { errors.category = 'Category is required'; isValid = false }
-  if (!form.supplierName) { errors.supplierName = 'Supplier Name is required'; isValid = false }
-  if (!form.status) { errors.status = 'Status is required'; isValid = false }
+  if (!form.skuCode.trim()) {
+    errors.skuCode = 'SKU Code is required'
+    isValid = false
+  }
+
+  if (!form.name.trim()) {
+    errors.name = 'Product Name is required'
+    isValid = false
+  }
+
+  if (!form.productCode.trim()) {
+    errors.productCode = 'Product Code is required'
+    isValid = false
+  }
+
+  if (!form.category) {
+    errors.category = 'Category is required'
+    isValid = false
+  }
+
+  if (!form.supplier) {
+    errors.supplier = 'Supplier Name is required'
+    isValid = false
+  }
+
+  if (!form.status) {
+    errors.status = 'Status is required'
+    isValid = false
+  }
 
   return isValid
 }
 
-// Clear error when user types (omitted for brevity)
+// Clear error when user types
 watch(() => form.skuCode, () => { if (errors.skuCode) errors.skuCode = '' })
-watch(() => form.productName, () => { if (errors.productName) errors.productName = '' })
+watch(() => form.name, () => { if (errors.name) errors.name = '' })
 watch(() => form.productCode, () => { if (errors.productCode) errors.productCode = '' })
 watch(() => form.category, () => { if (errors.category) errors.category = '' })
-watch(() => form.supplierName, () => { if (errors.supplierName) errors.supplierName = '' })
+watch(() => form.supplier, () => { if (errors.supplier) errors.supplier = '' })
 watch(() => form.status, () => { if (errors.status) errors.status = '' })
-watch(() => form.remark, () => { if (errors.remark) errors.remark = '' })
+watch(() => form.remarks, () => { if (errors.remarks) errors.remarks = '' })
 
 /* helpers */
 const toggleDropdown = (name: 'status' | 'category' | 'supplier') => {
@@ -478,22 +520,16 @@ const toggleDropdown = (name: 'status' | 'category' | 'supplier') => {
   openDropdowns[name] = !openDropdowns[name]
 }
 
-/**
- * 💡 FIX APPLIED HERE:
- * Correctly asserts the type of the value being assigned to the form field 
- * to resolve potential TypeScript errors.
- */
 const selectOption = (key: keyof typeof form, value: string) => {
-  // The correct type assertion for a dynamic key in a reactive object
-  form[key] = value as (typeof form)[typeof key]
-  
-  let dropdownKey: keyof typeof openDropdowns | null = null;
-  if (key === 'supplierName') {
-    dropdownKey = 'supplier';
+  form[key] = value as never
+
+  let dropdownKey: keyof typeof openDropdowns | null = null
+  if (key === 'supplier') {
+    dropdownKey = 'supplier'
   } else if (key === 'category') {
-    dropdownKey = 'category';
+    dropdownKey = 'category'
   } else if (key === 'status') {
-    dropdownKey = 'status';
+    dropdownKey = 'status'
   }
 
   if (dropdownKey) {
@@ -501,7 +537,7 @@ const selectOption = (key: keyof typeof form, value: string) => {
   }
 }
 
-/* close dropdowns when clicking outside (omitted for brevity) */
+/* close dropdowns when clicking outside */
 const handleClickOutside = (event: MouseEvent) => {
   const statusDd = statusDropdownRef.value
   const categoryDd = categoryDropdownRef.value
@@ -521,18 +557,60 @@ const handleClickOutside = (event: MouseEvent) => {
 }
 
 /* open/close modal */
-const openModal = async (product: Product) => {
+const openModal = async (product: any) => {
+  console.log('=== OPENING EDIT MODAL ===')
+  console.log('1. Product received:', product)
+  
+  // Fetch categories and suppliers when modal opens
   await Promise.all([fetchCategories(), fetchSuppliers()])
 
-  // Prefill the form with the provided product data
-  originalProduct.value = product;
-  form.skuCode = product.skuCode
-  form.productName = product.productName
-  form.productCode = product.productCode
-  form.category = product.category
-  form.supplierName = product.supplierName
-  form.status = product.status
-  form.remark = product.remark || ''
+  console.log('2. Categories loaded:', categories.value)
+  console.log('3. Suppliers loaded:', suppliers.value)
+
+  // Use raw data if available (your table is transforming the data)
+  const actualProduct = product.raw || product
+  
+  console.log('3.5. Using data from:', actualProduct)
+
+  // Store product ID for update
+  productId.value = actualProduct.id
+
+  // Prefill form with product data
+  form.skuCode = actualProduct.skuCode || ''
+  form.name = actualProduct.name || ''
+  form.productCode = actualProduct.productCode || ''
+  form.status = actualProduct.status || ''
+  form.remarks = actualProduct.remarks || ''
+
+  console.log('4. Form basic fields:', {
+    skuCode: form.skuCode,
+    name: form.name,
+    productCode: form.productCode,
+    status: form.status,
+    remarks: form.remarks
+  })
+
+  // Find category name by ID
+  if (actualProduct.categoryId) {
+    const category = categories.value.find(c => c.id === actualProduct.categoryId)
+    form.category = category ? category.name : ''
+    console.log('5. Category ID:', actualProduct.categoryId, 'Category found:', category, 'Form category:', form.category)
+  } else {
+    form.category = ''
+    console.log('5. No categoryId in product')
+  }
+
+  // Find supplier name by ID
+  if (actualProduct.supplierId) {
+    const supplier = suppliers.value.find(s => s.id === actualProduct.supplierId)
+    form.supplier = supplier ? supplier.name : ''
+    console.log('6. Supplier ID:', actualProduct.supplierId, 'Supplier found:', supplier, 'Form supplier:', form.supplier)
+  } else {
+    form.supplier = ''
+    console.log('6. No supplierId in product')
+  }
+
+  console.log('7. Final form state:', form)
 
   // Reset errors
   Object.keys(errors).forEach(key => errors[key as keyof typeof errors] = '')
@@ -551,14 +629,14 @@ const closeModal = async () => {
 
   // Reset form after modal is closed
   await nextTick()
-  originalProduct.value = null;
+  productId.value = null
   form.skuCode = ''
-  form.productName = ''
+  form.name = ''
   form.productCode = ''
   form.category = ''
-  form.supplierName = ''
+  form.supplier = ''
   form.status = ''
-  form.remark = ''
+  form.remarks = ''
 
   // Reset errors
   Object.keys(errors).forEach(key => errors[key as keyof typeof errors] = '')
@@ -566,32 +644,46 @@ const closeModal = async () => {
 
 /* submit */
 const submitForm = async () => {
-  if (!validateForm() || !originalProduct.value) {
-    if (!originalProduct.value) errors.submit = 'No product data provided for editing.';
+  if (!validateForm()) {
+    return
+  }
+
+  if (!productId.value) {
+    errors.submit = 'Product ID is missing'
     return
   }
 
   isSubmitting.value = true
   errors.submit = ''
 
-  const productId = originalProduct.value.id;
-
   try {
-    const submissionData = {
-      skuCode: form.skuCode.toUpperCase(),
-      productName: form.productName,
-      productCode: form.productCode.toUpperCase(),
-      category: form.category,
-      supplierName: form.supplierName,
-      status: form.status,
-      remark: form.remark || null,
-      quantity: originalProduct.value.quantity,
-      createdTime: originalProduct.value.createdTime,
-      updatedTime: new Date().toISOString()
+    // Find category and supplier IDs by name
+    const category = categories.value.find(c => c.name === form.category)
+    const supplier = suppliers.value.find(s => s.name === form.supplier)
+
+    if (!category) {
+      errors.category = 'Invalid category selected'
+      return
     }
 
-    const response = await fetch(`/api/product/${productId}`, {
-      method: 'PUT',
+    if (!supplier) {
+      errors.supplier = 'Invalid supplier selected'
+      return
+    }
+
+    const submissionData = {
+      skuCode: form.skuCode.toUpperCase(),
+      name: form.name,
+      productCode: form.productCode.toUpperCase(),
+      categoryId: category.id,
+      supplierId: supplier.id,
+      status: form.status,
+      remarks: form.remarks || null
+    }
+
+    // Use PATCH method to update the product
+    const response = await fetch(`/api/product/${productId.value}`, {
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -606,14 +698,17 @@ const submitForm = async () => {
     const data = await response.json()
     console.log('Server response:', data)
 
+    // Close modal after successful update
     await closeModal()
 
+    // Emit event to parent component with success status
     emit('product-updated', { success: true, data })
 
   } catch (error) {
     console.error('Error updating product:', error)
     const errorMessage = error instanceof Error ? error.message : 'Failed to update product'
     errors.submit = errorMessage
+    // Emit event to parent component with error status
     emit('product-updated', { success: false, error: errorMessage })
   } finally {
     isSubmitting.value = false

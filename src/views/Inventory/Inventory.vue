@@ -1,58 +1,189 @@
 <template>
+  <div v-if="showToast" class="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+    <div :class="[
+      'rounded-lg px-6 py-4 shadow-lg flex items-center transform transition-all duration-300',
+      toastType === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    ]">
+      <span v-if="toastType === 'success'" class="mr-2">✓</span>
+      <span v-else class="mr-2">⚠</span>
+      {{ toastMessage }}
+    </div>
+  </div>
+
   <AdminLayout>
     <PageBreadcrumb :pageTitle="currentPageTitle" />
-    <ToolListFilters @filter-change="handleFilterChange" />
-    <div class="space-y-5 sm:space-y-6">
-      <ComponentCard title="All Warehouse List" desc="Overview of all Warehouse List">
-        <!-- Button in header slot -->
-        <template #headerAction>
-          <button
-            class="px-4 py-2 mr-2 btn btn-error text-white text-sm font-medium rounded-lg transition-colors duration-200">
-            Delete
-          </button>
-          <button @click="openAddMachineModal"
-            class="px-4 py-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
-            Add New Inventory
-          </button>
-        </template>
 
-        <!-- Table in main slot
-        <SupplierListTable :filters="activeFilters" /> -->
+    <div class="space-y-5 sm:space-y-6">
+      <ComponentCard 
+        title="All Inventory List" 
+        desc="Overview of all Inventory List"
+      >
+        <div>
+          <div class="border-b border-gray-200 dark:border-gray-700 -mx-6 px-6 -mt-14">
+            <InventoryFilters @filter-change="handleFilterChange" />
+            <div class="flex gap-1">
+              <button
+                @click="handleTabChange('table')"
+                :class="[
+                  'px-4 py-3 font-medium text-sm transition-all relative',
+                  activeTab === 'table'
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                ]"
+              >
+                List of Inventory
+                <div
+                  v-if="activeTab === 'table'"
+                  class="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400 rounded-t"
+                />
+              </button>
+            </div>
+          </div>
+
+          <div class="flex gap-2 my-6">
+            <button @click="handleImportUpdateStatus"
+              class="px-4 py-2 btn btn-secondary text-white text-sm font-medium rounded-lg transition-colors duration-200">
+              Import Update Status
+            </button>
+            <button @click="handleImportUpdateInventory"
+              class="px-4 py-2 btn btn-secondary text-white text-sm font-medium rounded-lg transition-colors duration-200">
+              Import Update Inventory
+            </button>
+          </div>
+
+          <component 
+            :is="currentComponent" 
+            v-if="currentComponent"
+            ref="inventoryTableRef"
+            :filters="activeFilters"
+          />
+        </div>
       </ComponentCard>
     </div>
-
-    <!-- <AddNewSupplier ref="addMachineModalRef" /> -->
   </AdminLayout>
+
+  <ImportUpdateInventory 
+    ref="inventoryModalRef" 
+    @file-uploaded="handleFileUploaded" 
+  />
+
+  <ImportUpdateStatus 
+    ref="statusModalRef" 
+    @file-uploaded="handleStatusFileUploaded" 
+  />
 </template>
 
-<script setup>
-import { ref } from "vue";
+<script setup lang="ts">
+import { ref, computed } from "vue";
 import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
-import PageTitle from "@/components/common/PageTitle.vue";
-// import ToolListFilters from "@/components/common/ToolListFilters.vue"; // Add this import
-// import SupplierListTable from "./component/SupplierListTable.vue";
-// import AddNewSupplier from "./component/AddNewSupplier.vue";
+import InventoryTable from "./component/InventoryTable.vue";
+import InventoryFilters from "./component/InventoryFilters.vue";
+import ImportUpdateInventory from "./component/ImportUpdateInventory.vue"; 
+// 1. Import the new modal component
+import ImportUpdateStatus from "./component/ImportUpdateStatus.vue";
 
+// Interface definitions
+interface Filters {
+  [key: string]: string | number | boolean | undefined;
+}
+
+// State and Refs
 const currentPageTitle = ref("Inventory Management");
-const activeFilters = ref({});
-const addMachineModalRef = ref(null);
+const activeFilters = ref<Filters>({});
+const inventoryTableRef = ref<InstanceType<typeof InventoryTable> | null>(null);
+const activeTab = ref('table'); 
 
-const handleFilterChange = (filters) => {
-  activeFilters.value = filters;
-  console.log('Filters applied:', filters); // For debugging
+// 2. Refs for the modal components
+const inventoryModalRef = ref<InstanceType<typeof ImportUpdateInventory> | null>(null);
+const statusModalRef = ref<InstanceType<typeof ImportUpdateStatus> | null>(null);
+
+// --- Tab Logic ---
+const inventoryTabs = [
+  {
+    id: 'table',
+    label: 'List of Inventory',
+    component: InventoryTable
+  },
+];
+
+const currentComponent = computed(() => {
+  return inventoryTabs.find(tab => tab.id === activeTab.value)?.component;
+});
+
+const handleTabChange = (tabId: string) => {
+  activeTab.value = tabId;
+};
+// --- End Tab Logic ---
+
+// Toast state
+const showToast = ref(false);
+const toastMessage = ref('');
+const toastType = ref<'success' | 'error'>('success');
+
+/**
+ * Function to show toast notification
+ */
+const showToastMessage = (message: string, type: 'success' | 'error' = 'success', duration: number = 2000) => {
+  toastMessage.value = message;
+  toastType.value = type;
+  showToast.value = true;
+
+  // Hide toast after a duration
+  setTimeout(() => {
+    showToast.value = false;
+  }, duration);
 };
 
-const openAddMachineModal = () => {
-  console.log('Button clicked'); // Add this
-  console.log('Modal ref:', addMachineModalRef.value); // Add this
+const handleFilterChange = (filters: Filters) => {
+  activeFilters.value = filters;
+  console.log('Filters applied:', filters);
+};
 
-  if (addMachineModalRef.value) {
-    console.log('Calling openModal'); // Add this
-    addMachineModalRef.value.openModal();
-  } else {
-    console.log('Modal ref is null'); // Add this
+/**
+ * Handler for 'Import Update Status' button click
+ * Opens the ImportUpdateStatus modal
+ */
+const handleImportUpdateStatus = () => {
+    if (statusModalRef.value) {
+        statusModalRef.value.openModal();
+    }
+};
+
+/**
+ * Handler for 'Import Update Inventory' button click
+ * Opens the ImportUpdateInventory modal
+ */
+const handleImportUpdateInventory = () => {
+  if (inventoryModalRef.value) {
+    inventoryModalRef.value.openModal();
   }
 };
+
+/**
+ * Handler for the @file-uploaded event from the ImportUpdateInventory modal
+ */
+const handleFileUploaded = (event: { success: boolean, data?: any, error?: string }) => {
+    if (event.success) {
+        showToastMessage('Inventory stock updated successfully!', 'success');
+        // Refresh the inventory table data
+        inventoryTableRef.value?.fetchData(); 
+    } else {
+        showToastMessage(event.error || 'Inventory stock upload failed. Please check the file.', 'error', 3500);
+    }
+}
+
+/**
+ * Handler for the @file-uploaded event from the ImportUpdateStatus modal
+ */
+const handleStatusFileUploaded = (event: { success: boolean, data?: any, error?: string }) => {
+    if (event.success) {
+        showToastMessage('Inventory status updated successfully!', 'success');
+        // Refresh the inventory table data
+        inventoryTableRef.value?.fetchData(); 
+    } else {
+        showToastMessage(event.error || 'Inventory status upload failed. Please check the file.', 'error', 3500);
+    }
+}
 </script>

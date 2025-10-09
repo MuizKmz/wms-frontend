@@ -71,11 +71,16 @@
     <AddNewSupplier ref="addSupplierModalRef" @supplier-created="handleSupplierCreated" />
 
     <EditSupplier ref="editSupplierModalRef" @supplier-updated="handleSupplierUpdated" />
+    
+    <ImportSupplier 
+        ref="importSupplierModalRef" 
+        @file-uploaded="handleImportSupplierUploaded" 
+    />
   </AdminLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue"; // Import 'computed'
+import { ref, computed } from "vue";
 import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
@@ -83,6 +88,8 @@ import SupplierListTable from "./component/SupplierListTable.vue";
 import AddNewSupplier from "./component/AddNewSupplier.vue";
 import EditSupplier from "./component/EditSupplier.vue";
 import SupplierListFilters from "./component/SupplierListFilters.vue";
+// New: Import the ImportSupplier modal component
+import ImportSupplier from "./component/ImportSupplier.vue"; 
 
 // Interface definitions
 interface Supplier {
@@ -95,7 +102,10 @@ interface Result {
   success: boolean;
   error?: string;
   data?: {
-    supplierName: string;
+    supplierName?: string;
+    count?: number; // for bulk delete
+    deletedCount?: number; // for bulk delete
+    // Add any specific data properties expected from the import modal if needed
   };
 }
 
@@ -111,6 +121,9 @@ const editSupplierModalRef = ref<InstanceType<typeof EditSupplier> | null>(null)
 const supplierTableRef = ref<InstanceType<typeof SupplierListTable> | null>(null);
 const activeTab = ref('table'); 
 
+// New: Ref for the ImportSupplier modal
+const importSupplierModalRef = ref<InstanceType<typeof ImportSupplier> | null>(null);
+
 // --- Tab Logic ---
 // Define the single tab with its component
 const supplierTabs = [
@@ -119,7 +132,7 @@ const supplierTabs = [
     label: 'List of Suppliers',
     component: SupplierListTable // Use the SupplierListTable component
   },
-  // Future tabs can be added here, e.g., { id: 'summary', component: SupplierSummary }
+  // Future tabs can be added here
 ];
 
 // Computed property to dynamically select the component
@@ -139,24 +152,24 @@ const toastMessage = ref('');
 const toastType = ref<'success' | 'error'>('success'); // Ensure type is explicitly defined
 
 // Function to show toast
-const showToastMessage = (message: string, type: 'success' | 'error' = 'success') => {
+const showToastMessage = (message: string, type: 'success' | 'error' = 'success', duration: number = 2000) => {
   toastMessage.value = message;
   toastType.value = type;
   showToast.value = true;
 
-  // Hide toast after 2 seconds
+  // Hide toast after a duration
   setTimeout(() => {
     showToast.value = false;
-  }, 2000);
+  }, duration);
 };
 
 // Handle supplier creation response
 const handleSupplierCreated = async (result: Result) => {
   if (result.success) {
     showToastMessage('Supplier has been successfully added', 'success');
-    if (supplierTableRef.value) {
+    if (supplierTableRef.value && 'refreshData' in supplierTableRef.value) {
       // Assuming SupplierListTable has a refreshData method
-      await supplierTableRef.value.refreshData();
+      await (supplierTableRef.value as any).refreshData(); 
     }
   } else {
     showToastMessage(result.error || 'Failed to create supplier', 'error');
@@ -167,8 +180,8 @@ const handleSupplierCreated = async (result: Result) => {
 const handleSupplierUpdated = async (result: Result) => {
   if (result.success) {
     showToastMessage('Supplier has been successfully updated', 'success');
-    if (supplierTableRef.value) {
-      await supplierTableRef.value.refreshData();
+    if (supplierTableRef.value && 'refreshData' in supplierTableRef.value) {
+      await (supplierTableRef.value as any).refreshData();
     }
   } else {
     showToastMessage(result.error || 'Failed to update supplier', 'error');
@@ -189,7 +202,7 @@ const openAddSupplierModal = () => {
 const openEditSupplierModal = (supplier: Supplier) => {
   if (editSupplierModalRef.value) {
     // Assuming EditSupplier component has an openModal method that takes supplier data
-    editSupplierModalRef.value.openModal(supplier);
+    (editSupplierModalRef.value as any).openModal(supplier);
   }
 };
 
@@ -199,24 +212,21 @@ const handleViewSupplier = (supplier: Supplier) => {
   // Implement view modal or navigate to detail page
 };
 
-const handleDeleteSupplier = async (result: any) => {
-  // This function needs to be improved for better consistency, 
-  // but it's kept close to the original for context.
+const handleDeleteSupplier = async (result: Result) => {
   if (result.success) {
     showToastMessage('Supplier deleted successfully', 'success');
-    if (supplierTableRef.value) {
-      await supplierTableRef.value.refreshData();
+    if (supplierTableRef.value && 'refreshData' in supplierTableRef.value) {
+      await (supplierTableRef.value as any).refreshData();
     }
     return
   }
   
-  // The original implementation had complex logic for bulk/partial delete.
-  // For a clear implementation: If the table refresh is the goal,
+  // Handling for bulk/partial delete response structure
   if (result.data && (result.data.count || result.data.deletedCount)) {
     const deletedCount = result.data.count || result.data.deletedCount;
     showToastMessage(`${deletedCount} supplier(s) deleted.`, 'success');
-    if (supplierTableRef.value) {
-      await supplierTableRef.value.refreshData();
+    if (supplierTableRef.value && 'refreshData' in supplierTableRef.value) {
+      await (supplierTableRef.value as any).refreshData();
     }
     return
   }
@@ -226,12 +236,13 @@ const handleDeleteSupplier = async (result: any) => {
 };
 
 const handleBulkDelete = async () => {
-  if (!supplierTableRef.value || !supplierTableRef.value.bulkDelete) {
+  if (!supplierTableRef.value || !('bulkDelete' in supplierTableRef.value)) {
     showToastMessage('Bulk delete feature not available or not implemented on table.', 'error');
     return;
   }
 
-  const result = await supplierTableRef.value.bulkDelete();
+  // Assuming bulkDelete method returns a promise with a Result object
+  const result: Result = await (supplierTableRef.value as any).bulkDelete();
 
   if (result.success) {
     handleDeleteSupplier(result); // Use the same handler to show toast and refresh
@@ -240,8 +251,28 @@ const handleBulkDelete = async () => {
   }
 };
 
+/**
+ * Handler for 'Import Supplier' button click
+ * Opens the ImportSupplier modal
+ */
 const handleImportSupplier = () => {
-  console.log('Import supplier clicked - implementation needed');
-  showToastMessage('Supplier import feature is not yet implemented', 'error');
+    if (importSupplierModalRef.value) {
+        importSupplierModalRef.value.openModal();
+    }
 };
+
+/**
+ * Handler for the @file-uploaded event from the ImportSupplier modal
+ */
+const handleImportSupplierUploaded = (event: { success: boolean, data?: any, error?: string }) => {
+    if (event.success) {
+        showToastMessage('Suppliers imported successfully!', 'success');
+        // Refresh the supplier list table data
+        if (supplierTableRef.value && 'refreshData' in supplierTableRef.value) {
+            (supplierTableRef.value as any).refreshData(); 
+        }
+    } else {
+        showToastMessage(event.error || 'Supplier import failed. Please check the file format.', 'error', 3500);
+    }
+}
 </script>

@@ -15,8 +15,10 @@
         aria-hidden="false"
         @click.self="closeModal"
       >
+        <!-- overlay -->
         <div class="absolute inset-0 bg-black/50"></div>
 
+        <!-- modal panel -->
         <transition
           enter-active-class="transition-all duration-300 ease-out"
           enter-from-class="opacity-0 scale-95 translate-y-4"
@@ -36,9 +38,10 @@
             aria-labelledby="modal-title"
           >
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col min-h-0 max-h-[90vh]">
+              <!-- header -->
               <div class="flex items-center justify-between p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">
-                  Add New Warehouse
+                  Add New Supplier
                 </h2>
                 <button
                   type="button"
@@ -51,21 +54,24 @@
                 </button>
               </div>
 
+              <!-- body -->
               <div class="space-y-4 overflow-y-auto p-6 flex-1">
+                <!-- Submit Error -->
                 <div v-if="errors.submit" class="alert alert-error">
                   <span>{{ errors.submit }}</span>
                 </div>
 
+                <!-- Supplier Code -->
                 <div class="relative">
                   <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Warehouse Code
+                    <span class="text-red-500">*</span> Supplier Code
                   </label>
                   <input
-                    v-model="form.warehouseCode"
+                    v-model="form.supplierCode"
                     type="text"
-                    placeholder="Enter Warehouse Code"
+                    placeholder="Enter Supplier Code"
                     maxlength="20"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.warehouseCode }]"
+                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.supplierCode }]"
                   />
                   <transition
                     enter-active-class="transition-all duration-200 ease-out"
@@ -75,22 +81,23 @@
                     leave-from-class="opacity-100 translate-y-0"
                     leave-to-class="opacity-0 -translate-y-1"
                   >
-                    <div v-if="errors.warehouseCode" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.warehouseCode }}</p>
+                    <div v-if="errors.supplierCode" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.supplierCode }}</p>
                     </div>
                   </transition>
                 </div>
 
+                <!-- Supplier Name -->
                 <div class="relative">
                   <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Warehouse Name
+                    <span class="text-red-500">*</span> Supplier Name
                   </label>
                   <input
-                    v-model="form.name"
+                    v-model="form.supplierName"
                     type="text"
-                    placeholder="Enter Warehouse Name"
+                    placeholder="Enter Supplier Name"
                     maxlength="100"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.name }]"
+                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.supplierName }]"
                   />
                   <transition
                     enter-active-class="transition-all duration-200 ease-out"
@@ -100,45 +107,21 @@
                     leave-from-class="opacity-100 translate-y-0"
                     leave-to-class="opacity-0 -translate-y-1"
                   >
-                    <div v-if="errors.name" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.name }}</p>
+                    <div v-if="errors.supplierName" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.supplierName }}</p>
                     </div>
                   </transition>
                 </div>
 
+                <!-- PIC Name -->
                 <div class="relative">
                   <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Address
-                  </label>
-                  <input
-                    v-model="form.address"
-                    type="text"
-                    placeholder="Enter Address"
-                    maxlength="255"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.address }]"
-                  />
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.address" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.address }}</p>
-                    </div>
-                  </transition>
-                </div>
-
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Manager
+                    <span class="text-red-500">*</span> PIC Name
                   </label>
                   <input
                     v-model="form.manager"
                     type="text"
-                    placeholder="Enter Manager Name"
+                    placeholder="Enter PIC Name"
                     maxlength="50"
                     :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.manager }]"
                   />
@@ -156,12 +139,13 @@
                   </transition>
                 </div>
 
-
+                <!-- Contact -->
                 <div class="relative">
                   <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
                     <span class="text-red-500">*</span> Contact
                   </label>
                   <div class="flex gap-2">
+                    <!-- Country Code Dropdown -->
                     <div class="dropdown relative inline-flex w-32" ref="countryDropdownRef">
                       <button
                         type="button"
@@ -192,6 +176,7 @@
                       </ul>
                     </div>
 
+                    <!-- Phone Number Input -->
                     <input
                       v-model="form.phoneNumber"
                       type="tel"
@@ -216,17 +201,17 @@
                   </transition>
                 </div>
 
-
+                <!-- Email Address -->
                 <div class="relative">
                   <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
                     <span class="text-red-500">*</span> Email Address
                   </label>
                   <input
-                    v-model="form.email"
+                    v-model="form.emailAddress"
                     type="email"
                     placeholder="Enter Email Address"
                     maxlength="100"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.email }]"
+                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.emailAddress }]"
                   />
                   <transition
                     enter-active-class="transition-all duration-200 ease-out"
@@ -236,12 +221,13 @@
                     leave-from-class="opacity-100 translate-y-0"
                     leave-to-class="opacity-0 -translate-y-1"
                   >
-                    <div v-if="errors.email" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.email }}</p>
+                    <div v-if="errors.emailAddress" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.emailAddress }}</p>
                     </div>
                   </transition>
                 </div>
 
+                <!-- Status dropdown -->
                 <div class="relative">
                   <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
                     <span class="text-red-500">*</span> Status
@@ -286,19 +272,20 @@
                   </transition>
                 </div>
 
+                <!-- Remarks -->
                 <div class="relative">
                   <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
                     Remarks
                   </label>
                   <textarea
-                    v-model="form.remark"
+                    v-model="form.remarks"
                     placeholder="Enter Remarks"
                     maxlength="500"
                     rows="3"
-                    :class="['textarea textarea-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none', { 'textarea-error': errors.remark }]"
+                    :class="['textarea textarea-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none', { 'textarea-error': errors.remarks }]"
                   ></textarea>
                   <div class="flex justify-between items-center mt-1">
-                    <span class="text-xs text-gray-500">{{ form.remark.length }}/500 characters</span>
+                    <span class="text-xs text-gray-500">{{ form.remarks.length }}/500 characters</span>
                   </div>
                   <transition
                     enter-active-class="transition-all duration-200 ease-out"
@@ -308,13 +295,14 @@
                     leave-from-class="opacity-100 translate-y-0"
                     leave-to-class="opacity-0 -translate-y-1"
                   >
-                    <div v-if="errors.remark" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.remark }}</p>
+                    <div v-if="errors.remarks" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.remarks }}</p>
                     </div>
                   </transition>
                 </div>
               </div>
 
+              <!-- footer -->
               <div class="flex justify-end gap-2 p-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <button @click="closeModal" class="btn btn-outline btn-error" :disabled="isSubmitting">
                   Cancel
@@ -335,8 +323,7 @@
 <script setup>
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 
-// Changed emit name from supplier-created to warehouse-created
-const emit = defineEmits(['item-created'])
+const emit = defineEmits(['supplier-created'])
 
 /* state */
 const isOpen = ref(false)
@@ -346,35 +333,31 @@ const statusDropdownRef = ref(null)
 const countryDropdownRef = ref(null)
 
 const form = reactive({
-  // Changed fields to match API keys
-  warehouseCode: '',
-  name: '', // Changed from warehouseName to 'name'
-  address: '',
+  supplierCode: '',
+  supplierName: '',
   manager: '',
   countryCode: '+60',
   phoneNumber: '',
-  email: '', // Changed from emailAddress to 'email'
-  status: 'Active',
-  remark: '' // Changed from remarks to 'remark'
+  emailAddress: '',
+  status: 'Active', // Default to Active
+  remarks: ''
 })
 
 const errors = reactive({
-  // Changed error fields to match new form/API keys
-  warehouseCode: '',
-  name: '', // Changed from warehouseName
-  address: '',
+  supplierCode: '',
+  supplierName: '',
   manager: '',
   contactPhone: '',
-  email: '', // Changed from emailAddress
+  emailAddress: '',
   status: '',
-  remark: '', // Changed from remarks
+  remarks: '',
   submit: ''
 })
 
 const statusOptions = ['Active', 'Inactive',]
 const openDropdowns = reactive({ status: false, country: false })
 
-// Popular countries for phone numbers - Retained from original code
+// Popular countries for phone numbers
 const countries = [
   { code: 'MY', name: 'Malaysia', dialCode: '+60', flag: '🇲🇾' },
   { code: 'SG', name: 'Singapore', dialCode: '+65', flag: '🇸🇬' },
@@ -393,7 +376,7 @@ const countries = [
   { code: 'SA', name: 'Saudi Arabia', dialCode: '+966', flag: '🇸🇦' }
 ]
 
-/* Modal scroll lock utilities - Retained from original code */
+/* Modal scroll lock utilities */
 let scrollY = 0
 let scrollbarWidth = 0
 
@@ -424,56 +407,43 @@ const unlockScroll = () => {
   })
 }
 
-/* Validation (Updated for new field names) */
+/* Validation */
 const validateForm = () => {
   // Reset errors
   Object.keys(errors).forEach(key => errors[key] = '')
 
   let isValid = true
 
-  // Warehouse Code validation
-  if (!form.warehouseCode.trim()) {
-    errors.warehouseCode = 'Warehouse Code is required'
+  // Supplier Code validation
+  if (!form.supplierCode.trim()) {
+    errors.supplierCode = 'Supplier Code is required'
     isValid = false
-  } else if (!form.warehouseCode.match(/^[A-Z0-9-]{1,20}$/i)) {
-    errors.warehouseCode = 'Warehouse Code format is invalid'
-    isValid = false
-  } else if (form.warehouseCode.length > 20) {
-    errors.warehouseCode = 'Warehouse Code cannot exceed 20 characters'
+  } else if (!form.supplierCode.match(/^SUP-\d{3}$/)) {
+    errors.supplierCode = 'Supplier Code must be in format SUP-XXX (where X is a number)'
     isValid = false
   }
 
-
-  // Warehouse Name validation (Updated field name to 'name')
-  if (!form.name.trim()) {
-    errors.name = 'Warehouse Name is required'
+  // Supplier Name validation
+  if (!form.supplierName.trim()) {
+    errors.supplierName = 'Supplier Name is required'
     isValid = false
-  } else if (form.name.length < 3) {
-    errors.name = 'Warehouse Name must be at least 3 characters'
+  } else if (form.supplierName.length < 3) {
+    errors.supplierName = 'Supplier Name must be at least 3 characters'
     isValid = false
-  } else if (form.name.length > 100) {
-    errors.name = 'Warehouse Name cannot exceed 100 characters'
-    isValid = false
-  }
-
-  // Address Validation
-  if (!form.address.trim()) {
-    errors.address = 'Address is required'
-    isValid = false
-  } else if (form.address.length > 255) {
-    errors.address = 'Address cannot exceed 255 characters'
+  } else if (form.supplierName.length > 100) {
+    errors.supplierName = 'Supplier Name cannot exceed 100 characters'
     isValid = false
   }
 
-  // Manager validation
+  // PIC Name validation
   if (!form.manager.trim()) {
-    errors.manager = 'Manager Name is required'
+    errors.manager = 'PIC Name is required'
     isValid = false
   } else if (form.manager.length < 2) {
-    errors.manager = 'Manager Name must be at least 2 characters'
+    errors.manager = 'PIC Name must be at least 2 characters'
     isValid = false
   } else if (form.manager.length > 50) {
-    errors.manager = 'Manager Name cannot exceed 50 characters'
+    errors.manager = 'PIC Name cannot exceed 50 characters'
     isValid = false
   }
 
@@ -492,15 +462,15 @@ const validateForm = () => {
     isValid = false
   }
 
-  // Email validation (Updated field name to 'email')
-  if (!form.email.trim()) {
-    errors.email = 'Email Address is required'
+  // Email validation
+  if (!form.emailAddress.trim()) {
+    errors.emailAddress = 'Email Address is required'
     isValid = false
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-    errors.email = 'Please enter a valid email address'
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.emailAddress)) {
+    errors.emailAddress = 'Please enter a valid email address'
     isValid = false
-  } else if (form.email.length > 100) {
-    errors.email = 'Email Address cannot exceed 100 characters'
+  } else if (form.emailAddress.length > 100) {
+    errors.emailAddress = 'Email Address cannot exceed 100 characters'
     isValid = false
   }
 
@@ -510,27 +480,26 @@ const validateForm = () => {
     isValid = false
   }
 
-  // Remarks validation (Updated field name to 'remark')
-  if (form.remark.length > 500) {
-    errors.remark = 'Remarks cannot exceed 500 characters'
+  // Remarks validation (optional but with limit)
+  if (form.remarks.length > 500) {
+    errors.remarks = 'Remarks cannot exceed 500 characters'
     isValid = false
   }
 
   return isValid
 }
 
-// Clear error when user types (Updated fields)
-watch(() => form.warehouseCode, () => { if (errors.warehouseCode) errors.warehouseCode = '' })
-watch(() => form.name, () => { if (errors.name) errors.name = '' }) // Changed from warehouseName
-watch(() => form.address, () => { if (errors.address) errors.address = '' })
+// Clear error when user types
+watch(() => form.supplierCode, () => { if (errors.supplierCode) errors.supplierCode = '' })
+watch(() => form.supplierName, () => { if (errors.supplierName) errors.supplierName = '' })
 watch(() => form.manager, () => { if (errors.manager) errors.manager = '' })
 watch(() => form.phoneNumber, () => { if (errors.contactPhone) errors.contactPhone = '' })
 watch(() => form.countryCode, () => { if (errors.contactPhone) errors.contactPhone = '' })
-watch(() => form.email, () => { if (errors.email) errors.email = '' }) // Changed from emailAddress
+watch(() => form.emailAddress, () => { if (errors.emailAddress) errors.emailAddress = '' })
 watch(() => form.status, () => { if (errors.status) errors.status = '' })
-watch(() => form.remark, () => { if (errors.remark) errors.remark = '' }) // Changed from remarks
+watch(() => form.remarks, () => { if (errors.remarks) errors.remarks = '' })
 
-/* helpers - Retained from original code */
+/* helpers */
 const toggleDropdown = (name) => {
   Object.keys(openDropdowns).forEach(k => { if (k !== name) openDropdowns[k] = false })
   openDropdowns[name] = !openDropdowns[name]
@@ -559,7 +528,7 @@ const formatPhoneNumber = (event) => {
   // Remove all non-numeric characters
   let value = event.target.value.replace(/\D/g, '')
 
-  // Limit to 15 digits (using original code limit)
+  // Limit to 15 digits
   if (value.length > 15) {
     value = value.slice(0, 15)
   }
@@ -567,7 +536,7 @@ const formatPhoneNumber = (event) => {
   form.phoneNumber = value
 }
 
-/* close dropdowns when clicking outside - Retained from original code */
+/* close dropdowns when clicking outside */
 const handleClickOutside = (event) => {
   const statusDd = statusDropdownRef.value
   const countryDd = countryDropdownRef.value
@@ -581,18 +550,17 @@ const handleClickOutside = (event) => {
   }
 }
 
-/* open/close modal - Updated to clear new fields */
+/* open/close modal */
 const openModal = async () => {
   // Reset form
-  form.warehouseCode = ''
-  form.name = '' // Changed from warehouseName
-  form.address = ''
+  form.supplierCode = ''
+  form.supplierName = ''
   form.manager = ''
   form.countryCode = '+60'
   form.phoneNumber = ''
-  form.email = '' // Changed from emailAddress
-  form.status = 'Active'
-  form.remark = '' // Changed from remarks
+  form.emailAddress = ''
+  form.status = ''
+  form.remarks = ''
 
   // Reset errors
   Object.keys(errors).forEach(key => errors[key] = '')
@@ -610,21 +578,20 @@ const closeModal = async () => {
 
   // Reset form after modal is closed
   await nextTick()
-  form.warehouseCode = ''
-  form.name = '' // Changed from warehouseName
-  form.address = ''
+  form.supplierCode = ''
+  form.supplierName = ''
   form.manager = ''
   form.countryCode = '+60'
   form.phoneNumber = ''
-  form.email = '' // Changed from emailAddress
-  form.status = 'Active'
-  form.remark = '' // Changed from remarks
+  form.emailAddress = ''
+  form.status = ''
+  form.remarks = ''
 
   // Reset errors
   Object.keys(errors).forEach(key => errors[key] = '')
 }
 
-/* submit - Updated for warehouse data and API endpoint */
+/* submit */
 const submitForm = async () => {
   if (!validateForm()) {
     return
@@ -634,20 +601,19 @@ const submitForm = async () => {
   errors.submit = ''
 
   try {
-    // Format the data to match the backend schema naming convention
+    // Format the data to match the backend schema
     const submissionData = {
-      warehouseCode: form.warehouseCode.toUpperCase(), 
-      name: form.name, // Matches API key 'name'
-      address: form.address,
+      supplierCode: form.supplierCode.toUpperCase(), // Ensure code is uppercase
+      supplierName: form.supplierName,
       manager: form.manager,
       contactPhone: `${form.countryCode}${form.phoneNumber}`,
-      email: form.email, // Matches API key 'email'
-      status: form.status === 'Active' ? 'Active' : 'Inactive', 
-      remark: form.remark || null // Matches API key 'remark'
+      email: form.emailAddress,
+      status: form.status === 'Active' ? 'Active' : 'Inactive', // Ensure proper status
+      remark: form.remarks || null
     }
 
-    // Updated API endpoint
-    const response = await fetch('api/warehouse', { 
+    // Make the API call to the correct endpoint
+    const response = await fetch('api/supplier', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -657,29 +623,29 @@ const submitForm = async () => {
 
     if (!response.ok) {
       const errorData = await response.json()
-      throw new Error(errorData.message || 'Failed to create warehouse')
+      throw new Error(errorData.message || 'Failed to create supplier')
     }
 
     const data = await response.json()
-    console.log('Server response:', data) 
+    console.log('Server response:', data) // Debug log
 
     // Only close and reset after successful API call
     await closeModal()
 
-    // Emit event to parent component with success status (Updated event name)
-    emit('item-created', { success: true, data })
+    // Emit event to parent component with success status
+    emit('supplier-created', { success: true, data })
 
   } catch (error) {
-    console.error('Error creating warehouse:', error)
-    errors.submit = error.message || 'Failed to create warehouse. Please try again.'
-    // Emit event to parent component with error status (Updated event name)
-    emit('item-created', { success: false, error: error.message || 'Failed to create warehouse' })
+    console.error('Error creating supplier:', error)
+    errors.submit = error.message || 'Failed to create supplier. Please try again.'
+    // Emit event to parent component with error status
+    emit('supplier-created', { success: false, error: error.message || 'Failed to create supplier' })
   } finally {
     isSubmitting.value = false
   }
 }
 
-/* lifecycle - Retained from original code */
+/* lifecycle */
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
 })
@@ -691,7 +657,7 @@ onBeforeUnmount(() => {
   }
 })
 
-/* expose to parent - Retained from original code */
+/* expose to parent */
 defineExpose({ openModal, closeModal })
 </script>
 

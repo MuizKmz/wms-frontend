@@ -43,9 +43,9 @@
           aria-orientation="vertical"
         >
           <li v-if="loadingCategories" class="px-4 py-2 text-sm text-gray-500">Loading categories...</li>
-          <li><a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('category', '')">All Categories</a></li>
+          <li><a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg" @click="selectOption('category', '')">All Categories</a></li>
           <li v-for="category in categories" :key="category.value">
-            <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('category', category.value)">
+            <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg" @click="selectOption('category', category.value)">
               {{ category.label }}
             </a>
           </li>
