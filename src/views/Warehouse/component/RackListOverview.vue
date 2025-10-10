@@ -1,5 +1,5 @@
 <template>
-  <div class="overflow-hidden">
+  <div class="overflow-visible">
 
     <!-- Warehouse Dropdown Filter -->
     <div class="mb-4 flex items-center gap-2 mt-5">
@@ -22,7 +22,7 @@
         </button>
 
         <ul
-          class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
+          class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-[9999] text-gray-900 dark:text-white max-h-60 overflow-y-auto"
           :class="{ 'opacity-100 pointer-events-auto': isWarehouseDropdownOpen, 'opacity-0 pointer-events-none': !isWarehouseDropdownOpen }"
           role="menu"
         >
@@ -111,9 +111,19 @@
 
             <!-- Action -->
             <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                -
-              </p>
+              <div class="flex items-center gap-2">
+                <button
+                  @click="editItem(item)"
+                  class="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
+                  aria-label="Edit"
+                  title="Edit Warehouse"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -190,6 +200,8 @@ const props = defineProps({
   }
 })
 
+const emit = defineEmits(['edit-item'])
+
 const data = ref([])
 const loading = ref(false)
 const error = ref(null)
@@ -239,7 +251,6 @@ const fetchData = async () => {
       sections: rack.sections || [],
       product: rack.product?.name || rack.product?.productCode || rack.productName || '-',
       inventory: rack.inventory || [],
-      // productId: rack.product?.id || rack.productId,
       warehouseId: rack.warehouse?.id || rack.warehouseId || null,
       raw: rack
     }))
@@ -255,6 +266,12 @@ const fetchData = async () => {
 onMounted(() => {
   fetchWarehouses()
   fetchData()
+  document.addEventListener('click', handleClickOutside)
+})
+
+// Remove event listener on unmount
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
 })
 
 // Computed property for filtered data
@@ -350,17 +367,10 @@ const handleClickOutside = (event) => {
   }
 }
 
-// Add event listener for clicking outside
-onMounted(() => {
-  fetchWarehouses()
-  fetchData()
-  document.addEventListener('click', handleClickOutside)
-})
-
-// Remove event listener on unmount
-onBeforeUnmount(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
+// Action handlers
+const editItem = (item) => {
+  emit('edit-item', item)
+}
 
 // Expose refresh method for parent component
 const refreshData = () => {

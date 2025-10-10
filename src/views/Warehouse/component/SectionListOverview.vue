@@ -1,9 +1,7 @@
 <template>
-  <div class="overflow-hidden">
+  <div class="overflow-visible">
 
-    <!-- Warehouse and Rack Dropdown Filters -->
     <div class="mb-4 flex items-center gap-4 mt-5">
-      <!-- Warehouse Dropdown -->
       <div class="flex items-center gap-2">
         <label class="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
           Warehouse :
@@ -48,7 +46,6 @@
         </div>
       </div>
 
-      <!-- Rack Dropdown -->
       <div class="flex items-center gap-2">
         <label class="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
           Rack :
@@ -78,7 +75,7 @@
                 All Racks
               </a>
             </li>
-            <li v-for="rack in filteredRacks" :key="rack.id">
+            <li v-for="rack in displayRacks" :key="rack.id">
               <a
                 class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer"
                 @click="selectRack(rack.id, rack.rackCode || rack.rackName)"
@@ -119,40 +116,44 @@
           <tr v-for="(item, index) in paginatedData" :key="index"
             class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
 
-            <!-- Section -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
                 {{ item.section || '-' }}
               </p>
             </td>
 
-            <!-- Product -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
                 {{ item.inventory?.map(i => i.product?.name).join(', ') || '-' }}
               </p>
             </td>
 
-            <!-- Action -->
             <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                -
-              </p>
+              <div class="flex items-center gap-2">
+                <button
+                  @click="editItem(item)"
+                  class="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
+                  aria-label="Edit"
+                  title="Edit Warehouse"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button> 
+              </div>
             </td>
           </tr>
         </tbody>
       </table>
 
-      <!-- FlyonUI Pagination -->
       <div v-if="totalPages > 1" class="mt-6 flex justify-center">
         <nav class="flex items-center gap-x-1">
-          <!-- Previous -->
           <button type="button" class="btn btn-text dark:text-gray-300" :disabled="currentPage === 1"
             @click="changePage(currentPage - 1)">
             Previous
           </button>
 
-          <!-- Pages -->
           <div class="flex items-center gap-x-1">
             <button v-for="page in totalPages" :key="page" type="button"
               class="btn btn-text btn-square aria-[current='page']:text-bg-primary dark:text-gray-300"
@@ -162,7 +163,6 @@
             </button>
           </div>
 
-          <!-- Next -->
           <button type="button" class="btn btn-text dark:text-gray-300" :disabled="currentPage === totalPages"
             @click="changePage(currentPage + 1)">
             Next
@@ -170,13 +170,11 @@
         </nav>
       </div>
 
-      <!-- Loading -->
       <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
         <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
         <p>Loading data...</p>
       </div>
 
-      <!-- Empty State -->
       <div v-if="!loading && filteredData.length === 0" class="p-8 text-center text-gray-500">
         <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
@@ -190,7 +188,6 @@
         </p>
       </div>
 
-      <!-- Error -->
       <div v-if="error" class="p-8 text-center text-red-500 text-sm">
         <svg class="mx-auto h-12 w-12 text-red-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
@@ -252,17 +249,23 @@ const fetchWarehouses = async () => {
 }
 
 // Function to fetch racks based on selected warehouse
+// This function is still needed to fetch data, but the UI filtering is guaranteed by displayRacks
 const fetchRacks = async () => {
+  // If no warehouse is selected, we clear the list of racks
   if (!selectedWarehouseId.value) {
-    racks.value = []
+    racks.value = [] 
     return
   }
 
   loadingRacks.value = true
   try {
+    // Attempt to fetch filtered racks from the API
     const response = await fetch(`${RACK_API_URL}?warehouseId=${selectedWarehouseId.value}`)
     if (!response.ok) throw new Error('Failed to fetch racks')
     const json = await response.json()
+    
+    // **Assumption**: We assume the backend returns an array of rack objects, 
+    // and each rack object has a 'warehouseId' property for client-side filtering below.
     racks.value = json || []
   } catch (e) {
     console.error('Error fetching racks:', e)
@@ -272,11 +275,17 @@ const fetchRacks = async () => {
   }
 }
 
-// Computed property for filtered racks based on selected warehouse
-const filteredRacks = computed(() => {
-  if (!selectedWarehouseId.value) return []
-  return racks.value
-})
+// **CRITICAL FIX: Computed property to display only racks for the selected warehouse**
+const displayRacks = computed(() => {
+  if (!selectedWarehouseId.value) {
+    return [] // Show no racks if 'All Warehouses' is selected (you only want racks for a specific warehouse)
+  }
+  
+  // Apply a client-side filter to guarantee only the racks associated 
+  // with the selected warehouse are shown.
+  return racks.value.filter(rack => rack.warehouseId === selectedWarehouseId.value);
+});
+
 
 // Function to fetch data from the API
 const fetchData = async () => {
@@ -307,8 +316,6 @@ const fetchData = async () => {
     data.value = (json || []).map(section => ({
       id: section.id,
       section: section.sectionName || section.sectionCode || '-',
-      // product: section.product?.name || section.product?.productCode || section.productName || '-',
-      // productId: section.product?.id || section.productId,
       inventory: section.inventory || [],
       rackId: section.rack?.id || section.rackId || null,
       warehouseId: section.rack?.warehouse?.id || section.rack?.warehouseId || section.warehouseId || null,
@@ -328,18 +335,18 @@ onMounted(() => {
   fetchData()
 })
 
-// Computed property for filtered data
+// Computed property for filtered data (for the table)
 const filteredData = computed(() => {
   let filtered = data.value
 
-  // Filter by selected warehouse
+  // Filter by selected warehouse (client-side backup filter)
   if (selectedWarehouseId.value !== null) {
     filtered = filtered.filter(item =>
       item.warehouseId === selectedWarehouseId.value
     )
   }
 
-  // Filter by selected rack
+  // Filter by selected rack (client-side backup filter)
   if (selectedRackId.value !== null) {
     filtered = filtered.filter(item =>
       item.rackId === selectedRackId.value
@@ -360,14 +367,17 @@ const filteredData = computed(() => {
     ) {
       return false
     }
+    // Added filtering for product as well (using inventory check)
     if (
-      filters.product &&
-      !(item.product || '')
-        .toLowerCase()
-        .includes(filters.product.toLowerCase())
+        filters.product &&
+        !item.inventory.some(i => 
+          (i.product?.name || '').toLowerCase().includes(filters.product.toLowerCase()) || 
+          (i.product?.productCode || '').toLowerCase().includes(filters.product.toLowerCase())
+        )
     ) {
-      return false
+        return false;
     }
+
 
     return true
   })
@@ -406,12 +416,8 @@ const selectWarehouse = (id, name) => {
 
   currentPage.value = 1 // Reset to first page when warehouse changes
 
-  // Fetch racks for the selected warehouse
-  if (id) {
-    fetchRacks()
-  } else {
-    racks.value = []
-  }
+  // Fetch racks for the newly selected warehouse
+  fetchRacks()
 
   // Fetch sections filtered by warehouse
   fetchData()
@@ -419,6 +425,7 @@ const selectWarehouse = (id, name) => {
 
 // Rack dropdown functions
 const toggleRackDropdown = () => {
+  // Prevent opening the rack dropdown if no warehouse is selected
   if (!selectedWarehouseId.value) return
   isRackDropdownOpen.value = !isRackDropdownOpen.value
 }
@@ -445,8 +452,6 @@ const handleClickOutside = (event) => {
 
 // Add event listener for clicking outside
 onMounted(() => {
-  fetchWarehouses()
-  fetchData()
   document.addEventListener('click', handleClickOutside)
 })
 
