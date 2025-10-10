@@ -129,7 +129,7 @@
             <!-- Received Quantity -->
             <td class="px-6 py-4">
               <span class="text-sm text-gray-900 dark:text-white">
-                {{ row.isReceiving ? '-' : (row.receivedQuantity || '-') }}
+                {{ row.isReceiving ? '-' : (row.quantity || '-') }}
               </span>
             </td>
 
@@ -336,11 +336,11 @@ const paginatedData = computed(() => {
 // Generate visible rows (parent + expanded children)
 const visibleRows = computed(() => {
   const rows = []
-  
+
   paginatedData.value.forEach((receiving) => {
     const hasItems = receiving.receivingItems && receiving.receivingItems.length > 0
     const isExpanded = expandedRows.value.includes(receiving.id)
-    
+
     // Add parent receiving row
     rows.push({
       ...receiving,
@@ -350,7 +350,7 @@ const visibleRows = computed(() => {
       isExpanded: isExpanded,
       uniqueId: `R-${receiving.id}`
     })
-    
+
     // Add child items if expanded
     if (isExpanded && hasItems) {
       receiving.receivingItems.forEach((item) => {
@@ -366,7 +366,7 @@ const visibleRows = computed(() => {
       })
     }
   })
-  
+
   return rows
 })
 
@@ -458,10 +458,10 @@ watch([paginatedData, expandedRows], updateSelectAllState, { deep: true, immedia
 const formatDate = (dateString) => {
   if (!dateString) return '-'
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-GB', { 
-    day: '2-digit', 
-    month: '2-digit', 
-    year: 'numeric' 
+  return date.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
   })
 }
 
@@ -489,10 +489,10 @@ const deleteReceiving = async (item) => {
   }
 
   try {
-    const endpoint = item.isReceiving 
-      ? `${API_URL}/${item.id}` 
+    const endpoint = item.isReceiving
+      ? `${API_URL}/${item.id}`
       : `${API_URL}/items/${item.id}`
-    
+
     const response = await fetch(endpoint, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' }
@@ -563,7 +563,7 @@ const bulkDelete = async () => {
     const receivingIds = selectedItems.value
       .filter(id => id.startsWith('R-'))
       .map(id => parseInt(id.replace('R-', '')))
-    
+
     const itemIds = selectedItems.value
       .filter(id => id.startsWith('I-'))
       .map(id => parseInt(id.replace('I-', '')))
