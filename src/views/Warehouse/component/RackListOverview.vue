@@ -98,14 +98,14 @@
             <!-- Section -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.section || '-' }}
+                {{ item.sections?.map(s => s.sectionName).join(', ') || '-' }}
               </p>
             </td>
 
             <!-- Product -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.product || '-' }}
+                {{ item.inventory?.map(i => i.product?.name).join(', ') || '-' }}
               </p>
             </td>
 
@@ -236,9 +236,10 @@ const fetchData = async () => {
       id: rack.id,
       rackCode: rack.rackCode || '-',
       rack: rack.rackName || rack.rackCode || '-',
-      section: rack.section?.sectionName || rack.section?.sectionCode || rack.sectionName || '-',
+      sections: rack.sections || [],
       product: rack.product?.name || rack.product?.productCode || rack.productName || '-',
-      productId: rack.product?.id || rack.productId,
+      inventory: rack.inventory || [],
+      // productId: rack.product?.id || rack.productId,
       warehouseId: rack.warehouse?.id || rack.warehouseId || null,
       raw: rack
     }))

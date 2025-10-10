@@ -129,7 +129,7 @@
             <!-- Product -->
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.product || '-' }}
+                {{ item.inventory?.map(i => i.product?.name).join(', ') || '-' }}
               </p>
             </td>
 
@@ -257,7 +257,7 @@ const fetchRacks = async () => {
     racks.value = []
     return
   }
-  
+
   loadingRacks.value = true
   try {
     const response = await fetch(`${RACK_API_URL}?warehouseId=${selectedWarehouseId.value}`)
@@ -286,18 +286,18 @@ const fetchData = async () => {
     // Build URL with filters
     let url = API_URL
     const params = new URLSearchParams()
-    
+
     if (selectedWarehouseId.value) {
       params.append('warehouseId', selectedWarehouseId.value)
     }
     if (selectedRackId.value) {
       params.append('rackId', selectedRackId.value)
     }
-    
+
     if (params.toString()) {
       url += '?' + params.toString()
     }
-    
+
     const response = await fetch(url)
 
     if (!response.ok) throw new Error("Failed to fetch data")
@@ -307,8 +307,9 @@ const fetchData = async () => {
     data.value = (json || []).map(section => ({
       id: section.id,
       section: section.sectionName || section.sectionCode || '-',
-      product: section.product?.name || section.product?.productCode || section.productName || '-',
-      productId: section.product?.id || section.productId,
+      // product: section.product?.name || section.product?.productCode || section.productName || '-',
+      // productId: section.product?.id || section.productId,
+      inventory: section.inventory || [],
       rackId: section.rack?.id || section.rackId || null,
       warehouseId: section.rack?.warehouse?.id || section.rack?.warehouseId || section.warehouseId || null,
       raw: section
@@ -398,20 +399,20 @@ const selectWarehouse = (id, name) => {
   selectedWarehouseId.value = id
   selectedWarehouseName.value = name
   isWarehouseDropdownOpen.value = false
-  
+
   // Reset rack selection when warehouse changes
   selectedRackId.value = null
   selectedRackName.value = 'All Racks'
-  
+
   currentPage.value = 1 // Reset to first page when warehouse changes
-  
+
   // Fetch racks for the selected warehouse
   if (id) {
     fetchRacks()
   } else {
     racks.value = []
   }
-  
+
   // Fetch sections filtered by warehouse
   fetchData()
 }
@@ -427,7 +428,7 @@ const selectRack = (id, name) => {
   selectedRackName.value = name
   isRackDropdownOpen.value = false
   currentPage.value = 1 // Reset to first page when rack changes
-  
+
   // Fetch sections filtered by rack
   fetchData()
 }
