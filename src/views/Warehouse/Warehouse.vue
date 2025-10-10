@@ -68,6 +68,7 @@
             ref="activeComponentRef"
             :filters="activeFilters"
             @delete-item="handleDeleteItem"
+            @edit-item="handleEditItem"
           />
         </div>
       </ComponentCard>
@@ -84,6 +85,10 @@
     <AddNewSection 
       ref="addSectionModalRef"
       @item-created="handleItemCreated"
+    />
+    <EditWarehouse
+      ref="editWarehouseModalRef"
+      @item-updated="handleItemUpdated"
     />
   </AdminLayout>
 </template>
@@ -103,6 +108,7 @@ import AddNewWarehouse from "./component/AddNewWarehouse.vue";
 import AddNewRack from "./component/AddNewRack.vue";
 import AddNewSection from "./component/AddNewSection.vue";
 import WarehouseFilters from "./component/WarehouseFilters.vue";
+import EditWarehouse from "./component/EditWarehouse.vue";
 
 // Interfaces (simplified for the new domain)
 interface Result {
@@ -122,6 +128,7 @@ const activeFilters = ref<Filters>({});
 const addWarehouseModalRef = ref<InstanceType<typeof AddNewWarehouse> | null>(null);
 const addRackModalRef = ref<InstanceType<typeof AddNewRack> | null>(null);
 const addSectionModalRef = ref<InstanceType<typeof AddNewSection> | null>(null);
+const editWarehouseModalRef = ref<InstanceType<typeof EditWarehouse> | null>(null);
 // Generic ref for the currently active component (Table/Overview)
 const activeComponentRef = ref<any | null>(null); 
 const activeTab = ref('warehouse'); // Default to warehouse
@@ -169,6 +176,29 @@ const handleDeleteItem = async (result: Result) => {
     console.error('Failed to delete item:', result.error);
   }
 };
+
+// Handle edit action coming from child list component
+const handleEditItem = async (item: any) => {
+  if (!item) return
+  if (editWarehouseModalRef.value && editWarehouseModalRef.value.openModal) {
+    // openModal expects the warehouse object
+    editWarehouseModalRef.value.openModal(item)
+  } else {
+    console.warn('EditWarehouse modal ref not available')
+  }
+}
+
+// Handle update emitted by EditWarehouse modal
+const handleItemUpdated = async (result: Result) => {
+  if (result.success) {
+    showToastMessage('Item has been successfully updated', 'success')
+    if (activeComponentRef.value && activeComponentRef.value.refreshData) {
+      await activeComponentRef.value.refreshData()
+    }
+  } else {
+    showToastMessage(result.error || 'Failed to update item', 'error')
+  }
+}
 
 // Define tabs with components based on the image
 const inventoryTabs = [

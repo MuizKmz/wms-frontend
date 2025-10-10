@@ -31,7 +31,7 @@
           <div
             v-if="isOpen"
             ref="panelRef"
-            class="relative z-10 w-full max-w-xl mx-4 max-h-[90vh] flex flex-col"
+            class="relative z-10 w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col"
             @click.stop
             role="dialog"
             aria-modal="true"
@@ -41,7 +41,7 @@
               <!-- header -->
               <div class="flex items-center justify-between p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">
-                  Add New Supplier
+                  Add New Receiving
                 </h2>
                 <button
                   type="button"
@@ -61,245 +61,376 @@
                   <span>{{ errors.submit }}</span>
                 </div>
 
-                <!-- Supplier Code -->
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Supplier Code
-                  </label>
-                  <input
-                    v-model="form.supplierCode"
-                    type="text"
-                    placeholder="Enter Supplier Code"
-                    maxlength="20"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.supplierCode }]"
-                  />
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.supplierCode" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.supplierCode }}</p>
-                    </div>
-                  </transition>
+                <!-- Row 1: Receiving Code & DO Number -->
+                <div class="grid grid-cols-2 gap-4">
+                  <!-- Receiving Code -->
+                  <div class="relative">
+                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                      <span class="text-red-500">*</span> Receiving Code
+                    </label>
+                    <input
+                      v-model="form.receivingCode"
+                      type="text"
+                      placeholder="Enter Receiving Code"
+                      maxlength="50"
+                      :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.receivingCode }]"
+                    />
+                    <transition
+                      enter-active-class="transition-all duration-200 ease-out"
+                      enter-from-class="opacity-0 -translate-y-1"
+                      enter-to-class="opacity-100 translate-y-0"
+                      leave-active-class="transition-all duration-150 ease-in"
+                      leave-from-class="opacity-100 translate-y-0"
+                      leave-to-class="opacity-0 -translate-y-1"
+                    >
+                      <div v-if="errors.receivingCode" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                        <p class="text-xs text-red-600 dark:text-red-400">{{ errors.receivingCode }}</p>
+                      </div>
+                    </transition>
+                  </div>
+
+                  <!-- DO Number -->
+                  <div class="relative">
+                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                      DO Number
+                    </label>
+                    <input
+                      v-model="form.doNumber"
+                      type="text"
+                      placeholder="Enter DO Number"
+                      maxlength="50"
+                      :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.doNumber }]"
+                    />
+                  </div>
                 </div>
 
-                <!-- Supplier Name -->
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Supplier Name
-                  </label>
-                  <input
-                    v-model="form.supplierName"
-                    type="text"
-                    placeholder="Enter Supplier Name"
-                    maxlength="100"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.supplierName }]"
-                  />
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.supplierName" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.supplierName }}</p>
-                    </div>
-                  </transition>
-                </div>
-
-                <!-- PIC Name -->
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> PIC Name
-                  </label>
-                  <input
-                    v-model="form.manager"
-                    type="text"
-                    placeholder="Enter PIC Name"
-                    maxlength="50"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.manager }]"
-                  />
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.manager" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.manager }}</p>
-                    </div>
-                  </transition>
-                </div>
-
-                <!-- Contact -->
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Contact
-                  </label>
-                  <div class="flex gap-2">
-                    <!-- Country Code Dropdown -->
-                    <div class="dropdown relative inline-flex w-32" ref="countryDropdownRef">
+                <!-- Row 2: Warehouse, Rack, Section -->
+                <div class="grid grid-cols-3 gap-4">
+                  <!-- Warehouse -->
+                  <div class="relative">
+                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                      Warehouse
+                    </label>
+                    <div class="dropdown relative inline-flex w-full" ref="warehouseDropdownRef">
                       <button
                         type="button"
-                        :class="['dropdown-toggle btn btn-outline justify-between dark:bg-gray-700 dark:text-gray-400 w-full', { 'btn-error': errors.contactPhone }]"
-                        :aria-expanded="openDropdowns.country"
-                        @click.stop="toggleDropdown('country')"
+                        :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.warehouseId }]"
+                        :aria-expanded="openDropdowns.warehouse"
+                        @click.stop="toggleDropdown('warehouse')"
                       >
-                        <span class="flex items-center gap-1">
-                          <span>{{ form.countryCode }}</span>
-                        </span>
+                        {{ getWarehouseName(form.warehouseId) || 'Select Warehouse' }}
                         <span
                           class="icon-[tabler--chevron-down] size-4 transition-transform"
-                          :class="{ 'rotate-180': openDropdowns.country }"
+                          :class="{ 'rotate-180': openDropdowns.warehouse }"
                         ></span>
                       </button>
 
                       <ul
-                        class="dropdown-menu min-w-full w-64 transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
-                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.country, 'opacity-0 pointer-events-none': !openDropdowns.country }"
+                        class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
+                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.warehouse, 'opacity-0 pointer-events-none': !openDropdowns.warehouse }"
                         role="menu"
                       >
-                        <li v-for="country in countries" :key="country.code">
-                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" @click="selectCountry(country)">
-                            <span class="mr-2">{{ country.flag }}</span>
-                            <span>{{ country.name }} ({{ country.dialCode }})</span>
+                        <li v-for="warehouse in warehouses" :key="warehouse.id">
+                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" @click="selectWarehouse(warehouse.id)">
+                            {{ warehouse.name }}
                           </a>
                         </li>
                       </ul>
                     </div>
+                  </div>
 
-                    <!-- Phone Number Input -->
+                  <!-- Rack -->
+                  <div class="relative">
+                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                      Rack
+                    </label>
+                    <div class="dropdown relative inline-flex w-full" ref="rackDropdownRef">
+                      <button
+                        type="button"
+                        :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.rackId }]"
+                        :aria-expanded="openDropdowns.rack"
+                        @click.stop="toggleDropdown('rack')"
+                        :disabled="!form.warehouseId"
+                      >
+                        {{ getRackName(form.rackId) || 'Select Rack' }}
+                        <span
+                          class="icon-[tabler--chevron-down] size-4 transition-transform"
+                          :class="{ 'rotate-180': openDropdowns.rack }"
+                        ></span>
+                      </button>
+
+                      <ul
+                        class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
+                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.rack, 'opacity-0 pointer-events-none': !openDropdowns.rack }"
+                        role="menu"
+                      >
+                        <li v-for="rack in racks" :key="rack.id">
+                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" @click="selectRack(rack.id)">
+                            {{ rack.name }}
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <!-- Section -->
+                  <div class="relative">
+                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                      Section
+                    </label>
+                    <div class="dropdown relative inline-flex w-full" ref="sectionDropdownRef">
+                      <button
+                        type="button"
+                        :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.sectionId }]"
+                        :aria-expanded="openDropdowns.section"
+                        @click.stop="toggleDropdown('section')"
+                        :disabled="!form.rackId"
+                      >
+                        {{ getSectionName(form.sectionId) || 'Select Section' }}
+                        <span
+                          class="icon-[tabler--chevron-down] size-4 transition-transform"
+                          :class="{ 'rotate-180': openDropdowns.section }"
+                        ></span>
+                      </button>
+
+                      <ul
+                        class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
+                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.section, 'opacity-0 pointer-events-none': !openDropdowns.section }"
+                        role="menu"
+                      >
+                        <li v-for="section in sections" :key="section.id">
+                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" @click="selectSection(section.id)">
+                            {{ section.name }}
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Row 3: Supplier Name, Receiving Source, Receiving Purpose -->
+                <div class="grid grid-cols-3 gap-4">
+                  <!-- Supplier Name -->
+                  <div class="relative">
+                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                      <span class="text-red-500">*</span> Supplier Name
+                    </label>
+                    <div class="dropdown relative inline-flex w-full" ref="supplierDropdownRef">
+                      <button
+                        type="button"
+                        :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.supplierId }]"
+                        :aria-expanded="openDropdowns.supplier"
+                        @click.stop="toggleDropdown('supplier')"
+                      >
+                        {{ getSupplierName(form.supplierId) || 'Select Supplier' }}
+                        <span
+                          class="icon-[tabler--chevron-down] size-4 transition-transform"
+                          :class="{ 'rotate-180': openDropdowns.supplier }"
+                        ></span>
+                      </button>
+
+                      <ul
+                        class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
+                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.supplier, 'opacity-0 pointer-events-none': !openDropdowns.supplier }"
+                        role="menu"
+                      >
+                        <li v-for="supplier in suppliers" :key="supplier.id">
+                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" @click="selectSupplier(supplier.id)">
+                            {{ supplier.supplierName }}
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <!-- Receiving Source -->
+                  <div class="relative">
+                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                      <span class="text-red-500">*</span> Receiving Source
+                    </label>
                     <input
-                      v-model="form.phoneNumber"
-                      type="tel"
-                      placeholder="Enter phone number"
-                      maxlength="10"
-                      @input="formatPhoneNumber"
-                      @keypress="onlyNumbers"
-                      :class="['input input-bordered flex-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.contactPhone }]"
+                      v-model="form.source"
+                      type="text"
+                      placeholder="Enter Receiving Source"
+                      maxlength="50"
+                      :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.source }]"
                     />
                   </div>
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.contactPhone" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.contactPhone }}</p>
+
+                  <!-- Receiving Purpose -->
+                  <div class="relative">
+                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                      <span class="text-red-500">*</span> Receiving Purpose
+                    </label>
+                    <div class="dropdown relative inline-flex w-full" ref="purposeDropdownRef">
+                      <button
+                        type="button"
+                        :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.purpose }]"
+                        :aria-expanded="openDropdowns.purpose"
+                        @click.stop="toggleDropdown('purpose')"
+                      >
+                        {{ form.purpose || 'Select Receiving Purpose' }}
+                        <span
+                          class="icon-[tabler--chevron-down] size-4 transition-transform"
+                          :class="{ 'rotate-180': openDropdowns.purpose }"
+                        ></span>
+                      </button>
+
+                      <ul
+                        class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
+                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.purpose, 'opacity-0 pointer-events-none': !openDropdowns.purpose }"
+                        role="menu"
+                      >
+                        <li v-for="purpose in purposeOptions" :key="purpose">
+                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" @click="selectPurpose(purpose)">
+                            {{ purpose }}
+                          </a>
+                        </li>
+                      </ul>
                     </div>
-                  </transition>
-                </div>
-
-                <!-- Email Address -->
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Email Address
-                  </label>
-                  <input
-                    v-model="form.emailAddress"
-                    type="email"
-                    placeholder="Enter Email Address"
-                    maxlength="100"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.emailAddress }]"
-                  />
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.emailAddress" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.emailAddress }}</p>
-                    </div>
-                  </transition>
-                </div>
-
-                <!-- Status dropdown -->
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Status
-                  </label>
-                  <div class="dropdown relative inline-flex w-full" ref="statusDropdownRef">
-                    <button
-                      type="button"
-                      :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.status }]"
-                      :aria-expanded="openDropdowns.status"
-                      @click.stop="toggleDropdown('status')"
-                    >
-                      {{ form.status || 'Select Status' }}
-                      <span
-                        class="icon-[tabler--chevron-down] size-4 transition-transform"
-                        :class="{ 'rotate-180': openDropdowns.status }"
-                      ></span>
-                    </button>
-
-                    <ul
-                      class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white"
-                      :class="{ 'opacity-100 pointer-events-auto': openDropdowns.status, 'opacity-0 pointer-events-none': !openDropdowns.status }"
-                      role="menu"
-                    >
-                      <li v-for="status in statusOptions" :key="status">
-                        <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('status', status)">
-                          {{ status }}
-                        </a>
-                      </li>
-                    </ul>
                   </div>
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.status" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.status }}</p>
-                    </div>
-                  </transition>
                 </div>
 
-                <!-- Remarks -->
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    Remarks
-                  </label>
-                  <textarea
-                    v-model="form.remarks"
-                    placeholder="Enter Remarks"
-                    maxlength="500"
-                    rows="3"
-                    :class="['textarea textarea-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none', { 'textarea-error': errors.remarks }]"
-                  ></textarea>
-                  <div class="flex justify-between items-center mt-1">
-                    <span class="text-xs text-gray-500">{{ form.remarks.length }}/500 characters</span>
+                <!-- Row 4: Received By, Receiving Date, Remarks -->
+                <div class="grid grid-cols-3 gap-4">
+                  <!-- Received By -->
+                  <div class="relative">
+                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                      <span class="text-red-500">*</span> Received By
+                    </label>
+                    <input
+                      v-model="form.receivedBy"
+                      type="text"
+                      placeholder="Enter Receiver Name"
+                      maxlength="100"
+                      :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.receivedBy }]"
+                    />
                   </div>
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.remarks" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.remarks }}</p>
-                    </div>
-                  </transition>
+
+                  <!-- Receiving Date -->
+                  <div class="relative">
+                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                      Receiving Date
+                    </label>
+                    <input
+                      ref="receivingDateInput"
+                      v-model="form.receivingDate"
+                      type="text"
+                      placeholder="Select Date"
+                      :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.receivingDate }]"
+                      readonly
+                    />
+                  </div>
+
+                  <!-- Remarks -->
+                  <div class="relative">
+                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                      Remarks
+                    </label>
+                    <input
+                      v-model="form.remarks"
+                      type="text"
+                      placeholder="Enter Remarks"
+                      maxlength="500"
+                      :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.remarks }]"
+                    />
+                  </div>
                 </div>
+
+                <!-- Product Rows -->
+                <div class="space-y-3 mt-6">
+                  <div v-for="(product, index) in form.products" :key="index" class="grid grid-cols-12 gap-4 items-start">
+                    <!-- Product Dropdown -->
+                    <div class="col-span-6 relative">
+                      <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                        <span class="text-red-500">*</span> Product {{ index + 1 }}
+                      </label>
+                      <div class="dropdown relative inline-flex w-full" :ref="el => productDropdownRefs[index] = el">
+                        <button
+                          type="button"
+                          :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors[`product${index}`] }]"
+                          :aria-expanded="openDropdowns[`product${index}`]"
+                          @click.stop="toggleDropdown(`product${index}`)"
+                        >
+                          {{ getProductName(product.productId) || 'Select Product' }}
+                          <span
+                            class="icon-[tabler--chevron-down] size-4 transition-transform"
+                            :class="{ 'rotate-180': openDropdowns[`product${index}`] }"
+                          ></span>
+                        </button>
+
+                        <ul
+                          class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
+                          :class="{ 'opacity-100 pointer-events-auto': openDropdowns[`product${index}`], 'opacity-0 pointer-events-none': !openDropdowns[`product${index}`] }"
+                          role="menu"
+                        >
+                          <li v-for="prod in products" :key="prod.id">
+                            <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" @click="selectProduct(index, prod.id)">
+                              {{ prod.name }}
+                            </a>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <!-- Product Quantity -->
+                    <div class="col-span-5 relative">
+                      <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                        <span class="text-red-500">*</span> Product {{ index + 1 }} Quantity
+                      </label>
+                      <div class="flex items-center gap-2">
+                        <button
+                          type="button"
+                          @click="decreaseQuantity(index)"
+                          class="btn btn-outline btn-sm w-10 h-10 p-0 flex items-center justify-center dark:bg-gray-700 dark:text-gray-400"
+                        >
+                          −
+                        </button>
+                        <input
+                          v-model.number="product.quantity"
+                          type="number"
+                          min="1"
+                          :class="['input input-bordered w-full text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors[`quantity${index}`] }]"
+                          @input="validateQuantity(index)"
+                        />
+                        <button
+                          type="button"
+                          @click="increaseQuantity(index)"
+                          class="btn btn-primary btn-sm w-10 h-10 p-0 flex items-center justify-center"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Remove Button -->
+                    <div class="col-span-1 flex items-end">
+                      <button
+                        v-if="form.products.length > 1"
+                        type="button"
+                        @click="removeProduct(index)"
+                        class="btn btn-outline btn-error btn-sm w-10 h-10 p-0 flex items-center justify-center mt-6"
+                        title="Remove Product"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Add Another Product Button -->
+                <button
+                  type="button"
+                  @click="addProduct"
+                  class="btn btn-primary btn-sm mt-4"
+                >
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add Another Product
+                </button>
               </div>
 
               <!-- footer -->
@@ -322,59 +453,65 @@
 
 <script setup>
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+import flatpickr from 'flatpickr'
+import 'flatpickr/dist/flatpickr.css'
 
-const emit = defineEmits(['supplier-created'])
+const emit = defineEmits(['receiving-created'])
 
 /* state */
 const isOpen = ref(false)
 const isSubmitting = ref(false)
 const panelRef = ref(null)
-const statusDropdownRef = ref(null)
-const countryDropdownRef = ref(null)
+const warehouseDropdownRef = ref(null)
+const rackDropdownRef = ref(null)
+const sectionDropdownRef = ref(null)
+const supplierDropdownRef = ref(null)
+const purposeDropdownRef = ref(null)
+const productDropdownRefs = ref([])
+const receivingDateInput = ref(null)
+let flatpickrInstance = null
+
+// API Data
+const warehouses = ref([])
+const racks = ref([])
+const sections = ref([])
+const suppliers = ref([])
+const products = ref([])
 
 const form = reactive({
-  supplierCode: '',
-  supplierName: '',
-  manager: '',
-  countryCode: '+60',
-  phoneNumber: '',
-  emailAddress: '',
-  status: 'Active', // Default to Active
-  remarks: ''
+  receivingCode: '',
+  doNumber: '',
+  warehouseId: null,
+  rackId: null,
+  sectionId: null,
+  supplierId: null,
+  source: '',
+  purpose: '',
+  receivedBy: '',
+  receivingDate: new Date().toISOString().split('T')[0],
+  remarks: '',
+  products: [
+    { productId: null, quantity: 1 }
+  ]
 })
 
 const errors = reactive({
-  supplierCode: '',
-  supplierName: '',
-  manager: '',
-  contactPhone: '',
-  emailAddress: '',
-  status: '',
+  receivingCode: '',
+  doNumber: '',
+  warehouseId: '',
+  rackId: '',
+  sectionId: '',
+  supplierId: '',
+  source: '',
+  purpose: '',
+  receivedBy: '',
+  receivingDate: '',
   remarks: '',
   submit: ''
 })
 
-const statusOptions = ['Active', 'Inactive',]
-const openDropdowns = reactive({ status: false, country: false })
-
-// Popular countries for phone numbers
-const countries = [
-  { code: 'MY', name: 'Malaysia', dialCode: '+60', flag: '🇲🇾' },
-  { code: 'SG', name: 'Singapore', dialCode: '+65', flag: '🇸🇬' },
-  { code: 'ID', name: 'Indonesia', dialCode: '+62', flag: '🇮🇩' },
-  { code: 'TH', name: 'Thailand', dialCode: '+66', flag: '🇹🇭' },
-  { code: 'PH', name: 'Philippines', dialCode: '+63', flag: '🇵🇭' },
-  { code: 'VN', name: 'Vietnam', dialCode: '+84', flag: '🇻🇳' },
-  { code: 'CN', name: 'China', dialCode: '+86', flag: '🇨🇳' },
-  { code: 'IN', name: 'India', dialCode: '+91', flag: '🇮🇳' },
-  { code: 'JP', name: 'Japan', dialCode: '+81', flag: '🇯🇵' },
-  { code: 'KR', name: 'South Korea', dialCode: '+82', flag: '🇰🇷' },
-  { code: 'US', name: 'United States', dialCode: '+1', flag: '🇺🇸' },
-  { code: 'GB', name: 'United Kingdom', dialCode: '+44', flag: '🇬🇧' },
-  { code: 'AU', name: 'Australia', dialCode: '+61', flag: '🇦🇺' },
-  { code: 'AE', name: 'UAE', dialCode: '+971', flag: '🇦🇪' },
-  { code: 'SA', name: 'Saudi Arabia', dialCode: '+966', flag: '🇸🇦' }
-]
+const purposeOptions = ['Raw Material', 'Finished Goods', 'Packaging', 'Consumables', 'Equipment', 'Returns']
+const openDropdowns = reactive({})
 
 /* Modal scroll lock utilities */
 let scrollY = 0
@@ -407,6 +544,162 @@ const unlockScroll = () => {
   })
 }
 
+/* Fetch API Data */
+const fetchWarehouses = async () => {
+  try {
+    const response = await fetch('/api/warehouse')
+    if (response.ok) {
+      warehouses.value = await response.json()
+    }
+  } catch (error) {
+    console.error('Error fetching warehouses:', error)
+  }
+}
+
+const fetchRacks = async (warehouseId) => {
+  if (!warehouseId) {
+    racks.value = []
+    return
+  }
+  try {
+    const response = await fetch(`/api/rack?warehouseId=${warehouseId}`)
+    if (response.ok) {
+      racks.value = await response.json()
+    }
+  } catch (error) {
+    console.error('Error fetching racks:', error)
+  }
+}
+
+const fetchSections = async (rackId) => {
+  if (!rackId) {
+    sections.value = []
+    return
+  }
+  try {
+    const response = await fetch(`/api/section?rackId=${rackId}`)
+    if (response.ok) {
+      sections.value = await response.json()
+    }
+  } catch (error) {
+    console.error('Error fetching sections:', error)
+  }
+}
+
+const fetchSuppliers = async () => {
+  try {
+    const response = await fetch('/api/supplier')
+    if (response.ok) {
+      suppliers.value = await response.json()
+    }
+  } catch (error) {
+    console.error('Error fetching suppliers:', error)
+  }
+}
+
+const fetchProducts = async () => {
+  try {
+    const response = await fetch('/api/product')
+    if (response.ok) {
+      products.value = await response.json()
+    }
+  } catch (error) {
+    console.error('Error fetching products:', error)
+  }
+}
+
+/* Helper functions to get names */
+const getWarehouseName = (id) => {
+  const warehouse = warehouses.value.find(w => w.id === id)
+  return warehouse ? warehouse.name : ''
+}
+
+const getRackName = (id) => {
+  const rack = racks.value.find(r => r.id === id)
+  return rack ? rack.name : ''
+}
+
+const getSectionName = (id) => {
+  const section = sections.value.find(s => s.id === id)
+  return section ? section.name : ''
+}
+
+const getSupplierName = (id) => {
+  const supplier = suppliers.value.find(s => s.id === id)
+  return supplier ? supplier.supplierName : ''
+}
+
+const getProductName = (id) => {
+  const product = products.value.find(p => p.id === id)
+  return product ? product.name : ''
+}
+
+/* Dropdown handlers */
+const toggleDropdown = (name) => {
+  Object.keys(openDropdowns).forEach(k => { if (k !== name) openDropdowns[k] = false })
+  openDropdowns[name] = !openDropdowns[name]
+}
+
+const selectWarehouse = async (id) => {
+  form.warehouseId = id
+  form.rackId = null
+  form.sectionId = null
+  openDropdowns.warehouse = false
+  await fetchRacks(id)
+}
+
+const selectRack = async (id) => {
+  form.rackId = id
+  form.sectionId = null
+  openDropdowns.rack = false
+  await fetchSections(id)
+}
+
+const selectSection = (id) => {
+  form.sectionId = id
+  openDropdowns.section = false
+}
+
+const selectSupplier = (id) => {
+  form.supplierId = id
+  openDropdowns.supplier = false
+}
+
+const selectPurpose = (purpose) => {
+  form.purpose = purpose
+  openDropdowns.purpose = false
+}
+
+const selectProduct = (index, productId) => {
+  form.products[index].productId = productId
+  openDropdowns[`product${index}`] = false
+}
+
+/* Product management */
+const addProduct = () => {
+  form.products.push({ productId: null, quantity: 1 })
+}
+
+const removeProduct = (index) => {
+  form.products.splice(index, 1)
+}
+
+const increaseQuantity = (index) => {
+  form.products[index].quantity++
+}
+
+const decreaseQuantity = (index) => {
+  if (form.products[index].quantity > 1) {
+    form.products[index].quantity--
+  }
+}
+
+const validateQuantity = (index) => {
+  if (form.products[index].quantity < 1) {
+    form.products[index].quantity = 1
+  }
+}
+
 /* Validation */
 const validateForm = () => {
   // Reset errors
@@ -414,153 +707,106 @@ const validateForm = () => {
 
   let isValid = true
 
-  // Supplier Code validation
-  if (!form.supplierCode.trim()) {
-    errors.supplierCode = 'Supplier Code is required'
-    isValid = false
-  } else if (!form.supplierCode.match(/^SUP-\d{3}$/)) {
-    errors.supplierCode = 'Supplier Code must be in format SUP-XXX (where X is a number)'
+  // Receiving Code validation
+  if (!form.receivingCode.trim()) {
+    errors.receivingCode = 'Receiving Code is required'
     isValid = false
   }
 
-  // Supplier Name validation
-  if (!form.supplierName.trim()) {
-    errors.supplierName = 'Supplier Name is required'
-    isValid = false
-  } else if (form.supplierName.length < 3) {
-    errors.supplierName = 'Supplier Name must be at least 3 characters'
-    isValid = false
-  } else if (form.supplierName.length > 100) {
-    errors.supplierName = 'Supplier Name cannot exceed 100 characters'
+  // Supplier validation
+  if (!form.supplierId) {
+    errors.supplierId = 'Supplier is required'
     isValid = false
   }
 
-  // PIC Name validation
-  if (!form.manager.trim()) {
-    errors.manager = 'PIC Name is required'
-    isValid = false
-  } else if (form.manager.length < 2) {
-    errors.manager = 'PIC Name must be at least 2 characters'
-    isValid = false
-  } else if (form.manager.length > 50) {
-    errors.manager = 'PIC Name cannot exceed 50 characters'
+  // Source validation
+  if (!form.source.trim()) {
+    errors.source = 'Receiving Source is required'
     isValid = false
   }
 
-  // Contact validation
-  if (!form.phoneNumber.trim()) {
-    errors.contactPhone = 'Contact Number is required'
-    isValid = false
-  } else if (!/^\d+$/.test(form.phoneNumber)) {
-    errors.contactPhone = 'Contact Number must contain only numbers'
-    isValid = false
-  } else if (form.phoneNumber.length < 8) {
-    errors.contactPhone = 'Contact Number must have at least 8 digits'
-    isValid = false
-  } else if (form.phoneNumber.length > 10) {
-    errors.contactPhone = 'Contact Number cannot exceed 10 digits'
+  // Purpose validation
+  if (!form.purpose) {
+    errors.purpose = 'Receiving Purpose is required'
     isValid = false
   }
 
-  // Email validation
-  if (!form.emailAddress.trim()) {
-    errors.emailAddress = 'Email Address is required'
-    isValid = false
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.emailAddress)) {
-    errors.emailAddress = 'Please enter a valid email address'
-    isValid = false
-  } else if (form.emailAddress.length > 100) {
-    errors.emailAddress = 'Email Address cannot exceed 100 characters'
+  // Received By validation
+  if (!form.receivedBy.trim()) {
+    errors.receivedBy = 'Received By is required'
     isValid = false
   }
 
-  // Status validation
-  if (!form.status) {
-    errors.status = 'Status is required'
-    isValid = false
-  }
-
-  // Remarks validation (optional but with limit)
-  if (form.remarks.length > 500) {
-    errors.remarks = 'Remarks cannot exceed 500 characters'
-    isValid = false
-  }
+  // Product validation
+  form.products.forEach((product, index) => {
+    if (!product.productId) {
+      errors[`product${index}`] = 'Product is required'
+      isValid = false
+    }
+    if (!product.quantity || product.quantity < 1) {
+      errors[`quantity${index}`] = 'Quantity must be at least 1'
+      isValid = false
+    }
+  })
 
   return isValid
 }
 
 // Clear error when user types
-watch(() => form.supplierCode, () => { if (errors.supplierCode) errors.supplierCode = '' })
-watch(() => form.supplierName, () => { if (errors.supplierName) errors.supplierName = '' })
-watch(() => form.manager, () => { if (errors.manager) errors.manager = '' })
-watch(() => form.phoneNumber, () => { if (errors.contactPhone) errors.contactPhone = '' })
-watch(() => form.countryCode, () => { if (errors.contactPhone) errors.contactPhone = '' })
-watch(() => form.emailAddress, () => { if (errors.emailAddress) errors.emailAddress = '' })
-watch(() => form.status, () => { if (errors.status) errors.status = '' })
-watch(() => form.remarks, () => { if (errors.remarks) errors.remarks = '' })
-
-/* helpers */
-const toggleDropdown = (name) => {
-  Object.keys(openDropdowns).forEach(k => { if (k !== name) openDropdowns[k] = false })
-  openDropdowns[name] = !openDropdowns[name]
-}
-
-const selectOption = (key, value) => {
-  form[key] = value
-  openDropdowns[key] = false
-}
-
-const selectCountry = (country) => {
-  form.countryCode = country.dialCode
-  openDropdowns.country = false
-}
-
-// Only allow numbers in phone input
-const onlyNumbers = (event) => {
-  const charCode = event.which ? event.which : event.keyCode
-  if (charCode > 31 && (charCode < 48 || charCode > 57)) {
-    event.preventDefault()
-  }
-}
-
-// Format phone number as user types
-const formatPhoneNumber = (event) => {
-  // Remove all non-numeric characters
-  let value = event.target.value.replace(/\D/g, '')
-
-  // Limit to 15 digits
-  if (value.length > 15) {
-    value = value.slice(0, 15)
-  }
-
-  form.phoneNumber = value
-}
+watch(() => form.receivingCode, () => { if (errors.receivingCode) errors.receivingCode = '' })
+watch(() => form.supplierId, () => { if (errors.supplierId) errors.supplierId = '' })
+watch(() => form.source, () => { if (errors.source) errors.source = '' })
+watch(() => form.purpose, () => { if (errors.purpose) errors.purpose = '' })
+watch(() => form.receivedBy, () => { if (errors.receivedBy) errors.receivedBy = '' })
 
 /* close dropdowns when clicking outside */
 const handleClickOutside = (event) => {
-  const statusDd = statusDropdownRef.value
-  const countryDd = countryDropdownRef.value
+  const refs = [
+    warehouseDropdownRef.value,
+    rackDropdownRef.value,
+    sectionDropdownRef.value,
+    supplierDropdownRef.value,
+    purposeDropdownRef.value,
+    ...productDropdownRefs.value
+  ]
 
-  if (statusDd && !statusDd.contains(event.target)) {
-    openDropdowns.status = false
+  let clickedInside = false
+  for (const ref of refs) {
+    if (ref && ref.contains(event.target)) {
+      clickedInside = true
+      break
+    }
   }
 
-  if (countryDd && !countryDd.contains(event.target)) {
-    openDropdowns.country = false
+  if (!clickedInside) {
+    Object.keys(openDropdowns).forEach(key => {
+      openDropdowns[key] = false
+    })
   }
 }
 
 /* open/close modal */
 const openModal = async () => {
+  // Fetch all required data
+  await Promise.all([
+    fetchWarehouses(),
+    fetchSuppliers(),
+    fetchProducts()
+  ])
+
   // Reset form
-  form.supplierCode = ''
-  form.supplierName = ''
-  form.manager = ''
-  form.countryCode = '+60'
-  form.phoneNumber = ''
-  form.emailAddress = ''
-  form.status = ''
+  form.receivingCode = ''
+  form.doNumber = ''
+  form.warehouseId = null
+  form.rackId = null
+  form.sectionId = null
+  form.supplierId = null
+  form.source = ''
+  form.purpose = ''
+  form.receivedBy = ''
+  form.receivingDate = new Date().toISOString().split('T')[0]
   form.remarks = ''
+  form.products = [{ productId: null, quantity: 1 }]
 
   // Reset errors
   Object.keys(errors).forEach(key => errors[key] = '')
@@ -568,24 +814,46 @@ const openModal = async () => {
   isOpen.value = true
   lockScroll()
   await nextTick()
+  
+  // Initialize Flatpickr
+  if (receivingDateInput.value && !flatpickrInstance) {
+    flatpickrInstance = flatpickr(receivingDateInput.value, {
+      dateFormat: 'Y-m-d',
+      defaultDate: new Date(),
+      onChange: (selectedDates, dateStr) => {
+        form.receivingDate = dateStr
+      }
+    })
+  }
+  
   panelRef.value?.querySelector('input,select,textarea,button')?.focus()
 }
 
 const closeModal = async () => {
-  openDropdowns.status = false
-  openDropdowns.country = false
+  Object.keys(openDropdowns).forEach(key => openDropdowns[key] = false)
+  
+  // Destroy Flatpickr instance
+  if (flatpickrInstance) {
+    flatpickrInstance.destroy()
+    flatpickrInstance = null
+  }
+  
   isOpen.value = false
 
   // Reset form after modal is closed
   await nextTick()
-  form.supplierCode = ''
-  form.supplierName = ''
-  form.manager = ''
-  form.countryCode = '+60'
-  form.phoneNumber = ''
-  form.emailAddress = ''
-  form.status = ''
+  form.receivingCode = ''
+  form.doNumber = ''
+  form.warehouseId = null
+  form.rackId = null
+  form.sectionId = null
+  form.supplierId = null
+  form.source = ''
+  form.purpose = ''
+  form.receivedBy = ''
+  form.receivingDate = new Date().toISOString().split('T')[0]
   form.remarks = ''
+  form.products = [{ productId: null, quantity: 1 }]
 
   // Reset errors
   Object.keys(errors).forEach(key => errors[key] = '')
@@ -603,17 +871,26 @@ const submitForm = async () => {
   try {
     // Format the data to match the backend schema
     const submissionData = {
-      supplierCode: form.supplierCode.toUpperCase(), // Ensure code is uppercase
-      supplierName: form.supplierName,
-      manager: form.manager,
-      contactPhone: `${form.countryCode}${form.phoneNumber}`,
-      email: form.emailAddress,
-      status: form.status === 'Active' ? 'Active' : 'Inactive', // Ensure proper status
-      remark: form.remarks || null
+      receivingCode: form.receivingCode,
+      doNumber: form.doNumber || null,
+      warehouseId: form.warehouseId,
+      rackId: form.rackId || null,
+      sectionId: form.sectionId || null,
+      source: form.source,
+      supplierId: form.supplierId,
+      receivingDate: form.receivingDate,
+      receivedBy: form.receivedBy,
+      remarks: form.remarks || null,
+      receivingItems: form.products.map(p => ({
+        productId: p.productId,
+        expectedQuantity: p.quantity,
+        receivedQuantity: p.quantity,
+        purpose: form.purpose
+      }))
     }
 
-    // Make the API call to the correct endpoint
-    const response = await fetch('api/supplier', {
+    // Make the API call
+    const response = await fetch('/api/receiving', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -623,23 +900,20 @@ const submitForm = async () => {
 
     if (!response.ok) {
       const errorData = await response.json()
-      throw new Error(errorData.message || 'Failed to create supplier')
+      throw new Error(errorData.message || 'Failed to create receiving record')
     }
 
     const data = await response.json()
-    console.log('Server response:', data) // Debug log
+    console.log('Server response:', data)
 
-    // Only close and reset after successful API call
+    // Close modal and emit success
     await closeModal()
-
-    // Emit event to parent component with success status
-    emit('supplier-created', { success: true, data })
+    emit('receiving-created', { success: true, data })
 
   } catch (error) {
-    console.error('Error creating supplier:', error)
-    errors.submit = error.message || 'Failed to create supplier. Please try again.'
-    // Emit event to parent component with error status
-    emit('supplier-created', { success: false, error: error.message || 'Failed to create supplier' })
+    console.error('Error creating receiving:', error)
+    errors.submit = error.message || 'Failed to create receiving record. Please try again.'
+    emit('receiving-created', { success: false, error: error.message || 'Failed to create receiving record' })
   } finally {
     isSubmitting.value = false
   }
@@ -652,6 +926,13 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
+  
+  // Clean up Flatpickr
+  if (flatpickrInstance) {
+    flatpickrInstance.destroy()
+    flatpickrInstance = null
+  }
+  
   if (isOpen.value) {
     unlockScroll()
   }
