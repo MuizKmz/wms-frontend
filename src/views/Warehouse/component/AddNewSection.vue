@@ -1,4 +1,7 @@
 <template>
+  <!-- Rack Info Modal Component -->
+  <RackInfoModal ref="rackInfoModalRef" />
+  
   <teleport to="body">
     <transition
       enter-active-class="transition-opacity duration-300 ease-out"
@@ -101,8 +104,20 @@
                 </div>
 
                 <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Rack Code
+                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                    <span><span class="text-red-500">*</span> Rack Code</span>
+                    <button
+                      type="button"
+                      @click="showRackInfo"
+                      class="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                      aria-label="Show rack information"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                      </svg>
+                    </button>
                   </label>
                   <div class="dropdown relative inline-flex w-full" ref="rackDropdownRef">
                     <button
@@ -112,14 +127,18 @@
                       @click.stop="toggleDropdown('rack')"
                       :disabled="!form.warehouseId || loadingRacks"
                     >
-                      {{ selectedRackName || 'Select Rack' }}
-                      <span
+                      <span :class="{ 'text-green-600 dark:text-green-400 font-medium': racks.length === 0 && form.warehouseId }">
+                        {{ getRackButtonText() }}
+                      </span>
+                      <span v-if="racks.length > 0 || !form.warehouseId"
                         class="icon-[tabler--chevron-down] size-4 transition-transform"
                         :class="{ 'rotate-180': openDropdowns.rack }"
                       ></span>
+                      <span v-else class="text-xl">+</span>
                     </button>
 
                     <ul
+                      v-if="racks.length > 0"
                       class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
                       :class="{ 'opacity-100 pointer-events-auto': openDropdowns.rack, 'opacity-0 pointer-events-none': !openDropdowns.rack }"
                       role="menu"
@@ -312,8 +331,9 @@
 
 <script setup>
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+import RackInfoModal from './RackInfoModal.vue'
 
-const emit = defineEmits(['item-created'])
+const emit = defineEmits(['item-created', 'open-add-rack'])
 
 /* state */
 const isOpen = ref(false)
@@ -322,6 +342,7 @@ const panelRef = ref(null)
 const statusDropdownRef = ref(null)
 const warehouseDropdownRef = ref(null)
 const rackDropdownRef = ref(null)
+const rackInfoModalRef = ref(null)
 
 const warehouses = ref([])
 const racks = ref([])
@@ -353,6 +374,19 @@ const errors = reactive({
 const statusOptions = ['Active', 'Inactive']
 const openDropdowns = reactive({ status: false, warehouse: false, rack: false })
 
+/* Rack info modal */
+const showRackInfo = () => {
+  rackInfoModalRef.value?.openModal()
+}
+
+/* Get rack button text */
+const getRackButtonText = () => {
+  if (!form.warehouseId) return 'Select Rack'
+  if (loadingRacks.value) return 'Loading...'
+  if (racks.value.length === 0) return '+ Add Rack'
+  return selectedRackName.value || 'Select Rack'
+}
+
 /* Fetch warehouses */
 const fetchWarehouses = async () => {
   try {
@@ -377,7 +411,8 @@ const fetchRacks = async () => {
     const response = await fetch(`/api/rack?warehouseId=${form.warehouseId}`)
     if (!response.ok) throw new Error('Failed to fetch racks')
     const json = await response.json()
-    racks.value = json || []
+    // Filter to ensure only racks for selected warehouse are shown
+    racks.value = (json || []).filter(rack => rack.warehouseId === form.warehouseId)
   } catch (e) {
     console.error('Error fetching racks:', e)
     racks.value = []
@@ -481,6 +516,12 @@ watch(() => form.remarks, () => { if (errors.remarks) errors.remarks = '' })
 
 /* helpers */
 const toggleDropdown = (name) => {
+  // If clicking rack dropdown and no racks available, open add rack modal
+  if (name === 'rack' && form.warehouseId && racks.value.length === 0) {
+    handleAddRack()
+    return
+  }
+  
   Object.keys(openDropdowns).forEach(k => { if (k !== name) openDropdowns[k] = false })
   openDropdowns[name] = !openDropdowns[name]
 }
@@ -507,6 +548,13 @@ const selectRack = (rack) => {
   form.rackId = rack.id
   selectedRackName.value = rack.rackCode
   openDropdowns.rack = false
+}
+
+const handleAddRack = () => {
+  // Close this modal first
+  closeModal()
+  // Emit event to parent to open add rack modal
+  emit('open-add-rack', { warehouseId: form.warehouseId })
 }
 
 /* close dropdowns when clicking outside */
@@ -592,7 +640,7 @@ const submitForm = async () => {
       sectionName: form.sectionName,
       capacity: form.capacity,
       status: form.status,
-      remarks: form.remarks || null
+      remark: form.remarks || null
     }
 
     const response = await fetch('/api/section', {

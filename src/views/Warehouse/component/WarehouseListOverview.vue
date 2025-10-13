@@ -453,7 +453,7 @@ const deleteItem = async (item) => {
     console.error('Error deleting warehouse:', error)
     emit('delete-item', { success: false, error: error.message }) // Changed emit
     // Show error notification
-    Swal.fire('Error', `Failed to delete warehouse: ${error.message}`, 'error')
+    Swal.fire('Error', `Failed to delete warehouse: This warehouse has racks or sections or products`, 'error')
   }
 }
 
