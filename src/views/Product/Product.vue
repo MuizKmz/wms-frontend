@@ -15,8 +15,8 @@
     <ToolListFilters @filter-change="handleFilterChange" />
 
     <div class="space-y-5 sm:space-y-6">
-      <ComponentCard 
-        title="All Product List" 
+      <ComponentCard
+        title="All Product List"
         desc="Overview of all Product List"
       >
         <div>
@@ -42,7 +42,7 @@
           </div>
 
           <div class="flex gap-2 my-6">
-            <button 
+            <button
               @click="openAddProductModal"
               class="px-4 py-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Add New Product
@@ -52,15 +52,15 @@
               class="px-4 py-2 btn btn-error text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Delete
             </button>
-            <button 
+            <button
               @click="handleImportProduct"
               class="px-4 py-2 btn btn-secondary text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Import Product
             </button>
           </div>
 
-          <component 
-            :is="currentComponent" 
+          <component
+            :is="currentComponent"
             v-if="currentComponent"
             ref="productTableRef"
             :filters="activeFilters"
@@ -71,7 +71,7 @@
       </ComponentCard>
     </div>
 
-    <AddNewProduct 
+    <AddNewProduct
       ref="addProductModalRef"
       @product-created="handleProductCreated"
     />
@@ -196,7 +196,7 @@ const handleBulkDelete = async () => {
 
   // Check if there are selected items
   const selectedItems = productTableRef.value.selectedItems || [];
-  
+
   if (selectedItems.length === 0) {
     // SweetAlert will show the "No Selection" message from bulkDelete function
     await productTableRef.value.bulkDelete();
@@ -205,7 +205,7 @@ const handleBulkDelete = async () => {
 
   // Call the bulkDelete method exposed by the ProductTable component
   const result = await productTableRef.value.bulkDelete();
-  
+
   // SweetAlert already handles all notifications in the table component
   // No need for additional toast here
   console.log('Bulk delete result:', result);
