@@ -41,7 +41,7 @@
               <!-- header -->
               <div class="flex items-center justify-between p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">
-                  Add New Receiving
+                  Edit Receiving
                 </h2>
                 <button
                   type="button"
@@ -74,6 +74,8 @@
                       placeholder="Enter Receiving Code"
                       maxlength="50"
                       :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.receivingCode }]"
+                      :readonly="isViewMode"
+                      :disabled="isViewMode"
                     />
                     <transition
                       enter-active-class="transition-all duration-200 ease-out"
@@ -100,6 +102,8 @@
                       placeholder="Enter DO Number"
                       maxlength="50"
                       :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.doNumber }]"
+                      :readonly="isViewMode"
+                      :disabled="isViewMode"
                     />
                   </div>
                 </div>
@@ -115,8 +119,9 @@
                       <button
                         type="button"
                         :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.warehouseId }]"
-                        :aria-expanded="openDropdowns.warehouse"
-                        @click.stop="toggleDropdown('warehouse')"
+                          :aria-expanded="openDropdowns.warehouse"
+                          @click.stop="!isViewMode && toggleDropdown('warehouse')"
+                          :disabled="isViewMode"
                       >
                         {{ getWarehouseName(form.warehouseId) || 'Select Warehouse' }}
                         <span
@@ -148,9 +153,9 @@
                       <button
                         type="button"
                         :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.rackId }]"
-                        :aria-expanded="openDropdowns.rack"
-                        @click.stop="toggleDropdown('rack')"
-                        :disabled="!form.warehouseId"
+                          :aria-expanded="openDropdowns.rack"
+                          @click.stop="!isViewMode && toggleDropdown('rack')"
+                          :disabled="isViewMode || !form.warehouseId"
                       >
                         {{ getRackName(form.rackId) || 'Select Rack' }}
                         <span
@@ -182,9 +187,9 @@
                       <button
                         type="button"
                         :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.sectionId }]"
-                        :aria-expanded="openDropdowns.section"
-                        @click.stop="toggleDropdown('section')"
-                        :disabled="!form.rackId"
+                          :aria-expanded="openDropdowns.section"
+                          @click.stop="!isViewMode && toggleDropdown('section')"
+                          :disabled="isViewMode || !form.rackId"
                       >
                         {{ getSectionName(form.sectionId) || 'Select Section' }}
                         <span
@@ -254,6 +259,8 @@
                       placeholder="Enter Receiving Source"
                       maxlength="50"
                       :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.source }]"
+                      :readonly="isViewMode"
+                      :disabled="isViewMode"
                     />
                   </div>
 
@@ -266,8 +273,9 @@
                       <button
                         type="button"
                         :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.purpose }]"
-                        :aria-expanded="openDropdowns.purpose"
-                        @click.stop="toggleDropdown('purpose')"
+                          :aria-expanded="openDropdowns.purpose"
+                          @click.stop="!isViewMode && toggleDropdown('purpose')"
+                          :disabled="isViewMode"
                       >
                         {{ form.purpose || 'Select Receiving Purpose' }}
                         <span
@@ -304,6 +312,8 @@
                       placeholder="Enter Receiver Name"
                       maxlength="100"
                       :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.receivedBy }]"
+                      :readonly="isViewMode"
+                      :disabled="isViewMode"
                     />
                   </div>
 
@@ -319,6 +329,7 @@
                       placeholder="Select Date"
                       :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.receivingDate }]"
                       readonly
+                      :disabled="isViewMode"
                     />
                   </div>
 
@@ -333,6 +344,8 @@
                       placeholder="Enter Remarks"
                       maxlength="500"
                       :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.remarks }]"
+                      :readonly="isViewMode"
+                      :disabled="isViewMode"
                     />
                   </div>
                 </div>
@@ -350,7 +363,8 @@
                           type="button"
                           class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400"
                           :aria-expanded="openDropdowns[`product${index}`]"
-                          @click.stop="toggleDropdown(`product${index}`)"
+                          @click.stop="!isViewMode && toggleDropdown(`product${index}`)"
+                          :disabled="isViewMode"
                         >
                           {{ getProductName(product.productId) || 'Select Product' }}
                           <span
@@ -393,7 +407,9 @@
                           min="1"
                           :class="['input input-bordered text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors[`quantity${index}`] }]"
                           style="width: 6rem"
-                          @input="validateQuantity(index)"
+                          @input="!isViewMode && validateQuantity(index)"
+                          :readonly="isViewMode"
+                          :disabled="isViewMode"
                         />
 
                         <!-- Unit dropdown (styled like other dropdowns) -->
@@ -423,8 +439,9 @@
                         </div>
                         <button
                           type="button"
-                          @click="increaseQuantity(index)"
+                          @click="!isViewMode && increaseQuantity(index)"
                           class="btn btn-primary btn-sm w-10 h-10 p-0 flex items-center justify-center"
+                          :disabled="isViewMode"
                         >
                           +
                         </button>
@@ -432,9 +449,9 @@
                     </div>
 
                     <!-- Remove Button -->
-                    <div class="col-span-1 flex items-end">
+                      <div class="col-span-1 flex items-end">
                       <button
-                        v-if="form.products.length > 1"
+                        v-if="form.products.length > 1 && !isViewMode"
                         type="button"
                         @click="removeProduct(index)"
                         class="btn btn-outline btn-error btn-sm w-10 h-10 p-0 flex items-center justify-center mt-6"
@@ -450,6 +467,7 @@
 
                 <!-- Add Another Product Button -->
                 <button
+                  v-if="!isViewMode"
                   type="button"
                   @click="addProduct"
                   class="btn btn-primary btn-sm mt-4"
@@ -464,9 +482,9 @@
               <!-- footer -->
               <div class="flex justify-end gap-2 p-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <button @click="closeModal" class="btn btn-outline btn-error" :disabled="isSubmitting">
-                  Cancel
+                  {{ isViewMode ? 'Close' : 'Cancel' }}
                 </button>
-                <button @click="submitForm" class="btn btn-primary" :disabled="isSubmitting">
+                <button v-if="!isViewMode" @click="submitForm" class="btn btn-primary" :disabled="isSubmitting">
                   <span v-if="isSubmitting" class="loading loading-spinner loading-sm"></span>
                   {{ isSubmitting ? 'Saving...' : 'Save' }}
                 </button>
@@ -484,7 +502,12 @@ import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 import flatpickr from 'flatpickr'
 import 'flatpickr/dist/flatpickr.css'
 
-const emit = defineEmits(['receiving-created'])
+const emit = defineEmits(['receiving-created', 'receiving-updated'])
+
+// track edit mode and current receiving id
+const isEditMode = ref(false)
+const isViewMode = ref(false)
+const currentReceivingId = ref(null)
 
 /* state */
 const isOpen = ref(false)
@@ -986,7 +1009,10 @@ const handleClickOutside = (event) => {
 }
 
 /* open/close modal */
-const openModal = async () => {
+// openModal can accept an optional receiving object to prefill form for editing
+// openModal can accept an optional receiving object to prefill form for editing
+// The second optional argument `viewOnly` will open the modal in read-only view mode
+const openModal = async (receiving = null, viewOnly = false) => {
   // Fetch all required data
   await Promise.all([
     fetchWarehouses(),
@@ -1014,6 +1040,37 @@ const openModal = async () => {
 
   // Reset errors
   Object.keys(errors).forEach(key => errors[key] = '')
+
+  // If a receiving object is provided, populate the form for edit
+  if (receiving) {
+    isEditMode.value = !viewOnly
+    isViewMode.value = !!viewOnly
+    currentReceivingId.value = receiving.id
+    currentReceivingId.value = receiving.id
+    // Populate basic fields
+    form.receivingCode = receiving.receivingCode || ''
+    form.doNumber = receiving.doNumber || ''
+    form.warehouseId = receiving.warehouseId || null
+    // fetch racks/sections for selected warehouse/rack
+    if (form.warehouseId) await fetchRacks(form.warehouseId)
+    form.rackId = receiving.rackId || null
+    if (form.rackId) await fetchSections(form.rackId)
+    form.sectionId = receiving.sectionId || null
+    form.supplierId = receiving.supplierId || null
+    form.source = receiving.source || ''
+    form.purpose = receiving.purpose || ''
+    form.receivedBy = receiving.receivedBy || ''
+    form.receivingDate = receiving.receivingDate ? receiving.receivingDate.split('T')[0] : form.receivingDate
+    form.remarks = receiving.remarks || ''
+    // populate products from receiving.receivingItems if present
+    if (receiving.receivingItems && Array.isArray(receiving.receivingItems) && receiving.receivingItems.length) {
+      form.products = receiving.receivingItems.map(item => ({ productId: item.productId, quantity: item.quantity || 1, unit: item.unit || 'pcs' }))
+    }
+  } else {
+    isEditMode.value = false
+    isViewMode.value = false
+    currentReceivingId.value = null
+  }
 
   isOpen.value = true
   lockScroll()
@@ -1063,6 +1120,12 @@ const closeModal = async () => {
 
   // Reset errors
   Object.keys(errors).forEach(key => errors[key] = '')
+
+  // If view mode, make sure nothing is editable by disabling inputs via a CSS class or attribute
+
+  // Reset edit mode state
+  isEditMode.value = false
+  currentReceivingId.value = null
 }
 
 /* submit */
@@ -1099,18 +1162,24 @@ const submitForm = async () => {
 
     console.debug('Submitting receiving:', submissionData)
 
-    // Make the API call
-    const response = await fetch('/api/receiving', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(submissionData)
-    })
+    // Make the API call (POST for create, PUT for update in edit mode)
+    let response
+    if (isEditMode.value && currentReceivingId.value) {
+      response = await fetch(`/api/receiving/${currentReceivingId.value}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submissionData)
+      })
+    } else {
+      response = await fetch('/api/receiving', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submissionData)
+      })
+    }
 
     if (!response.ok) {
-      // Try to parse JSON error body, fall back to plain text
-      let errorMessage = 'Failed to create receiving record'
+      let errorMessage = isEditMode.value ? 'Failed to update receiving record' : 'Failed to create receiving record'
       try {
         const errorData = await response.json()
         errorMessage = errorData.message || JSON.stringify(errorData)
@@ -1118,11 +1187,9 @@ const submitForm = async () => {
         try {
           const text = await response.text()
           if (text) errorMessage = text
-        } catch {
-          // ignore
-        }
+        } catch {}
       }
-      console.error('Create receiving failed', response.status, errorMessage)
+      console.error(errorMessage)
       throw new Error(errorMessage)
     }
 
@@ -1131,7 +1198,11 @@ const submitForm = async () => {
 
     // Close modal and emit success
     await closeModal()
-    emit('receiving-created', { success: true, data })
+    if (isEditMode.value) {
+      emit('receiving-updated', { success: true, data })
+    } else {
+      emit('receiving-created', { success: true, data })
+    }
 
   } catch (error) {
     console.error('Error creating receiving:', error)

@@ -66,6 +66,7 @@
             :filters="activeFilters"
             @delete-receiving="handleDeleteReceiving"
             @edit-receiving="handleEditReceiving"
+            @view-receiving="handleViewReceiving"
           />
         </div>
       </ComponentCard>
@@ -80,6 +81,14 @@
       ref="editReceivingModalRef"
       @receiving-updated="handleReceivingUpdated"
     />
+    
+    <ReceivingView
+      ref="receivingViewModalRef"
+    />
+    <ImportfromPO
+      ref="importFromPoModalRef"
+      @file-uploaded="handleImportResult"
+    />
   </AdminLayout>
 </template>
 
@@ -90,7 +99,9 @@ import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
 import ReceivingTable from "./component/ReceivingTable.vue";
 import AddNewReceiving from "./component/AddNewReceiving.vue";
-// import EditReceiving from "./component/EditReceiving.vue";
+import EditReceiving from "./component/EditReceiving.vue";
+import ReceivingView from "./component/ReceivingView.vue";
+import ImportfromPO from "./component/ImportfromPO.vue";
  import ReceivingListFilters from "./component/ReceivingListFilters.vue";
 
 // Interface definitions
@@ -118,6 +129,8 @@ const currentPageTitle = ref("Receiving Management");
 const activeFilters = ref<Filters>({});
 const addReceivingModalRef = ref<InstanceType<typeof AddNewReceiving> | null>(null);
 const editReceivingModalRef = ref<InstanceType<typeof EditReceiving> | null>(null);
+const receivingViewModalRef = ref<InstanceType<typeof ReceivingView> | null>(null);
+const importFromPoModalRef = ref<InstanceType<typeof ImportfromPO> | null>(null);
 const receivingTableRef = ref<InstanceType<typeof ReceivingTable> | null>(null);
 const activeTab = ref('table');
 
@@ -201,6 +214,12 @@ const handleEditReceiving = (receiving: Receiving) => {
   }
 };
 
+const handleViewReceiving = (receiving: Receiving) => {
+  if (receivingViewModalRef.value) {
+    receivingViewModalRef.value.openModal(receiving)
+  }
+};
+
 // Handle bulk delete
 const handleBulkDelete = async () => {
   if (!receivingTableRef.value) {
@@ -222,7 +241,19 @@ const handleBulkDelete = async () => {
 
 // Handle import receiving
 const handleImportReceiving = () => {
-  // Implement import logic here
-  console.log('Import receiving clicked');
+  if (importFromPoModalRef.value) {
+    importFromPoModalRef.value.openModal()
+  }
 };
+
+const handleImportResult = async (result: any) => {
+  if (result && result.success) {
+    showToastMessage('Import completed successfully', 'success')
+    if (receivingTableRef.value) {
+      await receivingTableRef.value.refreshData()
+    }
+  } else {
+    showToastMessage(result?.error || 'Import failed', 'error')
+  }
+}
 </script>

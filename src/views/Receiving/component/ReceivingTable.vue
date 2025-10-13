@@ -86,22 +86,11 @@
             <!-- Receiving ID with expand/collapse -->
             <td class="px-6 py-4">
               <div class="flex items-center gap-2" :style="{ 'padding-left': (row.depth * 2) + 'rem' }">
-                <button v-if="row.isReceiving && row.hasItems" @click="toggleExpand(row.id)"
-                  class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                  <svg class="w-4 h-4 transition-transform"
-                    :class="{ 'rotate-90': row.isExpanded }" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-                <div v-else class="w-4 h-4"></div>
+                <div class="w-4 h-4"></div>
 
-                <span class="font-mono text-sm" :class="{
-                    'text-gray-900 dark:text-white font-medium': row.depth === 0,
-                    'text-gray-700 dark:text-gray-300 font-normal': row.depth > 0
-                }">
+                <button @click="viewReceiving(row)" class="text-left font-bold text-sm text-blue-600 dark:text-blue-400 hover:underline">
                   {{ row.receivingCode || '-' }}
-                </span>
+                </button>
               </div>
             </td>
 
@@ -263,7 +252,7 @@ const props = defineProps({
 })
 
 // Emits for parent component
-const emit = defineEmits(['edit-receiving', 'delete-receiving'])
+const emit = defineEmits(['edit-receiving', 'delete-receiving', 'view-receiving'])
 
 const data = ref([])
 const loading = ref(false)
@@ -465,20 +454,7 @@ const visibleRows = computed(() => {
       totalReceivedQuantity: calculateTotalReceivedQuantity(receiving)
     })
 
-    // Add child items if expanded
-    if (isExpanded && hasItems) {
-      receiving.receivingItems.forEach((item) => {
-        rows.push({
-          ...item,
-          isReceiving: false,
-          depth: 1,
-          parentId: receiving.id,
-          receivingCode: receiving.receivingCode,
-          doNumber: receiving.doNumber,
-          uniqueId: `I-${item.id}`
-        })
-      })
-    }
+    // NOTE: Subitems removed — only parent receiving rows are shown in the table
   })
 
   return rows
@@ -585,6 +561,10 @@ const formatDate = (dateString) => {
 
 const editReceiving = (row) => {
   emit('edit-receiving', row)
+}
+
+const viewReceiving = (row) => {
+  emit('view-receiving', row)
 }
 
 const deleteReceiving = async (item) => {
