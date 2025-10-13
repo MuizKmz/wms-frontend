@@ -116,11 +116,22 @@
                   @click="editItem(item)"
                   class="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
                   aria-label="Edit"
-                  title="Edit Warehouse"
+                  title="Edit Rack"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+                <button
+                  @click="deleteItem(item)"
+                  class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                  aria-label="Delete"
+                  title="Delete Rack"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 </button>
               </div>
@@ -191,6 +202,7 @@
 
 <script setup>
 import { ref, onMounted, computed, watch, onBeforeUnmount } from "vue"
+import Swal from 'sweetalert2'
 
 // Props for receiving filters
 const props = defineProps({
@@ -200,7 +212,8 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['edit-item'])
+// Emit typed events so parent can distinguish edit/delete for rack vs warehouse
+const emit = defineEmits(['edit-item', 'delete-item'])
 
 const data = ref([])
 const loading = ref(false)
@@ -369,7 +382,58 @@ const handleClickOutside = (event) => {
 
 // Action handlers
 const editItem = (item) => {
-  emit('edit-item', item)
+  // Emit a typed payload so parent can route to the correct editor modal
+  emit('edit-item', { type: 'rack', item })
+}
+
+// Delete handler - calls API and emits a result object to parent
+const deleteItem = async (item) => {
+  if (!item || !item.id) return
+
+  // Confirmation dialog
+  const confirmResult = await Swal.fire({
+    title: 'Are you sure?',
+    text: `You are about to delete rack: ${item.rack || item.rackCode || item.id}. This action cannot be undone.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, delete it!'
+  })
+
+  if (!confirmResult.isConfirmed) {
+    emit('delete-item', { success: false, error: 'Cancelled by user' })
+    return
+  }
+
+  const result = { success: false, error: undefined }
+  try {
+    const resp = await fetch(`${API_URL}/${item.id}`, { method: 'DELETE' })
+    if (!resp.ok) {
+      const body = await resp.text()
+      throw new Error(body || 'Failed to delete rack')
+    }
+    result.success = true
+
+    // Show success notification
+    Swal.fire({
+      title: 'Deleted!',
+      text: `Rack ${item.rack || item.rackCode || item.id} has been deleted.`,
+      icon: 'success',
+      timer: 2000,
+      showConfirmButton: false
+    })
+
+    // Refresh local data
+    await fetchData()
+  } catch (e) {
+    console.error('Error deleting rack:', e)
+    result.error = e.message || String(e)
+    Swal.fire('Error', `Failed to delete rack: This rack has sections`, 'error')
+  }
+
+  // Emit delete result to parent; parent will refresh on success
+  emit('delete-item', result)
 }
 
 // Expose refresh method for parent component

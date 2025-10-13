@@ -45,7 +45,7 @@
           <div v-if="activeTab === 'warehouse'" class="flex gap-2 my-6">
             <button 
               @click="openAddWarehouseModal"
-        class="px-4 py-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
+              class="px-4 py-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Add New Warehouse
             </button>
           </div>
@@ -85,42 +85,55 @@
     <AddNewSection 
       ref="addSectionModalRef"
       @item-created="handleItemCreated"
+      @open-add-rack="handleOpenAddRack"
     />
     <EditWarehouse
       ref="editWarehouseModalRef"
+      @item-updated="handleItemUpdated"
+    />
+    <EditRack
+      ref="editRackModalRef"
+      :rackId="editingRack.id"
+      @item-updated="handleItemUpdated"
+    />
+    <EditSection
+      ref="editSectionModalRef"
+      :sectionId="editingSection.id"
       @item-updated="handleItemUpdated"
     />
   </AdminLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, nextTick } from "vue";
 // Assuming you have renamed/created these components
 import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
 // Tab Components
 import WarehouseListOverview from "./component/WarehouseListOverview.vue"; // Table/List for Warehouse
-import RackListOverview from "./component/RackListOverview.vue";         // Table/List for Rack
-import SectionListOverview from "./component/SectionListOverview.vue";   // Table/List for Section
+import RackListOverview from "./component/RackListOverview.vue";         // Table/List for Rack
+import SectionListOverview from "./component/SectionListOverview.vue";   // Table/List for Section
 // Modal Component
 import AddNewWarehouse from "./component/AddNewWarehouse.vue";
 import AddNewRack from "./component/AddNewRack.vue";
 import AddNewSection from "./component/AddNewSection.vue";
 import WarehouseFilters from "./component/WarehouseFilters.vue";
 import EditWarehouse from "./component/EditWarehouse.vue";
+import EditRack from "./component/EditRack.vue";
+import EditSection from "./component/EditSection.vue";
 
 // Interfaces (simplified for the new domain)
 interface Result {
-  success: boolean;
-  error?: string;
-  data?: {
-    itemName: string;
-  };
+  success: boolean;
+  error?: string;
+  data?: {
+    itemName: string;
+  };
 }
 
 interface Filters {
-  [key: string]: string | number | boolean | undefined;
+  [key: string]: string | number | boolean | undefined;
 }
 
 const currentPageTitle = ref("Warehouse");
@@ -129,6 +142,12 @@ const addWarehouseModalRef = ref<InstanceType<typeof AddNewWarehouse> | null>(nu
 const addRackModalRef = ref<InstanceType<typeof AddNewRack> | null>(null);
 const addSectionModalRef = ref<InstanceType<typeof AddNewSection> | null>(null);
 const editWarehouseModalRef = ref<InstanceType<typeof EditWarehouse> | null>(null);
+const editRackModalRef = ref<InstanceType<typeof EditRack> | null>(null);
+const editSectionModalRef = ref<InstanceType<typeof EditSection> | null>(null);
+// Reactive holder for the rack being edited so we can pass it as a prop to EditRack
+const editingRack = ref<any>({})
+// Reactive holder for the section being edited
+const editingSection = ref<any>({})
 // Generic ref for the currently active component (Table/Overview)
 const activeComponentRef = ref<any | null>(null); 
 const activeTab = ref('warehouse'); // Default to warehouse
@@ -140,51 +159,90 @@ const toastType = ref<'success' | 'error'>('success');
 
 // Function to show toast
 const showToastMessage = (message: string, type: 'success' | 'error' = 'success') => {
-  toastMessage.value = message;
-  toastType.value = type;
-  showToast.value = true;
+  toastMessage.value = message;
+  toastType.value = type;
+  showToast.value = true;
 
-  // Hide toast after 2 seconds
-  setTimeout(() => {
-    showToast.value = false;
-  }, 2000);
+  // Hide toast after 2 seconds
+  setTimeout(() => {
+    showToast.value = false;
+  }, 2000);
 };
 
 // Handle item creation response (e.g., Warehouse created) - TOAST REMAINS HERE
 const handleItemCreated = async (result: Result) => {
-  if (result.success) {
-    showToastMessage('Item has been successfully added', 'success');
-    // Refresh the data on the active component
-    if (activeComponentRef.value && activeComponentRef.value.refreshData) {
-      await activeComponentRef.value.refreshData();
-    }
-  } else {
-    showToastMessage(result.error || 'Failed to create item', 'error');
-  }
+  if (result.success) {
+    showToastMessage('Item has been successfully added', 'success');
+    // Refresh the data on the active component
+    if (activeComponentRef.value && activeComponentRef.value.refreshData) {
+      await activeComponentRef.value.refreshData();
+    }
+  } else {
+    showToastMessage(result.error || 'Failed to create item', 'error');
+  }
 };
 
 // Handle item deletion response - TOAST IS REMOVED HERE
 const handleDeleteItem = async (result: Result) => {
-  // The success/error toast logic is removed from this function.
-  if (result.success) {
-    // Only refresh table on successful deletion
-    if (activeComponentRef.value && activeComponentRef.value.refreshData) {
-      await activeComponentRef.value.refreshData();
-    }
-  } else {
-    // Only log error on failure. No toast shown.
-    console.error('Failed to delete item:', result.error);
-  }
+  // The success/error toast logic is removed from this function.
+  if (result.success) {
+    // Only refresh table on successful deletion
+    if (activeComponentRef.value && activeComponentRef.value.refreshData) {
+      await activeComponentRef.value.refreshData();
+    }
+  } else {
+    // Only log error on failure. No toast shown.
+    console.error('Failed to delete item:', result.error);
+  }
 };
 
 // Handle edit action coming from child list component
-const handleEditItem = async (item: any) => {
-  if (!item) return
+// Handle edit action coming from child list components
+// The child components emit a typed payload: { type: 'warehouse'|'rack'|'section', item }
+const handleEditItem = async (payload: any) => {
+  if (!payload) return
+
+  // Backwards-compatible: if parent receives raw item (no type), assume warehouse
+  const type = payload.type || 'warehouse'
+  const item = payload.item || payload
+
+  if (type === 'warehouse') {
+    if (editWarehouseModalRef.value && editWarehouseModalRef.value.openModal) {
+      editWarehouseModalRef.value.openModal(item)
+    } else {
+      console.warn('EditWarehouse modal ref not available')
+    }
+    return
+  }
+
+  if (type === 'rack') {
+    // Ensure the EditRack component receives the rack data via prop before opening
+    editingRack.value = item
+    // Wait for the prop to propagate to the child component
+    await nextTick()
+    if (editRackModalRef.value && editRackModalRef.value.openModal) {
+      editRackModalRef.value.openModal()
+    } else {
+      console.warn('EditRack modal ref not available')
+    }
+    return
+  }
+
+  if (type === 'section') {
+    // Ensure the EditSection component receives the section id before opening
+    editingSection.value = item
+    await nextTick()
+    if (editSectionModalRef.value && editSectionModalRef.value.openModal) {
+      editSectionModalRef.value.openModal()
+    } else {
+      console.warn('EditSection modal ref not available')
+    }
+    return
+  }
+
+  // For sections and other types, fall back to warehouse editor for now
   if (editWarehouseModalRef.value && editWarehouseModalRef.value.openModal) {
-    // openModal expects the warehouse object
     editWarehouseModalRef.value.openModal(item)
-  } else {
-    console.warn('EditWarehouse modal ref not available')
   }
 }
 
@@ -200,58 +258,72 @@ const handleItemUpdated = async (result: Result) => {
   }
 }
 
+// FIXED: Handle opening Add Rack modal from Section modal
+const handleOpenAddRack = ({ warehouseId }: { warehouseId: number }) => {
+  console.log('Opening Add Rack modal with warehouseId:', warehouseId);
+  
+  if (addRackModalRef.value && addRackModalRef.value.openModal) {
+    // Pass the warehouseId to pre-select the warehouse in the rack modal
+    addRackModalRef.value.openModal(warehouseId);
+  } else {
+    console.warn('AddRack modal ref not available');
+  }
+}
+
 // Define tabs with components based on the image
 const inventoryTabs = [
-  {
-    id: 'warehouse',
-    label: 'Warehouse List Overview',
-    component: WarehouseListOverview
-  },
-  {
-    id: 'rack',
-    label: 'Rack List Overview',
-    component: RackListOverview
-  },
-  {
-    id: 'section',
-    label: 'Section List Overview',
-    component: SectionListOverview
-  }
+  {
+    id: 'warehouse',
+    label: 'Warehouse List Overview',
+    component: WarehouseListOverview
+  },
+  {
+    id: 'rack',
+    label: 'Rack List Overview',
+    component: RackListOverview
+  },
+  {
+    id: 'section',
+    label: 'Section List Overview',
+    component: SectionListOverview
+  }
 ];
 
 // Computed property to determine which component to render
 const currentComponent = computed(() => {
-  return inventoryTabs.find(tab => tab.id === activeTab.value)?.component;
+  return inventoryTabs.find(tab => tab.id === activeTab.value)?.component;
 });
 
 const handleFilterChange = (filters: Filters) => {
-  activeFilters.value = filters;
-  console.log('Filters applied:', filters);
+  activeFilters.value = filters;
+  console.log('Filters applied:', filters);
 };
 
 const handleTabChange = (tabId: string) => {
-  activeTab.value = tabId;
+  activeTab.value = tabId;
 };
 
 // Function specific to the "Add New Warehouse" button
 const openAddWarehouseModal = () => {
-  if (addWarehouseModalRef.value) {
-    addWarehouseModalRef.value.openModal();
-  }
+  if (addWarehouseModalRef.value) {
+    addWarehouseModalRef.value.openModal();
+  }
 };
+
 const openAddRackModal = () => {
-  if (addRackModalRef.value) {
-    addRackModalRef.value.openModal();
-  }
+  if (addRackModalRef.value) {
+    addRackModalRef.value.openModal();
+  }
 };
+
 const openAddSectionModal = () => {
-  if (addSectionModalRef.value) {
-    addSectionModalRef.value.openModal();
-  }
+  if (addSectionModalRef.value) {
+    addSectionModalRef.value.openModal();
+  }
 };
 
 const handleBulkDelete = () => {
-  console.log(`Bulk delete clicked for ${activeTab.value}`);
-  // Implement bulk delete functionality specific to the active tab's component
+  console.log(`Bulk delete clicked for ${activeTab.value}`);
+  // Implement bulk delete functionality specific to the active tab's component
 };
 </script>

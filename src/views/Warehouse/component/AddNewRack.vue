@@ -383,17 +383,14 @@ const openDropdowns = reactive({ status: false, warehouse: false, rackType: fals
 const fetchWarehouses = async () => {
   try {
     const response = await fetch('/api/warehouse')
-    // Handle specific errors like 404/403/401 here if known
     if (!response.ok) {
-        // Attempt to parse a JSON error message from server
-        const errorData = await response.json().catch(() => ({ message: response.statusText }));
-        throw new Error(errorData.message || `Failed to fetch warehouses with status: ${response.status}`);
+      const errorData = await response.json().catch(() => ({ message: response.statusText }))
+      throw new Error(errorData.message || `Failed to fetch warehouses with status: ${response.status}`)
     }
     const json = await response.json()
     warehouses.value = json || []
   } catch (e) {
     console.error('Error fetching warehouses:', e)
-    // Display error to the user if fetch fails
     errors.submit = e.message || 'Failed to load warehouses for selection.'
   }
 }
@@ -431,7 +428,6 @@ const unlockScroll = () => {
 
 /* Validation */
 const validateForm = () => {
-  // Clear all previous errors
   Object.keys(errors).forEach(key => errors[key] = '')
 
   let isValid = true
@@ -465,14 +461,11 @@ const validateForm = () => {
     isValid = false
   }
 
-  // Check if capacity is a number and is valid
   const capacityNumber = Number(form.capacity)
   if (isNaN(capacityNumber) || capacityNumber < 1) {
     errors.capacity = 'Capacity must be a number greater than or equal to 1'
     isValid = false
-  }
-  // Optional: check if it's an integer
-  else if (capacityNumber % 1 !== 0) {
+  } else if (capacityNumber % 1 !== 0) {
     errors.capacity = 'Capacity must be a whole number'
     isValid = false
   }
@@ -501,18 +494,15 @@ watch(() => form.remarks, () => { if (errors.remarks) errors.remarks = '' })
 
 /* helpers */
 const toggleDropdown = (name) => {
-  // Close other open dropdowns
   Object.keys(openDropdowns).forEach(k => { if (k !== name) openDropdowns[k] = false })
   openDropdowns[name] = !openDropdowns[name]
 
   if (openDropdowns[name]) {
     nextTick(() => {
-      // Focus on the first menu item for accessibility
       const dropdownRef = name === 'warehouse' ? warehouseDropdownRef : (name === 'rackType' ? rackTypeDropdownRef : statusDropdownRef)
       dropdownRef.value?.querySelector('a[role="menuitem"]')?.focus()
     })
   } else {
-    // Re-focus on the button after closing the dropdown
     const dropdownRef = name === 'warehouse' ? warehouseDropdownRef : (name === 'rackType' ? rackTypeDropdownRef : statusDropdownRef)
     dropdownRef.value?.querySelector('button')?.focus()
   }
@@ -537,7 +527,6 @@ const handleClickOutside = (event) => {
     rackType: rackTypeDropdownRef.value
   }
 
-  // Check each open dropdown
   Object.keys(openDropdowns).forEach(k => {
     if (openDropdowns[k] && dropdowns[k] && !dropdowns[k].contains(event.target)) {
       openDropdowns[k] = false
@@ -545,29 +534,24 @@ const handleClickOutside = (event) => {
   })
 }
 
-/**
- * Traps focus within the modal for accessibility.
- * @param {KeyboardEvent} event 
- */
+/* Tab key handler for focus trap */
 const handleTabKey = (event) => {
   if (!panelRef.value) return
 
   const focusableElements = panelRef.value.querySelectorAll(
     'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
   )
-  if (focusableElements.length === 0) return // No focusable elements
+  if (focusableElements.length === 0) return
 
   const firstFocusable = focusableElements[0]
   const lastFocusable = focusableElements[focusableElements.length - 1]
 
   if (event.shiftKey) {
-    /* shift + tab */
     if (document.activeElement === firstFocusable) {
       lastFocusable.focus()
       event.preventDefault()
     }
   } else {
-    /* tab */
     if (document.activeElement === lastFocusable) {
       firstFocusable.focus()
       event.preventDefault()
@@ -575,44 +559,47 @@ const handleTabKey = (event) => {
   }
 }
 
-
 /* open/close modal */
-const openModal = async () => {
-  // Reset form
-  form.warehouseId = null
+const openModal = async (preSelectedWarehouseId = null) => {
+  // Reset form with optional pre-selected warehouse
+  form.warehouseId = preSelectedWarehouseId || null
   form.rackCode = ''
   form.rackName = ''
   form.rackType = ''
   form.capacity = 1
   form.status = 'Active'
   form.remarks = ''
-  selectedWarehouseName.value = ''
-
+  
   // Reset errors
   Object.keys(errors).forEach(key => errors[key] = '')
 
-  // Fetch warehouses
+  // Fetch warehouses first
   await fetchWarehouses()
+
+  // If warehouse is pre-selected, set the display name
+  if (preSelectedWarehouseId && warehouses.value.length > 0) {
+    const warehouse = warehouses.value.find(w => w.id === preSelectedWarehouseId)
+    if (warehouse) {
+      selectedWarehouseName.value = warehouse.warehouseCode
+    }
+  } else {
+    selectedWarehouseName.value = ''
+  }
 
   isOpen.value = true
   lockScroll()
   await nextTick()
-  // Focus the first focusable element inside the panelRef (The close button is a good target)
   panelRef.value?.querySelector('button[aria-label="Close modal"]')?.focus()
 }
 
 const closeModal = async () => {
-  // Close all dropdowns
   openDropdowns.status = false
   openDropdowns.warehouse = false
   openDropdowns.rackType = false
   
   isOpen.value = false
 
-  // Reset form after modal is closed
   await nextTick()
-  // The reset code is already within openModal, but we can repeat it here for clarity/safety if needed
-  // ...
 }
 
 /* submit */
@@ -622,20 +609,17 @@ const submitForm = async () => {
   }
 
   isSubmitting.value = true
-  errors.submit = '' // Clear submission error before new attempt
+  errors.submit = ''
 
   try {
     const submissionData = {
       warehouseId: form.warehouseId,
-      // Convert rackCode to uppercase before submission
       rackCode: form.rackCode.toUpperCase(),
       rackName: form.rackName,
       rackType: form.rackType,
-      // Ensure capacity is a valid integer before sending
       capacity: Number(form.capacity),
       status: form.status,
-      // Ensure empty string remarks are sent as null
-      remarks: form.remarks || null
+      remark: form.remarks || null
     }
 
     console.log('Submitting data:', submissionData)
@@ -649,15 +633,12 @@ const submitForm = async () => {
     })
 
     if (!response.ok) {
-      // 4xx or 5xx response
-      // THIS IS WHERE YOUR SERVER ERROR (500) IS HANDLED
       let errorMessage = `Failed to create rack (HTTP ${response.status}).`
       try {
         const errorData = await response.json()
-        errorMessage = errorData.message || errorMessage // Use the server's specific message if available
+        errorMessage = errorData.message || errorMessage
       } catch (e) {
-        // Fallback for non-JSON error responses (like a generic 500 HTML page)
-        console.error("Server returned non-JSON error response:", response.statusText);
+        console.error("Server returned non-JSON error response:", response.statusText)
       }
       throw new Error(errorMessage)
     }
@@ -667,15 +648,11 @@ const submitForm = async () => {
 
     await closeModal()
 
-    // Notify parent component of successful creation
     emit('item-created', { success: true, data })
 
   } catch (error) {
     console.error('Error creating rack:', error)
-    // Display the specific error message, including the 500 message captured above
     errors.submit = error.message || 'An unknown error occurred. Failed to create rack.'
-    
-    // Optionally emit failure to parent
     emit('item-created', { success: false, error: error.message || 'Failed to create rack' })
   } finally {
     isSubmitting.value = false
