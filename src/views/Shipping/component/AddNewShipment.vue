@@ -323,8 +323,8 @@ const form = reactive({
   carrier: '',
   order: '',
   destination: '',
-  shippingDate: new Date().toISOString(),
-  estimatedDeliveryDate: new Date().toISOString(),
+  shippingDate: new Date().toISOString().split('T')[0],
+  estimatedDeliveryDate: new Date().toISOString().split('T')[0],
   status: '',
   remark: ''
 })
@@ -500,8 +500,8 @@ const openModal = async () => {
   form.order = ''
   form.carrier = ''
   form.destination = ''
-  form.shippingDate = new Date().toISOString()
-  form.estimatedDeliveryDate = new Date().toISOString()
+  form.shippingDate = new Date().toISOString().split('T')[0]
+  form.estimatedDeliveryDate = new Date().toISOString().split('T')[0]
   form.status = ''
   form.remark = ''
 
@@ -520,7 +520,7 @@ const openModal = async () => {
       dateFormat: 'Y-m-d',
       defaultDate: form.shippingDate ? new Date(form.shippingDate) : new Date(),
       onChange: (selectedDates: Date[]) => {
-        if (selectedDates && selectedDates[0]) form.shippingDate = selectedDates[0].toISOString()
+        if (selectedDates && selectedDates[0]) form.shippingDate = selectedDates[0].toISOString().split('T')[0]
       }
     })
   }
@@ -530,7 +530,7 @@ const openModal = async () => {
       dateFormat: 'Y-m-d',
       defaultDate: form.estimatedDeliveryDate ? new Date(form.estimatedDeliveryDate) : new Date(),
       onChange: (selectedDates: Date[]) => {
-        if (selectedDates && selectedDates[0]) form.estimatedDeliveryDate = selectedDates[0].toISOString()
+        if (selectedDates && selectedDates[0]) form.estimatedDeliveryDate = selectedDates[0].toISOString().split('T')[0]
       }
     })
   }
@@ -558,8 +558,8 @@ const closeModal = async () => {
   form.order = ''
   form.carrier = ''
   form.destination = ''
-  form.shippingDate = new Date().toISOString()
-  form.estimatedDeliveryDate = new Date().toISOString()
+  form.shippingDate = new Date().toISOString().split('T')[0]
+  form.estimatedDeliveryDate = new Date().toISOString().split('T')[0]
   form.status = ''
   form.remark = ''
 
