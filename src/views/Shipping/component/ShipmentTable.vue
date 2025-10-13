@@ -1,0 +1,625 @@
+<template>
+  <div class="overflow-hidden">
+
+    <!-- Results count -->
+    <div class="mb-4">
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Showing {{ filteredData.length }} shipment items
+      </p>
+    </div>
+
+    <div class="max-w-full overflow-x-auto custom-scrollbar">
+      <table class="min-w-full">
+        <thead>
+          <tr class="border-b border-gray-200 dark:border-gray-700">
+            <th class="px-6 py-3 text-left w-12">
+              <input
+                type="checkbox"
+                class="checkbox checkbox-primary checkbox-sm"
+                aria-label="select all"
+                :checked="selectAll"
+                @change="toggleSelectAll"
+              />
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+                Tracking Code
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+                Order Number
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+                Shipping Carier
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+                Destination
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+                Shipping Date
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+                Estimated Delivery Date
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+                Remark
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+                Action
+              </p>
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+          <tr
+            v-for="item in paginatedData"
+            :key="item.id"
+            class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+          >
+            <td class="px-6 py-4">
+              <input
+                type="checkbox"
+                class="checkbox checkbox-primary checkbox-sm"
+                aria-label="select item"
+                :checked="isSelected(item.id)"
+                @change="toggleItemSelection(item.id)"
+              />
+            </td>
+
+            <!-- Tracking Code -->
+            <td class="px-6 py-4">
+              <span class="text-sm font-medium text-gray-900 dark:text-white">
+                {{ item.trackingCode || '-' }}
+              </span>
+            </td>
+
+            <!-- Order No -->
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-900 dark:text-white">
+                {{ item.order || '-' }}
+              </span>
+            </td>
+
+            <!-- Shipping Carier -->
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-900 dark:text-white">
+                {{ item.carrier || '-' }}
+              </span>
+            </td>
+
+            <!-- Destination -->
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-900 dark:text-white">
+                {{ item.destination || '-' }}
+              </span>
+            </td>
+
+            <!-- Shipping Date -->
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-900 dark:text-white">
+                {{ formatDate(item.shippingDate) }}
+              </span>
+            </td>
+
+            <!-- Estimated Delivery Date -->
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-900 dark:text-white">
+                {{ formatDate(item.estimatedDeliveryDate) }}
+              </span>
+            </td>
+
+            <!-- Remark -->
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-900 dark:text-white">
+                {{ item.remark || '-' }}
+              </span>
+            </td>
+
+            <!-- Actions -->
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2">
+                <button
+                  @click="generateEPC(item)"
+                  class="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                  title="Generate EPC"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </button>
+                <button
+                  @click="editShipment(item)"
+                  class="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
+                  aria-label="Edit"
+                  title="Edit Shipment"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+                <button
+                  @click="deleteShipment(item)"
+                  class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                  aria-label="Delete"
+                  title="Delete Shipment"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div v-if="totalPages > 1" class="mt-6 flex justify-center">
+        <nav class="flex items-center gap-x-1">
+          <!-- Previous -->
+          <button
+            type="button"
+            class="btn btn-text dark:text-gray-300"
+            :disabled="currentPage === 1"
+            @click="changePage(currentPage - 1)"
+          >
+            Previous
+          </button>
+
+          <!-- Pages -->
+          <div class="flex items-center gap-x-1">
+            <button
+              v-for="page in totalPages"
+              :key="page"
+              type="button"
+              class="btn btn-text btn-square aria-[current='page']:text-bg-primary dark:text-gray-300"
+              :class="{ 'text-bg-primary': page === currentPage }"
+              :aria-current="page === currentPage ? 'page' : null"
+              @click="changePage(page)"
+            >
+              {{ page }}
+            </button>
+          </div>
+
+          <!-- Next -->
+          <button
+            type="button"
+            class="btn btn-text dark:text-gray-300"
+            :disabled="currentPage === totalPages"
+            @click="changePage(currentPage + 1)"
+          >
+            Next
+          </button>
+        </nav>
+      </div>
+
+      <!-- Loading -->
+      <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
+        <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
+        <p>Loading shipments...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div v-if="!loading && filteredData.length === 0" class="p-8 text-center text-gray-500">
+        <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+        </svg>
+        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
+          No shipments found
+        </p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Try adjusting your filters or add a new shipment.
+        </p>
+      </div>
+
+      <!-- Error -->
+      <div v-if="error" class="p-8 text-center text-red-500 text-sm">
+        <svg class="mx-auto h-12 w-12 text-red-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z" />
+        </svg>
+        <p class="font-medium">Error loading shipments</p>
+        <p class="text-xs mt-1">{{ error }}</p>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, computed, watch } from "vue"
+import Swal from 'sweetalert2'
+
+// Props for receiving filters
+const props = defineProps({
+  filters: {
+    type: Object,
+    default: () => ({})
+  }
+})
+
+// Emits for parent component
+const emit = defineEmits(['generate-epc', 'edit-shipment', 'delete-shipment'])
+
+const data = ref([])
+const loading = ref(false)
+const error = ref(null)
+const selectedItems = ref([])
+const selectAll = ref(false)
+
+// API endpoint for shipments
+const API_URL = '/api/shipping'
+
+// Function to fetch shipments from the API
+const fetchShipments = async () => {
+  loading.value = true
+  error.value = null
+  try {
+    const response = await fetch(API_URL)
+
+    if (!response.ok) throw new Error("Failed to fetch shipments")
+
+    const json = await response.json()
+    // Normalize server shipment objects to the shape used by the table
+    data.value = (json || []).map((p) => {
+      // compute quantity if inventory relation is included
+      let quantity = 0
+
+
+      return {
+        id: p.id,
+        trackingCode: p.code || p.trackingCode || '',
+        order: p.order ? (p.order.name || p.order.orderNo) : (p.order || ''),
+        carrier: p.carrier || p.carrier || '',
+        destination: p.destination || p.destination || '',
+        shippingDate: p.shippingDate || p.shippingDate || '',
+        estimatedDeliveryDate: p.estimatedDeliveryDate || p.estimatedDeliveryDate || '',
+        remark: p.remarks || p.remark || p.remark || '',
+        raw: p,
+      }
+    })
+  } catch (e) {
+    error.value = e.message
+    console.error('Error fetching shipments:', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+// Fetch data on component mount
+onMounted(() => {
+  fetchShipments()
+})
+
+// --- Checkbox/Selection Logic ---
+
+// Computed list of IDs for currently visible (paginated) data
+const visibleItemIds = computed(() => {
+  return paginatedData.value.map(item => item.id)
+})
+
+// Update select all checkbox state
+const updateSelectAllState = () => {
+  const visibleIds = visibleItemIds.value
+  if (visibleIds.length === 0) {
+    selectAll.value = false
+    return
+  }
+  selectAll.value = visibleIds.every(id => selectedItems.value.includes(id))
+}
+
+// Toggle select all
+const toggleSelectAll = () => {
+  if (selectAll.value) {
+    selectedItems.value = selectedItems.value.filter(id => !visibleItemIds.value.includes(id))
+    selectAll.value = false
+  } else {
+    const visibleIds = visibleItemIds.value
+    visibleIds.forEach(id => {
+      if (!selectedItems.value.includes(id)) {
+        selectedItems.value.push(id)
+      }
+    })
+    selectAll.value = true
+  }
+}
+
+// Toggle individual item selection
+const toggleItemSelection = (itemId) => {
+  const index = selectedItems.value.indexOf(itemId)
+  if (index > -1) {
+    selectedItems.value.splice(index, 1)
+  } else {
+    selectedItems.value.push(itemId)
+  }
+  updateSelectAllState()
+}
+
+// Check if item is selected
+const isSelected = (itemId) => {
+  return selectedItems.value.includes(itemId)
+}
+
+// Format date
+const formatDate = (dateString) => {
+  if (!dateString) return '-'
+  const date = new Date(dateString)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${year}-${month}-${day} ${hours}:${minutes}`
+}
+
+// --- Actions ---
+
+// Edit shipment
+const editShipment = (shipment) => {
+  emit('edit-shipment', shipment)
+}
+
+// Delete shipment with SweetAlert2
+const deleteShipment = async (shipment) => {
+  const result = await Swal.fire({
+    title: 'Are you sure?',
+    text: `You are about to delete shipment: ${shipment.trackingCode}. This action cannot be undone.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, delete it!'
+  })
+
+  if (!result.isConfirmed) {
+    return
+  }
+
+  try {
+    const shipmentId = shipment.id
+    if (!shipmentId) {
+      throw new Error('Shipment identifier not found.')
+    }
+
+    const response = await fetch(`${API_URL}/${shipmentId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to delete shipment')
+    }
+
+    Swal.fire({
+      title: 'Deleted!',
+      text: `Shipment ${shipment.trackingCode} has been deleted.`,
+      icon: 'success',
+      timer: 2000,
+      showConfirmButton: false
+    })
+
+    emit('delete-shipment', { success: true, data: { trackingCode: shipment.trackingCode, id: shipment.id } })
+
+    const index = selectedItems.value.indexOf(shipment.id)
+    if (index > -1) {
+      selectedItems.value.splice(index, 1)
+    }
+
+    await fetchShipments()
+
+    adjustPageAfterDeletion()
+  } catch (error) {
+    console.error('Error deleting shipment:', error)
+    emit('delete-shipment', { success: false, error: error.message })
+    Swal.fire('Error', `Failed to delete shipment: ${error.message}`, 'error')
+  }
+}
+
+// Bulk delete selected shipments
+const bulkDelete = async () => {
+  if (!selectedItems.value || selectedItems.value.length === 0) {
+    Swal.fire('No Selection', 'Please select at least one shipment to delete.', 'info')
+    return { success: false, error: 'No shipments selected' }
+  }
+
+  const confirmResult = await Swal.fire({
+    title: 'Confirm Bulk Deletion',
+    text: `Are you sure you want to delete ${selectedItems.value.length} selected shipment(s)? This cannot be undone.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, proceed with bulk delete'
+  })
+
+  if (!confirmResult.isConfirmed) {
+    return { success: false, error: 'Cancelled by user' }
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/bulk-delete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: selectedItems.value })
+    })
+
+    if (!response.ok) {
+      const err = await response.text()
+      throw new Error(err || 'Failed to bulk delete shipments')
+    }
+
+    const result = await response.json()
+
+    const deletedCount = Array.isArray(result.deletedIds) ? result.deletedIds.length : 0
+    const blocked = result.blocked || []
+
+    selectedItems.value = []
+    selectAll.value = false
+    await fetchShipments()
+
+    adjustPageAfterDeletion()
+
+    if (deletedCount > 0 && blocked.length === 0) {
+      emit('delete-shipment', { success: true, data: { count: deletedCount } })
+      Swal.fire('Success', `${deletedCount} shipments deleted successfully.`, 'success')
+      return { success: true, data: result }
+    } else if (deletedCount > 0 && blocked.length > 0) {
+      const message = `${deletedCount} deleted, ${blocked.length} blocked due to existing relations`
+      emit('delete-shipment', { success: false, error: message, data: { deletedCount, blocked } })
+      Swal.fire('Partial Success', message, 'warning')
+      return { success: false, error: message, data: result }
+    } else {
+      const message = blocked.length > 0 ? `${blocked.length} shipments were blocked from deletion due to existing relations.` : 'No shipments were deleted.'
+      emit('delete-shipment', { success: false, error: message, data: result })
+      Swal.fire('Deletion Failed', message, 'error')
+      return { success: false, error: message }
+    }
+
+  } catch (error) {
+    console.error('Error bulk deleting shipments:', error)
+    emit('delete-shipment', { success: false, error: error.message })
+    Swal.fire('Error', `Failed to bulk delete shipments: ${error.message}`, 'error')
+    return { success: false, error: error.message }
+  }
+}
+
+// Computed property for filtered data
+const filteredData = computed(() => {
+  if (!props.filters) return data.value
+
+  return data.value.filter((item) => {
+    const filters = props.filters
+
+    if (
+      filters.trackingCode &&
+      !item.trackingCode?.toLowerCase().includes(filters.trackingCode.toLowerCase())
+    ) {
+      return false
+    }
+    if (
+      filters.carrier &&
+      !item.carrier?.toLowerCase().includes(filters.carrier.toLowerCase())
+    ) {
+      return false
+    }
+    if (
+      filters.order &&
+      !item.order?.toLowerCase().includes(filters.order.toLowerCase())
+    ) {
+      return false
+    }
+    if (
+      filters.destination &&
+      !item.destination?.toLowerCase().includes(filters.destination.toLowerCase())
+    ) {
+      return false
+    }
+    if (filters.status && item.status !== filters.status) {
+      return false
+    }
+    if (filters.date && item.shippingDate) {
+      const filterDate = new Date(filters.date)
+      const itemDate = new Date(item.shippingDate)
+      // Compare year, month, and day only
+      if (
+        filterDate.getFullYear() !== itemDate.getFullYear() ||
+        filterDate.getMonth() !== itemDate.getMonth() ||
+        filterDate.getDate() !== itemDate.getDate()
+      ) {
+        return false
+      }
+    }
+
+    return true
+  })
+})
+
+// Pagination
+const currentPage = ref(1)
+const itemsPerPage = ref(5)
+const totalPages = computed(() =>
+  Math.ceil(filteredData.value.length / itemsPerPage.value)
+)
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  return filteredData.value.slice(start, end)
+})
+const changePage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+  }
+}
+
+// Helper function to adjust page after deletion
+const adjustPageAfterDeletion = () => {
+  const totalItems = filteredData.value.length
+  const maxPage = Math.ceil(totalItems / itemsPerPage.value) || 1
+
+  if (currentPage.value > maxPage) {
+    currentPage.value = maxPage
+  }
+}
+
+// Watch for filter changes and pagination changes to update 'select all' state
+watch([() => props.filters, currentPage], () => {
+  setTimeout(updateSelectAllState, 0)
+}, { deep: true })
+
+// Expose refresh method for parent component
+const refreshData = () => {
+  fetchShipments()
+  selectedItems.value = []
+  selectAll.value = false
+}
+
+defineExpose({ refreshData, selectedItems, bulkDelete })
+
+// Watch for filter changes
+watch(
+  () => props.filters,
+  (newFilters) => {
+    console.log("Filters updated:", newFilters)
+    currentPage.value = 1
+  },
+  { deep: true }
+)
+</script>
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+</style>
