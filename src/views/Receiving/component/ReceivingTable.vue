@@ -114,36 +114,36 @@
 
             <!-- Product Name -->
             <td class="px-6 py-4">
-              <span class="text-sm text-gray-900 dark:text-white">
-                {{ row.isReceiving ? '-' : (row.product?.name || '-') }}
+              <span class="text-sm text-gray-900 dark:text-white" :title="row.isReceiving && row.aggregatedProducts ? row.aggregatedProducts.full : ''">
+                {{ row.isReceiving ? (row.aggregatedProducts?.display || '-') : (row.product?.name || '-') }}
               </span>
             </td>
 
             <!-- Expected Quantity -->
             <td class="px-6 py-4">
               <span class="text-sm text-gray-900 dark:text-white">
-                {{ row.isReceiving ? '-' : (row.expectedQuantity || '-') }}
+                {{ row.isReceiving ? (row.totalExpectedQuantity || '-') : (row.expectedQuantity || '-') }}
               </span>
             </td>
 
             <!-- Received Quantity -->
             <td class="px-6 py-4">
               <span class="text-sm text-gray-900 dark:text-white">
-                {{ row.isReceiving ? '-' : (row.quantity || '-') }}
+                {{ row.isReceiving ? (row.totalReceivedQuantity || '-') : (row.quantity || '-') }}
               </span>
             </td>
 
             <!-- Receiving Source -->
             <td class="px-6 py-4">
-              <span class="text-sm text-gray-900 dark:text-white">
-                {{ row.isReceiving ? (row.source || '-') : '-' }}
+              <span class="text-sm text-gray-900 dark:text-white" :title="row.isReceiving && row.aggregatedSources ? row.aggregatedSources.full : ''">
+                {{ row.isReceiving ? (row.aggregatedSources?.display || '-') : '-' }}
               </span>
             </td>
 
             <!-- Receiving Purpose -->
             <td class="px-6 py-4">
-              <span class="text-sm text-gray-900 dark:text-white">
-                {{ row.isReceiving ? '-' : (row.purpose || 'Raw Material') }}
+              <span class="text-sm text-gray-900 dark:text-white" :title="row.isReceiving && row.aggregatedPurposes ? row.aggregatedPurposes.full : ''">
+                {{ row.isReceiving ? (row.aggregatedPurposes?.display || '-') : (row.purpose || 'Raw Material') }}
               </span>
             </td>
 
@@ -300,6 +300,115 @@ onMounted(() => {
 })
 
 // ------------------------------------------------
+// --- Helper Functions for Aggregation ---
+// ------------------------------------------------
+
+// Function to aggregate products from receiving items
+const aggregateProducts = (receiving) => {
+  if (!receiving.receivingItems || receiving.receivingItems.length === 0) {
+    return { display: '-', full: '' }
+  }
+
+  const products = receiving.receivingItems.map(item => item.product?.name || 'Unknown')
+  const uniqueProducts = [...new Set(products)]
+  const maxDisplay = 2
+  const displayProducts = uniqueProducts.slice(0, maxDisplay)
+  const remaining = uniqueProducts.length - maxDisplay
+
+  if (remaining > 0) {
+    return {
+      display: displayProducts.join(', ') + `, +${remaining} more`,
+      full: uniqueProducts.join(', ')
+    }
+  }
+
+  return {
+    display: displayProducts.join(', '),
+    full: displayProducts.join(', ')
+  }
+}
+
+// Function to aggregate sources from receiving items
+const aggregateSources = (receiving) => {
+  if (!receiving.receivingItems || receiving.receivingItems.length === 0) {
+    return { display: '-', full: '' }
+  }
+
+  const sources = receiving.receivingItems.map(item => item.source || 'Unknown').filter(s => s !== 'Unknown')
+  const uniqueSources = [...new Set(sources)]
+  const maxDisplay = 2
+  const displaySources = uniqueSources.slice(0, maxDisplay)
+  const remaining = uniqueSources.length - maxDisplay
+
+  if (uniqueSources.length === 0) {
+    return { display: '-', full: '' }
+  }
+
+  if (remaining > 0) {
+    return {
+      display: displaySources.join(', ') + `, +${remaining} more`,
+      full: uniqueSources.join(', ')
+    }
+  }
+
+  return {
+    display: displaySources.join(', '),
+    full: displaySources.join(', ')
+  }
+}
+
+// Function to aggregate purposes from receiving items
+const aggregatePurposes = (receiving) => {
+  if (!receiving.receivingItems || receiving.receivingItems.length === 0) {
+    return { display: '-', full: '' }
+  }
+
+  const purposes = receiving.receivingItems.map(item => item.purpose || 'Raw Material')
+  const uniquePurposes = [...new Set(purposes)]
+  const maxDisplay = 2
+  const displayPurposes = uniquePurposes.slice(0, maxDisplay)
+  const remaining = uniquePurposes.length - maxDisplay
+
+  if (remaining > 0) {
+    return {
+      display: displayPurposes.join(', ') + `, +${remaining} more`,
+      full: uniquePurposes.join(', ')
+    }
+  }
+
+  return {
+    display: displayPurposes.join(', '),
+    full: displayPurposes.join(', ')
+  }
+}
+
+// Function to calculate total expected quantity
+const calculateTotalExpectedQuantity = (receiving) => {
+  if (!receiving.receivingItems || receiving.receivingItems.length === 0) {
+    return '-'
+  }
+
+  const total = receiving.receivingItems.reduce((sum, item) => {
+    return sum + (item.expectedQuantity || 0)
+  }, 0)
+
+  return total > 0 ? total : '-'
+}
+
+// Function to calculate total received quantity
+const calculateTotalReceivedQuantity = (receiving) => {
+  if (!receiving.receivingItems || receiving.receivingItems.length === 0) {
+    return '-'
+  }
+
+  const total = receiving.receivingItems.reduce((sum, item) => {
+    return sum + (item.quantity || 0)
+  }, 0)
+
+  return total > 0 ? total : '-'
+}
+
+// ------------------------------------------------
 // --- Filtering & Pagination Logic ---
 // ------------------------------------------------
 
@@ -341,14 +450,19 @@ const visibleRows = computed(() => {
     const hasItems = receiving.receivingItems && receiving.receivingItems.length > 0
     const isExpanded = expandedRows.value.includes(receiving.id)
 
-    // Add parent receiving row
+    // Add parent receiving row with aggregated data
     rows.push({
       ...receiving,
       isReceiving: true,
       depth: 0,
       hasItems: hasItems,
       isExpanded: isExpanded,
-      uniqueId: `R-${receiving.id}`
+      uniqueId: `R-${receiving.id}`,
+      aggregatedProducts: aggregateProducts(receiving),
+      aggregatedSources: aggregateSources(receiving),
+      aggregatedPurposes: aggregatePurposes(receiving),
+      totalExpectedQuantity: calculateTotalExpectedQuantity(receiving),
+      totalReceivedQuantity: calculateTotalReceivedQuantity(receiving)
     })
 
     // Add child items if expanded
