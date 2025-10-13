@@ -900,7 +900,6 @@ const submitForm = async () => {
         quantity: p.quantity,
         // default unit to 'pcs' when user didn't provide one
         unit: p.unit || 'pcs',
-        purpose: form.purpose || null
       }))
     }
 
@@ -921,11 +920,11 @@ const submitForm = async () => {
       try {
         const errorData = await response.json()
         errorMessage = errorData.message || JSON.stringify(errorData)
-      } catch (e) {
+      } catch {
         try {
           const text = await response.text()
           if (text) errorMessage = text
-        } catch (_) {
+        } catch {
           // ignore
         }
       }
