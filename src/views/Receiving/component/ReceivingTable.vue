@@ -172,7 +172,7 @@
             <td class="px-6 py-4">
               <div class="flex items-center gap-2">
                 <button @click="editReceiving(row)"
-                  class="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                  class="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
                   aria-label="Edit" title="Edit">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

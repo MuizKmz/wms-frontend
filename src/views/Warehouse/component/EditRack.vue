@@ -67,7 +67,7 @@
                       <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
                         <span class="text-red-500">*</span> Warehouse Code
                       </label>
-                      <div class="input input-bordered w-full bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 cursor-not-allowed py-1">
+                      <div class="input input-bordered w-full border-gray-200 bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 cursor-not-allowed py-1">
                         {{ selectedWarehouseName || 'N/A' }}
                       </div>
                       <input type="hidden" v-model="form.warehouseId"> </div>

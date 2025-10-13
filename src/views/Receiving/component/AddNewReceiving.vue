@@ -131,7 +131,7 @@
                         role="menu"
                       >
                         <li v-for="warehouse in warehouses" :key="warehouse.id">
-                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" @click="selectWarehouse(warehouse.id)">
+                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer  rounded-lg" @click="selectWarehouse(warehouse.id)">
                             {{ warehouse.name }}
                           </a>
                         </li>
@@ -165,8 +165,8 @@
                         role="menu"
                       >
                         <li v-for="rack in racks" :key="rack.id">
-                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" @click="selectRack(rack.id)">
-                            {{ rack.name }}
+                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg" @click="selectRack(rack.id)">
+                            {{ rack.rackCode }}
                           </a>
                         </li>
                       </ul>
@@ -199,8 +199,8 @@
                         role="menu"
                       >
                         <li v-for="section in sections" :key="section.id">
-                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" @click="selectSection(section.id)">
-                            {{ section.name }}
+                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer  rounded-lg" @click="selectSection(section.id)">
+                            {{ section.sectionCode }}
                           </a>
                         </li>
                       </ul>
@@ -235,7 +235,7 @@
                         role="menu"
                       >
                         <li v-for="supplier in suppliers" :key="supplier.id">
-                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" @click="selectSupplier(supplier.id)">
+                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg" @click="selectSupplier(supplier.id)">
                             {{ supplier.supplierName }}
                           </a>
                         </li>
@@ -282,7 +282,7 @@
                         role="menu"
                       >
                         <li v-for="purpose in purposeOptions" :key="purpose">
-                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" @click="selectPurpose(purpose)">
+                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg" @click="selectPurpose(purpose)">
                             {{ purpose }}
                           </a>
                         </li>
@@ -360,12 +360,12 @@
                         </button>
 
                         <ul
-                          class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
+                          class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-auto"
                           :class="{ 'opacity-100 pointer-events-auto': openDropdowns[`product${index}`], 'opacity-0 pointer-events-none': !openDropdowns[`product${index}`] }"
                           role="menu"
                         >
                           <li v-for="prod in products" :key="prod.id">
-                            <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" @click="selectProduct(index, prod.id)">
+                            <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg" @click="selectProduct(index, prod.id)">
                               {{ prod.name }}
                             </a>
                           </li>
@@ -390,8 +390,18 @@
                           v-model.number="product.quantity"
                           type="number"
                           min="1"
-                          :class="['input input-bordered w-full text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors[`quantity${index}`] }]"
+                          :class="['input input-bordered text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors[`quantity${index}`] }]"
+                          style="width: 6rem"
                           @input="validateQuantity(index)"
+                        />
+
+                        <input
+                          v-model="product.unit"
+                          type="text"
+                          maxlength="10"
+                          class="input input-bordered text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          style="width: 4.5rem"
+                          placeholder="unit"
                         />
                         <button
                           type="button"
@@ -491,7 +501,7 @@ const form = reactive({
   receivingDate: new Date().toISOString().split('T')[0],
   remarks: '',
   products: [
-    { productId: null, quantity: 1 }
+    { productId: null, quantity: 1, unit: 'pcs' }
   ]
 })
 
@@ -565,6 +575,7 @@ const fetchRacks = async (warehouseId) => {
     const response = await fetch(`/api/rack?warehouseId=${warehouseId}`)
     if (response.ok) {
       racks.value = await response.json()
+      console.log(racks.value)
     }
   } catch (error) {
     console.error('Error fetching racks:', error)
@@ -580,6 +591,7 @@ const fetchSections = async (rackId) => {
     const response = await fetch(`/api/section?rackId=${rackId}`)
     if (response.ok) {
       sections.value = await response.json()
+      console.log(sections.value)
     }
   } catch (error) {
     console.error('Error fetching sections:', error)
@@ -677,7 +689,7 @@ const selectProduct = (index, productId) => {
 
 /* Product management */
 const addProduct = () => {
-  form.products.push({ productId: null, quantity: 1 })
+  form.products.push({ productId: null, quantity: 1, unit: 'pcs' })
 }
 
 const removeProduct = (index) => {
@@ -806,7 +818,7 @@ const openModal = async () => {
   form.receivedBy = ''
   form.receivingDate = new Date().toISOString().split('T')[0]
   form.remarks = ''
-  form.products = [{ productId: null, quantity: 1 }]
+  form.products = [{ productId: null, quantity: 1, unit: 'pcs' }]
 
   // Reset errors
   Object.keys(errors).forEach(key => errors[key] = '')
@@ -869,25 +881,30 @@ const submitForm = async () => {
   errors.submit = ''
 
   try {
-    // Format the data to match the backend schema
+    // Format the data to match backend expectations
+    // Backend expects each receiving item to have productId, quantity and unit (see API sample)
     const submissionData = {
       receivingCode: form.receivingCode,
       doNumber: form.doNumber || null,
       warehouseId: form.warehouseId,
       rackId: form.rackId || null,
       sectionId: form.sectionId || null,
-      source: form.source,
+      source: form.source || null,
       supplierId: form.supplierId,
       receivingDate: form.receivingDate,
       receivedBy: form.receivedBy,
       remarks: form.remarks || null,
       receivingItems: form.products.map(p => ({
         productId: p.productId,
-        expectedQuantity: p.quantity,
-        receivedQuantity: p.quantity,
-        purpose: form.purpose
+        // use the simple `quantity` field which the table/other components expect
+        quantity: p.quantity,
+        // default unit to 'pcs' when user didn't provide one
+        unit: p.unit || 'pcs',
+        purpose: form.purpose || null
       }))
     }
+
+    console.debug('Submitting receiving:', submissionData)
 
     // Make the API call
     const response = await fetch('/api/receiving', {
@@ -899,8 +916,21 @@ const submitForm = async () => {
     })
 
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.message || 'Failed to create receiving record')
+      // Try to parse JSON error body, fall back to plain text
+      let errorMessage = 'Failed to create receiving record'
+      try {
+        const errorData = await response.json()
+        errorMessage = errorData.message || JSON.stringify(errorData)
+      } catch (e) {
+        try {
+          const text = await response.text()
+          if (text) errorMessage = text
+        } catch (_) {
+          // ignore
+        }
+      }
+      console.error('Create receiving failed', response.status, errorMessage)
+      throw new Error(errorMessage)
     }
 
     const data = await response.json()
