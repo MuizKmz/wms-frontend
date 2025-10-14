@@ -784,7 +784,7 @@ const positionUnitMenu = (index) => {
   if (!btn) return
 
   const rect = btn.getBoundingClientRect()
-  
+
   // try to compute panel width so dropdown can expand to full modal content width
   const panelRect = panelRef.value ? panelRef.value.getBoundingClientRect() : null
 
@@ -867,15 +867,6 @@ const selectPurpose = (purpose) => {
 }
 
 const selectProduct = (index, productId) => {
-  // prevent selecting the same product in more than one row
-  const takenIndex = form.products.findIndex((p, i) => i !== index && p.productId === productId)
-  if (takenIndex !== -1) {
-    // silently ignore duplicate selection to preserve styling/UX
-    console.warn(`Product ${productId} is already selected in row ${takenIndex}`)
-    openDropdowns[`product${index}`] = false
-    return
-  }
-
   form.products[index].productId = productId
   openDropdowns[`product${index}`] = false
 }
@@ -1075,7 +1066,7 @@ const openModal = async (receiving = null, viewOnly = false) => {
   isOpen.value = true
   lockScroll()
   await nextTick()
-  
+
   // Initialize Flatpickr and make sure it reflects form.receivingDate
   if (receivingDateInput.value) {
     // ensure the input shows the current form value immediately
@@ -1099,19 +1090,19 @@ const openModal = async (receiving = null, viewOnly = false) => {
       }
     }
   }
-  
+
   panelRef.value?.querySelector('input,select,textarea,button')?.focus()
 }
 
 const closeModal = async () => {
   Object.keys(openDropdowns).forEach(key => openDropdowns[key] = false)
-  
+
   // Destroy Flatpickr instance
   if (flatpickrInstance) {
     flatpickrInstance.destroy()
     flatpickrInstance = null
   }
-  
+
   isOpen.value = false
 
   // Reset form after modal is closed
@@ -1178,11 +1169,32 @@ const submitForm = async () => {
     // Make the API call (POST for create, PUT for update in edit mode)
     let response
     if (isEditMode.value && currentReceivingId.value) {
+      // For update: first update header, then update items
       response = await fetch(`/api/receiving/${currentReceivingId.value}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submissionData)
+        body: JSON.stringify({
+          receivingCode: submissionData.receivingCode,
+          doNumber: submissionData.doNumber,
+          warehouseId: submissionData.warehouseId,
+          rackId: submissionData.rackId,
+          sectionId: submissionData.sectionId,
+          source: submissionData.source,
+          supplierId: submissionData.supplierId,
+          receivingDate: submissionData.receivingDate,
+          receivedBy: submissionData.receivedBy,
+          remarks: submissionData.remarks
+        })
       })
+
+      // Then update items separately
+      if (response.ok) {
+        response = await fetch(`/api/receiving/${currentReceivingId.value}/items`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ receivingItems: submissionData.receivingItems })
+        })
+      }
     } else {
       response = await fetch('/api/receiving', {
         method: 'POST',
@@ -1253,13 +1265,13 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
-  
+
   // Clean up Flatpickr
   if (flatpickrInstance) {
     flatpickrInstance.destroy()
     flatpickrInstance = null
   }
-  
+
   if (isOpen.value) {
     unlockScroll()
   }
