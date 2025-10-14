@@ -17,7 +17,7 @@
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Receiving ID
+                Receiving Code
               </p>
             </th>
             <th class="px-6 py-3 text-left">

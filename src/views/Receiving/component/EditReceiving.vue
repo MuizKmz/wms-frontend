@@ -1076,15 +1076,28 @@ const openModal = async (receiving = null, viewOnly = false) => {
   lockScroll()
   await nextTick()
   
-  // Initialize Flatpickr
-  if (receivingDateInput.value && !flatpickrInstance) {
-    flatpickrInstance = flatpickr(receivingDateInput.value, {
-      dateFormat: 'Y-m-d',
-      defaultDate: new Date(),
-      onChange: (selectedDates, dateStr) => {
-        form.receivingDate = dateStr
+  // Initialize Flatpickr and make sure it reflects form.receivingDate
+  if (receivingDateInput.value) {
+    // ensure the input shows the current form value immediately
+    receivingDateInput.value.value = form.receivingDate || ''
+
+    if (!flatpickrInstance) {
+      flatpickrInstance = flatpickr(receivingDateInput.value, {
+        dateFormat: 'Y-m-d',
+        // use the form value (which may come from API) as the default date
+        defaultDate: form.receivingDate || new Date(),
+        onChange: (selectedDates, dateStr) => {
+          form.receivingDate = dateStr
+        }
+      })
+    } else {
+      // if flatpickr already exists (rare), update its selected date
+      try {
+        flatpickrInstance.setDate(form.receivingDate, false, 'Y-m-d')
+      } catch (e) {
+        // ignore setDate errors
       }
-    })
+    }
   }
   
   panelRef.value?.querySelector('input,select,textarea,button')?.focus()
@@ -1193,12 +1206,25 @@ const submitForm = async () => {
       throw new Error(errorMessage)
     }
 
-    const data = await response.json()
+    // Try to parse JSON body if present, otherwise fallback to empty object
+    let data = {}
+    try {
+      // Some APIs return 204 No Content; guard against parsing errors
+      if (response.status !== 204) {
+        data = await response.json()
+      }
+    } catch (e) {
+      console.warn('Response had no JSON body or failed to parse:', e)
+      data = {}
+    }
+
     console.log('Server response:', data)
 
+    // Capture current mode before closing (closeModal resets isEditMode)
+    const wasEditMode = isEditMode.value
     // Close modal and emit success
     await closeModal()
-    if (isEditMode.value) {
+    if (wasEditMode) {
       emit('receiving-updated', { success: true, data })
     } else {
       emit('receiving-created', { success: true, data })
@@ -1206,8 +1232,13 @@ const submitForm = async () => {
 
   } catch (error) {
     console.error('Error creating receiving:', error)
-    errors.submit = error.message || 'Failed to create receiving record. Please try again.'
-    emit('receiving-created', { success: false, error: error.message || 'Failed to create receiving record' })
+    errors.submit = error.message || (isEditMode.value ? 'Failed to update receiving record. Please try again.' : 'Failed to create receiving record. Please try again.')
+    // Emit failure event according to mode so parent can show toast or refresh accordingly
+    if (isEditMode.value) {
+      emit('receiving-updated', { success: false, error: error.message || 'Failed to update receiving record' })
+    } else {
+      emit('receiving-created', { success: false, error: error.message || 'Failed to create receiving record' })
+    }
   } finally {
     isSubmitting.value = false
   }
