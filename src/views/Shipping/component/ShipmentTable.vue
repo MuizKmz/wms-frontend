@@ -43,6 +43,11 @@
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+                Status
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
                 Shipping Date
               </p>
             </th>
@@ -104,6 +109,13 @@
             <td class="px-6 py-4">
               <span class="text-sm text-gray-900 dark:text-white">
                 {{ item.destination || '-' }}
+              </span>
+            </td>
+
+            <!-- Status -->
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-900 dark:text-white">
+                {{ item.state || '-' }}
               </span>
             </td>
 
@@ -288,6 +300,7 @@ const fetchShipments = async () => {
         order: p.order ? (p.order.name || p.order.orderNo) : (p.order || ''),
         carrier: p.carrier || p.carrier || '',
         destination: p.destination || p.destination || '',
+        state: p.state || p.state || '',
         shippingDate: p.shippingDate || p.shippingDate || '',
         estimatedDeliveryDate: p.estimatedDeliveryDate || p.estimatedDeliveryDate || '',
         remark: p.remarks || p.remark || p.remark || '',

@@ -92,16 +92,9 @@ const router = createRouter({
       component: () => import('../views/Customer/Customer.vue'),
       meta: {
         title: 'Customer',
-      },
     },
-    {
-      path: '/workorder',
-      name: 'Work Order Management',
-      component: () => import('../views/WorkOrderMgt/WorkOrder.vue'),
-      meta: {
-        title: 'Work Order Management',
-      },
     },
+
   ],
 })
 

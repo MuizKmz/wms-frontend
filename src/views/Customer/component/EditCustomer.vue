@@ -15,8 +15,10 @@
         aria-hidden="false"
         @click.self="closeModal"
       >
+        <!-- overlay -->
         <div class="absolute inset-0 bg-black/50"></div>
 
+        <!-- modal panel -->
         <transition
           enter-active-class="transition-all duration-300 ease-out"
           enter-from-class="opacity-0 scale-95 translate-y-4"
@@ -35,10 +37,11 @@
             aria-modal="true"
             aria-labelledby="modal-title"
           >
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col min-h-[600px] max-h-[90vh]">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col min-h-0 max-h-[90vh]">
+              <!-- header -->
               <div class="flex items-center justify-between p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">
-                  Edit Shipment
+                  Edit Customer
                 </h2>
                 <button
                   type="button"
@@ -51,162 +54,242 @@
                 </button>
               </div>
 
+              <!-- body -->
               <div class="space-y-4 overflow-y-auto p-6 flex-1">
+                <!-- Submit Error -->
                 <div v-if="errors.submit" class="alert alert-error">
                   <span>{{ errors.submit }}</span>
                 </div>
 
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Tracking Code
-                  </label>
-                  <input
-                    v-model="form.trackingCode"
-                    type="text"
-                    placeholder="Enter Tracking Code"
-                    maxlength="50"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.trackingCode }]"
-                  />
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.trackingCode" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.trackingCode }}</p>
-                    </div>
-                  </transition>
-                </div>
-
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Shipping Carrier
-                  </label>
-                  <input
-                    v-model="form.carrier"
-                    type="text"
-                    placeholder="Enter Carrier"
-                    maxlength="50"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.carrier }]"
-                  />
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.carrier" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.carrier }}</p>
-                    </div>
-                  </transition>
-                </div>
-
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Order Number
-                  </label>
-                  <div class="dropdown relative inline-flex w-full" ref="orderDropdownRef">
-                    <button
-                      type="button"
-                      :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.order }]"
-                      :aria-expanded="openDropdowns.order"
-                      @click.stop="toggleDropdown('order')"
-                      :disabled="loadingOrders"
-                    >
-                      {{ form.order || 'Select Order' }}
-                      <span
-                        class="icon-[tabler--chevron-down] size-4 transition-transform"
-                        :class="{ 'rotate-180': openDropdowns.order }"
-                      ></span>
-                    </button>
-
-                    <ul
-                      class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
-                      :class="{ 'opacity-100 pointer-events-auto': openDropdowns.order, 'opacity-0 pointer-events-none': !openDropdowns.order }"
-                      role="menu"
-                    >
-                      <li v-for="order in orders" :key="order.id">
-                        <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('order', order.orderNo)">
-                          {{ order.orderNo }}
-                        </a>
-                      </li>
-                    </ul>
-                  </div>
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.order" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.order }}</p>
-                    </div>
-                  </transition>
-                </div>
-
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Destination
-                  </label>
-                  <input
-                    v-model="form.destination"
-                    type="text"
-                    placeholder="Enter Shipping Destination"
-                    maxlength="50"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.destination }]"
-                  />
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.destination" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.destination }}</p>
-                    </div>
-                  </transition>
-                </div>
-
+                <!-- Customer ID and Customer Name in a row -->
+                <div class="grid grid-cols-2 gap-4">
+                  <!-- Customer ID -->
                   <div class="relative">
                     <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                      Shipping Date
+                      <span class="text-red-500">*</span> Customer ID
                     </label>
                     <input
-                      ref="shippingDateInput"
-                      v-model="form.shippingDate"
+                      v-model="form.customerId"
                       type="text"
-                      placeholder="Select Date"
-                      :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.shippingDate }]"
-                      readonly
+                      placeholder="Enter Customer ID"
+                      maxlength="20"
+                      disabled
+                      :class="['input input-bordered w-full bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed', { 'input-error': errors.customerId }]"
                     />
+                    <transition
+                      enter-active-class="transition-all duration-200 ease-out"
+                      enter-from-class="opacity-0 -translate-y-1"
+                      enter-to-class="opacity-100 translate-y-0"
+                      leave-active-class="transition-all duration-150 ease-in"
+                      leave-from-class="opacity-100 translate-y-0"
+                      leave-to-class="opacity-0 -translate-y-1"
+                    >
+                      <div v-if="errors.customerId" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                        <p class="text-xs text-red-600 dark:text-red-400">{{ errors.customerId }}</p>
+                      </div>
+                    </transition>
                   </div>
 
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    Estimated Delivery Date
-                  </label>
-                  <input
-                    ref="estimatedDeliveryDateInput"
-                    v-model="form.estimatedDeliveryDate"
-                    type="text"
-                    placeholder="Select Date"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.estimatedDeliveryDate }]"
-                    readonly
-                  />
+                  <!-- Customer Name -->
+                  <div class="relative">
+                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                      <span class="text-red-500">*</span> Customer Name
+                    </label>
+                    <input
+                      v-model="form.customerName"
+                      type="text"
+                      placeholder="Enter Customer Name"
+                      maxlength="100"
+                      :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.customerName }]"
+                    />
+                    <transition
+                      enter-active-class="transition-all duration-200 ease-out"
+                      enter-from-class="opacity-0 -translate-y-1"
+                      enter-to-class="opacity-100 translate-y-0"
+                      leave-active-class="transition-all duration-150 ease-in"
+                      leave-from-class="opacity-100 translate-y-0"
+                      leave-to-class="opacity-0 -translate-y-1"
+                    >
+                      <div v-if="errors.customerName" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                        <p class="text-xs text-red-600 dark:text-red-400">{{ errors.customerName }}</p>
+                      </div>
+                    </transition>
+                  </div>
                 </div>
 
+                <!-- Contact Person -->
                 <div class="relative">
                   <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Status
+                    <span class="text-red-500">*</span> Contact Person
+                  </label>
+                  <input
+                    v-model="form.contactPerson"
+                    type="text"
+                    placeholder="Enter Contact Person"
+                    maxlength="50"
+                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.contactPerson }]"
+                  />
+                  <transition
+                    enter-active-class="transition-all duration-200 ease-out"
+                    enter-from-class="opacity-0 -translate-y-1"
+                    enter-to-class="opacity-100 translate-y-0"
+                    leave-active-class="transition-all duration-150 ease-in"
+                    leave-from-class="opacity-100 translate-y-0"
+                    leave-to-class="opacity-0 -translate-y-1"
+                  >
+                    <div v-if="errors.contactPerson" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.contactPerson }}</p>
+                    </div>
+                  </transition>
+                </div>
+
+                <!-- Phone Number -->
+                <div class="relative">
+                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                    <span class="text-red-500">*</span> Phone Number
+                  </label>
+                  <div class="flex gap-2">
+                    <!-- Country Code Dropdown -->
+                    <div class="dropdown relative inline-flex w-32" ref="countryDropdownRef">
+                      <button
+                        type="button"
+                        :class="['dropdown-toggle btn btn-outline justify-between dark:bg-gray-700 dark:text-gray-400 w-full', { 'btn-error': errors.phoneNumber }]"
+                        :aria-expanded="openDropdowns.country"
+                        @click.stop="toggleDropdown('country')"
+                      >
+                        <span class="flex items-center gap-1">
+                          <span>{{ form.countryCode }}</span>
+                        </span>
+                        <span
+                          class="icon-[tabler--chevron-down] size-4 transition-transform"
+                          :class="{ 'rotate-180': openDropdowns.country }"
+                        ></span>
+                      </button>
+
+                      <ul
+                        class="dropdown-menu min-w-full w-64 transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
+                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.country, 'opacity-0 pointer-events-none': !openDropdowns.country }"
+                        role="menu"
+                      >
+                        <li v-for="country in countries" :key="country.code">
+                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" @click="selectCountry(country)">
+                            <span class="mr-2">{{ country.flag }}</span>
+                            <span>{{ country.name }} ({{ country.dialCode }})</span>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <!-- Phone Number Input -->
+                    <input
+                      v-model="form.phoneNumber"
+                      type="tel"
+                      placeholder="Enter Phone Number"
+                      maxlength="10"
+                      @input="formatPhoneNumber"
+                      @keypress="onlyNumbers"
+                      :class="['input input-bordered flex-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.phoneNumber }]"
+                    />
+                  </div>
+                  <transition
+                    enter-active-class="transition-all duration-200 ease-out"
+                    enter-from-class="opacity-0 -translate-y-1"
+                    enter-to-class="opacity-100 translate-y-0"
+                    leave-active-class="transition-all duration-150 ease-in"
+                    leave-from-class="opacity-100 translate-y-0"
+                    leave-to-class="opacity-0 -translate-y-1"
+                  >
+                    <div v-if="errors.phoneNumber" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.phoneNumber }}</p>
+                    </div>
+                  </transition>
+                </div>
+
+                <!-- Email Address -->
+                <div class="relative">
+                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                    <span class="text-red-500">*</span> Email Address
+                  </label>
+                  <input
+                    v-model="form.emailAddress"
+                    type="email"
+                    placeholder="Enter Email Address"
+                    maxlength="100"
+                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.emailAddress }]"
+                  />
+                  <transition
+                    enter-active-class="transition-all duration-200 ease-out"
+                    enter-from-class="opacity-0 -translate-y-1"
+                    enter-to-class="opacity-100 translate-y-0"
+                    leave-active-class="transition-all duration-150 ease-in"
+                    leave-from-class="opacity-100 translate-y-0"
+                    leave-to-class="opacity-0 -translate-y-1"
+                  >
+                    <div v-if="errors.emailAddress" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.emailAddress }}</p>
+                    </div>
+                  </transition>
+                </div>
+
+                <!-- Address and City in a row -->
+                <div class="grid grid-cols-2 gap-4">
+                  <!-- Address -->
+                  <div class="relative">
+                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                      <span class="text-red-500">*</span> Address
+                    </label>
+                    <input
+                      v-model="form.address"
+                      type="text"
+                      placeholder="Enter Address"
+                      maxlength="200"
+                      :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.address }]"
+                    />
+                    <transition
+                      enter-active-class="transition-all duration-200 ease-out"
+                      enter-from-class="opacity-0 -translate-y-1"
+                      enter-to-class="opacity-100 translate-y-0"
+                      leave-active-class="transition-all duration-150 ease-in"
+                      leave-from-class="opacity-100 translate-y-0"
+                      leave-to-class="opacity-0 -translate-y-1"
+                    >
+                      <div v-if="errors.address" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                        <p class="text-xs text-red-600 dark:text-red-400">{{ errors.address }}</p>
+                      </div>
+                    </transition>
+                  </div>
+
+                  <!-- City -->
+                  <div class="relative">
+                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                      <span class="text-red-500">*</span> City
+                    </label>
+                    <input
+                      v-model="form.city"
+                      type="text"
+                      placeholder="Enter City"
+                      maxlength="50"
+                      :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.city }]"
+                    />
+                    <transition
+                      enter-active-class="transition-all duration-200 ease-out"
+                      enter-from-class="opacity-0 -translate-y-1"
+                      enter-to-class="opacity-100 translate-y-0"
+                      leave-active-class="transition-all duration-150 ease-in"
+                      leave-from-class="opacity-100 translate-y-0"
+                      leave-to-class="opacity-0 -translate-y-1"
+                    >
+                      <div v-if="errors.city" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                        <p class="text-xs text-red-600 dark:text-red-400">{{ errors.city }}</p>
+                      </div>
+                    </transition>
+                  </div>
+                </div>
+
+                <!-- Status dropdown -->
+                <div class="relative">
+                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                    Status
                   </label>
                   <div class="dropdown relative inline-flex w-full" ref="statusDropdownRef">
                     <button
@@ -248,17 +331,21 @@
                   </transition>
                 </div>
 
+                <!-- Remarks -->
                 <div class="relative">
                   <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
                     Remarks
                   </label>
-                  <input
-                    v-model="form.remark"
-                    type="text"
+                  <textarea
+                    v-model="form.remarks"
                     placeholder="Enter Remarks"
-                    maxlength="200"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.remark }]"
-                  />
+                    maxlength="500"
+                    rows="3"
+                    :class="['textarea textarea-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none', { 'textarea-error': errors.remarks }]"
+                  ></textarea>
+                  <div class="flex justify-between items-center mt-1">
+                    <span class="text-xs text-gray-500">{{ form.remarks.length }}/500 characters</span>
+                  </div>
                   <transition
                     enter-active-class="transition-all duration-200 ease-out"
                     enter-from-class="opacity-0 -translate-y-1"
@@ -267,15 +354,16 @@
                     leave-from-class="opacity-100 translate-y-0"
                     leave-to-class="opacity-0 -translate-y-1"
                   >
-                    <div v-if="errors.remark" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.remark }}</p>
+                    <div v-if="errors.remarks" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.remarks }}</p>
                     </div>
                   </transition>
                 </div>
               </div>
 
+              <!-- footer -->
               <div class="flex justify-end gap-2 p-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button @click="closeModal" class="btn btn-outline" :disabled="isSubmitting">
+                <button @click="closeModal" class="btn btn-outline btn-error" :disabled="isSubmitting">
                   Cancel
                 </button>
                 <button @click="submitForm" class="btn btn-primary" :disabled="isSubmitting">
@@ -291,92 +379,66 @@
   </teleport>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
-import flatpickr from 'flatpickr'
-import 'flatpickr/dist/flatpickr.css'
 
-
-interface Order {
-  id: number
-  orderNo: string
-}
-
-interface Shipment {
-  id: number
-  trackingCode: string
-  carrier: string
-  orderId: number
-  orderNo?: string
-  destination: string
-  shippingDate: string
-  estimatedDeliveryDate: string
-  state: string
-  remark: string
-}
-
-
-const emit = defineEmits(['shipment-updated'])
+const emit = defineEmits(['customer-updated'])
 
 /* state */
 const isOpen = ref(false)
 const isSubmitting = ref(false)
-const loadingOrders = ref(false)
-const panelRef = ref<HTMLElement | null>(null)
-const statusDropdownRef = ref<HTMLElement | null>(null)
-const orderDropdownRef = ref<HTMLElement | null>(null)
-const shippingDateInput = ref(null)
-const estimatedDeliveryDateInput = ref(null)
-let flatpickrInstance: any = null
-let flatpickrInstanceEstimated: any = null
-
-const currentShipmentId = ref<number | null>(null)
+const panelRef = ref(null)
+const statusDropdownRef = ref(null)
+const countryDropdownRef = ref(null)
+const customerId = ref(null) // Store the customer ID for PATCH request
 
 const form = reactive({
-  trackingCode: '',
-  name: '',
-  carrier: '',
-  order: '',
-  destination: '',
-  shippingDate: new Date().toISOString().split('T')[0],
-  estimatedDeliveryDate: new Date().toISOString().split('T')[0],
-  status: '',
-  remark: ''
+  customerId: '',
+  customerName: '',
+  contactPerson: '',
+  countryCode: '+60',
+  phoneNumber: '',
+  emailAddress: '',
+  address: '',
+  city: '',
+  status: 'Active',
+  remarks: ''
 })
 
 const errors = reactive({
-  trackingCode: '',
-  name: '',
-  carrier: '',
-  order: '',
-  destination: '',
-  shippingDate: '',
-  estimatedDeliveryDate: '',
+  customerId: '',
+  customerName: '',
+  contactPerson: '',
+  phoneNumber: '',
+  emailAddress: '',
+  address: '',
+  city: '',
   status: '',
-  remark: '',
+  remarks: '',
   submit: ''
 })
 
 const statusOptions = ['Active', 'Inactive']
-const orders = ref<Order[]>([])
-const openDropdowns = reactive({ status: false, order: false })
+const openDropdowns = reactive({ status: false, country: false })
 
-/* Fetch orders  */
-const fetchOrder = async () => {
-  loadingOrders.value = true
-  try {
-    const response = await fetch('/api/order')
-    if (!response.ok) throw new Error('Failed to fetch orders')
-    const data = await response.json()
-    orders.value = data
-    console.log('Fetched orders:', data)
-  } catch (error) {
-    console.error('Error fetching orders:', error)
-  } finally {
-    loadingOrders.value = false
-  }
-}
-
+// Popular countries for phone numbers
+const countries = [
+  { code: 'MY', name: 'Malaysia', dialCode: '+60', flag: '🇲🇾' },
+  { code: 'SG', name: 'Singapore', dialCode: '+65', flag: '🇸🇬' },
+  { code: 'ID', name: 'Indonesia', dialCode: '+62', flag: '🇮🇩' },
+  { code: 'TH', name: 'Thailand', dialCode: '+66', flag: '🇹🇭' },
+  { code: 'PH', name: 'Philippines', dialCode: '+63', flag: '🇵🇭' },
+  { code: 'VN', name: 'Vietnam', dialCode: '+84', flag: '🇻🇳' },
+  { code: 'CN', name: 'China', dialCode: '+86', flag: '🇨🇳' },
+  { code: 'IN', name: 'India', dialCode: '+91', flag: '🇮🇳' },
+  { code: 'JP', name: 'Japan', dialCode: '+81', flag: '🇯🇵' },
+  { code: 'KR', name: 'South Korea', dialCode: '+82', flag: '🇰🇷' },
+  { code: 'US', name: 'United States', dialCode: '+1', flag: '🇺🇸' },
+  { code: 'GB', name: 'United Kingdom', dialCode: '+44', flag: '🇬🇧' },
+  { code: 'AU', name: 'Australia', dialCode: '+61', flag: '🇦🇺' },
+  { code: 'AE', name: 'UAE', dialCode: '+971', flag: '🇦🇪' },
+  { code: 'SA', name: 'Saudi Arabia', dialCode: '+966', flag: '🇸🇦' }
+]
 
 /* Modal scroll lock utilities */
 let scrollY = 0
@@ -412,37 +474,88 @@ const unlockScroll = () => {
 /* Validation */
 const validateForm = () => {
   // Reset errors
-  Object.keys(errors).forEach(key => errors[key as keyof typeof errors] = '')
+  Object.keys(errors).forEach(key => errors[key] = '')
 
   let isValid = true
 
-  // Tracking Code validation
-  if (!form.trackingCode.trim()) {
-    errors.trackingCode = 'Tracking Code is required'
+  // Customer Name validation
+  if (!form.customerName.trim()) {
+    errors.customerName = 'Customer Name is required'
+    isValid = false
+  } else if (form.customerName.length < 3) {
+    errors.customerName = 'Customer Name must be at least 3 characters'
+    isValid = false
+  } else if (form.customerName.length > 100) {
+    errors.customerName = 'Customer Name cannot exceed 100 characters'
     isValid = false
   }
 
-  // Order No validation
-  if (!form.order) {
-    errors.order = 'Order is required'
+  // Contact Person validation
+  if (!form.contactPerson.trim()) {
+    errors.contactPerson = 'Contact Person is required'
+    isValid = false
+  } else if (form.contactPerson.length < 2) {
+    errors.contactPerson = 'Contact Person must be at least 2 characters'
+    isValid = false
+  } else if (form.contactPerson.length > 50) {
+    errors.contactPerson = 'Contact Person cannot exceed 50 characters'
     isValid = false
   }
 
-  // Shipping Carrier validation
-  if (!form.carrier.trim()) {
-    errors.carrier = 'Shipping Carrier is required'
+  // Phone Number validation
+  if (!form.phoneNumber.trim()) {
+    errors.phoneNumber = 'Phone Number is required'
+    isValid = false
+  } else if (!/^\d+$/.test(form.phoneNumber)) {
+    errors.phoneNumber = 'Phone Number must contain only numbers'
+    isValid = false
+  } else if (form.phoneNumber.length < 8) {
+    errors.phoneNumber = 'Phone Number must have at least 8 digits'
+    isValid = false
+  } else if (form.phoneNumber.length > 10) {
+    errors.phoneNumber = 'Phone Number cannot exceed 10 digits'
     isValid = false
   }
 
-  // Destination validation
-  if (!form.destination.trim()) {
-    errors.destination = 'Destination is required'
+  // Email validation
+  if (!form.emailAddress.trim()) {
+    errors.emailAddress = 'Email Address is required'
+    isValid = false
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.emailAddress)) {
+    errors.emailAddress = 'Please enter a valid email address'
+    isValid = false
+  } else if (form.emailAddress.length > 100) {
+    errors.emailAddress = 'Email Address cannot exceed 100 characters'
     isValid = false
   }
 
-  // Status validation
-  if (!form.status) {
-    errors.status = 'Status is required'
+  // Address validation
+  if (!form.address.trim()) {
+    errors.address = 'Address is required'
+    isValid = false
+  } else if (form.address.length < 5) {
+    errors.address = 'Address must be at least 5 characters'
+    isValid = false
+  } else if (form.address.length > 200) {
+    errors.address = 'Address cannot exceed 200 characters'
+    isValid = false
+  }
+
+  // City validation
+  if (!form.city.trim()) {
+    errors.city = 'City is required'
+    isValid = false
+  } else if (form.city.length < 2) {
+    errors.city = 'City must be at least 2 characters'
+    isValid = false
+  } else if (form.city.length > 50) {
+    errors.city = 'City cannot exceed 50 characters'
+    isValid = false
+  }
+
+  // Remarks validation (optional but with limit)
+  if (form.remarks.length > 500) {
+    errors.remarks = 'Remarks cannot exceed 500 characters'
     isValid = false
   }
 
@@ -450,139 +563,135 @@ const validateForm = () => {
 }
 
 // Clear error when user types
-watch(() => form.trackingCode, () => { if (errors.trackingCode) errors.trackingCode = '' })
-watch(() => form.order, () => { if (errors.order) errors.order = '' })
-watch(() => form.carrier, () => { if (errors.carrier) errors.carrier = '' })
-watch(() => form.destination, () => { if (errors.destination) errors.destination = '' })
+watch(() => form.customerName, () => { if (errors.customerName) errors.customerName = '' })
+watch(() => form.contactPerson, () => { if (errors.contactPerson) errors.contactPerson = '' })
+watch(() => form.phoneNumber, () => { if (errors.phoneNumber) errors.phoneNumber = '' })
+watch(() => form.countryCode, () => { if (errors.phoneNumber) errors.phoneNumber = '' })
+watch(() => form.emailAddress, () => { if (errors.emailAddress) errors.emailAddress = '' })
+watch(() => form.address, () => { if (errors.address) errors.address = '' })
+watch(() => form.city, () => { if (errors.city) errors.city = '' })
 watch(() => form.status, () => { if (errors.status) errors.status = '' })
-watch(() => form.remark, () => { if (errors.remark) errors.remark = '' })
-watch(() => form.shippingDate, () => { if (errors.shippingDate) errors.shippingDate = '' })
-watch(() => form.estimatedDeliveryDate, () => { if (errors.estimatedDeliveryDate) errors.estimatedDeliveryDate = '' })
+watch(() => form.remarks, () => { if (errors.remarks) errors.remarks = '' })
 
 /* helpers */
-const toggleDropdown = (name: 'status' | 'order' ) => {
-  Object.keys(openDropdowns).forEach(k => {
-    if (k !== name) openDropdowns[k as keyof typeof openDropdowns] = false
-  })
+const toggleDropdown = (name) => {
+  Object.keys(openDropdowns).forEach(k => { if (k !== name) openDropdowns[k] = false })
   openDropdowns[name] = !openDropdowns[name]
 }
 
-const selectOption = (key: keyof typeof form, value: string) => {
-  form[key] = value as never
+const selectOption = (key, value) => {
+  form[key] = value
+  openDropdowns[key] = false
+}
 
-  // Determine which dropdown state key to close
-  let dropdownKey: keyof typeof openDropdowns | null = null;
-  if (key === 'order') {
-    dropdownKey = 'order';
-  } else if (key === 'status') {
-    dropdownKey = 'status';
+const selectCountry = (country) => {
+  form.countryCode = country.dialCode
+  openDropdowns.country = false
+}
+
+// Only allow numbers in phone input
+const onlyNumbers = (event) => {
+  const charCode = event.which ? event.which : event.keyCode
+  if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+    event.preventDefault()
+  }
+}
+
+// Format phone number as user types
+const formatPhoneNumber = (event) => {
+  // Remove all non-numeric characters
+  let value = event.target.value.replace(/\D/g, '')
+
+  // Limit to 15 digits
+  if (value.length > 15) {
+    value = value.slice(0, 15)
   }
 
-  if (dropdownKey) {
-    openDropdowns[dropdownKey] = false
+  form.phoneNumber = value
+}
+
+// Parse phone number to extract country code and number
+const parsePhoneNumber = (fullPhone) => {
+  if (!fullPhone) return { countryCode: '+60', phoneNumber: '' }
+  
+  // Try to match against known country codes
+  for (const country of countries) {
+    if (fullPhone.startsWith(country.dialCode)) {
+      return {
+        countryCode: country.dialCode,
+        phoneNumber: fullPhone.substring(country.dialCode.length)
+      }
+    }
   }
+  
+  // Default fallback
+  return { countryCode: '+60', phoneNumber: fullPhone }
 }
 
 /* close dropdowns when clicking outside */
-const handleClickOutside = (event: MouseEvent) => {
+const handleClickOutside = (event) => {
   const statusDd = statusDropdownRef.value
-  const orderDd = orderDropdownRef.value
+  const countryDd = countryDropdownRef.value
 
-  if (statusDd && !statusDd.contains(event.target as Node)) {
+  if (statusDd && !statusDd.contains(event.target)) {
     openDropdowns.status = false
   }
 
-  if (orderDd && !orderDd.contains(event.target as Node)) {
-    openDropdowns.order = false
+  if (countryDd && !countryDd.contains(event.target)) {
+    openDropdowns.country = false
   }
-
-}
-
-/* Prefill form with shipment data */
-const prefillForm = (shipment: Shipment) => {
-  currentShipmentId.value = shipment.id
-  form.trackingCode = shipment.trackingCode || ''
-  form.carrier = shipment.carrier || ''
-  form.order = shipment.orderNo || ''
-  form.destination = shipment.destination || ''
-
-  // Format dates to YYYY-MM-DD
-  form.shippingDate = shipment.shippingDate ? shipment.shippingDate.split('T')[0] : new Date().toISOString().split('T')[0]
-  form.estimatedDeliveryDate = shipment.estimatedDeliveryDate ? shipment.estimatedDeliveryDate.split('T')[0] : new Date().toISOString().split('T')[0]
-
-  form.status = shipment.state || ''
-  form.remark = shipment.remark || ''
 }
 
 /* open/close modal */
-const openModal = async (shipment: Shipment) => {
-  // Fetch orders when modal opens
-  await Promise.all([fetchOrder()])
+const openModal = async (customerData) => {
+  // Store the customer ID for PATCH request
+  customerId.value = customerData.id || customerData.customerId || customerData.customerCode
 
-  // Prefill form with shipment data
-  prefillForm(shipment)
+  // Parse phone number
+  const parsedPhone = parsePhoneNumber(customerData.phone || customerData.phoneNumber || '')
+
+  // Populate form with existing customer data
+  form.customerId = customerData.customerId || customerData.customerCode || ''
+  form.customerName = customerData.customerName || customerData.name || ''
+  form.contactPerson = customerData.contactPerson || customerData.contact || ''
+  form.countryCode = parsedPhone.countryCode
+  form.phoneNumber = parsedPhone.phoneNumber
+  form.emailAddress = customerData.email || customerData.emailAddress || ''
+  form.address = customerData.address || ''
+  form.city = customerData.city || ''
+  form.status = customerData.status || 'Active'
+  form.remarks = customerData.remark || customerData.remarks || ''
 
   // Reset errors
-  Object.keys(errors).forEach(key => errors[key as keyof typeof errors] = '')
+  Object.keys(errors).forEach(key => errors[key] = '')
 
   isOpen.value = true
   lockScroll()
   await nextTick()
-  const firstEl = panelRef.value?.querySelector('input,select,textarea,button') as HTMLElement | null
-  firstEl?.focus()
-
-  // Initialize Flatpickr instances for date inputs
-  if (shippingDateInput.value && !flatpickrInstance) {
-    flatpickrInstance = flatpickr(shippingDateInput.value, {
-      dateFormat: 'Y-m-d',
-      defaultDate: form.shippingDate ? new Date(form.shippingDate) : new Date(),
-      onChange: (selectedDates: Date[]) => {
-        if (selectedDates && selectedDates[0]) form.shippingDate = selectedDates[0].toISOString().split('T')[0]
-      }
-    })
-  }
-
-  if (estimatedDeliveryDateInput.value && !flatpickrInstanceEstimated) {
-    flatpickrInstanceEstimated = flatpickr(estimatedDeliveryDateInput.value, {
-      dateFormat: 'Y-m-d',
-      defaultDate: form.estimatedDeliveryDate ? new Date(form.estimatedDeliveryDate) : new Date(),
-      onChange: (selectedDates: Date[]) => {
-        if (selectedDates && selectedDates[0]) form.estimatedDeliveryDate = selectedDates[0].toISOString().split('T')[0]
-      }
-    })
-  }
+  panelRef.value?.querySelector('input:not([disabled]),select,textarea,button')?.focus()
 }
 
 const closeModal = async () => {
   openDropdowns.status = false
-  openDropdowns.order = false
-
-  // Destroy Flatpickr instance
-  if (flatpickrInstance) {
-    flatpickrInstance.destroy()
-    flatpickrInstance = null
-  }
-  if (flatpickrInstanceEstimated) {
-    flatpickrInstanceEstimated.destroy()
-    flatpickrInstanceEstimated = null
-  }
-
+  openDropdowns.country = false
   isOpen.value = false
 
   // Reset form after modal is closed
   await nextTick()
-  currentShipmentId.value = null
-  form.trackingCode = ''
-  form.order = ''
-  form.carrier = ''
-  form.destination = ''
-  form.shippingDate = new Date().toISOString().split('T')[0]
-  form.estimatedDeliveryDate = new Date().toISOString().split('T')[0]
-  form.status = ''
-  form.remark = ''
+  customerId.value = null
+  form.customerId = ''
+  form.customerName = ''
+  form.contactPerson = ''
+  form.countryCode = '+60'
+  form.phoneNumber = ''
+  form.emailAddress = ''
+  form.address = ''
+  form.city = ''
+  form.status = 'Active'
+  form.remarks = ''
 
   // Reset errors
-  Object.keys(errors).forEach(key => errors[key as keyof typeof errors] = '')
+  Object.keys(errors).forEach(key => errors[key] = '')
 }
 
 /* submit */
@@ -591,39 +700,24 @@ const submitForm = async () => {
     return
   }
 
-  if (!currentShipmentId.value) {
-    errors.submit = 'No shipment selected for update'
-    return
-  }
-
   isSubmitting.value = true
   errors.submit = ''
 
   try {
-    // Map selected orderNo to orderId for backend
-    const selectedOrder = orders.value.find((o: Order) => o.orderNo === form.order)
-    const orderId = selectedOrder ? selectedOrder.id : null
-
-    if (!orderId) {
-      errors.submit = 'Selected order not found. Please select a valid order.'
-      isSubmitting.value = false
-      return
-    }
-
-    // Format the data to match the backend schema for Shipment
+    // Format the data to match the backend schema
     const submissionData = {
-      trackingCode: form.trackingCode.toUpperCase(),
-      orderId: orderId,
-      carrier: form.carrier ? form.carrier.toUpperCase() : null,
-      destination: form.destination || null,
-      shippingDate: form.shippingDate || null,
-      estimatedDeliveryDate: form.estimatedDeliveryDate || null,
-      state: form.status,
-      remark: form.remark || null,
+      customerName: form.customerName,
+      contactPerson: form.contactPerson,
+      phone: `${form.countryCode}${form.phoneNumber}`,
+      email: form.emailAddress,
+      address: form.address,
+      city: form.city,
+      status: form.status === 'Active' ? 'Active' : 'Inactive',
+      remark: form.remarks || null
     }
 
-    // PATCH to shipments endpoint
-    const response = await fetch(`/api/shipping/${currentShipmentId.value}`, {
+    // Make the API call with PATCH method
+    const response = await fetch(`api/customer/${customerId.value}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -633,24 +727,23 @@ const submitForm = async () => {
 
     if (!response.ok) {
       const errorData = await response.json()
-      throw new Error(errorData.message || 'Failed to update shipment')
+      throw new Error(errorData.message || 'Failed to update customer')
     }
 
     const data = await response.json()
-    console.log('Server response:', data)
+    console.log('Server response:', data) // Debug log
 
     // Only close and reset after successful API call
     await closeModal()
 
     // Emit event to parent component with success status
-    emit('shipment-updated', { success: true, data })
+    emit('customer-updated', { success: true, data })
 
   } catch (error) {
-    console.error('Error updating shipment:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Failed to update shipment'
-    errors.submit = errorMessage
+    console.error('Error updating customer:', error)
+    errors.submit = error.message || 'Failed to update customer. Please try again.'
     // Emit event to parent component with error status
-    emit('shipment-updated', { success: false, error: errorMessage })
+    emit('customer-updated', { success: false, error: error.message || 'Failed to update customer' })
   } finally {
     isSubmitting.value = false
   }
@@ -663,17 +756,6 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
-
-  // Clean up Flatpickr
-  if (flatpickrInstance) {
-    flatpickrInstance.destroy()
-    flatpickrInstance = null
-  }
-  if (flatpickrInstanceEstimated) {
-    flatpickrInstanceEstimated.destroy()
-    flatpickrInstanceEstimated = null
-  }
-
   if (isOpen.value) {
     unlockScroll()
   }

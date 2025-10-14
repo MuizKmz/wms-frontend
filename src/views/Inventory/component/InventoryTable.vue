@@ -93,19 +93,19 @@
 
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.productName }}
+                {{ item.product?.name }}
               </p>
             </td>
 
             <td class="px-6 py-4">
               <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ item.productCode }}
+                {{ item.product?.productCode }}
               </span>
             </td>
 
             <td class="px-6 py-4">
               <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ item.skuCode }}
+                {{ item.product?.skuCode }}
               </span>
             </td>
 
@@ -135,7 +135,7 @@
 
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ formatDate(item.latestUpdate || item.updatedAt) }}
+                {{ formatDate(item.lastUpdatedAt || item.updatedAt) }}
               </p>
             </td>
 
@@ -153,19 +153,19 @@
 
             <td class="px-6 py-4">
               <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ item.warehouseCode || '-' }}
+                {{ item.warehouse?.warehouseCode || '-' }}
               </span>
             </td>
 
             <td class="px-6 py-4">
               <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ item.rackCode || '-' }}
+                {{ item.rack?.rackCode || '-' }}
               </span>
             </td>
 
             <td class="px-6 py-4">
               <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ item.sectionCode || '-' }}
+                {{ item.section?.sectionCode || '-' }}
               </span>
             </td>
           </tr>

@@ -357,7 +357,18 @@ const errors = reactive({
   submit: ''
 })
 
-const statusOptions = ['Active', 'Inactive']
+const statusOptions = [
+  'Pending',
+  'Preparing',
+  'Ready for Dispatch',
+  'In Transit',
+  'Out for Delivery',
+  'Delivered',
+  'Failed Delivery',
+  'Returned',
+  'Cancelled'
+]
+
 const orders = ref<Order[]>([])
 const openDropdowns = reactive({ status: false, order: false })
 
@@ -503,7 +514,11 @@ const prefillForm = (shipment: Shipment) => {
   currentShipmentId.value = shipment.id
   form.trackingCode = shipment.trackingCode || ''
   form.carrier = shipment.carrier || ''
-  form.order = shipment.orderNo || ''
+  // shipment may come in different shapes: sometimes it's the raw server object
+  // mapped table item (which uses `order`), or the original payload with `orderNo`.
+  // Try several fallbacks so the order field is prefilled correctly.
+  const anyShipment: any = shipment as any
+  form.order = shipment.orderNo || anyShipment.order || (anyShipment.raw && (anyShipment.raw.order?.orderNo || anyShipment.raw.order?.name)) || ''
   form.destination = shipment.destination || ''
   
   // Format dates to YYYY-MM-DD

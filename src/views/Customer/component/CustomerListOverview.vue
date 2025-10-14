@@ -295,66 +295,51 @@ const toggleSelectAll = () => {
 
 // --- Data and Filtering ---
 
-// Computed property for filtered data
+// Function to safely normalize and lowercase strings for comparison
+const normalize = (value) => (value || '').toString().toLowerCase()
+
+// Computed property for filtered data (***FIXED LOGIC HERE***)
 const filteredData = computed(() => {
   if (!props.filters) return data.value
 
+  const filters = props.filters
+  const normalize = (value) => (value || '').toString().toLowerCase()
+
   return data.value.filter((item) => {
-    const filters = props.filters
-
-    // Customer ID filter
-    if (
-      filters.customerId &&
-      !item.customerId
-        ?.toLowerCase()
-        .includes(filters.customerId.toLowerCase())
-    ) {
+    
+    // 1. Customer ID filter (using 'customerId' key from the filter component)
+    const itemCustomerId = normalize(item.customerId || item.customerCode)
+    if (filters.customerId && !itemCustomerId.includes(normalize(filters.customerId))) {
       return false
     }
-    // Customer Name filter
-    if (
-      filters.customerName &&
-      !(item.customerName || item.name)
-        ?.toLowerCase()
-        .includes(filters.customerName.toLowerCase())
-    ) {
-      return false
-    }
-    // Contact Person filter
-    if (
-      filters.contactPerson &&
-      !(item.contactPerson || item.contact)
-        ?.toLowerCase()
-        .includes(filters.contactPerson.toLowerCase())
-    ) {
-      return false
-    }
-    // Email Address filter
-    if (
-      filters.emailAddress &&
-      !(item.emailAddress || item.email)
-        ?.toLowerCase()
-        .includes(filters.emailAddress.toLowerCase())
-    ) {
-      return false
-    }
-    // City filter
-    if (
-      filters.city &&
-      !item.city
-        ?.toLowerCase()
-        .includes(filters.city.toLowerCase())
-    ) {
-      return false
-    }
-    // Status filter
-    if (filters.status && item.status !== filters.status) {
+    
+    // 2. Customer Name filter (using 'customerName' key from the filter component)
+    const itemCustomerName = normalize(item.customerName || item.name)
+    if (filters.customerName && !itemCustomerName.includes(normalize(filters.customerName))) {
       return false
     }
 
+    // 3. Email Address filter (using 'email' key from the filter component)
+    // Checks item.emailAddress or item.email against filters.email
+    const itemEmail = normalize(item.emailAddress || item.email)
+    if (filters.email && !itemEmail.includes(normalize(filters.email))) {
+      return false
+    }
+
+    // 4. Status filter (using 'status' key from the filter component)
+    // This must be an exact match (or case-insensitive exact match) if a status is selected
+    if (filters.status && normalize(item.status) !== normalize(filters.status)) {
+      return false
+    }
+
+    // Optional: If you had a Contact Person or City filter in your filter component, 
+    // you would add them here. They were in the original list but not in your filter component's data.
+
+    // If all checks pass, include the item
     return true
   })
 })
+
 
 // --- Pagination ---
 const currentPage = ref(1)
@@ -376,6 +361,8 @@ const changePage = (page) => {
 
 // Watch for filter changes and pagination changes to update 'select all' state
 watch([() => props.filters, currentPage], () => {
+  // Reset to page 1 on filter change
+  currentPage.value = 1
   setTimeout(updateSelectAllState, 0)
 }, { deep: true })
 
@@ -520,7 +507,7 @@ watch(
   () => props.filters,
   (newFilters) => {
     console.log("Filters updated:", newFilters)
-    currentPage.value = 1
+    currentPage.value = 1 // Crucial: Reset to first page on filter change
   },
   { deep: true }
 )

@@ -342,7 +342,18 @@ const errors = reactive({
   submit: ''
 })
 
-const statusOptions = ['Active', 'Inactive']
+const statusOptions = [
+  'Pending',
+  'Preparing',
+  'Ready for Dispatch',
+  'In Transit',
+  'Out for Delivery',
+  'Delivered',
+  'Failed Delivery',
+  'Returned',
+  'Cancelled'
+]
+
 const orders = ref<Order[]>([])
 // The keys here ('status', 'order') must match the keys passed to toggleDropdown
 const openDropdowns = reactive({ status: false, order: false })

@@ -55,7 +55,7 @@
             </div>
           </div>
 
-          <div class="flex gap-2 my-6">
+          <div  v-if="activeTab === 'overview'" class="flex gap-2 my-6">
             <button @click="openAddCustomerModal"
               class="px-4 py-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Add New Customer
@@ -252,17 +252,15 @@ const handleDeleteCustomer = async (result: Result) => {
 };
 
 const handleBulkDelete = async () => {
-  if (!customerTableRef.value || !('bulkDelete' in customerTableRef.value)) {
-    showToastMessage('Bulk delete feature not available or not implemented on table.', 'error');
-    return;
-  }
+  // if (!customerTableRef.value || !('bulkDelete' in customerTableRef.value)) {
+  //   showToastMessage('Bulk delete feature not available or not implemented on table.', 'error');
+  //   return;
+  // }
 
   const result: Result = await (customerTableRef.value as any).bulkDelete();
 
   if (result.success) {
     handleDeleteCustomer(result);
-  } else {
-    showToastMessage(result.error || 'Failed to delete selected customers', 'error');
   }
 };
 

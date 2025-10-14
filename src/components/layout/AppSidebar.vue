@@ -226,11 +226,6 @@ const menuGroups = [
         name: "Customer",
         path: "/customer",
       },
-      {
-        icon: BagIcon,
-        name: "Work Order Management",
-        path: "/workorder",
-      },
     ],
   },
   {
