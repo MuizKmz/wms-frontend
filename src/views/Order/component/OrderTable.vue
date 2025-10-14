@@ -81,22 +81,11 @@
             <!-- Order Number with expand/collapse -->
             <td class="px-6 py-4">
               <div class="flex items-center gap-2" :style="{ 'padding-left': (row.depth * 2) + 'rem' }">
-                <button v-if="row.isOrder && row.hasItems" @click="toggleExpand(row.id)"
-                  class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                  <svg class="w-4 h-4 transition-transform"
-                    :class="{ 'rotate-90': row.isExpanded }" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-                <div v-else class="w-4 h-4"></div>
+                <div class="w-4 h-4"></div>
 
-                <span class="font-mono text-sm" :class="{
-                    'text-gray-900 dark:text-white font-medium': row.depth === 0,
-                    'text-gray-700 dark:text-gray-300 font-normal': row.depth > 0
-                }">
+                <button @click="viewOrder(row)" class="text-left font-bold text-sm text-blue-600 dark:text-blue-400 hover:underline">
                   {{ row.orderNo || '-' }}
-                </span>
+                </button>
               </div>
             </td>
 
@@ -239,11 +228,14 @@
         <p class="text-xs mt-1">{{ error }}</p>
       </div>
     </div>
+  
+    <OrderView ref="orderViewRef" />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed, watch } from "vue"
+import OrderView from './OrderView.vue'
 import Swal from 'sweetalert2'
 
 // Props for order filters
@@ -255,7 +247,7 @@ const props = defineProps({
 })
 
 // Emits for parent component
-const emit = defineEmits(['edit-order', 'delete-order'])
+const emit = defineEmits(['edit-order', 'delete-order', 'view-order'])
 
 const data = ref([])
 const loading = ref(false)
@@ -402,20 +394,7 @@ const visibleRows = computed(() => {
       totalStockOutQuantity: calculateTotalStockOutQuantity(order)
     })
 
-    // Add child items if expanded
-    if (isExpanded && hasItems) {
-      order.orderItems.forEach((item) => {
-        rows.push({
-          ...item,
-          isOrder: false,
-          depth: 1,
-          parentId: order.id,
-          orderNo: order.orderNo,
-          customer: order.customer,
-          uniqueId: `I-${item.id}`
-        })
-      })
-    }
+    // NOTE: Subitems removed — only parent order rows are shown in the table
   })
 
   return rows
@@ -657,6 +636,19 @@ const adjustPageAfterDeletion = () => {
   if (currentPage.value > maxPage) {
     currentPage.value = maxPage
   }
+}
+
+// Modal ref for viewing order
+const orderViewRef = ref(null)
+
+// Open order modal and emit event
+const viewOrder = (row) => {
+  if (!orderViewRef.value) return
+  // only open for parent order rows
+  const payload = row && row.isOrder ? row : null
+  if (!payload) return
+  orderViewRef.value.openModal(payload)
+  emit('view-order', payload)
 }
 
 // Expose refresh method for parent component
