@@ -78,7 +78,7 @@
             </td>
 
             <td class="px-6 py-4">
-              <span class="text-left font-mono text-xs text-blue-600 dark:text-blue-400 hover:underline break-all">
+              <span class="text-left font-bold text-sm text-blue-600 dark:text-blue-400 hover:underline break-all">
                 {{ epc.epcCode || '-' }}
               </span>
             </td>

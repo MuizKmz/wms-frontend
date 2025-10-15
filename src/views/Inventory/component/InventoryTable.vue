@@ -61,11 +61,11 @@
                 Supplier Code
               </p>
             </th>
-            <th class="px-6 py-3 text-left">
+            <!-- <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
                 Supplier Name
               </p>
-            </th>
+            </th> -->
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
                 Warehouse Code
@@ -92,9 +92,10 @@
             </td>
 
             <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.product?.name }}
-              </p>
+              <button @click="viewInventory(item)" 
+                class="text-left font-bold text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                {{ item.product?.name || '-' }}
+              </button>
             </td>
 
             <td class="px-6 py-4">
@@ -111,45 +112,45 @@
 
             <td class="px-6 py-4 text-center">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.received || 0 }}
+                {{ calculateReceived(item) }}
               </p>
             </td>
 
             <td class="px-6 py-4 text-center">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.delivered || 0 }}
+                {{ calculateDelivered(item) }}
               </p>
             </td>
 
             <td class="px-6 py-4 text-center">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.inStock || 0 }}
+                {{ calculateInStock(item) }}
               </p>
             </td>
 
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.return || 0 }}
+                {{ calculateReturn(item) }}
               </p>
             </td>
 
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ formatDate(item.lastUpdatedAt || item.updatedAt) }}
+                {{ formatDate(item.lastUpdatedAt) }}
               </p>
             </td>
 
             <td class="px-6 py-4">
               <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ item.supplierCode || '-' }}
+                {{ item.product?.supplier?.supplierCode || '-' }}
               </span>
             </td>
 
-            <td class="px-6 py-4">
+            <!-- <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
                 {{ item.supplierName || '-' }}
               </p>
-            </td>
+            </td> -->
 
             <td class="px-6 py-4">
               <span class="font-mono text-sm text-gray-900 dark:text-white">
@@ -235,6 +236,9 @@ const props = defineProps({
     default: () => ({})
   }
 })
+
+// Emits for parent component
+const emit = defineEmits(['view-inventory'])
 
 // State for data and UI
 const data = ref([])
@@ -330,7 +334,7 @@ const filteredData = computed(() => {
 
     if (
       filters.productName &&
-      !item.productName
+      !item.product?.name
         .toLowerCase()
         .includes(filters.productName.toLowerCase())
     ) {
@@ -338,17 +342,22 @@ const filteredData = computed(() => {
     }
     if (
       filters.skuCode &&
-      !item.skuCode
+      !item.product?.skuCode
         .toLowerCase()
         .includes(filters.skuCode.toLowerCase())
     ) {
       return false
     }
-    if (filters.status && item.status !== filters.status) {
+    if (
+      filters.productCode &&
+      !item.product?.productCode
+        .toLowerCase()
+        .includes(filters.productCode.toLowerCase())
+    ) {
       return false
     }
-    if (filters.date && item.latestUpdate) {
-      const itemDate = new Date(item.latestUpdate).toISOString().split('T')[0]
+    if (filters.date && item.lastUpdatedAt) {
+      const itemDate = new Date(item.lastUpdatedAt).toISOString().split('T')[0]
       if (itemDate !== filters.date) {
         return false
       }
@@ -386,6 +395,36 @@ const formatDate = (dateString) => {
     month: 'short', 
     day: 'numeric' 
   })
+}
+
+// Calculate received quantity from EPCs with RECEIVED status
+const calculateReceived = (item) => {
+  if (!item.product?.epcs) return 0
+  return item.product.epcs.filter(epc => epc.status === 'RECEIVED').length
+}
+
+// Calculate delivered quantity from EPCs with DELIVERED status
+const calculateDelivered = (item) => {
+  if (!item.product?.epcs) return 0
+  return item.product.epcs.filter(epc => epc.status === 'DELIVERED').length
+}
+
+// Calculate in stock quantity from EPCs with INBOUND status
+const calculateInStock = (item) => {
+  if (!item.product?.epcs) return 0
+  return item.product.epcs.filter(epc => epc.status === 'INBOUND').length
+}
+
+// Calculate return quantity from EPCs with RETURNED status
+const calculateReturn = (item) => {
+  if (!item.product?.epcs) return 0
+  return item.product.epcs.filter(epc => epc.status === 'RETURNED').length
+}
+
+// --- Actions ---
+
+const viewInventory = (item) => {
+  emit('view-inventory', item)
 }
 
 // Watch for filter changes and pagination changes to update 'select all' state

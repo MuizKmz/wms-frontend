@@ -56,6 +56,7 @@
             v-if="currentComponent"
             ref="inventoryTableRef"
             :filters="activeFilters"
+            @view-inventory="handleViewInventory"
           />
         </div>
       </ComponentCard>
@@ -71,6 +72,11 @@
     ref="statusModalRef" 
     @file-uploaded="handleStatusFileUploaded" 
   />
+
+  <InventoryDetails 
+    ref="inventoryDetailsModalRef"
+    @close="handleCloseInventoryDetails"
+  />
 </template>
 
 <script setup lang="ts">
@@ -81,12 +87,26 @@ import ComponentCard from "@/components/common/ComponentCard.vue";
 import InventoryTable from "./component/InventoryTable.vue";
 import InventoryFilters from "./component/InventoryFilters.vue";
 import ImportUpdateInventory from "./component/ImportUpdateInventory.vue"; 
-// 1. Import the new modal component
 import ImportUpdateStatus from "./component/ImportUpdateStatus.vue";
+import InventoryDetails from "./component/InventoryDetails.vue";
 
 // Interface definitions
 interface Filters {
   [key: string]: string | number | boolean | undefined;
+}
+
+interface InventoryItem {
+  id: number;
+  productId: number;
+  warehouseId: number;
+  rackId: number;
+  sectionId: number;
+  quantity: number;
+  lastUpdatedAt: string;
+  product: any;
+  warehouse: any;
+  rack: any;
+  section: any;
 }
 
 // State and Refs
@@ -95,9 +115,10 @@ const activeFilters = ref<Filters>({});
 const inventoryTableRef = ref<InstanceType<typeof InventoryTable> | null>(null);
 const activeTab = ref('table'); 
 
-// 2. Refs for the modal components
+// Refs for the modal components
 const inventoryModalRef = ref<InstanceType<typeof ImportUpdateInventory> | null>(null);
 const statusModalRef = ref<InstanceType<typeof ImportUpdateStatus> | null>(null);
+const inventoryDetailsModalRef = ref<InstanceType<typeof InventoryDetails> | null>(null);
 
 // --- Tab Logic ---
 const inventoryTabs = [
@@ -168,7 +189,7 @@ const handleFileUploaded = (event: { success: boolean, data?: any, error?: strin
     if (event.success) {
         showToastMessage('Inventory stock updated successfully!', 'success');
         // Refresh the inventory table data
-        inventoryTableRef.value?.fetchData(); 
+        inventoryTableRef.value?.refreshData(); 
     } else {
         showToastMessage(event.error || 'Inventory stock upload failed. Please check the file.', 'error', 3500);
     }
@@ -181,9 +202,28 @@ const handleStatusFileUploaded = (event: { success: boolean, data?: any, error?:
     if (event.success) {
         showToastMessage('Inventory status updated successfully!', 'success');
         // Refresh the inventory table data
-        inventoryTableRef.value?.fetchData(); 
+        inventoryTableRef.value?.refreshData(); 
     } else {
         showToastMessage(event.error || 'Inventory status upload failed. Please check the file.', 'error', 3500);
     }
 }
+
+/**
+ * Handler for viewing inventory details
+ * Opens the InventoryDetails modal with the selected item
+ */
+const handleViewInventory = (item: InventoryItem) => {
+  console.log('Viewing inventory:', item);
+  if (inventoryDetailsModalRef.value) {
+    inventoryDetailsModalRef.value.openModal(item);
+  }
+};
+
+/**
+ * Handler for closing the inventory details modal
+ */
+const handleCloseInventoryDetails = () => {
+  // Optionally refresh the table after closing the modal
+  // inventoryTableRef.value?.refreshData();
+};
 </script>

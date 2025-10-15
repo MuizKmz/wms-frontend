@@ -132,7 +132,7 @@
                   <!-- Customer ID -->
                   <div class="relative">
                     <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
-                      <span class="text-red-500">+</span> Customer ID
+                      <span class="text-red-500">*</span> Customer ID
                     </label>
                     <div class="dropdown relative inline-flex w-full" ref="customerDropdownRef">
                       <button
@@ -156,7 +156,7 @@
                       >
                         <li v-for="customer in customers" :key="customer.id">
                           <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('customerId', customer.id.toString())">
-                            {{ customer.customerName }} (ID: {{ customer.id }})
+                            {{ customer.customerName }}
                           </a>
                         </li>
                       </ul>
@@ -370,7 +370,7 @@ import 'flatpickr/dist/flatpickr.css'
 
 interface Customer {
   id: number
-  name: string
+  customerName: string
 }
 
 interface Product {
@@ -410,7 +410,7 @@ const form = reactive<OrderForm>({
   orderType: '',
   customerId: null,
   picName: '',
-  estimatedDeliveryTime: new Date().toISOString(),
+  estimatedDeliveryTime: '',
   orderItems: [{ productId: '', quantity: 1, status: 'pending' }]
 })
 
@@ -435,7 +435,7 @@ const openDropdowns = reactive<Record<string, boolean>>({
 const selectedCustomerLabel = computed(() => {
   if (!form.customerId) return null
   const customer = customers.value.find(c => c.id.toString() === form.customerId)
-  return customer ? `${customer.customerName} (ID: ${customer.id})` : null
+  return customer ? customer.customerName : null
 })
 
 /* Scroll Lock */
@@ -580,7 +580,7 @@ const openModal = async () => {
   form.orderType = ''
   form.customerId = null
   form.picName = ''
-  form.estimatedDeliveryTime = new Date().toISOString()
+  form.estimatedDeliveryTime = ''
   form.orderItems = [{ productId: '', quantity: 1, status: 'pending' }]
   Object.keys(errors).forEach(key => errors[key as keyof typeof errors] = '')
 
@@ -591,9 +591,14 @@ const openModal = async () => {
   if (deliveryDateInput.value && !flatpickrInstance) {
     flatpickrInstance = flatpickr(deliveryDateInput.value, {
       dateFormat: 'Y-m-d',
-      defaultDate: new Date(form.estimatedDeliveryTime),
+      defaultDate: new Date(),
       onChange: (dates: Date[]) => {
-        if (dates[0]) form.estimatedDeliveryTime = dates[0].toISOString()
+        if (dates[0]) {
+          const year = dates[0].getFullYear()
+          const month = String(dates[0].getMonth() + 1).padStart(2, '0')
+          const day = String(dates[0].getDate()).padStart(2, '0')
+          form.estimatedDeliveryTime = `${year}-${month}-${day}`
+        }
       }
     })
   }
@@ -623,7 +628,7 @@ const submitForm = async () => {
       orderType: form.orderType,
       customerId: form.customerId ? parseInt(form.customerId) : null,
       picName: form.picName,
-      status: 'Draft', // ADD THIS
+      status: 'Draft',
       estimatedDeliveryTime: form.estimatedDeliveryTime,
       orderItems: form.orderItems.map(item => ({
         productId: parseInt(item.productId.toString()),

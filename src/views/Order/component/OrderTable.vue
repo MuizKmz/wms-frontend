@@ -531,6 +531,7 @@ const deleteOrder = async (item) => {
     let body = null
     try {
       body = await response.json()
+      CONSOLE.log('Delete response body:', body)
     } catch (e) {
       // ignore parse errors
     }
