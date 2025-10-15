@@ -15,49 +15,55 @@
               <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select all"
                 :checked="selectAll" @change="toggleSelectAll" />
             </th>
-            
-            <th class="px-6 py-3 text-left min-w-[150px]">
+
+            <th class="px-6 py-3 text-left min-w-[200px]">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
                 EPC Code
               </p>
             </th>
-            
+
             <th class="px-6 py-3 text-left min-w-[100px]">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
                 Corp Code
               </p>
             </th>
-            
+
             <th class="px-6 py-3 text-left min-w-[120px]">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
                 SKU Code
               </p>
             </th>
-            
-            <th class="px-6 py-3 text-left min-w-[150px]">
+
+            <th class="px-6 py-3 text-left min-w-[120px]">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
                 Serial Number
               </p>
             </th>
-            
-            <th class="px-6 py-3 text-left min-w-[120px]">
+
+            <th class="px-6 py-3 text-left min-w-[100px]">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Batch Number
+                Batch No.
               </p>
             </th>
-            
-            <th class="px-6 py-3 text-left min-w-[200px]">
+
+            <th class="px-6 py-3 text-left min-w-[150px]">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Remark
+                Batch Name
               </p>
             </th>
-            
+
+            <th class="px-6 py-3 text-left min-w-[100px]">
+              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+                Status
+              </p>
+            </th>
+
             <th class="px-6 py-3 text-left min-w-[150px]">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
                 Created Time
               </p>
             </th>
-            
+
           </tr>
         </thead>
 
@@ -72,26 +78,26 @@
             </td>
 
             <td class="px-6 py-4">
-              <span class="text-left font-bold text-sm text-blue-600 dark:text-blue-400 hover:underline">
+              <span class="text-left font-mono text-xs text-blue-600 dark:text-blue-400 hover:underline break-all">
                 {{ epc.epcCode || '-' }}
               </span>
             </td>
 
             <td class="px-6 py-4">
               <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ epc.corpCode || 'AA00' }} 
+                {{ parseEPCCode(epc.epcCode).corpCode || epc.corpCode?.code || '-' }}
               </span>
             </td>
 
             <td class="px-6 py-4">
-              <span class="text-sm text-gray-900 dark:text-white">
-                {{ epc.product?.skuCode || '-' }}
+              <span class="font-mono text-sm text-gray-900 dark:text-white">
+                {{ parseEPCCode(epc.epcCode).skuCode || epc.product?.skuCode || '-' }}
               </span>
             </td>
 
             <td class="px-6 py-4">
-              <span class="text-sm text-gray-900 dark:text-white">
-                {{ extractSerialNumber(epc.epcCode) || '-' }}
+              <span class="font-mono text-sm font-semibold text-green-600 dark:text-green-400">
+                {{ parseEPCCode(epc.epcCode).serialNumber || '-' }}
               </span>
             </td>
 
@@ -103,7 +109,14 @@
 
             <td class="px-6 py-4">
               <span class="text-sm text-gray-900 dark:text-white">
-                {{ epc.product?.remarks || epc.remark || '-' }}
+                {{ epc.batchName || '-' }}
+              </span>
+            </td>
+
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                :class="getStatusClass(epc.status)">
+                {{ epc.status || 'GENERATED' }}
               </span>
             </td>
 
@@ -112,7 +125,7 @@
                 {{ formatDateTime(epc.createdAt) || '-' }}
               </span>
             </td>
-            
+
           </tr>
         </tbody>
       </table>
@@ -174,9 +187,6 @@
 import { ref, onMounted, computed, watch } from "vue"
 import Swal from 'sweetalert2'
 
-// NOTE: Add type definitions if using TypeScript in this file
-// const EpcRecord = { ... }
-
 const props = defineProps({
   filters: {
     type: Object,
@@ -192,7 +202,7 @@ const error = ref(null)
 const selectedItems = ref([])
 const selectAll = ref(false)
 
-const API_URL = '/api/epc' 
+const API_URL = '/api/epc'
 
 // --- Data Fetching ---
 const fetchEPCs = async () => {
@@ -204,11 +214,9 @@ const fetchEPCs = async () => {
     if (!response.ok) throw new Error("Failed to fetch EPC records")
 
     const json = await response.json()
-    // Map data to include a uniqueId for selection logic
     data.value = (json || []).map(epc => ({
       ...epc,
-      // Ensure there's an 'id' or other primary key for uniqueId generation
-      uniqueId: `E-${epc.id || Math.random()}`, 
+      uniqueId: `E-${epc.id || Math.random()}`,
     }))
   } catch (e) {
     error.value = e.message
@@ -222,11 +230,42 @@ onMounted(() => {
   fetchEPCs()
 })
 
-// --- Data Transformation Helpers ---
-const extractSerialNumber = (epcCode) => {
-    if (!epcCode) return null;
-    const parts = epcCode.split('-');
-    return parts[parts.length - 1];
+// --- EPC Code Parser ---
+/**
+ * Parse EPC code format: corpCode(4) + skuCode(8) + date(6) + serialNumber(6) = 24 chars
+ * Example: AA0012345678151025000001
+ * - Corp Code: AA00 (4 chars)
+ * - SKU Code: 12345678 (8 chars)
+ * - Date: 151025 (DDMMYY - 6 chars)
+ * - Serial Number: 000001 (6 chars)
+ */
+const parseEPCCode = (epcCode) => {
+  if (!epcCode || epcCode.length < 24) {
+    return {
+      corpCode: null,
+      skuCode: null,
+      date: null,
+      serialNumber: null
+    }
+  }
+
+  return {
+    corpCode: epcCode.substring(0, 4),           // Characters 0-3
+    skuCode: epcCode.substring(4, 12),          // Characters 4-11
+    date: epcCode.substring(12, 18),            // Characters 12-17
+    serialNumber: epcCode.substring(18, 24)     // Characters 18-23 (last 6 digits)
+  }
+}
+
+// --- Status Badge Styling ---
+const getStatusClass = (status) => {
+  const statusMap = {
+    GENERATED: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+    RECEIVED: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+    DELIVERED: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
+    INBOUND: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+  }
+  return statusMap[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
 }
 
 // --- Filtering & Pagination Logic ---
@@ -244,13 +283,17 @@ const filteredData = computed(() => {
       props.filters.skuCode &&
       (!item.product?.skuCode || !item.product.skuCode.toLowerCase().includes(props.filters.skuCode.toLowerCase()))
     ) return false
-    
+    if (
+      props.filters.batchName &&
+      (!item.batchName || !item.batchName.toLowerCase().includes(props.filters.batchName.toLowerCase()))
+    ) return false
+
     return true
   })
 })
 
 const currentPage = ref(1)
-const itemsPerPage = ref(5)
+const itemsPerPage = ref(10)
 
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value
@@ -331,7 +374,6 @@ const updateSelectAllState = () => {
 
 watch(paginatedData, updateSelectAllState, { deep: true, immediate: true })
 
-
 // --- Utility Functions ---
 const formatDateTime = (dateString) => {
   if (!dateString) return '-'
@@ -359,7 +401,6 @@ const viewEPC = (epc) => {
 // Bulk delete selected EPCs
 const bulkDelete = async () => {
   if (!selectedItems.value || selectedItems.value.length === 0) {
-    // Show a user-friendly message without Swal.fire to allow the parent to handle the toast
     return { success: false, error: 'No items selected', data: { deletedCount: 0 } }
   }
 
@@ -382,11 +423,10 @@ const bulkDelete = async () => {
       .filter(id => id.startsWith('E-'))
       .map(id => parseInt(id.replace('E-', '')))
 
-    // NOTE: Replace with your actual API endpoint if different
     const response = await fetch(`${API_URL}/bulk-delete`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ epcIds })
+      body: JSON.stringify({ ids: epcIds }) // Changed from 'epcIds' to 'ids'
     })
 
     if (!response.ok) {
@@ -401,7 +441,6 @@ const bulkDelete = async () => {
     await fetchEPCs()
     adjustPageAfterDeletion()
 
-    // Pass the result back to the parent component
     return { success: true, data: result }
 
   } catch (error) {
@@ -448,6 +487,6 @@ defineExpose({ refreshData, selectedItems, bulkDelete })
 }
 
 tbody tr {
-    cursor: pointer;
+  cursor: pointer;
 }
 </style>

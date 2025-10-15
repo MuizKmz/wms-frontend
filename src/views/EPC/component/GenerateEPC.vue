@@ -56,18 +56,106 @@
                   <span>{{ errors.submit }}</span>
                 </div>
 
+                <!-- Corp Code: Select or Create -->
                 <div class="relative">
                   <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
-                    Corp Code
+                    <span class="text-red-500">*</span> Corp Code
                   </label>
-                  <input
-                    v-model="form.corpCode"
-                    type="text"
-                    readonly
-                    :class="['input input-bordered w-full bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white pointer-events-none']"
-                  />
+                  <div class="flex gap-2">
+                    <div class="dropdown relative inline-flex w-full" ref="corpCodeDropdownRef">
+                      <button
+                        type="button"
+                        :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.corpCode }]"
+                        :aria-expanded="openDropdowns.corpCode"
+                        @click.stop="toggleDropdown('corpCode')"
+                        :disabled="loadingCorpCodes"
+                      >
+                        {{ selectedCorpCodeLabel || 'Select or Create' }}
+                        <span
+                          class="icon-[tabler--chevron-down] size-4 transition-transform"
+                          :class="{ 'rotate-180': openDropdowns.corpCode }"
+                        ></span>
+                      </button>
+
+                      <ul
+                        class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
+                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.corpCode, 'opacity-0 pointer-events-none': !openDropdowns.corpCode }"
+                        role="menu"
+                      >
+                        <li v-for="code in corpCodes" :key="code.id" class="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+                          <a
+                            class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer"
+                            @click="selectCorpCode(code)"
+                          >
+                            {{ code.code }} <span v-if="code.label" class="text-gray-500 dark:text-gray-400">- {{ code.label }}</span>
+                          </a>
+                        </li>
+                        <li class="border-t border-gray-200 dark:border-gray-700 px-4 py-2">
+                          <button
+                            type="button"
+                            class="text-sm text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+                            @click="openCreateCorpCode"
+                          >
+                            + Create New Corp Code
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div v-if="errors.corpCode" class="text-xs text-red-600 dark:text-red-400 mt-1">{{ errors.corpCode }}</div>
                 </div>
 
+                <!-- Create New Corp Code Modal (Inline) -->
+                <div v-if="showCreateCorpCode" class="p-4 border border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                  <h3 class="text-sm font-semibold mb-3 text-gray-900 dark:text-white">Create New Corp Code</h3>
+                  <div class="space-y-3">
+                    <div>
+                      <label class="block text-xs mb-1 text-gray-700 dark:text-gray-300">
+                        Code (4 Hex Characters)
+                      </label>
+                      <input
+                        v-model="newCorpCodeForm.code"
+                        type="text"
+                        placeholder="e.g., AA00"
+                        maxlength="4"
+                        class="input input-bordered w-full text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white uppercase"
+                        @input="newCorpCodeForm.code = $event.target.value.toUpperCase()"
+                      />
+                      <div v-if="errors.newCorpCodeCode" class="text-xs text-red-600 dark:text-red-400 mt-1">{{ errors.newCorpCodeCode }}</div>
+                    </div>
+                    <div>
+                      <label class="block text-xs mb-1 text-gray-700 dark:text-gray-300">
+                        Label (Optional)
+                      </label>
+                      <input
+                        v-model="newCorpCodeForm.label"
+                        type="text"
+                        placeholder="e.g., Main Office"
+                        maxlength="100"
+                        class="input input-bordered w-full text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      />
+                    </div>
+                    <div class="flex gap-2">
+                      <button
+                        type="button"
+                        @click="createCorpCode"
+                        class="btn btn-sm btn-primary"
+                        :disabled="!newCorpCodeForm.code"
+                      >
+                        Create
+                      </button>
+                      <button
+                        type="button"
+                        @click="showCreateCorpCode = false"
+                        class="btn btn-sm btn-outline"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Product Name -->
                 <div class="relative">
                   <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
                     <span class="text-red-500">*</span> Product Name
@@ -101,7 +189,8 @@
                   </div>
                   <div v-if="errors.productName" class="text-xs text-red-600 dark:text-red-400 mt-1">{{ errors.productName }}</div>
                 </div>
-                
+
+                <!-- Batch Name -->
                 <div class="relative">
                   <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
                     Batch Name
@@ -116,9 +205,10 @@
                   <div v-if="errors.batchName" class="text-xs text-red-600 dark:text-red-400 mt-1">{{ errors.batchName }}</div>
                 </div>
 
+                <!-- Batch Quantity -->
                 <div class="relative">
                   <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
-                    Batch Quantity
+                    Batch Quantity (Serial: 000001 - {{ String(form.batchQuantity).padStart(6, '0') }})
                   </label>
                   <div class="flex items-center gap-0">
                     <button
@@ -146,7 +236,8 @@
                   </div>
                   <div v-if="errors.batchQuantity" class="text-xs text-red-600 dark:text-red-400 mt-1">{{ errors.batchQuantity }}</div>
                 </div>
-                
+
+                <!-- Remarks -->
                 <div class="relative">
                   <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
                     Remarks
@@ -181,17 +272,21 @@
 <script setup lang="ts">
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 
-// Simplified Product Interface for this modal
 interface Product {
   id: number
   name: string
-  // Assuming the API returns a 'name' field, adjust if necessary (e.g., 'productName', 'sku')
+  skuCode?: string
 }
 
-// Updated Form Structure
+interface CorpCode {
+  id: number
+  code: string
+  label?: string
+}
+
 interface EPCForm {
-  corpCode: string
-  productName: string | null
+  corpCodeId: number | null
+  productId: number | null
   batchName: string
   batchQuantity: number
   remarks: string
@@ -203,36 +298,53 @@ const emit = defineEmits(['epc-generated'])
 const isOpen = ref(false)
 const isSubmitting = ref(false)
 const loadingProducts = ref(false)
+const loadingCorpCodes = ref(false)
+const showCreateCorpCode = ref(false)
 const panelRef = ref<HTMLElement | null>(null)
 
 const form = reactive<EPCForm>({
-  corpCode: 'AA00', // Hardcoded as per image
-  productName: null,
+  corpCodeId: null,
+  productId: null,
   batchName: '',
   batchQuantity: 1,
   remarks: ''
 })
 
+const newCorpCodeForm = reactive({
+  code: '',
+  label: ''
+})
+
 const errors = reactive({
   submit: '',
+  corpCode: '',
   productName: '',
   batchName: '',
   batchQuantity: '',
   remarks: '',
+  newCorpCodeCode: '',
 })
 
-// Simplified product list
-const products = ref<Product[]>([]) 
+const products = ref<Product[]>([])
+const corpCodes = ref<CorpCode[]>([])
 const openDropdowns = reactive<Record<string, boolean>>({
+  corpCode: false,
   product: false
 })
 
-const selectedProductLabel = computed(() => {
-  if (!form.productName) return null
-  return form.productName
+const selectedCorpCodeLabel = computed(() => {
+  if (!form.corpCodeId) return null
+  const code = corpCodes.value.find(c => c.id === form.corpCodeId)
+  return code ? `${code.code}${code.label ? ` - ${code.label}` : ''}` : null
 })
 
-/* Scroll Lock (Keeping existing logic) */
+const selectedProductLabel = computed(() => {
+  if (!form.productId) return null
+  const product = products.value.find(p => p.id === form.productId)
+  return product?.name || null
+})
+
+/* Scroll Lock */
 let scrollY = 0
 let scrollbarWidth = 0
 
@@ -259,28 +371,35 @@ const unlockScroll = () => {
 
 /* Fetch Data */
 const fetchData = async () => {
+  loadingCorpCodes.value = true
   loadingProducts.value = true
   try {
-    // CORRECTED: Using the specified endpoint /api/product
-    const productsRes = await fetch('/api/product') 
+    const [corpCodesRes, productsRes] = await Promise.all([
+      fetch('/api/corp-code'),
+      fetch('/api/product')
+    ])
+
+    if (corpCodesRes.ok) {
+      corpCodes.value = await corpCodesRes.json()
+    } else {
+      errors.submit = 'Failed to load corp codes'
+    }
 
     if (productsRes.ok) {
-        // ASSUMPTION: The /api/product response is an array of objects
-        // that contain 'id' and 'name' properties. Adjust Product interface if needed.
-        products.value = await productsRes.json()
+      const list = await productsRes.json()
+      products.value = (Array.isArray(list) ? list : []).map((p: any) => ({
+        id: p.id,
+        name: p.name || p.productCode || p.sku_code || String(p.id),
+        skuCode: p.sku_code || p.skuCode || null,
+      }))
     } else {
-        // Fallback mock data if API fails 
-        products.value = [
-            { id: 1, name: 'Product Alpha' },
-            { id: 2, name: 'Product Beta' },
-            { id: 3, name: 'Product Gamma' },
-        ]
-        console.warn('Failed to fetch products from /api/product. Using mock data.')
+      errors.submit = 'Failed to load products'
     }
   } catch (error) {
-    console.error('Error fetching product data:', error)
-    errors.submit = 'Failed to load products'
+    console.error('Error fetching data:', error)
+    errors.submit = 'Failed to load data'
   } finally {
+    loadingCorpCodes.value = false
     loadingProducts.value = false
   }
 }
@@ -290,8 +409,13 @@ const validateForm = () => {
   Object.keys(errors).forEach(key => (errors[key as keyof typeof errors] = ''))
   let isValid = true
 
-  if (!form.productName) {
-    errors.productName = 'Product Name is required'
+  if (!form.corpCodeId) {
+    errors.corpCode = 'Corp Code selection is required'
+    isValid = false
+  }
+
+  if (!form.productId) {
+    errors.productName = 'Product selection is required'
     isValid = false
   }
 
@@ -299,12 +423,9 @@ const validateForm = () => {
     errors.batchQuantity = 'Quantity must be at least 1'
     isValid = false
   }
-  
+
   return isValid
 }
-
-/* Clear errors on input */
-watch(() => form.productName, () => { if (errors.productName) errors.productName = '' })
 
 /* Helpers */
 const toggleDropdown = (name: string) => {
@@ -314,13 +435,57 @@ const toggleDropdown = (name: string) => {
   openDropdowns[name] = !openDropdowns[name]
 }
 
+const selectCorpCode = (code: CorpCode) => {
+  form.corpCodeId = code.id
+  openDropdowns.corpCode = false
+  showCreateCorpCode.value = false
+}
+
 const selectProduct = (product: Product) => {
-  form.productName = product.name
+  form.productId = product.id
   openDropdowns.product = false
 }
 
 const updateQuantity = (change: number) => {
-  form.batchQuantity = Math.max(1, form.batchQuantity + change);
+  form.batchQuantity = Math.max(1, form.batchQuantity + change)
+}
+
+const openCreateCorpCode = () => {
+  showCreateCorpCode.value = true
+  openDropdowns.corpCode = false
+}
+
+const createCorpCode = async () => {
+  errors.newCorpCodeCode = ''
+  if (!/^[0-9A-Fa-f]{4}$/.test(newCorpCodeForm.code)) {
+    errors.newCorpCodeCode = 'Must be exactly 4 hexadecimal characters'
+    return
+  }
+
+  try {
+    const response = await fetch('/api/corp-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code: newCorpCodeForm.code.toUpperCase(),
+        label: newCorpCodeForm.label || null
+      })
+    })
+
+    if (response.ok) {
+      const newCode = await response.json()
+      corpCodes.value.push(newCode)
+      form.corpCodeId = newCode.id
+      newCorpCodeForm.code = ''
+      newCorpCodeForm.label = ''
+      showCreateCorpCode.value = false
+      openDropdowns.corpCode = false
+    } else {
+      errors.newCorpCodeCode = 'Failed to create corp code'
+    }
+  } catch (error) {
+    errors.newCorpCodeCode = 'Error creating corp code'
+  }
 }
 
 const handleClickOutside = (event: MouseEvent) => {
@@ -334,12 +499,14 @@ const handleClickOutside = (event: MouseEvent) => {
 const openModal = async () => {
   await fetchData()
 
-  // Reset form
-  form.corpCode = 'AA00'
-  form.productName = null
+  form.corpCodeId = null
+  form.productId = null
   form.batchName = ''
   form.batchQuantity = 1
   form.remarks = ''
+  newCorpCodeForm.code = ''
+  newCorpCodeForm.label = ''
+  showCreateCorpCode.value = false
   Object.keys(errors).forEach(key => (errors[key as keyof typeof errors] = ''))
 
   isOpen.value = true
@@ -361,8 +528,8 @@ const submitForm = async () => {
 
   try {
     const submissionData = {
-      corpCode: form.corpCode,
-      productName: form.productName,
+      corpCodeId: form.corpCodeId,
+      productId: form.productId,
       batchName: form.batchName || null,
       batchQuantity: form.batchQuantity,
       remarks: form.remarks || null,
@@ -381,12 +548,12 @@ const submitForm = async () => {
 
     const data = await response.json()
     await closeModal()
-    emit('epc-generated', { success: true, data }) 
+    emit('epc-generated', { success: true, data })
 
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to generate EPC batch.'
     errors.submit = message
-    emit('epc-generated', { success: false, error: message }) 
+    emit('epc-generated', { success: false, error: message })
   } finally {
     isSubmitting.value = false
   }
@@ -402,7 +569,6 @@ onBeforeUnmount(() => {
   if (isOpen.value) unlockScroll()
 })
 
-// CRUCIAL: Expose methods for parent component interaction
 defineExpose({ openModal, closeModal })
 </script>
 
@@ -411,7 +577,6 @@ defineExpose({ openModal, closeModal })
   transform-origin: center;
 }
 
-/* Style to make input look seamless with buttons */
 .input-bordered.border-x-0 {
   border-left-width: 0px !important;
   border-right-width: 0px !important;
