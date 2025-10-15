@@ -29,7 +29,7 @@
           <div
             v-if="isOpen"
             ref="panelRef"
-            class="relative z-10 w-full max-w-xl mx-4 max-h-[90vh] flex flex-col"
+            class="relative z-10 w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col"
             @click.stop
             role="dialog"
             aria-modal="true"
@@ -38,7 +38,7 @@
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col min-h-[600px] max-h-[90vh]">
               <div class="flex items-center justify-between p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">
-                  Edit Shipment
+                  Edit Order
                 </h2>
                 <button
                   type="button"
@@ -56,111 +56,17 @@
                   <span>{{ errors.submit }}</span>
                 </div>
 
+                <!-- Order Number -->
                 <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Tracking Code
-                  </label>
-                  <input
-                    v-model="form.trackingCode"
-                    type="text"
-                    placeholder="Enter Tracking Code"
-                    maxlength="50"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.trackingCode }]"
-                  />
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.trackingCode" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.trackingCode }}</p>
-                    </div>
-                  </transition>
-                </div>
-
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Shipping Carrier
-                  </label>
-                  <input
-                    v-model="form.carrier"
-                    type="text"
-                    placeholder="Enter Carrier"
-                    maxlength="50"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.carrier }]"
-                  />
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.carrier" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.carrier }}</p>
-                    </div>
-                  </transition>
-                </div>
-
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                  <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
                     <span class="text-red-500">*</span> Order Number
                   </label>
-                  <div class="dropdown relative inline-flex w-full" ref="orderDropdownRef">
-                    <button
-                      type="button"
-                      :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.order }]"
-                      :aria-expanded="openDropdowns.order"
-                      @click.stop="toggleDropdown('order')"
-                      :disabled="loadingOrders"
-                    >
-                      {{ form.order || 'Select Order' }}
-                      <span
-                        class="icon-[tabler--chevron-down] size-4 transition-transform"
-                        :class="{ 'rotate-180': openDropdowns.order }"
-                      ></span>
-                    </button>
-
-                    <ul
-                      class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
-                      :class="{ 'opacity-100 pointer-events-auto': openDropdowns.order, 'opacity-0 pointer-events-none': !openDropdowns.order }"
-                      role="menu"
-                    >
-                      <li v-for="order in orders" :key="order.id">
-                        <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('order', order.orderNo)">
-                          {{ order.orderNo }}
-                        </a>
-                      </li>
-                    </ul>
-                  </div>
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.order" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.order }}</p>
-                    </div>
-                  </transition>
-                </div>
-
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Destination
-                  </label>
                   <input
-                    v-model="form.destination"
+                    v-model="form.orderNo"
                     type="text"
-                    placeholder="Enter Shipping Destination"
+                    placeholder="Enter Order Number"
                     maxlength="50"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.destination }]"
+                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.orderNo }]"
                   />
                   <transition
                     enter-active-class="transition-all duration-200 ease-out"
@@ -170,66 +76,121 @@
                     leave-from-class="opacity-100 translate-y-0"
                     leave-to-class="opacity-0 -translate-y-1"
                   >
-                    <div v-if="errors.destination" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.destination }}</p>
+                    <div v-if="errors.orderNo" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.orderNo }}</p>
                     </div>
                   </transition>
                 </div>
 
+                <!-- Order Type & Customer ID Row -->
+                <div class="grid grid-cols-2 gap-4">
+                  <!-- Order Type -->
                   <div class="relative">
-                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                      Shipping Date
+                    <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
+                      <span class="text-red-500">*</span> Order Type
                     </label>
-                    <input
-                      ref="shippingDateInput"
-                      v-model="form.shippingDate"
-                      type="text"
-                      placeholder="Select Date"
-                      :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.shippingDate }]"
-                      readonly
-                    />
+                    <div class="dropdown relative inline-flex w-full" ref="orderTypeDropdownRef">
+                      <button
+                        type="button"
+                        :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.orderType }]"
+                        :aria-expanded="openDropdowns.orderType"
+                        @click.stop="toggleDropdown('orderType')"
+                      >
+                        {{ form.orderType || 'Select Type' }}
+                        <span
+                          class="icon-[tabler--chevron-down] size-4 transition-transform"
+                          :class="{ 'rotate-180': openDropdowns.orderType }"
+                        ></span>
+                      </button>
+
+                      <ul
+                        class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white"
+                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.orderType, 'opacity-0 pointer-events-none': !openDropdowns.orderType }"
+                        role="menu"
+                      >
+                        <li v-for="type in orderTypes" :key="type">
+                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('orderType', type)">
+                            {{ type }}
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                    <transition
+                      enter-active-class="transition-all duration-200 ease-out"
+                      enter-from-class="opacity-0 -translate-y-1"
+                      enter-to-class="opacity-100 translate-y-0"
+                      leave-active-class="transition-all duration-150 ease-in"
+                      leave-from-class="opacity-100 translate-y-0"
+                      leave-to-class="opacity-0 -translate-y-1"
+                    >
+                      <div v-if="errors.orderType" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                        <p class="text-xs text-red-600 dark:text-red-400">{{ errors.orderType }}</p>
+                      </div>
+                    </transition>
                   </div>
 
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    Estimated Delivery Date
-                  </label>
-                  <input
-                    ref="estimatedDeliveryDateInput"
-                    v-model="form.estimatedDeliveryDate"
-                    type="text"
-                    placeholder="Select Date"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.estimatedDeliveryDate }]"
-                    readonly
-                  />
+                  <!-- Customer ID -->
+                  <div class="relative">
+                    <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
+                      <span class="text-red-500">*</span> Customer ID
+                    </label>
+                    <div class="dropdown relative inline-flex w-full" ref="customerDropdownRef">
+                      <button
+                        type="button"
+                        :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.customerId }]"
+                        :aria-expanded="openDropdowns.customer"
+                        @click.stop="toggleDropdown('customer')"
+                        :disabled="loadingCustomers"
+                      >
+                        {{ selectedCustomerLabel || 'Select Customer' }}
+                        <span
+                          class="icon-[tabler--chevron-down] size-4 transition-transform"
+                          :class="{ 'rotate-180': openDropdowns.customer }"
+                        ></span>
+                      </button>
+
+                      <ul
+                        class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
+                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.customer, 'opacity-0 pointer-events-none': !openDropdowns.customer }"
+                        role="menu"
+                      >
+                        <li v-for="customer in customers" :key="customer.id">
+                          <a
+                            class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer"
+                            @click="selectOption('customerId', customer.id.toString())"
+                            :class="{ 'bg-blue-100 dark:bg-blue-900/40': form.customerId === customer.id.toString() }"
+                          >
+                            {{ customer.customerName }}
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
 
+                <!-- Order Status -->
                 <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Status
+                  <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
+                    <span class="text-red-500">*</span> Order Status
                   </label>
-                  <div class="dropdown relative inline-flex w-full" ref="statusDropdownRef">
+                  <div class="dropdown relative inline-flex w-full" ref="orderStatusDropdownRef">
                     <button
                       type="button"
-                      :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.status }]"
-                      :aria-expanded="openDropdowns.status"
-                      @click.stop="toggleDropdown('status')"
+                      :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.orderStatus }]"
+                      :aria-expanded="openDropdowns.orderStatus"
+                      @click.stop="toggleDropdown('orderStatus')"
                     >
                       {{ form.status || 'Select Status' }}
-                      <span
-                        class="icon-[tabler--chevron-down] size-4 transition-transform"
-                        :class="{ 'rotate-180': openDropdowns.status }"
-                      ></span>
+                      <span class="icon-[tabler--chevron-down] size-4 transition-transform" :class="{ 'rotate-180': openDropdowns.orderStatus }"></span>
                     </button>
-
                     <ul
                       class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white"
-                      :class="{ 'opacity-100 pointer-events-auto': openDropdowns.status, 'opacity-0 pointer-events-none': !openDropdowns.status }"
+                      :class="{ 'opacity-100 pointer-events-auto': openDropdowns.orderStatus, 'opacity-0 pointer-events-none': !openDropdowns.orderStatus }"
                       role="menu"
                     >
-                      <li v-for="status in statusOptions" :key="status">
-                        <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('status', status)">
-                          {{ status }}
+                      <li v-for="stat in orderStatuses" :key="stat">
+                        <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('orderStatus', stat)">
+                          {{ stat }}
                         </a>
                       </li>
                     </ul>
@@ -242,22 +203,23 @@
                     leave-from-class="opacity-100 translate-y-0"
                     leave-to-class="opacity-0 -translate-y-1"
                   >
-                    <div v-if="errors.status" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.status }}</p>
+                    <div v-if="errors.orderStatus" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.orderStatus }}</p>
                     </div>
                   </transition>
                 </div>
 
+                <!-- PIC Name -->
                 <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    Remarks
+                  <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
+                    <span class="text-red-500">*</span> PIC's Name
                   </label>
                   <input
-                    v-model="form.remark"
+                    v-model="form.picName"
                     type="text"
-                    placeholder="Enter Remarks"
-                    maxlength="200"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.remark }]"
+                    placeholder="Enter PIC Name"
+                    maxlength="100"
+                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.picName }]"
                   />
                   <transition
                     enter-active-class="transition-all duration-200 ease-out"
@@ -267,8 +229,157 @@
                     leave-from-class="opacity-100 translate-y-0"
                     leave-to-class="opacity-0 -translate-y-1"
                   >
-                    <div v-if="errors.remark" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.remark }}</p>
+                    <div v-if="errors.picName" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.picName }}</p>
+                    </div>
+                  </transition>
+                </div>
+
+                <!-- Order Items Section -->
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Order Items</h3>
+
+                  <!-- Unified Item Status -->
+                  <div class="mb-4 relative">
+                    <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">Order Item Status</label>
+                    <div class="dropdown relative inline-flex w-full" ref="itemStatusDropdownRef">
+                      <button
+                        type="button"
+                        class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400"
+                        :aria-expanded="openDropdowns.itemStatus"
+                        @click.stop="toggleDropdown('itemStatus')"
+                      >
+                        {{ form.itemStatus || 'Select Item Status' }}
+                        <span class="icon-[tabler--chevron-down] size-4 transition-transform" :class="{ 'rotate-180': openDropdowns.itemStatus }"></span>
+                      </button>
+                      <ul
+                        class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white"
+                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.itemStatus, 'opacity-0 pointer-events-none': !openDropdowns.itemStatus }"
+                        role="menu"
+                      >
+                        <li v-for="st in itemStatuses" :key="st">
+                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('itemStatus', st)">
+                            {{ st }}
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div v-for="(item, index) in form.orderItems" :key="index" class="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex justify-between items-center mb-2">
+                      <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Product {{ index + 1 }}</span>
+                      <button
+                        v-if="form.orderItems.length > 1"
+                        type="button"
+                        @click="removeOrderItem(index)"
+                        class="text-red-500 hover:text-red-700 text-sm"
+                      >
+                        Remove
+                      </button>
+                    </div>
+
+                    <!-- Product Selection -->
+                    <div class="mb-3 relative">
+                      <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                        <span class="text-red-500">*</span> Product
+                      </label>
+                      <div class="dropdown relative inline-flex w-full" :ref="`productDropdown${index}`">
+                        <button
+                          type="button"
+                          :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors[`item${index}Product`] }]"
+                          :aria-expanded="openDropdowns[`product${index}`]"
+                          @click.stop="toggleDropdown(`product${index}`)"
+                          :disabled="loadingProducts"
+                        >
+                          {{ getProductLabel(item.productId) || 'Select Product' }}
+                          <span
+                            class="icon-[tabler--chevron-down] size-4 transition-transform"
+                            :class="{ 'rotate-180': openDropdowns[`product${index}`] }"
+                          ></span>
+                        </button>
+
+                        <ul
+                          class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
+                          :class="{ 'opacity-100 pointer-events-auto': openDropdowns[`product${index}`], 'opacity-0 pointer-events-none': !openDropdowns[`product${index}`] }"
+                          role="menu"
+                        >
+                          <li v-for="product in products" :key="product.id">
+                            <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="updateOrderItem(index, 'productId', product.id.toString())">
+                              {{ product.skuCode }} - {{ product.name }}
+                            </a>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <!-- Quantity Row -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <!-- Quantity -->
+                      <div class="relative">
+                        <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                          <span class="text-red-500">*</span> Quantity
+                        </label>
+                        <div class="flex items-center gap-2">
+                          <button
+                            type="button"
+                            @click="updateOrderItem(index, 'quantity', Math.max(1, item.quantity - 1))"
+                            class="btn btn-sm btn-outline"
+                          >
+                            −
+                          </button>
+                          <input
+                            :value="item.quantity"
+                            type="number"
+                            min="1"
+                            class="input input-bordered w-full text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            @input="updateOrderItem(index, 'quantity', parseInt(($event.target as HTMLInputElement).value) || 1)"
+                          />
+                          <button
+                            type="button"
+                            @click="updateOrderItem(index, 'quantity', item.quantity + 1)"
+                            class="btn btn-sm btn-primary"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Add Another Product Button -->
+                  <button
+                    type="button"
+                    @click="addOrderItem"
+                    class="btn btn-primary btn-sm w-full"
+                  >
+                    <span class="text-lg">+</span> Add Another Product
+                  </button>
+                </div>
+
+                <!-- Estimated Delivery Time -->
+                <div class="relative">
+                  <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
+                    <span class="text-red-500">*</span> Estimated Delivery Time
+                  </label>
+                  <input
+                    ref="deliveryDateInput"
+                    v-model="form.estimatedDeliveryTime"
+                    type="text"
+                    placeholder="Pick Date"
+                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.estimatedDeliveryTime }]"
+                    readonly
+                  />
+                  <transition
+                    enter-active-class="transition-all duration-200 ease-out"
+                    enter-from-class="opacity-0 -translate-y-1"
+                    enter-to-class="opacity-100 translate-y-0"
+                    leave-active-class="transition-all duration-150 ease-in"
+                    leave-from-class="opacity-100 translate-y-0"
+                    leave-to-class="opacity-0 -translate-y-1"
+                  >
+                    <div v-if="errors.estimatedDeliveryTime" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.estimatedDeliveryTime }}</p>
                     </div>
                   </transition>
                 </div>
@@ -292,104 +403,104 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import flatpickr from 'flatpickr'
 import 'flatpickr/dist/flatpickr.css'
 
-
-interface Order {
+interface Customer {
   id: number
+  customerName: string
+  customerCode?: string
+}
+
+interface Product {
+  id: number
+  skuCode: string
+  name: string
+}
+
+interface OrderItem {
+  productId: string | number
+  quantity: number
+  status: string
+}
+
+interface OrderForm {
+  id: number | null
   orderNo: string
+  orderType: string
+  customerId: string | null
+  picName: string
+  estimatedDeliveryTime: string
+  status: string
+  itemStatus: string
+  orderItems: OrderItem[]
 }
 
-interface Shipment {
-  id: number
-  trackingCode: string
-  carrier: string
-  orderId: number
-  orderNo?: string
-  destination: string
-  shippingDate: string
-  estimatedDeliveryDate: string
-  state: string
-  remark: string
-}
+const emit = defineEmits(['order-updated'])
 
-
-const emit = defineEmits(['shipment-updated'])
-
-/* state */
+/* State */
 const isOpen = ref(false)
 const isSubmitting = ref(false)
-const loadingOrders = ref(false)
 const panelRef = ref<HTMLElement | null>(null)
-const statusDropdownRef = ref<HTMLElement | null>(null)
-const orderDropdownRef = ref<HTMLElement | null>(null)
-const shippingDateInput = ref(null)
-const estimatedDeliveryDateInput = ref(null)
+const loadingCustomers = ref(false)
+const loadingProducts = ref(false)
+const deliveryDateInput = ref(null)
 let flatpickrInstance: any = null
-let flatpickrInstanceEstimated: any = null
 
-const currentShipmentId = ref<number | null>(null)
-
-const form = reactive({
-  trackingCode: '',
-  name: '',
-  carrier: '',
-  order: '',
-  destination: '',
-  shippingDate: new Date().toISOString().split('T')[0],
-  estimatedDeliveryDate: new Date().toISOString().split('T')[0],
+const form = reactive<OrderForm>({
+  id: null,
+  orderNo: '',
+  orderType: '',
+  customerId: null,
+  picName: '',
+  estimatedDeliveryTime: '',
   status: '',
-  remark: ''
+  itemStatus: 'Pending',
+  orderItems: [{ productId: '', quantity: 1, status: 'Pending' }]
 })
 
-const errors = reactive({
-  trackingCode: '',
-  name: '',
-  carrier: '',
-  order: '',
-  destination: '',
-  shippingDate: '',
-  estimatedDeliveryDate: '',
-  status: '',
-  remark: '',
-  submit: ''
+const errors = reactive<Record<string, string>>({
+  submit: '',
+  orderNo: '',
+  orderType: '',
+  customerId: '',
+  picName: '',
+  estimatedDeliveryTime: '',
+  orderStatus: ''
 })
 
-const statusOptions = ['Active', 'Inactive']
-const orders = ref<Order[]>([])
-const openDropdowns = reactive({ status: false, order: false })
+const orderTypes = ['PO', 'SO', 'RMA']
+const orderStatuses = ['Created', 'Processing', 'Confirmed', 'Shipped', 'Completed', 'Cancelled']
+const itemStatuses = ['Pending', 'Allocated', 'Picked', 'Packed', 'Shipped', 'Delivered', 'Backordered', 'Rejected', 'Cancelled']
+const customers = ref<Customer[]>([])
+const products = ref<Product[]>([])
+const openDropdowns = reactive<Record<string, boolean>>({
+  orderType: false,
+  customer: false,
+  orderStatus: false,
+  itemStatus: false
+})
 
-/* Fetch orders  */
-const fetchOrder = async () => {
-  loadingOrders.value = true
-  try {
-    const response = await fetch('/api/order')
-    if (!response.ok) throw new Error('Failed to fetch orders')
-    const data = await response.json()
-    orders.value = data
-    console.log('Fetched orders:', data)
-  } catch (error) {
-    console.error('Error fetching orders:', error)
-  } finally {
-    loadingOrders.value = false
-  }
-}
+// Fallback label if the customer isn't in the fetched list (e.g. soft-deleted or filtered out)
+const prefilledCustomerName = ref<string | null>(null)
 
+const selectedCustomerLabel = computed(() => {
+  if (!form.customerId) return prefilledCustomerName.value
+  const customer = customers.value.find(c => c.id.toString() === form.customerId)
+  // If customer not found yet (maybe filtered or not loaded), show the raw ID as fallback
+  return customer ? customer.customerName : `Customer #${form.customerId}`
+})
 
-/* Modal scroll lock utilities */
+/* Scroll Lock */
 let scrollY = 0
 let scrollbarWidth = 0
 
-const getScrollbarWidth = () => {
-  return window.innerWidth - document.documentElement.clientWidth
-}
+const getScrollbarWidth = () => window.innerWidth - document.documentElement.clientWidth
 
 const lockScroll = () => {
   scrollY = window.scrollY
   scrollbarWidth = getScrollbarWidth()
-
   document.body.style.paddingRight = `${scrollbarWidth}px`
   document.body.style.position = 'fixed'
   document.body.style.top = `-${scrollY}px`
@@ -403,196 +514,259 @@ const unlockScroll = () => {
   document.body.style.top = ''
   document.body.style.width = ''
   document.body.style.overflow = ''
+  requestAnimationFrame(() => window.scrollTo(0, scrollY))
+}
 
-  requestAnimationFrame(() => {
-    window.scrollTo(0, scrollY)
-  })
+/* Fetch Data */
+const fetchData = async () => {
+  loadingCustomers.value = true
+  loadingProducts.value = true
+  try {
+    const [customersRes, productsRes] = await Promise.all([
+      fetch('/api/customer'),
+      fetch('/api/product')
+    ])
+
+    if (customersRes.ok) customers.value = await customersRes.json()
+    if (productsRes.ok) products.value = await productsRes.json()
+  } catch (error) {
+    console.error('Error fetching data:', error)
+    errors.submit = 'Failed to load customers and products'
+  } finally {
+    loadingCustomers.value = false
+    loadingProducts.value = false
+  }
 }
 
 /* Validation */
 const validateForm = () => {
-  // Reset errors
-  Object.keys(errors).forEach(key => errors[key as keyof typeof errors] = '')
-
+  Object.keys(errors).forEach(key => errors[key] = '')
   let isValid = true
 
-  // Tracking Code validation
-  if (!form.trackingCode.trim()) {
-    errors.trackingCode = 'Tracking Code is required'
+  if (!form.orderNo.trim()) {
+    errors.orderNo = 'Order Number is required'
     isValid = false
   }
 
-  // Order No validation
-  if (!form.order) {
-    errors.order = 'Order is required'
+  if (!form.orderType) {
+    errors.orderType = 'Order Type is required'
     isValid = false
   }
 
-  // Shipping Carrier validation
-  if (!form.carrier.trim()) {
-    errors.carrier = 'Shipping Carrier is required'
+  if (!form.picName.trim()) {
+    errors.picName = 'PIC Name is required'
     isValid = false
   }
 
-  // Destination validation
-  if (!form.destination.trim()) {
-    errors.destination = 'Destination is required'
-    isValid = false
-  }
-
-  // Status validation
   if (!form.status) {
-    errors.status = 'Status is required'
+    errors.orderStatus = 'Order Status is required'
     isValid = false
   }
+
+  if (!form.estimatedDeliveryTime) {
+    errors.estimatedDeliveryTime = 'Estimated Delivery Time is required'
+    isValid = false
+  }
+
+  form.orderItems.forEach((item, idx) => {
+    if (!item.productId) {
+      errors[`item${idx}Product`] = 'Product is required'
+      isValid = false
+    }
+    if (!item.quantity || item.quantity < 1) {
+      errors[`item${idx}Quantity`] = 'Valid quantity is required'
+      isValid = false
+    }
+  })
 
   return isValid
 }
 
-// Clear error when user types
-watch(() => form.trackingCode, () => { if (errors.trackingCode) errors.trackingCode = '' })
-watch(() => form.order, () => { if (errors.order) errors.order = '' })
-watch(() => form.carrier, () => { if (errors.carrier) errors.carrier = '' })
-watch(() => form.destination, () => { if (errors.destination) errors.destination = '' })
-watch(() => form.status, () => { if (errors.status) errors.status = '' })
-watch(() => form.remark, () => { if (errors.remark) errors.remark = '' })
-watch(() => form.shippingDate, () => { if (errors.shippingDate) errors.shippingDate = '' })
-watch(() => form.estimatedDeliveryDate, () => { if (errors.estimatedDeliveryDate) errors.estimatedDeliveryDate = '' })
+/* Clear errors on input */
+watch(() => form.orderNo, () => { if (errors.orderNo) errors.orderNo = '' })
+watch(() => form.orderType, () => { if (errors.orderType) errors.orderType = '' })
+watch(() => form.picName, () => { if (errors.picName) errors.picName = '' })
+watch(() => form.status, () => { if (errors.orderStatus) errors.orderStatus = '' })
 
-/* helpers */
-const toggleDropdown = (name: 'status' | 'order' ) => {
+/* Helpers */
+const toggleDropdown = (name: string) => {
   Object.keys(openDropdowns).forEach(k => {
-    if (k !== name) openDropdowns[k as keyof typeof openDropdowns] = false
+    if (k !== name) openDropdowns[k] = false
   })
   openDropdowns[name] = !openDropdowns[name]
 }
 
-const selectOption = (key: keyof typeof form, value: string) => {
-  form[key] = value as never
-
-  // Determine which dropdown state key to close
-  let dropdownKey: keyof typeof openDropdowns | null = null;
-  if (key === 'order') {
-    dropdownKey = 'order';
-  } else if (key === 'status') {
-    dropdownKey = 'status';
-  }
-
-  if (dropdownKey) {
-    openDropdowns[dropdownKey] = false
+const selectOption = (key: string, value: string) => {
+  switch (key) {
+    case 'orderType':
+      form.orderType = value
+      openDropdowns.orderType = false
+      break
+    case 'customerId':
+      form.customerId = value
+      openDropdowns.customer = false
+      break
+    case 'orderStatus':
+      form.status = value
+      openDropdowns.orderStatus = false
+      break
+    case 'itemStatus':
+      form.itemStatus = value
+      openDropdowns.itemStatus = false
+      form.orderItems.forEach(oi => { oi.status = value })
+      break
   }
 }
 
-/* close dropdowns when clicking outside */
+const getProductLabel = (productId: string | number) => {
+  const product = products.value.find(p => p.id.toString() === productId.toString())
+  return product ? `${product.skuCode} - ${product.name}` : null
+}
+
+const addOrderItem = () => {
+  form.orderItems.push({ productId: '', quantity: 1, status: form.itemStatus || 'Pending' })
+}
+
+const removeOrderItem = (index: number) => {
+  form.orderItems.splice(index, 1)
+}
+
+const updateOrderItem = (index: number, key: string, value: any) => {
+  form.orderItems[index][key as keyof OrderItem] = value
+  openDropdowns[`product${index}`] = false
+}
+
 const handleClickOutside = (event: MouseEvent) => {
-  const statusDd = statusDropdownRef.value
-  const orderDd = orderDropdownRef.value
-
-  if (statusDd && !statusDd.contains(event.target as Node)) {
-    openDropdowns.status = false
+  const target = event.target as Node
+  if (!panelRef.value?.contains(target)) {
+    Object.keys(openDropdowns).forEach(k => openDropdowns[k] = false)
   }
-
-  if (orderDd && !orderDd.contains(event.target as Node)) {
-    openDropdowns.order = false
-  }
-
 }
 
-/* Prefill form with shipment data */
-const prefillForm = (shipment: Shipment) => {
-  currentShipmentId.value = shipment.id
-  form.trackingCode = shipment.trackingCode || ''
-  form.carrier = shipment.carrier || ''
-  form.order = shipment.orderNo || ''
-  form.destination = shipment.destination || ''
+/* Prefill existing order */
+const prefillOrder = (order: any) => {
+  console.log('Prefilling order:', order)
+  form.id = order.id || null
+  form.orderNo = order.orderNo || ''
+  form.orderType = order.orderType || ''
+  form.picName = order.picName || ''
+  form.status = order.status || ''
+  form.estimatedDeliveryTime = order.estimatedDeliveryTime ? order.estimatedDeliveryTime.split('T')[0] : ''
 
-  // Format dates to YYYY-MM-DD
-  form.shippingDate = shipment.shippingDate ? shipment.shippingDate.split('T')[0] : new Date().toISOString().split('T')[0]
-  form.estimatedDeliveryDate = shipment.estimatedDeliveryDate ? shipment.estimatedDeliveryDate.split('T')[0] : new Date().toISOString().split('T')[0]
+  // Try to determine customerId via multiple fallbacks
+  let derivedCustomerId: string | null = null
+  
+  console.log('Checking customer data...')
+  console.log('order.customer:', order.customer)
+  console.log('order.customerId:', order.customerId)
+  
+  if (order.customer?.id) {
+    derivedCustomerId = order.customer.id.toString()
+    prefilledCustomerName.value = order.customer.customerName || null
+    console.log('Using order.customer.id:', derivedCustomerId)
+    // Verify this customer exists in our fetched list
+    const exists = customers.value.find(c => c.id.toString() === derivedCustomerId)
+    console.log('Customer exists in list:', exists)
+    if (!exists) {
+      console.warn(`Customer ID ${derivedCustomerId} not found in fetched customers list`)
+    }
+  } else if (order.customerId) {
+    derivedCustomerId = order.customerId.toString()
+    console.log('Using order.customerId:', derivedCustomerId)
+    // Try to find the customer name from our fetched list
+    const customer = customers.value.find(c => c.id.toString() === derivedCustomerId)
+    console.log('Found customer in list:', customer)
+    prefilledCustomerName.value = customer?.customerName || null
+  } else if (order.customerCode || order.customerName) {
+    console.log('Trying to match by code/name')
+    // Attempt to match against fetched customers by code or name
+    const match = customers.value.find(c =>
+      (order.customerCode && c.customerCode === order.customerCode) ||
+      (order.customerName && c.customerName === order.customerName)
+    )
+    if (match) {
+      derivedCustomerId = match.id.toString()
+      prefilledCustomerName.value = match.customerName
+      console.log('Matched customer:', match)
+    } else {
+      // store provided display name even if not found
+      prefilledCustomerName.value = order.customerName || order.customerCode || null
+      console.log('No match found, using name:', prefilledCustomerName.value)
+    }
+  } else {
+    prefilledCustomerName.value = null
+    console.log('No customer data found')
+  }
+  
+  form.customerId = derivedCustomerId
+  console.log('Final form.customerId:', form.customerId)
+  console.log('Final prefilledCustomerName:', prefilledCustomerName.value)
 
-  form.status = shipment.state || ''
-  form.remark = shipment.remark || ''
+  // Determine unified item status (if all same)
+  if (order.orderItems && order.orderItems.length) {
+    const statuses = order.orderItems.map((i: any) => i.status || 'Pending')
+    const first = statuses[0] || 'Pending'
+    const allSame = statuses.every(s => s === first)
+    form.itemStatus = allSame ? first : first // Could extend to show mixed state later
+    form.orderItems = order.orderItems.map((i: any) => ({
+      productId: i.product?.id ? i.product.id.toString() : (i.productId ? i.productId.toString() : ''),
+      quantity: i.quantity || 1,
+      status: i.status || form.itemStatus
+    }))
+  } else {
+    form.itemStatus = 'Pending'
+    form.orderItems = [{ productId: '', quantity: 1, status: 'Pending' }]
+  }
 }
 
-/* open/close modal */
-const openModal = async (shipment: Shipment) => {
-  // Fetch orders when modal opens
-  await Promise.all([fetchOrder()])
-
-  // Prefill form with shipment data
-  prefillForm(shipment)
-
-  // Reset errors
-  Object.keys(errors).forEach(key => errors[key as keyof typeof errors] = '')
+/* Modal Control */
+const openModal = async (order: any) => {
+  console.log('Opening modal with order:', order)
+  await fetchData()
+  await nextTick() // Wait for Vue to update reactive data
+  console.log('Customers loaded:', customers.value)
+  console.log('Customer from order:', order.customer, 'CustomerId:', order.customerId)
+  prefillOrder(order)
+  console.log('Form customerId after prefill:', form.customerId)
+  Object.keys(errors).forEach(key => errors[key] = '')
 
   isOpen.value = true
   lockScroll()
   await nextTick()
-  const firstEl = panelRef.value?.querySelector('input,select,textarea,button') as HTMLElement | null
-  firstEl?.focus()
 
-  // Initialize Flatpickr instances for date inputs
-  if (shippingDateInput.value && !flatpickrInstance) {
-    flatpickrInstance = flatpickr(shippingDateInput.value, {
+  if (deliveryDateInput.value && !flatpickrInstance) {
+    flatpickrInstance = flatpickr(deliveryDateInput.value, {
       dateFormat: 'Y-m-d',
-      defaultDate: form.shippingDate ? new Date(form.shippingDate) : new Date(),
-      onChange: (selectedDates: Date[]) => {
-        if (selectedDates && selectedDates[0]) form.shippingDate = selectedDates[0].toISOString().split('T')[0]
-      }
-    })
-  }
-
-  if (estimatedDeliveryDateInput.value && !flatpickrInstanceEstimated) {
-    flatpickrInstanceEstimated = flatpickr(estimatedDeliveryDateInput.value, {
-      dateFormat: 'Y-m-d',
-      defaultDate: form.estimatedDeliveryDate ? new Date(form.estimatedDeliveryDate) : new Date(),
-      onChange: (selectedDates: Date[]) => {
-        if (selectedDates && selectedDates[0]) form.estimatedDeliveryDate = selectedDates[0].toISOString().split('T')[0]
+      defaultDate: form.estimatedDeliveryTime ? new Date(form.estimatedDeliveryTime) : new Date(),
+      onChange: (dates: Date[]) => {
+        if (dates[0]) {
+          const year = dates[0].getFullYear()
+          const month = String(dates[0].getMonth() + 1).padStart(2, '0')
+          const day = String(dates[0].getDate()).padStart(2, '0')
+          form.estimatedDeliveryTime = `${year}-${month}-${day}`
+        }
       }
     })
   }
 }
 
 const closeModal = async () => {
-  openDropdowns.status = false
-  openDropdowns.order = false
+  Object.keys(openDropdowns).forEach(k => openDropdowns[k] = false)
 
-  // Destroy Flatpickr instance
   if (flatpickrInstance) {
     flatpickrInstance.destroy()
     flatpickrInstance = null
   }
-  if (flatpickrInstanceEstimated) {
-    flatpickrInstanceEstimated.destroy()
-    flatpickrInstanceEstimated = null
-  }
 
   isOpen.value = false
-
-  // Reset form after modal is closed
   await nextTick()
-  currentShipmentId.value = null
-  form.trackingCode = ''
-  form.order = ''
-  form.carrier = ''
-  form.destination = ''
-  form.shippingDate = new Date().toISOString().split('T')[0]
-  form.estimatedDeliveryDate = new Date().toISOString().split('T')[0]
-  form.status = ''
-  form.remark = ''
-
-  // Reset errors
-  Object.keys(errors).forEach(key => errors[key as keyof typeof errors] = '')
 }
 
-/* submit */
+/* Submit (PATCH existing order) */
 const submitForm = async () => {
-  if (!validateForm()) {
-    return
-  }
-
-  if (!currentShipmentId.value) {
-    errors.submit = 'No shipment selected for update'
+  if (!validateForm()) return
+  if (!form.id) {
+    errors.submit = 'Order ID missing'
     return
   }
 
@@ -600,86 +774,56 @@ const submitForm = async () => {
   errors.submit = ''
 
   try {
-    // Map selected orderNo to orderId for backend
-    const selectedOrder = orders.value.find((o: Order) => o.orderNo === form.order)
-    const orderId = selectedOrder ? selectedOrder.id : null
+    form.orderItems.forEach(oi => { oi.status = form.itemStatus })
 
-    if (!orderId) {
-      errors.submit = 'Selected order not found. Please select a valid order.'
-      isSubmitting.value = false
-      return
-    }
-
-    // Format the data to match the backend schema for Shipment
     const submissionData = {
-      trackingCode: form.trackingCode.toUpperCase(),
-      orderId: orderId,
-      carrier: form.carrier ? form.carrier.toUpperCase() : null,
-      destination: form.destination || null,
-      shippingDate: form.shippingDate || null,
-      estimatedDeliveryDate: form.estimatedDeliveryDate || null,
-      state: form.status,
-      remark: form.remark || null,
+      orderNo: form.orderNo,
+      orderType: form.orderType,
+      customerId: form.customerId ? parseInt(form.customerId) : null,
+      picName: form.picName,
+      status: form.status,
+      estimatedDeliveryTime: form.estimatedDeliveryTime,
+      orderItems: form.orderItems.map(item => ({
+        productId: parseInt(item.productId.toString()),
+        quantity: item.quantity,
+        status: item.status
+      }))
     }
 
-    // PATCH to shipments endpoint
-    const response = await fetch(`/api/shipping/${currentShipmentId.value}`, {
+    const response = await fetch(`/api/order/${form.id}`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(submissionData)
     })
 
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.message || 'Failed to update shipment')
+      const data = await response.json()
+      throw new Error(data.message || 'Failed to update order')
     }
 
     const data = await response.json()
-    console.log('Server response:', data)
-
-    // Only close and reset after successful API call
     await closeModal()
-
-    // Emit event to parent component with success status
-    emit('shipment-updated', { success: true, data })
-
+    emit('order-updated', { success: true, data })
   } catch (error) {
-    console.error('Error updating shipment:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Failed to update shipment'
-    errors.submit = errorMessage
-    // Emit event to parent component with error status
-    emit('shipment-updated', { success: false, error: errorMessage })
+    const message = error instanceof Error ? error.message : 'Failed to update order'
+    errors.submit = message
+    emit('order-updated', { success: false, error: message })
   } finally {
     isSubmitting.value = false
   }
 }
 
-/* lifecycle */
+/* Lifecycle */
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
-
-  // Clean up Flatpickr
-  if (flatpickrInstance) {
-    flatpickrInstance.destroy()
-    flatpickrInstance = null
-  }
-  if (flatpickrInstanceEstimated) {
-    flatpickrInstanceEstimated.destroy()
-    flatpickrInstanceEstimated = null
-  }
-
-  if (isOpen.value) {
-    unlockScroll()
-  }
+  if (flatpickrInstance) flatpickrInstance.destroy()
+  if (isOpen.value) unlockScroll()
 })
 
-/* expose to parent */
 defineExpose({ openModal, closeModal })
 </script>
 

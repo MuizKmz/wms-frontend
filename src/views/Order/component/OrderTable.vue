@@ -126,11 +126,10 @@
 
             <!-- Status -->
             <td class="px-6 py-4">
-              <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium" :class="{
-                'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': row.status === 'Confirmed' || row.status === 'Shipped',
-                'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': row.status === 'Processing' || row.status === 'Preparing',
-                'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200': !row.status
-              }">
+              <span
+                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-wide"
+                :class="statusClass(row.status)"
+              >
                 {{ row.status || '-' }}
               </span>
             </td>
@@ -256,6 +255,27 @@ const expandedRows = ref([])
 const selectedItems = ref([])
 const selectAll = ref(false)
 
+// Map order statuses to badge color classes
+const statusClass = (status) => {
+  if (!status) return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+  const map = {
+    Created: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
+    Processing: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
+    Preparing: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
+    Confirmed: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200',
+    Allocated: 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200',
+    Picked: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-200',
+    Packed: 'bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-200',
+    Shipped: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200',
+    Delivered: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200',
+    Completed: 'bg-green-200 text-green-900 dark:bg-green-900/60 dark:text-green-100',
+    Backordered: 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200',
+    Rejected: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200',
+    Cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200'
+  }
+  return map[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+}
+
 // API endpoint for orders
 const API_URL = '/api/order'
 
@@ -359,6 +379,20 @@ const filteredData = computed(() => {
       props.filters.status &&
       item.status !== props.filters.status
     ) return false
+    // Date filter (compare only the date part, assuming filters.date is 'YYYY-MM-DD')
+    if (props.filters.date) {
+      // Choose the field to filter by; using estimatedDeliveryTime here
+      const rawDate = item.estimatedDeliveryTime || item.orderDate || null
+      if (!rawDate) return false
+      const itemDate = new Date(rawDate)
+      if (isNaN(itemDate.getTime())) return false
+      // Normalize to YYYY-MM-DD in local timezone
+      const yyyy = itemDate.getFullYear()
+      const mm = String(itemDate.getMonth() + 1).padStart(2, '0')
+      const dd = String(itemDate.getDate()).padStart(2, '0')
+      const normalized = `${yyyy}-${mm}-${dd}`
+      if (normalized !== props.filters.date) return false
+    }
     return true
   })
 })

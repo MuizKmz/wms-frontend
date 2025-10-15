@@ -1,52 +1,52 @@
 <template>
   <div class="p-6">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-
+      <!-- Order Number -->
       <div>
         <input
-          v-model="filters.productName"
+          v-model="filters.orderNumber"
           type="text"
-          placeholder="Filter by Product Name"
+          placeholder="Filter by Order Number"
           class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
         />
       </div>
 
+      <!-- Customer ID -->
       <div>
         <input
-          v-model="filters.skuCode"
+          v-model="filters.customerCode"
           type="text"
-          placeholder="Filter by SKU Code"
+          placeholder="Filter by Customer ID"
           class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
         />
       </div>
 
+      <!-- Status Dropdown -->
       <div class="dropdown relative inline-flex w-full">
         <button
-          ref="categoryDropdownRef"
+          ref="statusDropdownRef"
           type="button"
           class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400"
           aria-haspopup="menu"
-          :aria-expanded="openDropdowns.category"
-          aria-label="Filter by Category"
-          @click="toggleDropdown('category')"
-          :disabled="loadingCategories"
+          :aria-expanded="openDropdowns.status"
+          aria-label="Filter by Status"
+          @click="toggleDropdown('status')"
         >
-          {{ categories.find(opt => opt.value === filters.category)?.label || 'Filter by Category' }}
-          <span class="icon-[tabler--chevron-down] size-4 transition-transform" :class="{ 'rotate-180': openDropdowns.category }"></span>
+          {{ statuses.find(opt => opt.value === filters.status)?.label || 'Filter by Status' }}
+          <span class="icon-[tabler--chevron-down] size-4 transition-transform" :class="{ 'rotate-180': openDropdowns.status }"></span>
         </button>
         <ul
           class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1
                  bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
                  rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
-          :class="{ 'opacity-100': openDropdowns.category, 'opacity-0 pointer-events-none': !openDropdowns.category }"
+          :class="{ 'opacity-100': openDropdowns.status, 'opacity-0 pointer-events-none': !openDropdowns.status }"
           role="menu"
           aria-orientation="vertical"
         >
-          <li v-if="loadingCategories" class="px-4 py-2 text-sm text-gray-500">Loading categories...</li>
-          <li><a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg" @click="selectOption('category', '')">All Categories</a></li>
-          <li v-for="category in categories" :key="category.value">
-            <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg" @click="selectOption('category', category.value)">
-              {{ category.label }}
+          <li><a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg" @click="selectOption('status', '')">All Statuses</a></li>
+          <li v-for="status in statuses" :key="status.value">
+            <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg" @click="selectOption('status', status.value)">
+              {{ status.label }}
             </a>
           </li>
         </ul>
@@ -90,52 +90,34 @@
 
 <script setup>
 import { ref, reactive, defineEmits, onMounted, onUnmounted } from 'vue'
-import flatpickr from 'flatpickr' // 💡 Flatpickr import is essential!
+import flatpickr from 'flatpickr' // Flatpickr import
 
 const emit = defineEmits(['filter-change'])
 
 // --- State Definitions ---
 
 const filters = ref({
-  productName: '',
-  skuCode: '',
-  category: '', // Stores the selected category value
+  orderNumber: '',
+  customerCode: '',
+  status: '',
   date: '', // Stores the selected date string
 })
 
-const categories = ref([])
-const loadingCategories = ref(false)
+// Fixed status options (adjust as needed)
+const statuses = ref([
+  { label: 'Processing', value: 'Processing' },
+  { label: 'Preparing', value: 'Preparing' },
+  { label: 'Confirmed', value: 'Confirmed' },
+  { label: 'Shipped', value: 'Shipped' },
+])
 
 const openDropdowns = reactive({
-  category: false,
+  status: false,
 })
 
-const categoryDropdownRef = ref(null)
+const statusDropdownRef = ref(null)
 const datePickerRef = ref(null)
 let flatpickrInstance = null
-
-// --- Data Fetching ---
-
-const fetchCategories = async () => {
-  loadingCategories.value = true
-  try {
-    // 💡 Mock API call: Replace this with your actual fetch call
-    // Your API should return an array of objects like: [{ id: 1, name: 'Electronics' }]
-    const response = await fetch('/api/category')
-    const data = await response.json()
-
-    // Map API data to { label: 'Category Name', value: 'Category Name' }
-    categories.value = data.map(item => ({
-      label: item.name || item.categoryName,
-      value: item.name || item.categoryName,
-    }))
-  } catch (error) {
-    console.error('Error fetching categories:', error)
-    // Optionally add a fallback category or error message
-  } finally {
-    loadingCategories.value = false
-  }
-}
 
 // --- Filter Logic ---
 
@@ -151,9 +133,9 @@ const applyFilters = () => {
 
 const clearFilters = () => {
   filters.value = {
-    productName: '',
-    skuCode: '',
-    category: '',
+    orderNumber: '',
+    customerCode: '',
+    status: '',
     date: '', // Clear the internal date state
   }
 
@@ -191,7 +173,7 @@ const closeAllDropdowns = () => {
 }
 
 const handleClickOutside = (event) => {
-  const dropdownRefs = [categoryDropdownRef.value]
+  const dropdownRefs = [statusDropdownRef.value]
 
   // Check if click is inside any dropdown, ignoring flatpickr's own elements
   const isClickInsideDropdown = dropdownRefs.some(ref => ref && ref.closest('.dropdown') && ref.closest('.dropdown').contains(event.target))
@@ -220,10 +202,7 @@ onMounted(() => {
     })
   }
 
-  // 2. Fetch data
-  fetchCategories()
-
-  // 3. Setup global click handler
+  // 2. Setup global click handler
   document.addEventListener('click', handleClickOutside)
 })
 
