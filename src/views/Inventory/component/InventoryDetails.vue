@@ -40,7 +40,7 @@
 
         <!-- Action Bar -->
         <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-          <div class="flex items-center gap-3">
+          <div class="flex flex-wrap items-center gap-3">
             <button
               @click="exportInventory"
               class="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
@@ -59,6 +59,44 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </button>
+
+            <!-- Bulk Status Update Controls -->
+            <div class="flex items-center gap-2 ml-auto" v-if="epcList.length > 0">
+              <div class="flex items-center gap-2">
+                <label class="text-xs font-medium text-gray-600 dark:text-gray-400">Bulk Status</label>
+                <select v-model="bulkStatus" class="select select-bordered select-xs w-40">
+                  <option disabled value="">Select status</option>
+                  <option value="RECEIVED">Received</option>
+                  <option value="DELIVERED">Delivered</option>
+                  <option value="INBOUND">Inbound</option>
+                </select>
+              </div>
+              <button
+                @click="applyBulkStatus"
+                :disabled="selectedEpcs.length === 0 || !bulkStatus || loadingBulk"
+                class="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg transition-colors
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                <span v-if="!loadingBulk">Update ({{ selectedEpcs.length }})</span>
+                <span v-else class="flex items-center gap-1">
+                  <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                  </svg>
+                  Updating...
+                </span>
+              </button>
+              <button
+                @click="clearSelection"
+                :disabled="selectedEpcs.length === 0"
+                class="px-3 py-2 text-xs font-medium rounded-lg transition-colors
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200"
+              >
+                Clear
+              </button>
+            </div>
           </div>
         </div>
 
@@ -69,9 +107,9 @@
               <thead class="bg-gray-50 dark:bg-gray-900/50">
                 <tr>
                   <th class="px-4 py-3 text-left">
-                    <input 
-                      type="checkbox" 
-                      class="checkbox checkbox-primary checkbox-sm" 
+                    <input
+                      type="checkbox"
+                      class="checkbox checkbox-primary checkbox-sm"
                       @change="toggleSelectAll"
                       :checked="allSelected"
                       aria-label="Select all"
@@ -105,19 +143,19 @@
                     Section Code
                   </th>
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Inbound Status
+                    Status
                   </th>
                 </tr>
               </thead>
               <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                <tr 
-                  v-for="epc in epcList" 
+                <tr
+                  v-for="epc in epcList"
                   :key="epc.id"
                   class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                 >
                   <td class="px-4 py-4">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       class="checkbox checkbox-primary checkbox-sm"
                       :checked="selectedEpcs.includes(epc.id)"
                       @change="toggleEpcSelection(epc.id)"
@@ -203,6 +241,8 @@ const emit = defineEmits(['close'])
 const isOpen = ref(false)
 const inventoryData = ref(null)
 const selectedEpcs = ref([])
+const bulkStatus = ref('')
+const loadingBulk = ref(false)
 
 /* Computed */
 const epcList = computed(() => {
@@ -219,20 +259,20 @@ const openModal = (data) => {
   inventoryData.value = data
   selectedEpcs.value = []
   isOpen.value = true
-  
+
   // Lock body scroll
   document.body.style.overflow = 'hidden'
 }
 
 const closeModal = () => {
   isOpen.value = false
-  
+
   // Unlock body scroll
   document.body.style.overflow = ''
-  
+
   // Emit close event
   emit('close')
-  
+
   // Reset data after animation
   setTimeout(() => {
     inventoryData.value = null
@@ -263,6 +303,7 @@ const getStatusClass = (status) => {
     'INBOUND': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
     'DELIVERED': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
     'RETURNED': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    'GENERATED': 'bg-gray-100 text-gray-800 dark:bg-gray-700/30 dark:text-gray-300',
   }
   return statusMap[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
 }
@@ -283,7 +324,7 @@ const exportInventory = () => {
   // Export functionality
   console.log('Exporting inventory for:', inventoryData.value?.product?.name)
   console.log('Selected EPCs:', selectedEpcs.value)
-  
+
   // You can implement CSV export here
   if (selectedEpcs.value.length > 0) {
     const selectedData = epcList.value.filter(epc => selectedEpcs.value.includes(epc.id))
@@ -292,6 +333,40 @@ const exportInventory = () => {
   } else {
     console.log('Exporting all EPCs:', epcList.value)
     // Add export logic here
+  }
+}
+
+const clearSelection = () => {
+  selectedEpcs.value = []
+}
+
+const applyBulkStatus = async () => {
+  if (!bulkStatus.value || selectedEpcs.value.length === 0) return
+  loadingBulk.value = true
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/epc/bulk-update-status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: selectedEpcs.value, status: bulkStatus.value })
+    })
+    if (!response.ok) {
+      throw new Error('Failed to update statuses')
+    }
+    const result = await response.json()
+    // Update local epc statuses
+    const updatedMap = new Map(result.records.map(r => [r.id, r.status]))
+    inventoryData.value.product.epcs = inventoryData.value.product.epcs.map(epc => {
+      if (updatedMap.has(epc.id)) {
+        return { ...epc, status: updatedMap.get(epc.id) }
+      }
+      return epc
+    })
+    // Clear selection but keep chosen status for further operations
+    selectedEpcs.value = []
+  } catch (err) {
+    console.error(err)
+  } finally {
+    loadingBulk.value = false
   }
 }
 

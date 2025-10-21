@@ -36,7 +36,7 @@
             aria-labelledby="modal-title"
           >
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col">
-              
+
               <div class="flex items-center justify-between p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">
                   EPC Code Display </h2>
@@ -51,7 +51,7 @@
               </div>
 
               <div class="space-y-6 overflow-y-auto p-6 flex-1 text-center">
-                
+
                 <div class="flex items-center justify-center pt-2">
                     <span :class="{'font-bold text-gray-900 dark:text-white': !isQRCode, 'text-gray-500 dark:text-gray-400': isQRCode}">Bar Code</span>
                     <label class="relative inline-flex items-center cursor-pointer mx-4">
@@ -67,14 +67,14 @@
                 </div>
 
                 <div v-else-if="imageError" class="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
-                    <strong class="font-bold">Error:</strong> 
+                    <strong class="font-bold">Error:</strong>
                     <p class="text-sm mt-1">{{ imageError }}</p>
                 </div>
 
                 <div v-else-if="codeImageUrl" class="flex justify-center items-center py-4">
                     <img :src="codeImageUrl" :alt="isQRCode ? 'QR Code' : 'Bar Code'" class="max-w-[80%] w-full h-auto object-contain">
                 </div>
-                
+
                 <div v-else class="p-8 text-gray-500 dark:text-gray-400">
                     <p>Select an EPC to display its tracking code.</p>
                 </div>
@@ -84,17 +84,17 @@
                 </p>
 
               </div>
-              
+
               <div class="flex justify-end gap-2 p-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button 
-                    @click="printCode" 
-                    class="btn btn-outline" 
+                <button
+                    @click="printCode"
+                    class="btn btn-outline"
                     :disabled="loading || !codeImageUrl"
                 >
                     Print
                 </button>
-                <button 
-                    @click="downloadCode" 
+                <button
+                    @click="downloadCode"
                     class="btn btn-primary"
                     :disabled="loading || !codeImageUrl"
                 >
@@ -147,10 +147,10 @@ const fetchCodeImage = async () => {
 
     // Determine the API endpoint based on the toggle state
     const codeType = isQRCode.value ? 'qr' : 'bar';
-    
+
     // **UPDATE THIS TO YOUR ACTUAL API ENDPOINT**
-    const API_URL = `/api/epc/code/generate?epcCode=${encodeURIComponent(code)}&type=${codeType}`; 
-    
+    const API_URL = `/api/epc/code/image?epcCode=${encodeURIComponent(code)}&type=${codeType}`;
+
     try {
         const response = await fetch(API_URL);
 
@@ -166,20 +166,29 @@ const fetchCodeImage = async () => {
             }
             throw new Error(message);
         }
-        
+
         // ASSUMPTION: The API returns a JSON object with an 'imageUrl' field
         // If your API returns the image as a Blob/File, this logic needs adjustment.
-        const data = await response.json();
-        
-        if (!data.imageUrl) {
-            throw new Error("API response is missing the image URL.");
-        }
+            const data = await response.json();
 
-        codeImageUrl.value = data.imageUrl;
+            if (!data.imageUrl) {
+                throw new Error("API response is missing the image URL.");
+            }
 
-    } catch (e: any) {
-        console.error("Error fetching code image:", e);
-        imageError.value = e.message || "An unknown error occurred while fetching the code image.";
+            // If backend returns a relative path (e.g. /epc/11-qr.png), build absolute URL to backend.
+            const imgUrl: string = data.imageUrl;
+            if (imgUrl.startsWith('/')) {
+                // Prefer backend origin: if VITE_BACKEND_URL is set, use that; else derive from current location but swap port to 3000.
+                const backendBase = import.meta.env.VITE_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:3000`;
+                codeImageUrl.value = backendBase.replace(/\/$/, '') + imgUrl; // ensure no double slash
+            } else {
+                codeImageUrl.value = imgUrl;
+            }
+
+    } catch (e) {
+        const err = e as Error;
+        console.error("Error fetching code image:", err);
+        imageError.value = err.message || "An unknown error occurred while fetching the code image.";
         codeImageUrl.value = null;
     } finally {
         loading.value = false;
@@ -228,9 +237,9 @@ const openModal = async (code: string | null) => {
 
     isOpen.value = true;
     lockScroll();
-    
+
     await nextTick();
-    
+
     if (code) {
         await fetchCodeImage();
     }
@@ -282,7 +291,7 @@ watch(() => props.show, (newVal) => {
     if (newVal) {
         openModal(props.initialEpcCode);
     } else {
-        isOpen.value = false; 
+        isOpen.value = false;
     }
 });
 

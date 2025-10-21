@@ -34,6 +34,18 @@
               </p>
             </th>
 
+            <th class="px-6 py-3 text-left min-w-[140px]">
+              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+                Product Code
+              </p>
+            </th>
+
+            <th class="px-6 py-3 text-left min-w-[180px]">
+              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+                Product Name
+              </p>
+            </th>
+
             <th class="px-6 py-3 text-left min-w-[120px]">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
                 Serial Number
@@ -78,20 +90,38 @@
             </td>
 
             <td class="px-6 py-4">
-              <span class="text-left font-bold text-sm text-blue-600 dark:text-blue-400 hover:underline break-all">
+              <button
+                type="button"
+                class="text-left font-bold text-sm text-blue-600 dark:text-blue-400 hover:underline break-all focus:outline-none"
+                @click.stop="viewEPC(epc)"
+                :title="`View code images for ${epc.epcCode}`"
+              >
                 {{ epc.epcCode || '-' }}
+              </button>
+            </td>
+
+            <td class="px-6 py-4">
+              <span class="font-mono text-sm text-gray-900 dark:text-white">
+                {{ epc.corpCode?.code || parseEPCCode(epc.epcCode).corpCode || '-' }}
+                <span v-if="epc.corpCode?.label" class="block text-[11px] text-gray-500 dark:text-gray-400">{{ epc.corpCode.label }}</span>
               </span>
             </td>
 
             <td class="px-6 py-4">
               <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ parseEPCCode(epc.epcCode).corpCode || epc.corpCode?.code || '-' }}
+                {{ epc.product?.skuCode || parseEPCCode(epc.epcCode).skuCode || '-' }}
               </span>
             </td>
 
             <td class="px-6 py-4">
               <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ parseEPCCode(epc.epcCode).skuCode || epc.product?.skuCode || '-' }}
+                {{ epc.product?.productCode || '-' }}
+              </span>
+            </td>
+
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-900 dark:text-white line-clamp-2">
+                {{ epc.product?.name || '-' }}
               </span>
             </td>
 
@@ -140,7 +170,7 @@
           <div class="flex items-center gap-x-1">
             <button v-for="page in visiblePages" :key="page" type="button"
               class="btn btn-text btn-square aria-[current='page']:text-bg-primary dark:text-gray-300"
-              :class="{ 'text-bg-primary': page === currentPage }" :aria-current="page === currentPage ? 'page' : null"
+              :class="{ 'text-bg-primary': page === currentPage }" :aria-current="page === currentPage ? 'page' : undefined"
               @click="changePage(page)">
               {{ page }}
             </button>
@@ -183,23 +213,63 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, computed, watch } from "vue"
 import Swal from 'sweetalert2'
 
-const props = defineProps({
-  filters: {
-    type: Object,
-    default: () => ({})
-  }
-})
+// --- Type Definitions ---
+interface Product {
+  id: number
+  skuCode: string
+  productCode: string
+  name: string
+  categoryId: number
+  supplierId: number
+  status: string
+  remarks: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+interface CorpCode {
+  id: number
+  code: string
+  label: string
+  createdAt: string
+}
+
+interface EPCRecord {
+  id: number
+  epcCode: string
+  productId: number
+  corpCodeId: number
+  batchName: string
+  batchNumber: number
+  status: string
+  createdAt: string
+  qrCodeImageUrl: string
+  barcodeImageUrl: string
+  product?: Product
+  corpCode?: CorpCode
+  uniqueId: string
+}
+
+interface Filters {
+  corpCode?: string
+  skuCode?: string
+  date?: string // YYYY-MM-DD
+}
+
+const props = defineProps<{
+  filters: Filters
+}>()
 
 const emit = defineEmits(['view-epc', 'bulk-delete-epc'])
 
-const data = ref([])
+const data = ref<EPCRecord[]>([])
 const loading = ref(false)
-const error = ref(null)
-const selectedItems = ref([])
+const error = ref<string | null>(null)
+const selectedItems = ref<string[]>([])
 const selectAll = ref(false)
 
 const API_URL = '/api/epc'
@@ -213,13 +283,13 @@ const fetchEPCs = async () => {
 
     if (!response.ok) throw new Error("Failed to fetch EPC records")
 
-    const json = await response.json()
-    data.value = (json || []).map(epc => ({
+    const json: EPCRecord[] = await response.json()
+    data.value = (json || []).map((epc) => ({
       ...epc,
       uniqueId: `E-${epc.id || Math.random()}`,
     }))
   } catch (e) {
-    error.value = e.message
+  error.value = (e as Error).message
     console.error('Error fetching EPCs:', e)
   } finally {
     loading.value = false
@@ -239,7 +309,7 @@ onMounted(() => {
  * - Date: 151025 (DDMMYY - 6 chars)
  * - Serial Number: 000001 (6 chars)
  */
-const parseEPCCode = (epcCode) => {
+const parseEPCCode = (epcCode: string | null | undefined) => {
   if (!epcCode || epcCode.length < 24) {
     return {
       corpCode: null,
@@ -258,19 +328,19 @@ const parseEPCCode = (epcCode) => {
 }
 
 // --- Status Badge Styling ---
-const getStatusClass = (status) => {
+const getStatusClass = (status: string) => {
   const statusMap = {
     GENERATED: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
     RECEIVED: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
     DELIVERED: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
     INBOUND: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
   }
-  return statusMap[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+  return (statusMap as Record<string, string>)[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
 }
 
 // --- Filtering & Pagination Logic ---
-const filteredData = computed(() => {
-  return data.value.filter((item) => {
+const filteredData = computed<EPCRecord[]>(() => {
+  return data.value.filter((item: EPCRecord) => {
     const parsed = parseEPCCode(item.epcCode || '')
 
     // --- Corp Code filter ---
@@ -307,7 +377,7 @@ const filteredData = computed(() => {
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
 
-const paginatedData = computed(() => {
+const paginatedData = computed<EPCRecord[]>(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
   return filteredData.value.slice(start, end)
@@ -331,7 +401,7 @@ const visiblePages = computed(() => {
   return pages;
 });
 
-const changePage = (page) => {
+const changePage = (page: number) => {
   if (page >= 1 && page <= totalPages.value) {
     currentPage.value = page
   }
@@ -342,8 +412,8 @@ watch(() => props.filters, () => {
 }, { deep: true })
 
 // --- Checkbox/Selection Logic ---
-const allVisibleItemIds = computed(() => {
-  return visibleRows.value.map(row => row.uniqueId)
+const allVisibleItemIds = computed<string[]>(() => {
+  return visibleRows.value.map((row: EPCRecord) => row.uniqueId)
 })
 
 const toggleSelectAll = () => {
@@ -361,7 +431,7 @@ const toggleSelectAll = () => {
   }
 }
 
-const toggleItemSelection = (itemId) => {
+const toggleItemSelection = (itemId: string) => {
   const index = selectedItems.value.indexOf(itemId)
   if (index > -1) {
     selectedItems.value.splice(index, 1)
@@ -371,7 +441,7 @@ const toggleItemSelection = (itemId) => {
   updateSelectAllState()
 }
 
-const isSelected = (itemId) => {
+const isSelected = (itemId: string) => {
   return selectedItems.value.includes(itemId)
 }
 
@@ -387,11 +457,11 @@ const updateSelectAllState = () => {
 watch(paginatedData, updateSelectAllState, { deep: true, immediate: true })
 
 // --- Utility Functions ---
-const formatDateTime = (dateString) => {
+const formatDateTime = (dateString: string | null | undefined) => {
   if (!dateString) return '-'
   try {
     const date = new Date(dateString)
-    const pad = (num) => String(num).padStart(2, '0')
+  const pad = (num: number) => String(num).padStart(2, '0')
 
     const year = date.getFullYear()
     const month = pad(date.getMonth() + 1)
@@ -400,13 +470,13 @@ const formatDateTime = (dateString) => {
     const minute = pad(date.getMinutes())
 
     return `${day}/${month}/${year} ${hour}:${minute}`
-  } catch (e) {
+  } catch {
     return dateString;
   }
 }
 
 // --- Actions & Exposed Methods ---
-const viewEPC = (epc) => {
+const viewEPC = (epc: EPCRecord) => {
   emit('view-epc', epc)
 }
 
@@ -455,9 +525,9 @@ const bulkDelete = async () => {
 
     return { success: true, data: result }
 
-  } catch (error) {
-    console.error('Error bulk deleting EPCs:', error)
-    return { success: false, error: error.message, data: { deletedCount: 0 } }
+  } catch (err) {
+    console.error('Error bulk deleting EPCs:', err)
+    return { success: false, error: (err as Error).message, data: { deletedCount: 0 } }
   }
 }
 
