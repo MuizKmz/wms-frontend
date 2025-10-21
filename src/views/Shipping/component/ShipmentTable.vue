@@ -545,7 +545,8 @@ const filteredData = computed(() => {
     ) {
       return false
     }
-    if (filters.status && item.status !== filters.status) {
+    // Status filter (table uses item.state for the status column)
+    if (filters.status && item.state !== filters.status) {
       return false
     }
     if (filters.date && item.shippingDate) {

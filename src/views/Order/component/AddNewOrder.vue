@@ -164,6 +164,47 @@
                   </div>
                 </div>
 
+                <!-- Order Status -->
+                <div class="relative">
+                  <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
+                    <span class="text-red-500">*</span> Order Status
+                  </label>
+                  <div class="dropdown relative inline-flex w-full" ref="orderStatusDropdownRef">
+                    <button
+                      type="button"
+                      :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.orderStatus }]"
+                      :aria-expanded="openDropdowns.orderStatus"
+                      @click.stop="toggleDropdown('orderStatus')"
+                    >
+                      {{ form.status || 'Select Status' }}
+                      <span class="icon-[tabler--chevron-down] size-4 transition-transform" :class="{ 'rotate-180': openDropdowns.orderStatus }"></span>
+                    </button>
+                    <ul
+                      class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white"
+                      :class="{ 'opacity-100 pointer-events-auto': openDropdowns.orderStatus, 'opacity-0 pointer-events-none': !openDropdowns.orderStatus }"
+                      role="menu"
+                    >
+                      <li v-for="stat in orderStatuses" :key="stat">
+                        <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('orderStatus', stat)">
+                          {{ stat }}
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                  <transition
+                    enter-active-class="transition-all duration-200 ease-out"
+                    enter-from-class="opacity-0 -translate-y-1"
+                    enter-to-class="opacity-100 translate-y-0"
+                    leave-active-class="transition-all duration-150 ease-in"
+                    leave-from-class="opacity-100 translate-y-0"
+                    leave-to-class="opacity-0 -translate-y-1"
+                  >
+                    <div v-if="errors.orderStatus" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.orderStatus }}</p>
+                    </div>
+                  </transition>
+                </div>
+
                 <!-- PIC Name -->
                 <div class="relative">
                   <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
@@ -193,6 +234,33 @@
                 <!-- Order Items Section -->
                 <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                   <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Order Items</h3>
+
+                  <!-- Unified Item Status -->
+                  <div class="mb-4 relative">
+                    <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">Order Item Status</label>
+                    <div class="dropdown relative inline-flex w-full" ref="itemStatusDropdownRef">
+                      <button
+                        type="button"
+                        class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400"
+                        :aria-expanded="openDropdowns.itemStatus"
+                        @click.stop="toggleDropdown('itemStatus')"
+                      >
+                        {{ form.itemStatus || 'Select Item Status' }}
+                        <span class="icon-[tabler--chevron-down] size-4 transition-transform" :class="{ 'rotate-180': openDropdowns.itemStatus }"></span>
+                      </button>
+                      <ul
+                        class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white"
+                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.itemStatus, 'opacity-0 pointer-events-none': !openDropdowns.itemStatus }"
+                        role="menu"
+                      >
+                        <li v-for="st in itemStatuses" :key="st">
+                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('itemStatus', st)">
+                            {{ st }}
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
 
                   <div v-for="(item, index) in form.orderItems" :key="index" class="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
                     <div class="flex justify-between items-center mb-2">
@@ -241,8 +309,8 @@
                       </div>
                     </div>
 
-                    <!-- Quantity & Status Row -->
-                    <div class="grid grid-cols-2 gap-3">
+                    <!-- Quantity Row -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <!-- Quantity -->
                       <div class="relative">
                         <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
@@ -273,38 +341,6 @@
                         </div>
                       </div>
 
-                      <!-- Status -->
-                      <div class="relative">
-                        <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                          Status
-                        </label>
-                        <div class="dropdown relative inline-flex w-full">
-                          <button
-                            type="button"
-                            :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400']"
-                            :aria-expanded="openDropdowns[`itemStatus${index}`]"
-                            @click.stop="toggleDropdown(`itemStatus${index}`)"
-                          >
-                            {{ item.status || 'pending' }}
-                            <span
-                              class="icon-[tabler--chevron-down] size-4 transition-transform"
-                              :class="{ 'rotate-180': openDropdowns[`itemStatus${index}`] }"
-                            ></span>
-                          </button>
-
-                          <ul
-                            class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white"
-                            :class="{ 'opacity-100 pointer-events-auto': openDropdowns[`itemStatus${index}`], 'opacity-0 pointer-events-none': !openDropdowns[`itemStatus${index}`] }"
-                            role="menu"
-                          >
-                            <li v-for="status in itemStatuses" :key="status">
-                              <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="updateOrderItem(index, 'status', status)">
-                                {{ status }}
-                              </a>
-                            </li>
-                          </ul>
-                        </div>
-                      </div>
                     </div>
                   </div>
 
@@ -391,6 +427,8 @@ interface OrderForm {
   customerId: string | null
   picName: string
   estimatedDeliveryTime: string
+  status: string
+  itemStatus: string
   orderItems: OrderItem[]
 }
 
@@ -399,9 +437,9 @@ const emit = defineEmits(['order-created'])
 /* State */
 const isOpen = ref(false)
 const isSubmitting = ref(false)
+const panelRef = ref<HTMLElement | null>(null)
 const loadingCustomers = ref(false)
 const loadingProducts = ref(false)
-const panelRef = ref<HTMLElement | null>(null)
 const deliveryDateInput = ref(null)
 let flatpickrInstance: any = null
 
@@ -411,7 +449,9 @@ const form = reactive<OrderForm>({
   customerId: null,
   picName: '',
   estimatedDeliveryTime: '',
-  orderItems: [{ productId: '', quantity: 1, status: 'pending' }]
+  status: '',
+  itemStatus: 'Pending',
+  orderItems: [{ productId: '', quantity: 1, status: 'Pending' }]
 })
 
 const errors = reactive({
@@ -420,16 +460,22 @@ const errors = reactive({
   orderType: '',
   customerId: '',
   picName: '',
-  estimatedDeliveryTime: ''
+  estimatedDeliveryTime: '',
+  orderStatus: ''
 })
 
 const orderTypes = ['PO', 'SO', 'RMA']
-const itemStatuses = ['pending', 'received', 'partial', 'rejected']
+// Expanded, realistic order lifecycle for procurement / warehouse
+const orderStatuses = ['Created', 'Processing', 'Confirmed', 'Shipped', 'Completed', 'Cancelled']
+// Unified item lifecycle (applies to all order items together in this form)
+const itemStatuses = ['Pending', 'Allocated', 'Picked', 'Packed', 'Shipped', 'Delivered', 'Backordered', 'Rejected', 'Cancelled']
 const customers = ref<Customer[]>([])
 const products = ref<Product[]>([])
 const openDropdowns = reactive<Record<string, boolean>>({
   orderType: false,
-  customer: false
+  customer: false,
+  orderStatus: false,
+  itemStatus: false
 })
 
 const selectedCustomerLabel = computed(() => {
@@ -504,6 +550,11 @@ const validateForm = () => {
     isValid = false
   }
 
+  if (!form.status) {
+    errors.orderStatus = 'Order Status is required'
+    isValid = false
+  }
+
   if (!form.estimatedDeliveryTime) {
     errors.estimatedDeliveryTime = 'Estimated Delivery Time is required'
     isValid = false
@@ -527,6 +578,7 @@ const validateForm = () => {
 watch(() => form.orderNo, () => { if (errors.orderNo) errors.orderNo = '' })
 watch(() => form.orderType, () => { if (errors.orderType) errors.orderType = '' })
 watch(() => form.picName, () => { if (errors.picName) errors.picName = '' })
+watch(() => form.status, () => { if (errors.orderStatus) errors.orderStatus = '' })
 
 /* Helpers */
 const toggleDropdown = (name: string) => {
@@ -537,12 +589,25 @@ const toggleDropdown = (name: string) => {
 }
 
 const selectOption = (key: string, value: string) => {
-  if (key === 'orderType') {
-    form.orderType = value
-    openDropdowns.orderType = false
-  } else if (key === 'customerId') {
-    form.customerId = value
-    openDropdowns.customer = false
+  switch (key) {
+    case 'orderType':
+      form.orderType = value
+      openDropdowns.orderType = false
+      break
+    case 'customerId':
+      form.customerId = value
+      openDropdowns.customer = false
+      break
+    case 'orderStatus':
+      form.status = value
+      openDropdowns.orderStatus = false
+      break
+    case 'itemStatus':
+      form.itemStatus = value
+      openDropdowns.itemStatus = false
+      // propagate to existing items
+      form.orderItems.forEach(oi => { oi.status = value })
+      break
   }
 }
 
@@ -552,7 +617,7 @@ const getProductLabel = (productId: string | number) => {
 }
 
 const addOrderItem = () => {
-  form.orderItems.push({ productId: '', quantity: 1, status: 'pending' })
+  form.orderItems.push({ productId: '', quantity: 1, status: form.itemStatus || 'Pending' })
 }
 
 const removeOrderItem = (index: number) => {
@@ -562,7 +627,6 @@ const removeOrderItem = (index: number) => {
 const updateOrderItem = (index: number, key: string, value: any) => {
   form.orderItems[index][key as keyof OrderItem] = value
   openDropdowns[`product${index}`] = false
-  openDropdowns[`itemStatus${index}`] = false
 }
 
 const handleClickOutside = (event: MouseEvent) => {
@@ -581,7 +645,9 @@ const openModal = async () => {
   form.customerId = null
   form.picName = ''
   form.estimatedDeliveryTime = ''
-  form.orderItems = [{ productId: '', quantity: 1, status: 'pending' }]
+  form.status = ''
+  form.itemStatus = 'Pending'
+  form.orderItems = [{ productId: '', quantity: 1, status: 'Pending' }]
   Object.keys(errors).forEach(key => errors[key as keyof typeof errors] = '')
 
   isOpen.value = true
@@ -623,12 +689,15 @@ const submitForm = async () => {
   errors.submit = ''
 
   try {
+    // Ensure all item statuses reflect the unified itemStatus selection
+    form.orderItems.forEach(oi => { oi.status = form.itemStatus })
+
     const submissionData = {
       orderNo: form.orderNo,
       orderType: form.orderType,
       customerId: form.customerId ? parseInt(form.customerId) : null,
       picName: form.picName,
-      status: 'Draft',
+      status: form.status,
       estimatedDeliveryTime: form.estimatedDeliveryTime,
       orderItems: form.orderItems.map(item => ({
         productId: parseInt(item.productId.toString()),

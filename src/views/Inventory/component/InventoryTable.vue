@@ -31,17 +31,21 @@
               </p>
             </th>
             <th class="px-6 py-3 text-center" colspan="3">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400 py-2 mb-2 border-b">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400 py-2 mb-2 border-b">
                 Status
               </p>
               <div class="flex justify-around gap-2">
-                <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400 flex-1 border-r px-2">
+                <p
+                  class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400 flex-1 border-r px-2">
                   Received
                 </p>
-                <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400 flex-1 border-r px-2">
+                <p
+                  class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400 flex-1 border-r px-2">
                   Delivered
                 </p>
-                <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400 flex-1 whitespace-nowrap">
+                <p
+                  class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400 flex-1 whitespace-nowrap">
                   In Stock
                 </p>
               </div>
@@ -92,7 +96,7 @@
             </td>
 
             <td class="px-6 py-4">
-              <button @click="viewInventory(item)" 
+              <button @click="viewInventory(item)"
                 class="text-left font-bold text-sm text-blue-600 dark:text-blue-400 hover:underline">
                 {{ item.product?.name || '-' }}
               </button>
@@ -356,6 +360,15 @@ const filteredData = computed(() => {
     ) {
       return false
     }
+    if (
+      filters.supplierCode &&
+      !item.product?.supplier?.supplierCode
+        ?.toLowerCase()
+        .includes(filters.supplierCode.toLowerCase())
+    ) {
+      return false
+    }
+
     if (filters.date && item.lastUpdatedAt) {
       const itemDate = new Date(item.lastUpdatedAt).toISOString().split('T')[0]
       if (itemDate !== filters.date) {
@@ -390,10 +403,10 @@ const changePage = (page) => {
 const formatDate = (dateString) => {
   if (!dateString) return '-'
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric' 
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
   })
 }
 

@@ -271,29 +271,41 @@ const getStatusClass = (status) => {
 // --- Filtering & Pagination Logic ---
 const filteredData = computed(() => {
   return data.value.filter((item) => {
+    const parsed = parseEPCCode(item.epcCode || '')
+
+    // --- Corp Code filter ---
     if (
-      props.filters.epcCode &&
-      !item.epcCode.toLowerCase().includes(props.filters.epcCode.toLowerCase())
-    ) return false
-    if (
-      props.filters.batchNumber &&
-      (!item.batchNumber || !String(item.batchNumber).toLowerCase().includes(props.filters.batchNumber.toLowerCase()))
-    ) return false
+      props.filters.corpCode &&
+      !(parsed.corpCode?.toLowerCase().includes(props.filters.corpCode.toLowerCase()) ||
+        item.corpCode?.code?.toLowerCase().includes(props.filters.corpCode.toLowerCase()))
+    ) {
+      return false
+    }
+
+    // --- SKU Code filter ---
     if (
       props.filters.skuCode &&
-      (!item.product?.skuCode || !item.product.skuCode.toLowerCase().includes(props.filters.skuCode.toLowerCase()))
-    ) return false
-    if (
-      props.filters.batchName &&
-      (!item.batchName || !item.batchName.toLowerCase().includes(props.filters.batchName.toLowerCase()))
-    ) return false
+      !(parsed.skuCode?.toLowerCase().includes(props.filters.skuCode.toLowerCase()) ||
+        item.product?.skuCode?.toLowerCase().includes(props.filters.skuCode.toLowerCase()))
+    ) {
+      return false
+    }
+
+    // --- Date filter ---
+    if (props.filters.date) {
+      const formattedFilterDate = props.filters.date.replace(/-/g, '') // from 'YYYY-MM-DD' → 'YYYYMMDD'
+      const itemDate = item.createdAt ? item.createdAt.split('T')[0].replace(/-/g, '') : null
+      if (itemDate !== formattedFilterDate) {
+        return false
+      }
+    }
 
     return true
   })
 })
 
 const currentPage = ref(1)
-const itemsPerPage = ref(10)
+const itemsPerPage = ref(5)
 
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value
