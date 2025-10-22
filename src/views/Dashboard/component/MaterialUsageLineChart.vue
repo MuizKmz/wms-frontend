@@ -1,23 +1,20 @@
 <template>
-  <div class="space-y-4 w-full max-w-[650px]">
-    <!-- ✅ Line Chart -->
-    <div class="w-full max-w-[600px] h-[300px] relative">
-      <!-- Loading State -->
-      <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg">
-        <div class="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-          <div class="w-5 h-5 border-2 border-gray-300 border-t-indigo-600 rounded-full animate-spin"></div>
-          <span class="text-sm">Loading chart data...</span>
-        </div>
+  <div ref="chartContainer" class="w-full h-full relative">
+    <!-- Loading State -->
+    <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg">
+      <div class="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+        <div class="w-5 h-5 border-2 border-gray-300 border-t-indigo-600 rounded-full animate-spin"></div>
+        <span class="text-sm">Loading chart data...</span>
       </div>
-
-      <!-- Actual Chart -->
-      <canvas 
-        v-show="!loading" 
-        ref="lineChartCanvas"
-        class="transition-opacity duration-300"
-        :class="{ 'opacity-0': loading, 'opacity-100': !loading }"
-      ></canvas>
     </div>
+
+    <!-- Actual Chart -->
+    <canvas 
+      v-show="!loading" 
+      ref="lineChartCanvas"
+      class="transition-opacity duration-300"
+      :class="{ 'opacity-0': loading, 'opacity-100': !loading }"
+    ></canvas>
   </div>
 </template>
 
@@ -44,9 +41,11 @@ Chart.register(
   Legend
 )
 
+const chartContainer = ref(null)
 const lineChartCanvas = ref(null)
 const lineChartInstance = ref(null)
 const loading = ref(true)
+const resizeObserver = ref(null)
 
 // Dropdown state
 const selectedRange = ref('Last 7 Days')
@@ -168,9 +167,20 @@ onMounted(async () => {
   const data = await fetchMaterialUsageData()
   createLineChart(data)
   loading.value = false
+
+  // Setup resize observer
+  if (chartContainer.value) {
+    resizeObserver.value = new ResizeObserver(() => {
+      if (lineChartInstance.value) {
+        lineChartInstance.value.resize()
+      }
+    })
+    resizeObserver.value.observe(chartContainer.value)
+  }
 })
 
 onUnmounted(() => {
   if (lineChartInstance.value) lineChartInstance.value.destroy()
+  if (resizeObserver.value) resizeObserver.value.disconnect()
 })
 </script>

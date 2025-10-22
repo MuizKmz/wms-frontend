@@ -1,13 +1,13 @@
 <template>
   <div
     :class="[
-      'rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] relative transition-all',
+      'rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] relative transition-all flex flex-col',
       isFullscreen ? 'fixed inset-0 z-50 m-0 max-w-none w-screen h-screen overflow-auto' : '',
       className,
     ]"
   >
     <!-- Card Header -->
-  <div class="px-4 sm:px-6 py-4 flex items-center justify-between gap-3 border-b border-gray-200 dark:border-gray-800">
+  <div class="px-4 sm:px-6 py-4 flex items-center justify-between gap-3 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
       <!-- Card Title: prefer slot, fallback to prop -->
       <div class="min-w-0">
         <template v-if="$slots.title">
@@ -54,8 +54,8 @@
     </div>
 
     <!-- Card Body -->
-    <div class="p-4 dark:border-gray-800 sm:p-6">
-      <div class="space-y-5">
+    <div class="p-4 dark:border-gray-800 sm:p-6 flex-1 min-h-0 overflow-hidden">
+      <div class="h-full">
         <slot></slot>
       </div>
     </div>
