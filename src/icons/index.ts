@@ -52,6 +52,8 @@ import MaintenanceIcon from "./MaintenanceIcon.vue";
 import QualityIcon from "./QualityIcon.vue";
 import RejectIcon from "./RejectIcon.vue";
 import ReportsIcon from "./ReportsIcon.vue";
+import ExpandIcon from './ExpandIcon.vue';
+import CollapseIcon from './CollapseIcon.vue';
 
 export {
   BellIcon,
@@ -108,4 +110,6 @@ export {
   QualityIcon,
   RejectIcon,
   ReportsIcon,
+  ExpandIcon,
+  CollapseIcon,
 };

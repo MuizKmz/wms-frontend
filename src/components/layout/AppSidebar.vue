@@ -43,7 +43,7 @@
 
           <!-- Menu Items -->
           <nav class="px-3">
-            <ul class="space-y-1">
+            <ul class="space-y-1 mb-2">
               <li v-for="(item, itemIndex) in group.items" :key="item.name">
                 <!-- Main Menu Item -->
                 <button 
@@ -233,11 +233,23 @@ const menuGroups = [
     items: [
       {
         icon: ReportsIcon,
-        name: "Reports & Analytics",
-        subItems: [
-          { name: "Material List", path: "/reports/material", pro: false },
-          { name: "Material Requisition", path: "/reports/requisition", pro: false },
-        ],
+        name: "Receiving",
+        path: "/receivingreport",
+      },
+      {
+        icon: ReportsIcon,
+        name: "Label Generation",
+        path: "/labelreport",
+      },
+      {
+        icon: ReportsIcon,
+        name: "Inventory",
+        path: "/inventoryreport",
+      },
+      {
+        icon: ReportsIcon,
+        name: "Order",
+        path: "/orderreport",
       },
     ],
   },

@@ -1,7 +1,7 @@
 <template>
-  <div class="space-y-4 w-[650px]">
+  <div class="space-y-4 w-full max-w-[650px]">
     <!-- ✅ Line Chart -->
-    <div class="w-[600px] h-[300px] relative">
+    <div class="w-full max-w-[600px] h-[300px] relative">
       <!-- Loading State -->
       <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg">
         <div class="flex items-center gap-2 text-gray-500 dark:text-gray-400">

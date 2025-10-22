@@ -4,21 +4,51 @@
       <DateRangeDropdown @range-select="handleDateRangeChange" />
     </div>
 
-    <ComponentCard title="Work Order">
-      <WorkOrderBarChart />
-    </ComponentCard>
-    <ComponentCard title="Material Usage" class="mt-6">
-      <MaterialUsageLineChart />
-    </ComponentCard>
+    <!-- Restored static layout with spacing -->
+    <div class="px-6 grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
+      <ChartCard
+        title="Work Order"
+        fullscreenable
+        refreshable
+        className="h-full"
+      >
+        <WorkOrderBarChart />
+      </ChartCard>
+      <ChartCard
+        title="Material Usage"
+        fullscreenable
+        refreshable
+        className="h-full"
+      >
+        <MaterialUsageLineChart />
+      </ChartCard>
+      <ChartCard
+        title="Material Usage"
+        fullscreenable
+        refreshable
+        className="h-full"
+      >
+        <MaterialUsageLineChart />
+      </ChartCard>
+      <ChartCard
+        title="Recent Shipments"
+        fullscreenable
+        refreshable
+        className="h-full"
+      >
+        <RecentShipment />
+      </ChartCard>
+    </div>
   </AdminLayout>
 </template>
 
 <script setup>
 import { ref } from "vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
-import ComponentCard from "@/components/common/ComponentCard.vue";
 import WorkOrderBarChart from "./component/WorkOrderBarChart.vue";
 import MaterialUsageLineChart from "./component/MaterialUsageLineChart.vue";
+import ChartCard from "./component/ChartCard.vue";
+import RecentShipment from "./component/RecentShipment.vue";
 // Import the new dropdown component
 import DateRangeDropdown from './component/DateRangeDropdown.vue'; 
 

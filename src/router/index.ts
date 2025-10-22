@@ -7,6 +7,14 @@ const router = createRouter({
   },
   routes: [
     {
+      path: '/signin',
+      name: 'SignIn',
+      component: () => import('../views/Auth/Signin.vue'),
+      meta: {
+        title: 'SignIn',
+      },
+    },
+    {
       path: '/',
       name: 'Dashboard',
       component: () => import('../views/Dashboard/Dashboard.vue'),
@@ -92,6 +100,46 @@ const router = createRouter({
       component: () => import('../views/Customer/Customer.vue'),
       meta: {
         title: 'Customer',
+    },
+    },
+    {
+      path: '/receivingreport',
+      name: 'Receiving Report',
+      component: () => import('../views/Reports/Receiving/ReceivingReport.vue'),
+      meta: {
+        title: 'Receiving Report',
+    },
+    },
+    {
+      path: '/labelreport',
+      name: 'Label Generation Report',
+      component: () => import('../views/Reports/Label/LabelReport.vue'),
+      meta: {
+        title: 'Label Generation Report',
+    },
+    },
+    {
+      path: '/inventoryreport',
+      name: 'Inventory Report',
+      component: () => import('../views/Reports/Inventory/InventoryReport.vue'),
+      meta: {
+        title: 'Inventory Report',
+    },
+    },
+    {
+      path: '/orderreport',
+      name: 'Order Report',
+      component: () => import('../views/Reports/Order/OrderReport.vue'),
+      meta: {
+        title: 'Order Report',
+    },
+    },
+    {
+      path: '/settings',
+      name: 'Settings',
+      component: () => import('../views/Settings/Settings.vue'),
+      meta: {
+        title: 'Settings',
     },
     },
 
