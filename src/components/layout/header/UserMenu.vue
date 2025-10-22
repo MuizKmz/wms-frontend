@@ -80,9 +80,16 @@ const closeDropdown = () => {
 }
 
 const signOut = () => {
-  // Implement sign out logic here
-  console.log('Signing out...')
-  closeDropdown()
+  // Clear authentication tokens
+  localStorage.removeItem('authToken'); // Adjust key name as per your implementation
+
+  // Optional: Notify backend (if required)
+  // fetch('/api/logout', { method: 'POST', credentials: 'include' });
+
+  // Redirect to sign-in page
+  console.log('Signing out...');
+  closeDropdown();
+  window.location.href = '/signin'; // Ensure this matches your route
 }
 
 const handleClickOutside = (event) => {

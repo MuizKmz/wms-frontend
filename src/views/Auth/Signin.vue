@@ -200,9 +200,7 @@
           <div class="flex items-center justify-center z-1">
             <common-grid-shape />
             <div class="flex flex-col items-center max-w-xs">
-              <router-link to="/" class="block mb-4">
                 <img width="{231}" height="{48}" src="/images/logo/logo-icon.svg" alt="Logo" />
-              </router-link>
               <p class="text-center text-gray-400 dark:text-white/60">
                 Warehouse Management System Dashboard
               </p>
@@ -227,6 +225,9 @@ const keepLoggedIn = ref(false)
 const isLoading = ref(false)
 const errorMessage = ref('')
 
+// New: dynamic API base (set VITE_API_BASE_URL or rely on relative path to use a dev proxy to bypass CORS)
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
+
 const togglePasswordVisibility = () => {
   if (!isLoading.value) {
     showPassword.value = !showPassword.value
@@ -239,12 +240,13 @@ const handleSubmit = async () => {
   isLoading.value = true
 
   try {
-    // Replace with your actual API endpoint
-    const response = await fetch('/api/auth/login', {
+    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      // Optional: include credentials if backend uses cookies (uncomment if needed)
+      // credentials: 'include',
       body: JSON.stringify({
         email: email.value,
         password: password.value,
@@ -255,6 +257,7 @@ const handleSubmit = async () => {
     const data = await response.json()
 
     if (!response.ok) {
+      console.error('Backend error:', data)
       throw new Error(data.message || 'Login failed. Please check your credentials.')
     }
 
@@ -276,8 +279,14 @@ const handleSubmit = async () => {
     // Redirect to dashboard
     router.push({ name: 'Dashboard' })
   } catch (error) {
-    console.error('Login error:', error)
-    errorMessage.value = error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.'
+    // CORS / network failure (fetch TypeError) handling
+    if (error instanceof TypeError) {
+      errorMessage.value = 'Network or CORS error. Verify server is running and this origin is allowed.'
+      console.error('CORS/network error:', error)
+    } else {
+      console.error('Login error:', error)
+      errorMessage.value = error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.'
+    }
   } finally {
     isLoading.value = false
   }
