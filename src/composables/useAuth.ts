@@ -27,7 +27,7 @@ export function useAuth() {
   const loadUserPermissions = async () => {
     const userStr = localStorage.getItem('user')
     console.log('🔍 [useAuth] localStorage user:', userStr)
-    
+
     if (!userStr) {
       console.warn('⚠️ [useAuth] No user found in localStorage')
       return
@@ -35,7 +35,7 @@ export function useAuth() {
 
     const user = JSON.parse(userStr)
     console.log('👤 [useAuth] Parsed user object:', user)
-    
+
     if (!user.id) {
       console.error('❌ [useAuth] User ID not found in user object:', user)
       return
@@ -43,11 +43,11 @@ export function useAuth() {
 
     console.log(`📡 [useAuth] Fetching permissions for user ID: ${user.id}`)
     loading.value = true
-    
+
     try {
       const url = `${API_URL}/auth/users/${user.id}/permissions`
       console.log(`🌐 [useAuth] Request URL: ${url}`)
-      
+
       const response = await axios.get(url)
       const permissionsData: UserPermissions = response.data
 
@@ -74,14 +74,14 @@ export function useAuth() {
       if (axios.isAxiosError(error)) {
         console.error('Response status:', error.response?.status)
         console.error('Response data:', error.response?.data)
-        
+
         // If user not found (404), likely because seed was run and user ID changed
         if (error.response?.status === 404) {
           console.error('🚨 USER NOT FOUND! This usually means:')
           console.error('   1. Database was reseeded and user IDs changed')
           console.error('   2. You need to LOGOUT and LOGIN again')
           console.error('   3. Or clear browser localStorage and refresh')
-          
+
           // Optionally clear localStorage and redirect to login
           alert('⚠️ Your session is invalid. Please login again.\n\nThis happens when the database is reset.\n\nClick OK to logout.')
           localStorage.clear()

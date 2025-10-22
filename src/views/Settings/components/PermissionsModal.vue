@@ -139,14 +139,14 @@ const fetchPermissions = async () => {
     ])
 
     permissionModules.value = permissionsResponse.data
-    
+
     console.log('📦 Permissions response:', permissionsResponse.data)
     console.log('👤 Role permissions response:', rolePermissionsResponse.data)
 
     // Role permissions endpoint returns flat array of permissions
     const rolePerms = rolePermissionsResponse.data || []
     selectedPermissions.value = rolePerms.map((p: any) => p.id)
-    
+
     console.log('✅ Selected permission IDs:', selectedPermissions.value)
   } catch (error) {
     console.error('Error fetching permissions:', error)
@@ -193,11 +193,11 @@ const savePermissions = async () => {
   saving.value = true
   try {
     console.log('💾 Saving permissions:', selectedPermissions.value)
-    
+
     await axios.post(`${API_URL}/roles/${props.role.id}/permissions`, {
       permissionIds: selectedPermissions.value,
     })
-    
+
     console.log('✅ Permissions saved successfully')
     alert('✅ Permissions updated successfully!')
     emit('saved')
