@@ -1,157 +1,89 @@
 <template>
-  <div class="p-6">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      <div>
-        <input
-          v-model="filters.customerId"
-          type="text"
-          placeholder="Filter by Customer ID"
-          class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-        />
-      </div>
+  <AdminLayout>
+    <PageBreadcrumb pageTitle="Settings" />
 
-      <div>
-        <input
-          v-model="filters.customerName"
-          type="text"
-          placeholder="Filter by Customer Name"
-          class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-        />
-      </div>
-
-      <div>
-        <input
-          v-model="filters.email"
-          type="text"
-          placeholder="Filter by Email"
-          class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-        />
-      </div>
-
-      <div class="dropdown relative inline-flex w-full">
-        <button 
-          ref="statusDropdownRef"
-          type="button" 
-          class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400" 
-          aria-haspopup="menu" 
-          :aria-expanded="openDropdowns.status"
-          aria-label="Filter by Status"
-          @click="toggleDropdown('status')"
-        >
-          {{ statusOptions.find(opt => opt.value === filters.status)?.label || 'Filter by Status' }}
-          <span class="icon-[tabler--chevron-down] size-4 transition-transform" :class="{ 'rotate-180': openDropdowns.status }"></span>
-        </button>
-        <ul 
-          class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 
-                 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 
-                 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white" 
-          :class="{ 'opacity-100': openDropdowns.status, 'opacity-0 pointer-events-none': !openDropdowns.status }"
-          role="menu" 
-          aria-orientation="vertical"
-        >
-          <li><a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('status', '')">Select Status</a></li>
-          <li><a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('status', 'Active')">Active</a></li>
-          <li><a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('status', 'Inactive')">Inactive</a></li>
-        </ul>
-      </div>
-
-    </div>
-
-    <!-- Action buttons: placed in their own full-width row so they stay right-aligned -->
-    <div class="mt-4 flex justify-end gap-2">
-      <button
-        @click="clearFilters"
-        class="btn btn-outline btn-error flex items-center gap-2"
+    <div class="space-y-5 sm:space-y-6">
+      <ComponentCard
+        title="System Settings"
+        desc="Manage roles, permissions, and user access"
       >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-        </svg>
-        Clear
-      </button>
-      
-      <button
-        @click="applyFilters"
-        class="btn btn-primary flex items-center gap-2"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z"/>
-        </svg>
-        Apply Filters
-      </button>
+        <!-- Tab Navigation -->
+        <div class="border-b border-gray-200 dark:border-gray-700 -mx-6 px-6 -mt-14">
+          <div class="flex gap-1">
+            <button
+              v-for="tab in tabs"
+              :key="tab.id"
+              @click="activeTab = tab.id"
+              :class="[
+                'px-4 py-3 font-medium text-sm transition-all relative',
+                activeTab === tab.id
+                  ? 'text-blue-600 dark:text-blue-400'
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+              ]"
+            >
+              {{ tab.label }}
+              <div
+                v-if="activeTab === tab.id"
+                class="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400"
+              />
+            </button>
+          </div>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="pt-6">
+          <transition name="fade" mode="out-in">
+            <component :is="currentTabComponent" :key="activeTab" />
+          </transition>
+        </div>
+      </ComponentCard>
     </div>
-  </div>
+  </AdminLayout>
 </template>
 
-<script setup>
-import { ref, defineEmits, onMounted, onUnmounted } from 'vue'
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import AdminLayout from '@/components/layout/AdminLayout.vue'
+import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
+import ComponentCard from '@/components/common/ComponentCard.vue'
+import RolesTab from './components/RolesTab.vue'
+import PermissionsTab from './components/PermissionsTab.vue'
+import UsersTab from './components/UsersTab.vue'
+import DebugTab from './components/DebugTab.vue'
 
-const emit = defineEmits(['filter-change'])
+const activeTab = ref('roles')
 
-const filters = ref({
-  customerId: '',
-  customerName: '',
-  email: '',
-  status: '',
-})
+const tabs = [
+  { id: 'roles', label: 'Roles' },
+  { id: 'permissions', label: 'Permissions' },
+  { id: 'users', label: 'Users' },
+  { id: 'debug', label: '🐛 Debug' },
+]
 
-const statusOptions = ref([
-  { label: 'Active', value: 'Active' },
-  { label: 'Inactive', value: 'Inactive' },
-])
-
-const openDropdowns = ref({
-  status: false,
-})
-
-const statusDropdownRef = ref(null)
-
-const applyFilters = () => {
-  emit('filter-change', filters.value)
-}
-
-const clearFilters = () => {
-  filters.value = {
-    customerId: '',
-    customerName: '',
-    email: '',
-    status: '',
+const currentTabComponent = computed(() => {
+  switch (activeTab.value) {
+    case 'roles':
+      return RolesTab
+    case 'permissions':
+      return PermissionsTab
+    case 'users':
+      return UsersTab
+    case 'debug':
+      return DebugTab
+    default:
+      return RolesTab
   }
-  emit('filter-change', filters.value)
-}
-
-const toggleDropdown = (dropdownName) => {
-  Object.keys(openDropdowns.value).forEach(key => {
-    if (key !== dropdownName) {
-      openDropdowns.value[key] = false
-    }
-  })
-  openDropdowns.value[dropdownName] = !openDropdowns.value[dropdownName]
-}
-
-const selectOption = (key, value) => {
-  filters.value[key] = value
-  openDropdowns.value[key] = false
-}
-
-const closeAllDropdowns = () => {
-  Object.keys(openDropdowns.value).forEach(key => {
-    openDropdowns.value[key] = false
-  })
-}
-
-const handleClickOutside = (event) => {
-  const dropdownRefs = [statusDropdownRef.value]
-  const isClickInside = dropdownRefs.some(ref => ref && ref.closest('.dropdown') && ref.closest('.dropdown').contains(event.target))
-  if (!isClickInside) {
-    closeAllDropdowns()
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
 })
 </script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

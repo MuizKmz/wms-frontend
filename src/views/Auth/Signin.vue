@@ -261,22 +261,23 @@ const handleSubmit = async () => {
       throw new Error(data.message || 'Login failed. Please check your credentials.')
     }
 
+    console.log('✅ Login successful! Response:', data)
+
+    // ALWAYS store to localStorage for RBAC to work
     // Store the authentication token
     if (data.token) {
-      if (keepLoggedIn.value) {
-        localStorage.setItem('authToken', data.token)
-      } else {
-        sessionStorage.setItem('authToken', data.token)
-      }
+      localStorage.setItem('token', data.token)
+      console.log('✅ Token stored in localStorage')
     }
 
     // Store user data if provided
     if (data.user) {
-      const storage = keepLoggedIn.value ? localStorage : sessionStorage
-      storage.setItem('user', JSON.stringify(data.user))
+      localStorage.setItem('user', JSON.stringify(data.user))
+      console.log('✅ User stored in localStorage:', data.user)
     }
 
     // Redirect to dashboard
+    console.log('🚀 Redirecting to dashboard...')
     router.push({ name: 'Dashboard' })
   } catch (error) {
     // CORS / network failure (fetch TypeError) handling
