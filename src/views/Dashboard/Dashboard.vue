@@ -139,6 +139,11 @@ import RecentShipment from "./component/RecentShipment.vue";
 import OrderStatusChart from "./component/OrderStatusChart.vue";
 import InventoryStockChart from "./component/InventoryStockChart.vue";
 import LowStockAlert from "./component/LowStockAlert.vue";
+import SupplierPerformanceChart from "./component/SupplierPerformanceChart.vue";
+import WarehouseUtilizationChart from "./component/WarehouseUtilizationChart.vue";
+import ProductCategoryDistribution from "./component/ProductCategoryDistribution.vue";
+import ReceivingActivityChart from "./component/ReceivingActivityChart.vue";
+import CustomerMetricsCard from "./component/CustomerMetricsCard.vue";
 import DraggableResizableCard from '@/components/common/DraggableResizableCard.vue';
 import ChartSelectorPanel from './component/ChartSelectorPanel.vue';
 import ChartCard from './component/ChartCard.vue';
@@ -198,6 +203,41 @@ const availableCharts = ref([
     description: 'Table showing products with low or critical stock levels',
     icon: BoxIcon,
     component: 'LowStockAlert'
+  },
+  {
+    id: 'supplier-performance',
+    title: 'Supplier Performance',
+    description: 'Dual-axis chart showing supplier orders and on-time delivery rates',
+    icon: BarChartIcon,
+    component: 'SupplierPerformanceChart'
+  },
+  {
+    id: 'warehouse-utilization',
+    title: 'Warehouse Utilization',
+    description: 'Doughnut chart displaying warehouse capacity usage',
+    icon: PieChartIcon,
+    component: 'WarehouseUtilizationChart'
+  },
+  {
+    id: 'product-categories',
+    title: 'Product Category Distribution',
+    description: 'Pie chart showing product distribution across categories',
+    icon: PieChartIcon,
+    component: 'ProductCategoryDistribution'
+  },
+  {
+    id: 'receiving-activity',
+    title: 'Receiving Activity',
+    description: 'Line chart tracking receiving operations over time',
+    icon: BarChartIcon,
+    component: 'ReceivingActivityChart'
+  },
+  {
+    id: 'customer-metrics',
+    title: 'Customer Metrics',
+    description: 'Metric cards showing customer and order statistics',
+    icon: TableIcon,
+    component: 'CustomerMetricsCard'
   }
 ]);
 
@@ -303,7 +343,12 @@ const componentMap = {
   RecentShipment: markRaw(RecentShipment),
   OrderStatusChart: markRaw(OrderStatusChart),
   InventoryStockChart: markRaw(InventoryStockChart),
-  LowStockAlert: markRaw(LowStockAlert)
+  LowStockAlert: markRaw(LowStockAlert),
+  SupplierPerformanceChart: markRaw(SupplierPerformanceChart),
+  WarehouseUtilizationChart: markRaw(WarehouseUtilizationChart),
+  ProductCategoryDistribution: markRaw(ProductCategoryDistribution),
+  ReceivingActivityChart: markRaw(ReceivingActivityChart),
+  CustomerMetricsCard: markRaw(CustomerMetricsCard)
 };
 
 function getChartComponent(componentName) {

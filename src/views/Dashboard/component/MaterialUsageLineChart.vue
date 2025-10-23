@@ -8,9 +8,21 @@
       </div>
     </div>
 
+    <!-- Error State -->
+    <div v-else-if="error" class="absolute inset-0 flex items-center justify-center">
+      <div class="text-center text-red-500">
+        <svg class="mx-auto h-8 w-8 text-red-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z" />
+        </svg>
+        <p class="text-sm font-medium">Error loading material usage</p>
+        <p class="text-xs mt-1">{{ error }}</p>
+      </div>
+    </div>
+
     <!-- Actual Chart -->
     <canvas 
-      v-show="!loading" 
+      v-show="!loading && !error" 
       ref="lineChartCanvas"
       class="transition-opacity duration-300"
       :class="{ 'opacity-0': loading, 'opacity-100': !loading }"
@@ -45,6 +57,7 @@ const chartContainer = ref(null)
 const lineChartCanvas = ref(null)
 const lineChartInstance = ref(null)
 const loading = ref(true)
+const error = ref(null)
 const resizeObserver = ref(null)
 
 // Dropdown state
@@ -72,15 +85,20 @@ const mockLineData = {
 }
 
 const fetchMaterialUsageData = async () => {
+  loading.value = true
+  error.value = null
   try {
     const response = await fetch('/api/material-usage/chart-data')
-    if (!response.ok) throw new Error(`API Error: ${response.status}`)
+    if (!response.ok) throw new Error('Failed to fetch material usage')
     const data = await response.json()
     if (!data || !data.labels || !data.datasets) throw new Error('Invalid API format')
     return data
   } catch (err) {
-    console.error('Fetch failed, using mock data:', err)
+    error.value = err.message
+    console.error('Error fetching material usage:', err)
     return mockLineData
+  } finally {
+    loading.value = false
   }
 }
 
@@ -161,12 +179,10 @@ const createLineChart = (data) => {
 onMounted(async () => {
   await nextTick()
   
-  // Simulate loading time (remove this in production)
-  await new Promise(resolve => setTimeout(resolve, 1500))
-  
   const data = await fetchMaterialUsageData()
-  createLineChart(data)
-  loading.value = false
+  if (!error.value) {
+    createLineChart(data)
+  }
 
   // Setup resize observer
   if (chartContainer.value) {

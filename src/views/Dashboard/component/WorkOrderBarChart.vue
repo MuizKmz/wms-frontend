@@ -46,15 +46,14 @@
       </div>
 
       <!-- Error State -->
-      <div v-else-if="error" class="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-gray-800 rounded-lg p-4">
-        <div class="flex flex-col items-center gap-3 text-center">
-          <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-            <span class="icon-[tabler--alert-circle] size-6 text-red-600 dark:text-red-400"></span>
-          </div>
-          <div>
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-1">Failed to load chart data</h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400">{{ error }}</p>
-          </div>
+      <div v-else-if="error" class="absolute inset-0 flex items-center justify-center">
+        <div class="text-center text-red-500">
+          <svg class="mx-auto h-8 w-8 text-red-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <p class="text-sm font-medium">Error loading work orders</p>
+          <p class="text-xs mt-1">{{ error }}</p>
         </div>
       </div>
 

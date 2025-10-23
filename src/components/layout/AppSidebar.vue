@@ -3,17 +3,19 @@
     <!-- Modern Expanded Sidebar -->
     <aside
       :class="[
-        'fixed top-0 left-0 bg-slate-900 dark:bg-slate-800 text-white h-screen z-[60] w-64 flex flex-col shadow-xl transition-transform duration-300',
+        'fixed top-0 left-0 h-screen z-[60] w-64 flex flex-col shadow-xl transition-all duration-300',
         {
           '-translate-x-full lg:translate-x-0': !isMobileOpen,
           'translate-x-0': isMobileOpen
         }
-      ]">
+      ]"
+      :style="{ backgroundColor: 'var(--sidebar-color, #0f172a)', color: 'var(--sidebar-text-color, #ffffff)' }">
 
       <!-- Sidebar Toggle Button (Mobile Only) - Sticks out from sidebar edge -->
       <button
         @click="toggleMobileSidebar"
-        class="absolute -right-10 top-20 bg-slate-900 dark:bg-slate-800 text-white p-2 rounded-r-lg shadow-lg lg:hidden z-[70]"
+        class="absolute -right-10 top-20 p-2 rounded-r-lg shadow-lg lg:hidden z-[70]"
+        :style="{ backgroundColor: 'var(--sidebar-color, #0f172a)', color: 'var(--sidebar-text-color, #ffffff)' }"
       >
         <MenuIcon v-if="!isMobileOpen" class="w-5 h-5" />
         <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -22,7 +24,7 @@
       </button>
 
       <!-- Logo Section -->
-      <div class="p-6 border-b border-slate-700">
+      <div class="p-6 border-b" style="border-color: rgba(255, 255, 255, 0.1)">
         <router-link to="/" class="block" @click="closeMobileSidebar">
           <div class="bg-white rounded-lg p-3 mb-3 w-fit">
             <img src="/images/logo/logo-icon.svg" alt="Logo" width="32" height="32" />
@@ -75,13 +77,9 @@
                   v-if="item.subItems"
                   @click="handleItemClick(groupIndex, itemIndex, item)"
                   :class="[
-                    'w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200',
-                    {
-                      'bg-blue-600 text-white': isSubmenuActive(item),
-                      'bg-slate-800 text-white': !isSubmenuActive(item) && isSubmenuOpen(groupIndex, itemIndex, item),
-                      'text-slate-300 hover:bg-slate-800': !isSubmenuOpen(groupIndex, itemIndex, item) && !isSubmenuActive(item),
-                    }
-                  ]">
+                    'w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200'
+                  ]"
+                  :style="isSubmenuActive(item) ? activeMenuStyle : (isSubmenuOpen(groupIndex, itemIndex, item) ? openMenuStyle : hoverMenuStyle)">
                   <div class="flex items-center gap-3">
                     <component :is="item.icon" class="w-5 h-5 flex-shrink-0" />
                     <span class="text-sm font-medium text-left">{{ item.name }}</span>
@@ -97,12 +95,9 @@
                   :to="item.path"
                   @click.stop="handleDirectNavigation()"
                   :class="[
-                    'w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200',
-                    {
-                      'bg-blue-600 text-white': isActive(item.path),
-                      'text-slate-300 hover:bg-slate-800': !isActive(item.path),
-                    }
-                  ]">
+                    'w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200'
+                  ]"
+                  :style="isActive(item.path) ? activeMenuStyle : hoverMenuStyle">
                   <div class="flex items-center gap-3">
                     <component :is="item.icon" class="w-5 h-5 flex-shrink-0" />
                     <span class="text-sm font-medium">{{ item.name }}</span>
@@ -119,14 +114,11 @@
                     :to="subItem.path"
                     @click.stop="closeMobileSidebar"
                     :class="[
-                      'flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200',
-                      {
-                        'bg-blue-600 text-white font-medium': isActive(subItem.path),
-                        'text-slate-400 hover:bg-slate-800 hover:text-slate-300': !isActive(subItem.path),
-                      }
-                    ]">
-                    <div class="w-1.5 h-1.5 rounded-full bg-slate-600 flex-shrink-0"></div>
-                    <span>{{ subItem.name }}</span>
+                      'flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200'
+                    ]"
+                    :style="isActive(subItem.path) ? activeMenuStyle : subMenuStyle">
+                    <div class="w-1.5 h-1.5 rounded-full flex-shrink-0" :style="{ backgroundColor: isActive(subItem.path) ? 'currentColor' : 'rgba(255,255,255,0.3)' }"></div>
+                    <span :class="{ 'font-medium': isActive(subItem.path) }">{{ subItem.name }}</span>
                     <div class="flex items-center gap-1 ml-auto">
                       <span v-if="subItem.new" class="px-2 py-0.5 text-[10px] font-medium text-green-300 bg-green-900/50 rounded-full">
                         new
@@ -155,18 +147,23 @@
       </div>
 
       <!-- Footer -->
-      <div class="p-3 border-t border-slate-700">
+      <div class="p-3 border-t" style="border-color: rgba(255, 255, 255, 0.1)">
         <router-link
+         v-if="hasModuleAccess('Settings')"
           to="/settings"
           @click.stop="closeMobileSidebar"
-          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 transition-all duration-200 mb-2">
+          :class="[
+            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 mb-2'
+          ]"
+          :style="isActive('/settings') ? activeMenuStyle : hoverMenuStyle">
           <SettingsIcon class="w-5 h-5" />
           <span class="text-sm font-medium">Settings</span>
         </router-link>
 
         <button
           @click="signOut"
-          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 transition-all duration-200">
+          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200"
+          :style="hoverMenuStyle">
           <LogoutIcon class="w-5 h-5" />
           <span class="text-sm font-medium">Sign Out</span>
         </button>
@@ -184,12 +181,24 @@ import { useAuth } from "@/composables/useAuth";
 import {
   LogoutIcon,
   SettingsIcon,
-  BagIcon,
   MenuIcon,
   HomeIcon,
   ReportsIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  BoxIcon,
+  BarChartIcon,
+  FolderIcon,
+  WarehouseIcon,
+  SupplierIcon,
+  CategoryIcon,
+  ProductIcon,
+  EPCIcon,
+  InventoryIcon,
+  OrderIcon,
+  ShippingIcon,
+  CustomerIcon,
+  LabelIcon,
 } from "../../icons";
 
 const route = useRoute();
@@ -203,6 +212,37 @@ const { hasModuleAccess, loadUserPermissions, userPermissions, loading } = useAu
 
 const openSubmenu = ref(null);
 const openGroups = ref(new Set(['STOCK', 'REPORTS'])); // Track which groups are open (default open)
+
+// Computed styles for active menu items that adapt to theme
+const activeMenuStyle = computed(() => {
+  const sidebarColor = getComputedStyle(document.documentElement).getPropertyValue('--sidebar-color').trim() || '#0f172a'
+  const isDark = document.documentElement.classList.contains('dark')
+  
+  // Calculate a lighter/accent color based on sidebar color
+  const rgb = parseInt(sidebarColor.slice(1), 16)
+  const r = Math.min(255, ((rgb >> 16) & 0xff) + 60)
+  const g = Math.min(255, ((rgb >> 8) & 0xff) + 60)
+  const b = Math.min(255, (rgb & 0xff) + 60)
+  const accentColor = `rgb(${r}, ${g}, ${b})`
+  
+  return {
+    backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : accentColor,
+    color: isDark ? '#60a5fa' : '#ffffff'
+  }
+})
+
+const openMenuStyle = computed(() => ({
+  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  color: 'rgba(255, 255, 255, 0.9)'
+}))
+
+const hoverMenuStyle = computed(() => ({
+  color: 'rgba(255, 255, 255, 0.7)'
+}))
+
+const subMenuStyle = computed(() => ({
+  color: 'rgba(255, 255, 255, 0.6)'
+}))
 
 // Load permissions on mount
 onMounted(async () => {
@@ -240,61 +280,61 @@ const allMenuGroups = [
     title: "STOCK",
     items: [
       {
-        icon: BagIcon,
+        icon: WarehouseIcon,
         name: "Warehouse",
         path: "/warehouse",
         module: "Warehouse"
       },
       {
-        icon: BagIcon,
+        icon: SupplierIcon,
         name: "Supplier",
         path: "/supplier",
         module: "Supplier"
       },
       {
-        icon: BagIcon,
+        icon: BoxIcon,
         name: "Receiving",
         path: "/receiving",
         module: "Receiving"
       },
       {
-        icon: BagIcon,
+        icon: CategoryIcon,
         name: "Category",
         path: "/category",
         module: "Category"
       },
       {
-        icon: BagIcon,
+        icon: ProductIcon,
         name: "Product",
         path: "/product",
         module: "Product"
       },
       {
-        icon: BagIcon,
+        icon: EPCIcon,
         name: "EPC",
         path: "/epc",
         module: "EPC"
       },
       {
-        icon: BagIcon,
+        icon: InventoryIcon,
         name: "Inventory",
         path: "/inventory",
         module: "Inventory"
       },
       {
-        icon: BagIcon,
+        icon: OrderIcon,
         name: "Order",
         path: "/order",
         module: "Order"
       },
       {
-        icon: BagIcon,
+        icon: ShippingIcon,
         name: "Shipping",
         path: "/shipping",
         module: "Shipping"
       },
       {
-        icon: BagIcon,
+        icon: CustomerIcon,
         name: "Customer",
         path: "/customer",
         module: "Customer"
@@ -305,25 +345,25 @@ const allMenuGroups = [
     title: "REPORTS",
     items: [
       {
-        icon: ReportsIcon,
+        icon: BoxIcon,
         name: "Receiving",
         path: "/receivingreport",
         module: "Reports"
       },
       {
-        icon: ReportsIcon,
+        icon: LabelIcon,
         name: "Label Generation",
         path: "/labelreport",
         module: "Reports"
       },
       {
-        icon: ReportsIcon,
+        icon: InventoryIcon,
         name: "Inventory",
         path: "/inventoryreport",
         module: "Reports"
       },
       {
-        icon: ReportsIcon,
+        icon: FolderIcon,
         name: "Order",
         path: "/orderreport",
         module: "Reports"
@@ -424,5 +464,16 @@ const signOut = () => {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Hover effects for menu items */
+nav a:hover,
+nav button:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+nav a:active,
+nav button:active {
+  transform: scale(0.98);
 }
 </style>

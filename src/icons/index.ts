@@ -54,6 +54,16 @@ import RejectIcon from "./RejectIcon.vue";
 import ReportsIcon from "./ReportsIcon.vue";
 import ExpandIcon from './ExpandIcon.vue';
 import CollapseIcon from './CollapseIcon.vue';
+import WarehouseIcon from './WarehouseIcon.vue';
+import SupplierIcon from './SupplierIcon.vue';
+import CategoryIcon from './CategoryIcon.vue';
+import ProductIcon from './ProductIcon.vue';
+import EPCIcon from './EPCIcon.vue';
+import InventoryIcon from './InventoryIcon.vue';
+import OrderIcon from './OrderIcon.vue';
+import ShippingIcon from './ShippingIcon.vue';
+import CustomerIcon from './CustomerIcon.vue';
+import LabelIcon from './LabelIcon.vue';
 
 export {
   BellIcon,
@@ -112,4 +122,14 @@ export {
   ReportsIcon,
   ExpandIcon,
   CollapseIcon,
+  WarehouseIcon,
+  SupplierIcon,
+  CategoryIcon,
+  ProductIcon,
+  EPCIcon,
+  InventoryIcon,
+  OrderIcon,
+  ShippingIcon,
+  CustomerIcon,
+  LabelIcon,
 };
