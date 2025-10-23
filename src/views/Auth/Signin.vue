@@ -199,8 +199,25 @@
         >
           <div class="flex items-center justify-center z-1">
             <common-grid-shape />
-            <div class="flex flex-col items-center max-w-xs">
-                <img width="{231}" height="{48}" src="/images/logo/logo-icon.svg" alt="Logo" />
+            
+            <!-- Skeleton Loader -->
+            <div v-if="!logoLoaded" class="flex flex-col items-center max-w-xs animate-pulse">
+              <div class="mb-4 bg-white/10 rounded-lg h-16 w-48"></div>
+              <div class="h-6 bg-white/10 rounded w-64 mb-2"></div>
+              <div class="h-4 bg-white/10 rounded w-56"></div>
+            </div>
+            
+            <!-- Actual Logo -->
+            <div v-else class="flex flex-col items-center max-w-xs">
+              <div v-if="customLogoUrl" class="mb-4">
+                <img :src="customLogoUrl" alt="Logo" class="w-auto h-16 object-contain" />
+              </div>
+              <div v-else class="mb-4">
+                <img width="231" height="48" src="/images/logo/logo-icon.svg" alt="Logo" />
+              </div>
+              <h2 v-if="companyName && companyName !== 'WMS Console'" class="text-2xl font-bold text-white mb-2">
+                {{ companyName }}
+              </h2>
               <p class="text-center text-gray-400">
                 Warehouse Management System Dashboard
               </p>
@@ -213,7 +230,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import CommonGridShape from '@/components/common/CommonGridShape.vue'
 import FullScreenLayout from '@/components/layout/FullScreenLayout.vue'
 import router from '@/router'
@@ -224,6 +241,34 @@ const showPassword = ref(false)
 const keepLoggedIn = ref(false)
 const isLoading = ref(false)
 const errorMessage = ref('')
+const customLogoUrl = ref('')
+const companyName = ref('WMS Console')
+const logoLoaded = ref(false)
+
+// Load custom logo and company name from theme settings
+const loadBranding = () => {
+  try {
+    const saved = localStorage.getItem('themeCustomization')
+    if (saved) {
+      const settings = JSON.parse(saved)
+      if (settings.logoUrl) {
+        customLogoUrl.value = settings.logoUrl
+      }
+      if (settings.companyName) {
+        companyName.value = settings.companyName
+      }
+    }
+    // Mark as loaded immediately now that we have skeleton
+    logoLoaded.value = true
+  } catch (e) {
+    console.error('Error loading branding:', e)
+    logoLoaded.value = true
+  }
+}
+
+onMounted(() => {
+  loadBranding()
+})
 
 // New: dynamic API base (set VITE_API_BASE_URL or rely on relative path to use a dev proxy to bypass CORS)
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
@@ -263,9 +308,27 @@ const handleSubmit = async () => {
 
     console.log('✅ Login successful! Response:', data)
 
-    // IMPORTANT: Clear old localStorage data first to prevent conflicts
+    // IMPORTANT: Only clear authentication data, keep theme and dashboard settings
+    const preservedKeys = ['themeCustomization', 'dashboard-charts-layout', 'theme']
+    const preservedData: Record<string, string> = {}
+    
+    // Save data to preserve
+    preservedKeys.forEach(key => {
+      const value = localStorage.getItem(key)
+      if (value) {
+        preservedData[key] = value
+      }
+    })
+    
+    // Clear all localStorage
     localStorage.clear()
-    console.log('🧹 [Signin] Cleared old localStorage data')
+    console.log('🧹 [Signin] Cleared old authentication data')
+    
+    // Restore preserved data
+    Object.keys(preservedData).forEach(key => {
+      localStorage.setItem(key, preservedData[key])
+    })
+    console.log('✅ [Signin] Restored theme and dashboard settings')
 
     // ALWAYS store to localStorage for RBAC to work
     // Store the authentication token

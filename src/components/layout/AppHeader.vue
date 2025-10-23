@@ -2,8 +2,8 @@
   <header
     class="sticky top-0 border-b z-50 transition-all duration-300"
     :style="{ 
-      backgroundColor: 'var(--header-color, #ffffff)', 
-      color: 'var(--header-text-color, #000000)',
+      backgroundColor: headerBgColor, 
+      color: headerTextColor,
       borderColor: 'rgba(0, 0, 0, 0.1)'
     }"
   >
@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import ThemeToggler from '../common/ThemeToggler.vue'
 import HeaderLogo from './header/HeaderLogo.vue'
 import NotificationMenu from './header/NotificationMenu.vue'
@@ -65,6 +65,14 @@ const { isMobileOpen, toggleMobileSidebar } = useSidebar()
 const currentDate = ref('')
 const currentTime = ref('')
 const userEmail = ref('')
+const headerBgColor = ref('var(--header-color, #ffffff)')
+const headerTextColor = ref('var(--header-text-color, #000000)')
+
+const updateHeaderColors = () => {
+  const root = document.documentElement
+  headerBgColor.value = getComputedStyle(root).getPropertyValue('--header-color').trim() || '#ffffff'
+  headerTextColor.value = getComputedStyle(root).getPropertyValue('--header-text-color').trim() || '#000000'
+}
 
 // Get user email from localStorage
 onMounted(() => {
@@ -98,13 +106,34 @@ function updateDateTime() {
 }
 
 let intervalId: number
+let observer: MutationObserver | null = null
 
 onMounted(() => {
   updateDateTime()
   intervalId = window.setInterval(updateDateTime, 1000)
+  
+  // Update colors initially
+  setTimeout(() => updateHeaderColors(), 100)
+  
+  // Listen for theme changes
+  window.addEventListener('themeChanged', updateHeaderColors)
+  
+  // Watch for dark mode toggle
+  observer = new MutationObserver(() => {
+    setTimeout(() => updateHeaderColors(), 50)
+  })
+  
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class']
+  })
 })
 
 onUnmounted(() => {
   clearInterval(intervalId)
+  window.removeEventListener('themeChanged', updateHeaderColors)
+  if (observer) {
+    observer.disconnect()
+  }
 })
 </script>

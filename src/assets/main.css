@@ -783,22 +783,19 @@ body[style*="--bg-type: gradient"] {
 }
 
 /* Apply custom primary color to relevant elements */
-.bg-blue-600,
+/* NOTE: text-blue-600 and bg-blue-600 are kept as default blue for tabs and standard UI elements */
 .bg-brand-500 {
   background-color: var(--primary-color) !important;
 }
 
-.text-blue-600,
 .text-brand-500 {
   color: var(--primary-color) !important;
 }
 
-.border-blue-600,
 .border-brand-500 {
   border-color: var(--primary-color) !important;
 }
 
-.hover\:bg-blue-700:hover,
 .hover\:bg-brand-600:hover {
   background-color: color-mix(in srgb, var(--primary-color) 90%, black) !important;
 }

@@ -7,7 +7,8 @@
       <ol class="flex items-center gap-1.5">
         <li>
           <router-link
-            class="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"
+            :style="breadcrumbLinkStyle"
+            class="inline-flex items-center gap-1.5 text-sm"
             to="/"
           >
             Home
@@ -29,7 +30,7 @@
             </svg>
           </router-link>
         </li>
-        <li class="text-sm text-gray-800 dark:text-white/90">
+        <li :style="breadcrumbTextStyle" class="text-sm font-medium">
           {{ pageTitle }}
         </li>
       </ol>
@@ -38,11 +39,74 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue'
+import { defineProps, ref, onMounted, computed } from 'vue'
 
 interface BreadcrumbProps {
   pageTitle: string
 }
 
 defineProps<BreadcrumbProps>()
+
+const hasCustomBackground = ref(false)
+
+// Check if custom background is set
+const checkBackgroundSettings = () => {
+  try {
+    const saved = localStorage.getItem('themeCustomization')
+    if (saved) {
+      const settings = JSON.parse(saved)
+      
+      // Only show white bold text if background image is set
+      if (settings.backgroundType === 'image' && settings.backgroundImageUrl) {
+        hasCustomBackground.value = true
+      } else {
+        hasCustomBackground.value = false
+      }
+    } else {
+      hasCustomBackground.value = false
+    }
+  } catch (e) {
+    console.error('Error checking background settings:', e)
+    hasCustomBackground.value = false
+  }
+}
+
+// Breadcrumb styles that adapt to background
+const breadcrumbLinkStyle = computed(() => {
+  if (hasCustomBackground.value) {
+    return {
+      color: '#ffffff',
+      fontWeight: '600',
+      textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
+    }
+  }
+  return {}
+})
+
+const breadcrumbTextStyle = computed(() => {
+  if (hasCustomBackground.value) {
+    return {
+      color: '#ffffff',
+      fontWeight: '700',
+      textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
+    }
+  }
+  return {}
+})
+
+onMounted(() => {
+  checkBackgroundSettings()
+  
+  // Listen for theme changes
+  window.addEventListener('themeChanged', checkBackgroundSettings)
+  
+  // Watch for dark mode toggle
+  const observer = new MutationObserver(() => {
+    checkBackgroundSettings()
+  })
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class']
+  })
+})
 </script>

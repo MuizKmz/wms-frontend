@@ -1,4 +1,5 @@
 import './assets/main.css'
+import './assets/theme.css'
 // Import Swiper styles
 import 'swiper/css'
 import 'swiper/css/navigation'
@@ -11,35 +12,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import VueApexCharts from 'vue3-apexcharts'
-
-// Load theme customization on startup
-const loadThemeCustomization = () => {
-  const saved = localStorage.getItem('themeCustomization')
-  if (saved) {
-    try {
-      const settings = JSON.parse(saved)
-      const root = document.documentElement
-
-      root.style.setProperty('--primary-color', settings.primaryColor || '#3B82F6')
-      root.style.setProperty('--accent-color', settings.accentColor || '#10B981')
-      
-      if (settings.backgroundType === 'solid') {
-        root.style.setProperty('--bg-color-light', settings.backgroundColor || '#F9FAFB')
-        root.style.setProperty('--bg-color-dark', settings.backgroundColorDark || '#111827')
-        root.style.removeProperty('--bg-gradient')
-      } else if (settings.backgroundType === 'gradient') {
-        const gradient = `linear-gradient(${settings.gradientDirection || 'to-br'}, ${settings.gradientStart || '#3B82F6'}, ${settings.gradientEnd || '#8B5CF6'})`
-        root.style.setProperty('--bg-gradient', gradient)
-      }
-
-      root.style.setProperty('--bg-type', settings.backgroundType || 'solid')
-    } catch (e) {
-      console.error('Failed to load theme customization:', e)
-    }
-  }
-}
-
-loadThemeCustomization()
+import { initializeTheme } from './utils/themeLoader'
 
 const app = createApp(App)
 
@@ -47,3 +20,16 @@ app.use(router)
 app.use(VueApexCharts)
 
 app.mount('#app')
+
+// Initialize theme after app is mounted
+// This will load theme from API if user is authenticated
+router.isReady().then(() => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    // User is authenticated, load theme from API
+    initializeTheme()
+  } else {
+    // User not authenticated, just load from localStorage if available
+    console.log('ℹ️ [Main] User not authenticated, skipping API theme load')
+  }
+})

@@ -29,49 +29,72 @@ import Backdrop from './Backdrop.vue'
 
 const mainBackgroundStyle = ref({})
 
-// Compute background style based on theme settings
+// Compute background style from localStorage directly
 const updateBackgroundStyle = () => {
-  const root = document.documentElement
-  const bgType = getComputedStyle(root).getPropertyValue('--bg-type').trim()
-  const isDark = root.classList.contains('dark')
-  
-  if (bgType === 'image') {
-    const imageUrl = isDark 
-      ? getComputedStyle(root).getPropertyValue('--bg-image-url-dark').trim() || getComputedStyle(root).getPropertyValue('--bg-image-url').trim()
-      : getComputedStyle(root).getPropertyValue('--bg-image-url').trim()
+  try {
+    const saved = localStorage.getItem('themeCustomization')
+    const isDark = document.documentElement.classList.contains('dark')
     
-    if (imageUrl) {
-      const bgSize = getComputedStyle(root).getPropertyValue('--bg-size').trim() || 'cover'
-      const bgPosition = getComputedStyle(root).getPropertyValue('--bg-position').trim() || 'center'
-      const bgRepeat = getComputedStyle(root).getPropertyValue('--bg-repeat').trim() || 'no-repeat'
-      const bgOpacity = getComputedStyle(root).getPropertyValue('--bg-opacity').trim() || '1'
-      
+    if (!saved) {
+      console.log('🎨 [AdminLayout] No theme customization found, using defaults')
       mainBackgroundStyle.value = {
-        backgroundImage: `linear-gradient(rgba(255, 255, 255, ${1 - parseFloat(bgOpacity)}), rgba(255, 255, 255, ${1 - parseFloat(bgOpacity)})), url(${imageUrl})`,
-        backgroundSize: bgSize,
-        backgroundPosition: bgPosition,
-        backgroundRepeat: bgRepeat,
-        backgroundAttachment: 'fixed'
+        backgroundColor: isDark ? '#111827' : '#F9FAFB'
       }
       return
     }
-  }
-  
-  // Default solid background
-  const bgColor = isDark 
-    ? getComputedStyle(root).getPropertyValue('--bg-color-dark').trim() || '#111827'
-    : getComputedStyle(root).getPropertyValue('--bg-color-light').trim() || '#F9FAFB'
-  
-  mainBackgroundStyle.value = {
-    backgroundColor: bgColor
+    
+    const settings = JSON.parse(saved)
+    console.log('🎨 [AdminLayout] updateBackgroundStyle from localStorage:', { 
+      backgroundType: settings.backgroundType, 
+      isDark,
+      hasBackgroundImage: !!settings.backgroundImageUrl
+    })
+    
+    if (settings.backgroundType === 'image') {
+      const imageUrl = isDark 
+        ? (settings.backgroundImageUrlDark || settings.backgroundImageUrl)
+        : settings.backgroundImageUrl
+      
+      if (imageUrl) {
+        const bgSize = settings.backgroundSize || 'cover'
+        const bgPosition = settings.backgroundPosition || 'center'
+        const bgRepeat = settings.backgroundRepeat || 'no-repeat'
+        const bgOpacity = (settings.backgroundOpacity || 100) / 100
+        
+        mainBackgroundStyle.value = {
+          backgroundImage: `linear-gradient(rgba(255, 255, 255, ${1 - bgOpacity}), rgba(255, 255, 255, ${1 - bgOpacity})), url(${imageUrl})`,
+          backgroundSize: bgSize,
+          backgroundPosition: bgPosition,
+          backgroundRepeat: bgRepeat,
+          backgroundAttachment: 'fixed'
+        }
+        console.log('✅ [AdminLayout] Background image applied, URL length:', imageUrl.length)
+        return
+      }
+    }
+    
+    // Solid background
+    const bgColor = isDark 
+      ? (settings.backgroundColorDark || '#111827')
+      : (settings.backgroundColor || '#F9FAFB')
+    
+    mainBackgroundStyle.value = {
+      backgroundColor: bgColor
+    }
+    console.log('✅ [AdminLayout] Solid background applied:', bgColor)
+  } catch (e) {
+    console.error('❌ [AdminLayout] Error loading background:', e)
+    mainBackgroundStyle.value = {
+      backgroundColor: document.documentElement.classList.contains('dark') ? '#111827' : '#F9FAFB'
+    }
   }
 }
 
 let observer = null
 
 onMounted(() => {
-  // Initial update
-  setTimeout(() => updateBackgroundStyle(), 100)
+  // Initial update immediately - no delay to prevent blink
+  updateBackgroundStyle()
   
   // Listen for theme changes
   window.addEventListener('themeChanged', updateBackgroundStyle)
@@ -80,7 +103,7 @@ onMounted(() => {
   observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.attributeName === 'class') {
-        setTimeout(() => updateBackgroundStyle(), 50)
+        updateBackgroundStyle()
       }
     })
   })

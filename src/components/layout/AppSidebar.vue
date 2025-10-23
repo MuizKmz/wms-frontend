@@ -25,28 +25,34 @@
 
       <!-- Logo Section -->
       <div class="p-6 border-b" style="border-color: rgba(255, 255, 255, 0.1)">
-        <router-link to="/" class="block" @click="closeMobileSidebar">
-          <div class="bg-white rounded-lg p-3 mb-3 w-fit">
+        <!-- Skeleton Loader - Exact same dimensions -->
+        <div v-if="!brandingLoaded" class="block">
+          <div class="animate-pulse bg-white/20 rounded-lg p-3 mb-3 w-fit">
+            <div class="w-8 h-8 bg-white/30 rounded"></div>
+          </div>
+          <div class="animate-pulse space-y-1">
+            <div class="h-[27px] bg-white/20 rounded w-32"></div>
+          </div>
+        </div>
+        
+        <!-- Actual Logo -->
+        <router-link v-else to="/" class="block" @click="closeMobileSidebar">
+          <div v-if="logoUrl" class="bg-white rounded-lg p-3 mb-3 w-fit">
+            <img :src="logoUrl" alt="Logo" class="w-8 h-8 object-contain" />
+          </div>
+          <div v-else class="bg-white rounded-lg p-3 mb-3 w-fit">
             <img src="/images/logo/logo-icon.svg" alt="Logo" width="32" height="32" />
           </div>
           <div class="space-y-1">
-            <h1 class="text-lg font-bold text-white">WMS Console</h1>
+            <h1 class="text-lg font-bold text-white">{{ companyName }}</h1>
           </div>
         </router-link>
       </div>
 
       <!-- Navigation Section -->
       <div class="flex-1 overflow-y-auto no-scrollbar">
-        <!-- Loading State -->
-        <div v-if="loading" class="flex items-center justify-center py-12">
-          <div class="text-center">
-            <span class="loading loading-spinner loading-lg text-primary"></span>
-            <p class="text-slate-400 text-sm mt-3">Loading permissions...</p>
-          </div>
-        </div>
-
-        <!-- Menu Items -->
-        <div v-else-if="menuGroups.length > 0" v-for="(group, groupIndex) in menuGroups" :key="groupIndex">
+        <!-- Menu Items (hide loading state to avoid glitch) -->
+        <div v-if="menuGroups.length > 0" v-for="(group, groupIndex) in menuGroups" :key="groupIndex">
           <!-- Group Title (Collapsible if it has a title) -->
           <button
             v-if="group.title"
@@ -212,6 +218,36 @@ const { hasModuleAccess, loadUserPermissions, userPermissions, loading } = useAu
 
 const openSubmenu = ref(null);
 const openGroups = ref(new Set(['STOCK', 'REPORTS'])); // Track which groups are open (default open)
+const logoUrl = ref('')
+const companyName = ref('WMS Console')
+const brandingLoaded = ref(false)
+
+// Update logo and company name from localStorage directly
+const updateBranding = () => {
+  try {
+    const saved = localStorage.getItem('themeCustomization')
+    if (saved) {
+      const settings = JSON.parse(saved)
+      console.log('🎨 [AppSidebar] updateBranding from localStorage:', { 
+        hasLogo: !!settings.logoUrl, 
+        companyName: settings.companyName,
+        logoLength: settings.logoUrl?.length 
+      })
+      
+      if (settings.logoUrl) {
+        logoUrl.value = settings.logoUrl
+      }
+      if (settings.companyName) {
+        companyName.value = settings.companyName
+      }
+    }
+    // Mark as loaded immediately now that we have skeleton
+    brandingLoaded.value = true
+  } catch (e) {
+    console.error('❌ [AppSidebar] Error loading branding:', e)
+    brandingLoaded.value = true
+  }
+}
 
 // Computed styles for active menu items that adapt to theme
 const activeMenuStyle = computed(() => {
@@ -249,6 +285,12 @@ onMounted(async () => {
   console.log('🚀 [AppSidebar] Component mounted, loading permissions...');
   await loadUserPermissions();
   console.log('✅ [AppSidebar] Permissions loaded, count:', userPermissions.value.length);
+  
+  // Update branding
+  setTimeout(() => updateBranding(), 100)
+  
+  // Listen for theme changes
+  window.addEventListener('themeChanged', updateBranding)
 });
 
 // Toggle group open/close

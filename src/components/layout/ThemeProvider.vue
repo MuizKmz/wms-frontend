@@ -40,12 +40,22 @@ const getTextColor = (bgColor: string): string => {
 // Apply theme customization from settings
 const applyThemeCustomization = () => {
   const saved = localStorage.getItem('themeCustomization')
-  if (!saved) return
+  if (!saved) {
+    console.log('🎨 [ThemeProvider] No saved theme customization found')
+    return
+  }
 
   try {
     const settings = JSON.parse(saved)
     const root = document.documentElement
     const isDark = root.classList.contains('dark')
+
+    console.log('🎨 [ThemeProvider] Applying theme customization:', { 
+      isDark, 
+      backgroundType: settings.backgroundType,
+      hasLogo: !!settings.logoUrl,
+      hasBackgroundImage: !!settings.backgroundImageUrl
+    })
 
     // Calculate text colors
     const sidebarTextColor = getTextColor(settings.sidebarColor || '#0f172a')
@@ -69,24 +79,32 @@ const applyThemeCustomization = () => {
       root.style.setProperty('--footer-text-color', footerTextColor)
     }
     
-    // Background settings
-    if (settings.backgroundType === 'solid') {
-      root.style.setProperty('--bg-color-light', settings.backgroundColor)
-      root.style.setProperty('--bg-color-dark', settings.backgroundColorDark)
+    // Background settings - ALWAYS set bg-type first
+    root.style.setProperty('--bg-type', settings.backgroundType || 'solid')
+    
+    if (settings.backgroundType === 'image') {
+      root.style.setProperty('--bg-image-url', settings.backgroundImageUrl || '')
+      root.style.setProperty('--bg-image-url-dark', settings.backgroundImageUrlDark || settings.backgroundImageUrl || '')
+      root.style.setProperty('--bg-size', settings.backgroundSize || 'cover')
+      root.style.setProperty('--bg-position', settings.backgroundPosition || 'center')
+      root.style.setProperty('--bg-repeat', settings.backgroundRepeat || 'no-repeat')
+      root.style.setProperty('--bg-opacity', ((settings.backgroundOpacity || 100) / 100).toString())
+      console.log('🖼️ [ThemeProvider] Background image URL set:', settings.backgroundImageUrl?.substring(0, 50))
+    } else {
+      root.style.setProperty('--bg-color-light', settings.backgroundColor || '#F9FAFB')
+      root.style.setProperty('--bg-color-dark', settings.backgroundColorDark || '#111827')
+      // Clear image properties
       root.style.removeProperty('--bg-image-url')
       root.style.removeProperty('--bg-image-url-dark')
-    } else {
-      root.style.setProperty('--bg-image-url', settings.backgroundImageUrl)
-      root.style.setProperty('--bg-image-url-dark', settings.backgroundImageUrlDark || settings.backgroundImageUrl)
-      root.style.setProperty('--bg-size', settings.backgroundSize)
-      root.style.setProperty('--bg-position', settings.backgroundPosition)
-      root.style.setProperty('--bg-repeat', settings.backgroundRepeat)
-      root.style.setProperty('--bg-opacity', (settings.backgroundOpacity / 100).toString())
     }
-
-    root.style.setProperty('--bg-type', settings.backgroundType)
+    
+    // Logo and branding
+    root.style.setProperty('--logo-url', settings.logoUrl || '')
+    root.style.setProperty('--company-name', settings.companyName || 'WMS Console')
+    
+    console.log('✅ [ThemeProvider] Theme customization applied successfully')
   } catch (e) {
-    console.error('Failed to apply theme customization:', e)
+    console.error('❌ [ThemeProvider] Failed to apply theme customization:', e)
   }
 }
 

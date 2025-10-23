@@ -101,6 +101,70 @@
         </div>
       </div>
 
+      <!-- Logo & Branding Section -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Logo & Branding
+        </h3>
+        
+        <div class="space-y-4">
+          <!-- Company Name -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Company Name
+            </label>
+            <input
+              type="text"
+              v-model="themeSettings.companyName"
+              @input="onColorChange"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              placeholder="WMS Console"
+            />
+          </div>
+
+          <!-- Logo Upload -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Company Logo
+            </label>
+            <div class="space-y-3">
+              <!-- Logo Preview -->
+              <div v-if="themeSettings.logoUrl" class="relative w-32 h-32 rounded-lg border-2 border-gray-300 dark:border-gray-600 overflow-hidden bg-white p-2">
+                <img :src="themeSettings.logoUrl" alt="Logo preview" class="w-full h-full object-contain" />
+                <button
+                  @click="removeLogo"
+                  class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                >
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <!-- File Upload -->
+              <div class="flex items-center gap-3">
+                <label class="flex-1 cursor-pointer">
+                  <div class="px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md hover:border-blue-500 dark:hover:border-blue-400 transition-colors text-center">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">
+                      Click to upload logo
+                    </span>
+                  </div>
+                  <input
+                    type="file"
+                    @change="handleLogoUpload"
+                    accept="image/*"
+                    class="hidden"
+                  />
+                </label>
+              </div>
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                Recommended: Square image, max 2MB (PNG, JPG, SVG)
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Background Section -->
       <div>
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -405,6 +469,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { saveThemeSettings, uploadLogo, uploadBackgroundImage, deleteImage } from '@/services/themeService'
 
 interface ThemeSettings {
   primaryColor: string
@@ -420,6 +485,8 @@ interface ThemeSettings {
   backgroundPosition: string
   backgroundRepeat: string
   backgroundOpacity: number
+  logoUrl: string
+  companyName: string
 }
 
 interface PredefinedTheme {
@@ -462,7 +529,9 @@ const defaultSettings: ThemeSettings = {
   backgroundSize: 'cover',
   backgroundPosition: 'center',
   backgroundRepeat: 'no-repeat',
-  backgroundOpacity: 100
+  backgroundOpacity: 100,
+  logoUrl: '',
+  companyName: 'WMS Console'
 }
 
 const themeSettings = ref<ThemeSettings>({ ...defaultSettings })
@@ -592,6 +661,41 @@ const removeBackgroundImage = (mode: 'light' | 'dark') => {
   }
 }
 
+// Handle logo upload
+const handleLogoUpload = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  
+  if (!file) return
+
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    showToastMessage('Please upload an image file', 'error')
+    return
+  }
+
+  // Validate file size (max 2MB)
+  if (file.size > 2 * 1024 * 1024) {
+    showToastMessage('Logo size should be less than 2MB', 'error')
+    return
+  }
+
+  // Read file as data URL
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const result = e.target?.result as string
+    themeSettings.value.logoUrl = result
+    onColorChange()
+  }
+  reader.readAsDataURL(file)
+}
+
+// Remove logo
+const removeLogo = () => {
+  themeSettings.value.logoUrl = ''
+  onColorChange()
+}
+
 // Load saved settings
 const loadSettings = () => {
   const saved = localStorage.getItem('themeCustomization')
@@ -650,16 +754,29 @@ const applyTheme = (settings: ThemeSettings) => {
 
   root.style.setProperty('--bg-type', settings.backgroundType)
   
+  // Logo and branding
+  root.style.setProperty('--logo-url', settings.logoUrl || '')
+  root.style.setProperty('--company-name', settings.companyName || 'WMS Console')
+  
   // Trigger a custom event to notify components
   window.dispatchEvent(new CustomEvent('themeChanged'))
 }
 
 // Apply changes
-const applyChanges = () => {
+const applyChanges = async () => {
   try {
+    // First save locally
     localStorage.setItem('themeCustomization', JSON.stringify(themeSettings.value))
     applyTheme(themeSettings.value)
-    showToastMessage('Theme settings applied successfully!', 'success')
+    
+    // Then save to API (company-wide settings)
+    try {
+      await saveThemeSettings(themeSettings.value)
+      showToastMessage('Theme settings applied successfully for all users!', 'success')
+    } catch (apiError) {
+      console.error('Failed to save to API:', apiError)
+      showToastMessage('Theme applied locally, but failed to save to server. Changes may not persist for other users.', 'error')
+    }
   } catch (e) {
     showToastMessage('Failed to apply theme settings', 'error')
     console.error('Failed to apply theme settings:', e)
