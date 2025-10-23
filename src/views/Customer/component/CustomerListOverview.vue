@@ -307,13 +307,13 @@ const filteredData = computed(() => {
   const normalize = (value) => (value || '').toString().toLowerCase()
 
   return data.value.filter((item) => {
-    
+
     // 1. Customer ID filter (using 'customerId' key from the filter component)
     const itemCustomerId = normalize(item.customerId || item.customerCode)
     if (filters.customerId && !itemCustomerId.includes(normalize(filters.customerId))) {
       return false
     }
-    
+
     // 2. Customer Name filter (using 'customerName' key from the filter component)
     const itemCustomerName = normalize(item.customerName || item.name)
     if (filters.customerName && !itemCustomerName.includes(normalize(filters.customerName))) {
@@ -333,7 +333,7 @@ const filteredData = computed(() => {
       return false
     }
 
-    // Optional: If you had a Contact Person or City filter in your filter component, 
+    // Optional: If you had a Contact Person or City filter in your filter component,
     // you would add them here. They were in the original list but not in your filter component's data.
 
     // If all checks pass, include the item

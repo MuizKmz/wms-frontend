@@ -227,7 +227,7 @@
         <p class="text-xs mt-1">{{ error }}</p>
       </div>
     </div>
-  
+
     <OrderView ref="orderViewRef" />
   </div>
 </template>

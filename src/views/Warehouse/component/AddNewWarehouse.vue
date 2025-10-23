@@ -637,18 +637,18 @@ const submitForm = async () => {
   try {
     // Format the data to match the backend schema naming convention
     const submissionData = {
-      warehouseCode: form.warehouseCode.toUpperCase(), 
+      warehouseCode: form.warehouseCode.toUpperCase(),
       name: form.name, // Matches API key 'name'
       address: form.address,
       manager: form.manager,
       contactPhone: `${form.countryCode}${form.phoneNumber}`,
       email: form.email, // Matches API key 'email'
-      status: form.status === 'Active' ? 'Active' : 'Inactive', 
+      status: form.status === 'Active' ? 'Active' : 'Inactive',
       remark: form.remark || null // Matches API key 'remark'
     }
 
     // Updated API endpoint
-    const response = await authenticatedFetch('api/warehouse', { 
+    const response = await authenticatedFetch('api/warehouse', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -662,7 +662,7 @@ const submitForm = async () => {
     }
 
     const data = await response.json()
-    console.log('Server response:', data) 
+    console.log('Server response:', data)
 
     // Only close and reset after successful API call
     await closeModal()

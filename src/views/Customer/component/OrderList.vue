@@ -79,7 +79,7 @@
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
           <tr v-for="item in paginatedData" :key="item.id"
             class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-            
+
             <td class="px-6 py-4">
               <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select item"
                 :checked="isSelected(item.id)" @change="toggleItemSelection(item.id)" />
@@ -242,7 +242,7 @@ const fetchData = async () => {
     if (!response.ok) throw new Error("Failed to fetch orders")
 
     const json = await response.json()
-    
+
     // Flatten orderItems into individual rows
     const flattenedData = []
     json.forEach(order => {
@@ -282,7 +282,7 @@ const fetchData = async () => {
         })
       }
     })
-    
+
     data.value = flattenedData
   } catch (e) {
     error.value = e.message

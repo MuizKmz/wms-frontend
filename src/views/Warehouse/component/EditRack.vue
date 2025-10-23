@@ -588,7 +588,7 @@ const openModal = async () => {
 const closeModal = async () => {
   openDropdowns.status = false
   openDropdowns.rackType = false
-  
+
   isOpen.value = false
 
   await nextTick()

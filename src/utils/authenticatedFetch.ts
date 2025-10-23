@@ -1,6 +1,6 @@
 /**
  * Authenticated Fetch Wrapper
- * 
+ *
  * This wrapper automatically adds JWT token to all fetch requests.
  * Use this instead of native fetch() for authenticated API calls.
  */
@@ -9,7 +9,7 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
   // Get token from localStorage
   const userStr = localStorage.getItem('user')
   let token = null
-  
+
   if (userStr) {
     try {
       const user = JSON.parse(userStr)
@@ -59,13 +59,13 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
     console.error('🚨 [AuthFetch] NOT redirecting - check console logs above!')
     console.error('🚨 [AuthFetch] Request URL:', url)
     console.error('🚨 [AuthFetch] Response:', await response.text())
-    
+
     // DON'T redirect - let user see the logs
     // localStorage.clear()
     // setTimeout(() => {
     //   window.location.href = '/signin'
     // }, 1000)
-    
+
     throw new Error('Unauthorized - Check console logs!')
   }
 

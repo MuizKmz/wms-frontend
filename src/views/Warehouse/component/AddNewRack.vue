@@ -570,7 +570,7 @@ const openModal = async (preSelectedWarehouseId = null) => {
   form.capacity = 1
   form.status = 'Active'
   form.remarks = ''
-  
+
   // Reset errors
   Object.keys(errors).forEach(key => errors[key] = '')
 
@@ -597,7 +597,7 @@ const closeModal = async () => {
   openDropdowns.status = false
   openDropdowns.warehouse = false
   openDropdowns.rackType = false
-  
+
   isOpen.value = false
 
   await nextTick()

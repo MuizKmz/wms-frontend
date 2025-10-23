@@ -614,7 +614,7 @@ const formatPhoneNumber = (event) => {
 // Parse phone number to extract country code and number
 const parsePhoneNumber = (fullPhone) => {
   if (!fullPhone) return { countryCode: '+60', phoneNumber: '' }
-  
+
   // Try to match against known country codes
   for (const country of countries) {
     if (fullPhone.startsWith(country.dialCode)) {
@@ -624,7 +624,7 @@ const parsePhoneNumber = (fullPhone) => {
       }
     }
   }
-  
+
   // Default fallback
   return { countryCode: '+60', phoneNumber: fullPhone }
 }

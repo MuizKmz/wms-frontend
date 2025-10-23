@@ -140,7 +140,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
-                </button> 
+                </button>
                 <button
                   @click="deleteItem(item)"
                   class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
@@ -269,7 +269,7 @@ const fetchWarehouses = async () => {
 const fetchRacks = async () => {
   // If no warehouse is selected, we clear the list of racks
   if (!selectedWarehouseId.value) {
-    racks.value = [] 
+    racks.value = []
     return
   }
 
@@ -279,8 +279,8 @@ const fetchRacks = async () => {
     const response = await authenticatedFetch(`${RACK_API_URL}?warehouseId=${selectedWarehouseId.value}`)
     if (!response.ok) throw new Error('Failed to fetch racks')
     const json = await response.json()
-    
-    // **Assumption**: We assume the backend returns an array of rack objects, 
+
+    // **Assumption**: We assume the backend returns an array of rack objects,
     // and each rack object has a 'warehouseId' property for client-side filtering below.
     racks.value = json || []
   } catch (e) {
@@ -296,8 +296,8 @@ const displayRacks = computed(() => {
   if (!selectedWarehouseId.value) {
     return [] // Show no racks if 'All Warehouses' is selected (you only want racks for a specific warehouse)
   }
-  
-  // Apply a client-side filter to guarantee only the racks associated 
+
+  // Apply a client-side filter to guarantee only the racks associated
   // with the selected warehouse are shown.
   return racks.value.filter(rack => rack.warehouseId === selectedWarehouseId.value);
 });
@@ -386,8 +386,8 @@ const filteredData = computed(() => {
     // Added filtering for product as well (using inventory check)
     if (
         filters.product &&
-        !item.inventory.some(i => 
-          (i.product?.name || '').toLowerCase().includes(filters.product.toLowerCase()) || 
+        !item.inventory.some(i =>
+          (i.product?.name || '').toLowerCase().includes(filters.product.toLowerCase()) ||
           (i.product?.productCode || '').toLowerCase().includes(filters.product.toLowerCase())
         )
     ) {

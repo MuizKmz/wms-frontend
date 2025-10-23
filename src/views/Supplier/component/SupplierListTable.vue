@@ -197,7 +197,7 @@
 <script setup>
 import { ref, onMounted, computed, watch } from "vue"
 import Swal from 'sweetalert2'
-import { authenticatedFetch } from '@/utils/authenticatedFetch' 
+import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
 // Props for receiving filters
 const props = defineProps({
@@ -367,7 +367,7 @@ const adjustPageAfterDeletion = () => {
   // Calculate if current page will be empty after refresh
   const totalItems = filteredData.value.length
   const maxPage = Math.ceil(totalItems / itemsPerPage.value) || 1
-  
+
   // If current page exceeds max pages, adjust to the last valid page
   if (currentPage.value > maxPage) {
     currentPage.value = maxPage
@@ -434,7 +434,7 @@ const deleteSupplier = async (supplier) => {
     }
 
     await fetchSuppliers()
-    
+
     adjustPageAfterDeletion()
   } catch (error) {
     console.error('Error deleting supplier:', error)
@@ -484,7 +484,7 @@ const bulkDelete = async () => {
     selectedItems.value = []
     selectAll.value = false
     await fetchSuppliers()
-    
+
     adjustPageAfterDeletion()
 
     if (deletedCount > 0 && blocked.length === 0) {

@@ -268,7 +268,7 @@ import RackInfoModal from './RackInfoModal.vue'
 import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
 // Change emit for update and remove 'open-add-rack' as it's not relevant for editing
-const emit = defineEmits(['item-updated']) 
+const emit = defineEmits(['item-updated'])
 
 /* state */
 const isOpen = ref(false)
@@ -335,7 +335,7 @@ const fetchSectionData = async () => {
 
     isLoading.value = true
     errors.submit = ''
-    
+
     // Reset form before fetching new data
     Object.keys(form).forEach(key => form[key] = (key === 'capacity') ? 1 : null)
 
@@ -418,7 +418,7 @@ const fetchSectionData = async () => {
 const showRackInfo = () => {
   if (form.rackId) {
     // Assuming the RackInfoModal can take a rackId prop to fetch its own data
-    rackInfoModalRef.value?.openModal(form.rackId) 
+    rackInfoModalRef.value?.openModal(form.rackId)
   }
 }
 
@@ -560,7 +560,7 @@ const closeModal = async () => {
 
   // Reset errors only
   Object.keys(errors).forEach(key => errors[key] = '')
-  
+
   await nextTick()
   // No need to reset form completely, as the next openModal will fetch and overwrite based on the new prop.
 }

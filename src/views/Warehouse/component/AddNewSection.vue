@@ -1,7 +1,7 @@
 <template>
   <!-- Rack Info Modal Component -->
   <RackInfoModal ref="rackInfoModalRef" />
-  
+
   <teleport to="body">
     <transition
       enter-active-class="transition-opacity duration-300 ease-out"
@@ -406,7 +406,7 @@ const fetchRacks = async () => {
     racks.value = []
     return
   }
-  
+
   loadingRacks.value = true
   try {
     const response = await authenticatedFetch(`/api/rack?warehouseId=${form.warehouseId}`)
@@ -522,7 +522,7 @@ const toggleDropdown = (name) => {
     handleAddRack()
     return
   }
-  
+
   Object.keys(openDropdowns).forEach(k => { if (k !== name) openDropdowns[k] = false })
   openDropdowns[name] = !openDropdowns[name]
 }
@@ -536,11 +536,11 @@ const selectWarehouse = (warehouse) => {
   form.warehouseId = warehouse.id
   selectedWarehouseName.value = warehouse.warehouseCode
   openDropdowns.warehouse = false
-  
+
   // Reset rack selection when warehouse changes
   form.rackId = null
   selectedRackName.value = ''
-  
+
   // Fetch racks for the selected warehouse
   fetchRacks()
 }
