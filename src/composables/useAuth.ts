@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import axios from 'axios'
 
-const API_URL = 'http://localhost:3000/api'
+const API_URL = 'api'
 
 interface Permission {
   id: number
@@ -116,9 +116,22 @@ export function useAuth() {
   const canDelete = (module: string) => hasPermission(module, 'delete')
   const canExport = (module: string) => hasPermission(module, 'export')
 
+  const logout = () => {
+    console.log('🚪 [useAuth] Logging out...')
+    localStorage.removeItem('user')
+    localStorage.removeItem('token')
+    userPermissions.value = []
+    window.location.href = '/signin'
+  }
+
+  const isAuthenticated = computed(() => {
+    return !!localStorage.getItem('user')
+  })
+
   return {
     userPermissions: computed(() => userPermissions.value),
     loading: computed(() => loading.value),
+    isAuthenticated,
     loadUserPermissions,
     hasPermission,
     hasModuleAccess,
@@ -127,5 +140,6 @@ export function useAuth() {
     canUpdate,
     canDelete,
     canExport,
+    logout,
   }
 }

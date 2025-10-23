@@ -119,7 +119,7 @@
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 
-const API_URL = 'http://localhost:3000/api'
+const API_URL = 'api'
 
 interface Permission {
   id: number

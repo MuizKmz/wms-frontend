@@ -123,7 +123,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'saved'])
 
-const API_URL = 'http://localhost:3000/api'
+const API_URL = 'api'
 
 const loading = ref(false)
 const saving = ref(false)

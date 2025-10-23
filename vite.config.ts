@@ -18,7 +18,8 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: process.env.VITE_BACKEND_URL || 'http://172.19.1.22:3000',
-        changeOrigin: true
+        changeOrigin: true,
+        secure: false
         // No rewrite: backend now serves with global prefix /api/*
       }
     }

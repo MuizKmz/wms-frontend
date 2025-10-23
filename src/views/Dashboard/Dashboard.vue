@@ -69,6 +69,7 @@
         :refreshable="true"
         @update:position="updateChartPosition"
         @update:size="updateChartSize"
+        @refresh="refreshChart(chart.id)"
       >
         <template #headerAction>
           <button
@@ -82,7 +83,7 @@
             </svg>
           </button>
         </template>
-        <component :is="getChartComponent(chart.componentName)" />
+        <component :is="getChartComponent(chart.componentName)" :ref="el => setChartRef(chart.id, el)" />
       </DraggableResizableCard>
     </div>
 
@@ -98,6 +99,7 @@
           :fullscreenable="true"
           :refreshable="true"
           class-name="w-full"
+          @refresh="refreshChart(chart.id)"
         >
           <template #headerAction>
             <button
@@ -112,7 +114,7 @@
             </button>
           </template>
           <div class="h-[400px]">
-            <component :is="getChartComponent(chart.componentName)" />
+            <component :is="getChartComponent(chart.componentName)" :ref="el => setChartRef(chart.id, el)" />
           </div>
         </ChartCard>
       </div>
@@ -277,6 +279,9 @@ nextChartId.value = savedLayout.nextId;
 // Track current layout preset (null means no preset selected, just user-added charts)
 const currentLayoutPreset = ref(savedLayout.currentPreset);
 
+// Store chart component refs
+const chartRefs = ref({});
+
 // Save layout to localStorage
 function saveLayout() {
   try {
@@ -415,8 +420,26 @@ function removeChart(chartId) {
   const index = activeCharts.value.findIndex(c => c.id === chartId);
   if (index !== -1) {
     activeCharts.value.splice(index, 1);
+    delete chartRefs.value[chartId];
     updateContainerHeight();
     saveLayout();
+  }
+}
+
+// Set chart component ref
+function setChartRef(chartId, el) {
+  if (el) {
+    chartRefs.value[chartId] = el;
+  }
+}
+
+// Refresh chart by calling its refresh method
+function refreshChart(chartId) {
+  const chartRef = chartRefs.value[chartId];
+  if (chartRef && typeof chartRef.refresh === 'function') {
+    chartRef.refresh();
+  } else {
+    console.warn(`Chart ${chartId} does not have a refresh method`);
   }
 }
 

@@ -104,7 +104,7 @@ import axios from 'axios';
 import PermissionsModal from './PermissionsModal.vue';
 import RoleFormModal from './RoleFormModal.vue';
 
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'api';
 
 const roles = ref([]);
 const loading = ref(false);

@@ -8,10 +8,10 @@ const router = createRouter({
   routes: [
     {
       path: '/signin',
-      name: 'SignIn',
+      name: 'Sign In',
       component: () => import('../views/Auth/Signin.vue'),
       meta: {
-        title: 'SignIn',
+        title: 'Sign In',
       },
     },
     {
@@ -150,5 +150,26 @@ export default router
 
 router.beforeEach((to, from, next) => {
   document.title = `${to.meta.title} | WMS`
-  next()
+  
+  // Check if user is logged in
+  const userStr = localStorage.getItem('user')
+  const isAuthenticated = !!userStr
+  
+  // If trying to access signin page
+  if (to.path === '/signin') {
+    // If already logged in, redirect to dashboard
+    if (isAuthenticated) {
+      next('/')
+    } else {
+      next()
+    }
+  } else {
+    // For all other routes, require authentication
+    if (!isAuthenticated) {
+      // Redirect to signin page
+      next('/signin')
+    } else {
+      next()
+    }
+  }
 })

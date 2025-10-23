@@ -15,7 +15,7 @@
     @mouseleave="hovered = false"
     :class="dragging || resizing ? 'opacity-70' : 'opacity-100'"
   >
-    <ChartCard :title="title" :className="'w-full h-full'" :fullscreenable="fullscreenable" :refreshable="refreshable">
+    <ChartCard :title="title" :className="'w-full h-full'" :fullscreenable="fullscreenable" :refreshable="refreshable" @refresh="emit('refresh')">
       <template #title>
         <div
           class="flex items-center justify-between cursor-move pr-2"
@@ -110,6 +110,7 @@ const ghostStyle = computed(() => ({
 const emit = defineEmits<{
   (e: 'update:position', payload: { id?: string | number; x: number; y: number }): void
   (e: 'update:size', payload: { id?: string | number; width: number; height: number }): void
+  (e: 'refresh'): void
 }>()
 
 function startDrag(e: MouseEvent) {

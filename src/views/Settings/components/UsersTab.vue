@@ -143,7 +143,7 @@ import UserFormModal from './UserFormModal.vue'
 import AssignRoleModal from './AssignRoleModal.vue'
 import PermissionsViewModal from './PermissionsViewModal.vue'
 
-const API_URL = 'http://localhost:3000/api'
+const API_URL = 'api'
 
 const users = ref([])
 const roles = ref([])

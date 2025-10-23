@@ -45,19 +45,32 @@
         </div>
       </div>
 
+      <!-- Error State -->
+      <div v-else-if="error" class="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-gray-800 rounded-lg p-4">
+        <div class="flex flex-col items-center gap-3 text-center">
+          <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+            <span class="icon-[tabler--alert-circle] size-6 text-red-600 dark:text-red-400"></span>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-1">Failed to load chart data</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400">{{ error }}</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Actual Chart -->
       <canvas 
-        v-show="!loading" 
+        v-show="!loading && !error" 
         ref="chartCanvas"
         class="transition-opacity duration-300 w-full h-full"
-        :class="{ 'opacity-0': loading, 'opacity-100': !loading }"
+        :class="{ 'opacity-0': loading, 'opacity-100': !loading && !error }"
       ></canvas>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, defineExpose } from 'vue'
 import {
   Chart,
   CategoryScale,
@@ -246,87 +259,134 @@ const fetchData = async () => {
 }
 
 const createChart = (data) => {
-  console.log('WorkOrderBarChart: createChart called with data:', data)
-  
-  const ctx = chartCanvas.value?.getContext('2d')
-  if (!ctx) {
-    console.error('WorkOrderBarChart: Canvas context not available!')
-    return
-  }
-  
-  console.log('WorkOrderBarChart: Canvas context obtained')
-  if (chartInstance.value) {
-    console.log('WorkOrderBarChart: Destroying previous chart instance')
-    chartInstance.value.destroy()
-  }
+  try {
+    console.log('WorkOrderBarChart: createChart called with data:', data)
+    
+    const ctx = chartCanvas.value?.getContext('2d')
+    if (!ctx) {
+      console.error('WorkOrderBarChart: Canvas context not available!')
+      error.value = 'Canvas not available'
+      loading.value = false
+      return
+    }
+    
+    console.log('WorkOrderBarChart: Canvas context obtained')
+    if (chartInstance.value) {
+      console.log('WorkOrderBarChart: Destroying previous chart instance')
+      chartInstance.value.destroy()
+    }
 
-  chartInstance.value = new Chart(ctx, {
-    type: 'bar',
-    data,
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: {
-        duration: 600,
-        easing: 'easeInOutCubic'
-      },
-      datasets: {
-        bar: {
-          barPercentage: 0.7,
-          categoryPercentage: 0.85
-        }
-      },
-      plugins: {
-        legend: {
-          display: true,
-          position: 'top',
-          labels: {
-            usePointStyle: true,
-            pointStyle: 'rectRounded',
-            font: { size: 13 },
-            color: '#374151'
+    // Check if dark mode is active
+    const isDarkMode = document.documentElement.classList.contains('dark')
+    const textColor = isDarkMode ? '#ffffff' : '#1f2937'
+    const tickColor = isDarkMode ? '#e5e7eb' : '#374151'
+
+    chartInstance.value = new Chart(ctx, {
+      type: 'bar',
+      data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: {
+          duration: 600,
+          easing: 'easeInOutCubic'
+        },
+        datasets: {
+          bar: {
+            barPercentage: 0.7,
+            categoryPercentage: 0.85
           }
         },
-        tooltip: {
-          backgroundColor: 'rgba(31, 41, 55, 0.9)',
-          titleColor: '#fff',
-          bodyColor: '#f9fafb',
-          padding: 10,
-          cornerRadius: 8
-        }
-      },
-      scales: {
-        x: {
-          stacked: true,
-          grid: { display: false },
-          border: { display: false },
-          ticks: { color: '#6b7280' }
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              pointStyle: 'rectRounded',
+              font: { size: 13 },
+              color: textColor
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(31, 41, 55, 0.9)',
+            titleColor: '#fff',
+            bodyColor: '#f9fafb',
+            padding: 10,
+            cornerRadius: 8
+          }
         },
-        y: {
-          stacked: true,
-          beginAtZero: true,
-          grid: { display: false },
-          border: { display: false },
-          ticks: { color: '#6b7280' }
+        scales: {
+          x: {
+            stacked: true,
+            grid: { display: false },
+            border: { display: false },
+            ticks: { color: tickColor }
+          },
+          y: {
+            stacked: true,
+            beginAtZero: true,
+            grid: { display: false },
+            border: { display: false },
+            ticks: { color: tickColor }
+          }
         }
       }
-    }
-  })
-  
-  console.log('WorkOrderBarChart: Chart instance created successfully')
-  loading.value = false
+    })
+    
+    console.log('WorkOrderBarChart: Chart instance created successfully')
+    loading.value = false
+  } catch (e) {
+    console.error('WorkOrderBarChart: Error creating chart:', e)
+    error.value = 'Failed to create chart'
+    loading.value = false
+  }
 }
+
+// Observer for theme changes
+let themeObserver = null
 
 onMounted(async () => {
   console.log('WorkOrderBarChart: Component mounted')
-  await fetchData()
+  
+  try {
+    await fetchData()
+  } catch (e) {
+    console.error('WorkOrderBarChart: Error in onMounted:', e)
+    error.value = e.message || 'Failed to initialize chart'
+    loading.value = false
+  }
   
   // Setup click outside handler for dropdown
   document.addEventListener('click', handleClickOutside)
+  
+  // Watch for theme changes
+  themeObserver = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.attributeName === 'class') {
+        // Theme changed, recreate chart if it exists
+        if (chartInstance.value && chartCanvas.value) {
+          const currentData = chartInstance.value.data
+          createChart(currentData)
+        }
+      }
+    })
+  })
+  
+  themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class']
+  })
 })
 
 onUnmounted(() => {
   if (chartInstance.value) chartInstance.value.destroy()
   document.removeEventListener('click', handleClickOutside)
+  if (themeObserver) themeObserver.disconnect()
+})
+
+// Expose refresh method to parent
+defineExpose({
+  refresh: fetchData
 })
 </script>
