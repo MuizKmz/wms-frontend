@@ -21,13 +21,28 @@
         </h1>
       </div>
 
-      <!-- RIGHT: Clock + Theme/Notifications -->
+      <!-- RIGHT: Clock + Theme + User Email -->
       <div class="flex items-center gap-2 sm:gap-4">
         <div class="text-sm font-mono text-gray-700 dark:text-gray-300 hidden sm:block">
           {{ currentTime }}
         </div>
         <ThemeToggler />
-        <NotificationMenu />
+        <!-- <NotificationMenu /> -->
+        
+        <!-- User Email with Tooltip -->
+        <div class="relative group">
+          <div class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer">
+            <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            <span class="text-sm text-gray-700 dark:text-gray-300 hidden md:block">{{ userEmail }}</span>
+          </div>
+          <!-- Tooltip -->
+          <div class="absolute right-0 top-full mt-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+            {{ userEmail }}
+            <div class="absolute -top-1 right-4 w-2 h-2 bg-gray-900 transform rotate-45"></div>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -44,6 +59,23 @@ const { isMobileOpen, toggleMobileSidebar } = useSidebar()
 
 const currentDate = ref('')
 const currentTime = ref('')
+const userEmail = ref('')
+
+// Get user email from localStorage
+onMounted(() => {
+  const userStr = localStorage.getItem('user')
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr)
+      userEmail.value = user.email || 'No email'
+    } catch (e) {
+      console.error('Failed to parse user data:', e)
+      userEmail.value = 'Unknown'
+    }
+  } else {
+    userEmail.value = 'Not logged in'
+  }
+})
 
 function updateDateTime() {
   const now = new Date()

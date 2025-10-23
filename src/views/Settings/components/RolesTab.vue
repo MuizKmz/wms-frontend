@@ -1,4 +1,17 @@
 <template>
+  <div>
+    <!-- Toast Notification -->
+    <div v-if="showToast" class="fixed inset-0 flex items-center justify-center z-[10000] pointer-events-none">
+      <div :class="[
+        'rounded-lg px-6 py-4 shadow-lg flex items-center transform transition-all duration-300',
+        toastType === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+      ]">
+        <span v-if="toastType === 'success'" class="mr-2">✓</span>
+        <span v-else class="mr-2">⚠</span>
+        {{ toastMessage }}
+      </div>
+    </div>
+
   <div class="space-y-6">
     <!-- Header with Create Button -->
     <div class="flex justify-between items-center">
@@ -96,6 +109,7 @@
       @saved="fetchRoles"
     />
   </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -112,6 +126,22 @@ const selectedRole = ref(null);
 const showPermissionsModal = ref(false);
 const roleFormModalRef = ref(null);
 
+// Toast state
+const showToast = ref(false)
+const toastMessage = ref('')
+const toastType = ref<'success' | 'error'>('success')
+
+// Toast function
+const showToastMessage = (message: string, type: 'success' | 'error' = 'success', duration: number = 2000) => {
+  toastMessage.value = message
+  toastType.value = type
+  showToast.value = true
+
+  setTimeout(() => {
+    showToast.value = false
+  }, duration)
+}
+
 const fetchRoles = async () => {
   loading.value = true;
   try {
@@ -119,7 +149,7 @@ const fetchRoles = async () => {
     roles.value = response.data;
   } catch (error) {
     console.error('Error fetching roles:', error);
-    alert('Failed to fetch roles');
+    showToastMessage('Failed to fetch roles', 'error');
   } finally {
     loading.value = false;
   }
@@ -137,13 +167,15 @@ const handleRoleSaved = async (event: any) => {
   try {
     if (event.isEdit) {
       await axios.put(`${API_URL}/roles/${event.roleId}`, event.data);
+      showToastMessage('Role updated successfully!', 'success');
     } else {
       await axios.post(`${API_URL}/roles`, event.data);
+      showToastMessage('Role created successfully!', 'success');
     }
     await fetchRoles();
   } catch (error: any) {
     console.error('Error saving role:', error);
-    alert(error.response?.data?.message || 'Failed to save role');
+    showToastMessage(error.response?.data?.message || 'Failed to save role', 'error');
   }
 }
 
@@ -152,10 +184,11 @@ const deleteRole = async (role: any) => {
 
   try {
     await axios.delete(`${API_URL}/roles/${role.id}`);
+    showToastMessage('Role deleted successfully!', 'success');
     await fetchRoles();
   } catch (error: any) {
     console.error('Error deleting role:', error);
-    alert(error.response?.data?.message || 'Failed to delete role');
+    showToastMessage(error.response?.data?.message || 'Failed to delete role', 'error');
   }
 }
 

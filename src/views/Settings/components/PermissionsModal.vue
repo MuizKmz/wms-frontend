@@ -1,4 +1,16 @@
 <template>
+  <!-- Toast Notification -->
+  <div v-if="showToast" class="fixed inset-0 flex items-center justify-center z-[10000] pointer-events-none">
+    <div :class="[
+      'rounded-lg px-6 py-4 shadow-lg flex items-center transform transition-all duration-300',
+      toastType === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    ]">
+      <span v-if="toastType === 'success'" class="mr-2">✓</span>
+      <span v-else class="mr-2">⚠</span>
+      {{ toastMessage }}
+    </div>
+  </div>
+
   <teleport to="body">
     <transition name="fade">
       <div
@@ -130,6 +142,22 @@ const saving = ref(false)
 const permissionModules = ref([])
 const selectedPermissions = ref<number[]>([])
 
+// Toast state
+const showToast = ref(false)
+const toastMessage = ref('')
+const toastType = ref<'success' | 'error'>('success')
+
+// Toast function
+const showToastMessage = (message: string, type: 'success' | 'error' = 'success', duration: number = 2000) => {
+  toastMessage.value = message
+  toastType.value = type
+  showToast.value = true
+
+  setTimeout(() => {
+    showToast.value = false
+  }, duration)
+}
+
 const fetchPermissions = async () => {
   loading.value = true
   try {
@@ -150,7 +178,7 @@ const fetchPermissions = async () => {
     console.log('✅ Selected permission IDs:', selectedPermissions.value)
   } catch (error) {
     console.error('Error fetching permissions:', error)
-    alert('Failed to load permissions')
+    showToastMessage('Failed to load permissions', 'error')
   } finally {
     loading.value = false
   }
@@ -199,12 +227,12 @@ const savePermissions = async () => {
     })
 
     console.log('✅ Permissions saved successfully')
-    alert('✅ Permissions updated successfully!')
+    showToastMessage('Permissions updated successfully!', 'success')
     emit('saved')
     closeModal()
   } catch (error) {
     console.error('Error saving permissions:', error)
-    alert('❌ Failed to save permissions')
+    showToastMessage('Failed to save permissions', 'error')
   } finally {
     saving.value = false
   }

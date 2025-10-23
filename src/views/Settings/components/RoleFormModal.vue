@@ -1,4 +1,16 @@
 <template>
+  <!-- Toast Notification -->
+  <div v-if="showToast" class="fixed inset-0 flex items-center justify-center z-[10000] pointer-events-none">
+    <div :class="[
+      'rounded-lg px-6 py-4 shadow-lg flex items-center transform transition-all duration-300',
+      toastType === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    ]">
+      <span v-if="toastType === 'success'" class="mr-2">✓</span>
+      <span v-else class="mr-2">⚠</span>
+      {{ toastMessage }}
+    </div>
+  </div>
+
   <teleport to="body">
     <transition name="fade">
       <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center" @click.self="closeModal">
@@ -74,6 +86,22 @@ const roleForm = ref({
   description: '',
   isActive: true,
 })
+
+// Toast state
+const showToast = ref(false)
+const toastMessage = ref('')
+const toastType = ref<'success' | 'error'>('success')
+
+// Toast function
+const showToastMessage = (message: string, type: 'success' | 'error' = 'success', duration: number = 2000) => {
+  toastMessage.value = message
+  toastType.value = type
+  showToast.value = true
+
+  setTimeout(() => {
+    showToast.value = false
+  }, duration)
+}
 
 const openModal = (role?: any) => {
   if (role) {

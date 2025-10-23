@@ -50,6 +50,7 @@ import RolesTab from './components/RolesTab.vue'
 import PermissionsTab from './components/PermissionsTab.vue'
 import UsersTab from './components/UsersTab.vue'
 import DebugTab from './components/DebugTab.vue'
+import CustomizationTab from './components/CustomizationTab.vue'
 
 const activeTab = ref('roles')
 
@@ -57,6 +58,7 @@ const tabs = [
   { id: 'roles', label: 'Roles' },
   { id: 'permissions', label: 'Permissions' },
   { id: 'users', label: 'Users' },
+  { id: 'customization', label: 'Customization' },
   { id: 'debug', label: '🐛 Debug' },
 ]
 
@@ -68,6 +70,8 @@ const currentTabComponent = computed(() => {
       return PermissionsTab
     case 'users':
       return UsersTab
+    case 'customization':
+      return CustomizationTab
     case 'debug':
       return DebugTab
     default:

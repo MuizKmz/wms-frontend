@@ -45,13 +45,29 @@
 
         <!-- Menu Items -->
         <div v-else-if="menuGroups.length > 0" v-for="(group, groupIndex) in menuGroups" :key="groupIndex">
-          <!-- Group Title -->
-          <div class="px-6 py-3 text-xs font-semibold text-slate-400 tracking-wider">
+          <!-- Group Title (Collapsible if it has a title) -->
+          <button
+            v-if="group.title"
+            @click.stop="toggleGroup(group.title)"
+            class="w-full flex items-center justify-between px-6 py-3 text-xs font-semibold text-slate-400 tracking-wider hover:text-slate-300 transition-colors"
+          >
+            <span>{{ group.title }}</span>
+            <svg 
+              class="w-4 h-4 transition-transform duration-200" 
+              :class="{ 'rotate-180': isGroupOpen(group.title) }"
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <div v-else class="px-6 py-3 text-xs font-semibold text-slate-400 tracking-wider">
             {{ group.title }}
           </div>
 
-          <!-- Menu Items -->
-          <nav class="px-3">
+          <!-- Menu Items (only show if group is open or no title) -->
+          <nav v-if="!group.title || isGroupOpen(group.title)" class="px-3">
             <ul class="space-y-1 mb-2">
               <li v-for="(item, itemIndex) in group.items" :key="item.name">
                 <!-- Main Menu Item -->
@@ -166,14 +182,14 @@ import { useSidebar } from "@/composables/useSidebar";
 import { useAuth } from "@/composables/useAuth";
 
 import {
-
   LogoutIcon,
   SettingsIcon,
   BagIcon,
   MenuIcon,
   HomeIcon,
   ReportsIcon,
-
+  ChevronDownIcon,
+  ChevronRightIcon,
 } from "../../icons";
 
 const route = useRoute();
@@ -186,6 +202,7 @@ const { isMobileOpen, toggleMobileSidebar } = useSidebar();
 const { hasModuleAccess, loadUserPermissions, userPermissions, loading } = useAuth();
 
 const openSubmenu = ref(null);
+const openGroups = ref(new Set(['STOCK', 'REPORTS'])); // Track which groups are open (default open)
 
 // Load permissions on mount
 onMounted(async () => {
@@ -193,6 +210,19 @@ onMounted(async () => {
   await loadUserPermissions();
   console.log('✅ [AppSidebar] Permissions loaded, count:', userPermissions.value.length);
 });
+
+// Toggle group open/close
+const toggleGroup = (groupTitle) => {
+  if (openGroups.value.has(groupTitle)) {
+    openGroups.value.delete(groupTitle);
+  } else {
+    openGroups.value.add(groupTitle);
+  }
+};
+
+const isGroupOpen = (groupTitle) => {
+  return openGroups.value.has(groupTitle);
+};
 
 // Original menu structure with module mappings
 const allMenuGroups = [
