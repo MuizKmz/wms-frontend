@@ -43,16 +43,19 @@
 
           <div class="flex gap-2 my-6">
             <button
+              v-if="canCreate('Product')"
               @click="openAddProductModal"
               class="px-4 py-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Add New Product
             </button>
             <button
+              v-if="canDelete('Product')"
               @click="handleBulkDelete"
               class="px-4 py-2 btn btn-error text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Delete
             </button>
             <button
+              v-if="canCreate('Product')"
               @click="handleImportProduct"
               class="px-4 py-2 btn btn-secondary text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Import Product
@@ -72,11 +75,13 @@
     </div>
 
     <AddNewProduct
+      v-if="canCreate('Product')"
       ref="addProductModalRef"
       @product-created="handleProductCreated"
     />
 
     <EditProduct
+      v-if="canUpdate('Product')"
       ref="editProductModalRef"
       @product-updated="handleProductUpdated"
     />
@@ -85,6 +90,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
+import { useAuth } from "@/composables/useAuth";
 import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
@@ -92,6 +98,9 @@ import ProductTable from "./component/ProductTable.vue";
 import AddNewProduct from "./component/AddNewProduct.vue";
 import EditProduct from "./component/EditProduct.vue";
 import ProductListFilters from "./component/ProductListFilters.vue";
+
+// Get permission checking functions
+const { canCreate, canUpdate, canDelete, canExport } = useAuth();
 
 // Interface definitions
 interface Product {

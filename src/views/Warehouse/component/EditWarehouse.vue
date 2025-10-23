@@ -333,6 +333,7 @@
 
 <script setup>
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
 const emit = defineEmits(['item-updated'])
 
@@ -651,7 +652,7 @@ const submitForm = async () => {
     }
 
     // Make the API call with PATCH method
-    const response = await fetch(`api/warehouse/${warehouseId.value}`, {
+    const response = await authenticatedFetch(`api/warehouse/${warehouseId.value}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',

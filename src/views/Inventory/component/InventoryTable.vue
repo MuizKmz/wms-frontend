@@ -232,6 +232,7 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from "vue"
+import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
 // Props for receiving filters
 const props = defineProps({
@@ -259,7 +260,7 @@ const fetchInventory = async () => {
   loading.value = true
   error.value = null
   try {
-    const response = await fetch(API_URL)
+    const response = await authenticatedFetch(API_URL)
 
     if (!response.ok) throw new Error("Failed to fetch inventory")
 

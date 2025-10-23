@@ -114,11 +114,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
+import axios from '@/utils/axios';
 import PermissionsModal from './PermissionsModal.vue';
 import RoleFormModal from './RoleFormModal.vue';
 
-const API_URL = 'api';
+const API_URL = ''; // Empty because axios baseURL is already '/api'
 
 const roles = ref([]);
 const loading = ref(false);

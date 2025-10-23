@@ -43,16 +43,19 @@
 
           <div class="flex gap-2 my-6">
             <button
+              v-if="canCreate('Shipping')"
               @click="openAddShipmentModal"
               class="px-4 py-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Add New Shipment
             </button>
             <button
+              v-if="canDelete('Shipping')"
               @click="handleBulkDelete"
               class="px-4 py-2 btn btn-error text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Delete
             </button>
             <button
+              v-if="canCreate('Shipping')"
               @click="handleImportShipment"
               class="px-4 py-2 btn btn-secondary text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Import Shipment
@@ -72,11 +75,13 @@
     </div>
 
     <AddNewShipment
+      v-if="canCreate('Shipping')"
       ref="addShipmentModalRef"
       @shipment-created="handleShipmentCreated"
     />
 
     <EditShipment
+      v-if="canUpdate('Shipping')"
       ref="editShipmentModalRef"
       @shipment-updated="handleShipmentUpdated"
     />
@@ -85,6 +90,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
+import { useAuth } from "@/composables/useAuth";
 import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
@@ -92,6 +98,9 @@ import ShipmentTable from "./component/ShipmentTable.vue";
 import AddNewShipment from "./component/AddNewShipment.vue";
 import EditShipment from "./component/EditShipment.vue";
 import ShipmentListFilter from "./component/ShipmentListFilter.vue";
+
+// Get permission checking functions
+const { canCreate, canUpdate, canDelete } = useAuth();
 
 
 // Interface definitions

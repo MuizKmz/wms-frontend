@@ -334,6 +334,7 @@
 
 <script setup>
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
 // Changed emit name from supplier-created to warehouse-created
 const emit = defineEmits(['item-created'])
@@ -647,7 +648,7 @@ const submitForm = async () => {
     }
 
     // Updated API endpoint
-    const response = await fetch('api/warehouse', { 
+    const response = await authenticatedFetch('api/warehouse', { 
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

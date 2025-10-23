@@ -340,6 +340,7 @@
 
 <script setup>
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
 const emit = defineEmits(['item-created'])
 
@@ -382,7 +383,7 @@ const openDropdowns = reactive({ status: false, warehouse: false, rackType: fals
 /* Fetch warehouses */
 const fetchWarehouses = async () => {
   try {
-    const response = await fetch('/api/warehouse')
+    const response = await authenticatedFetch('/api/warehouse')
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: response.statusText }))
       throw new Error(errorData.message || `Failed to fetch warehouses with status: ${response.status}`)
@@ -624,7 +625,7 @@ const submitForm = async () => {
 
     console.log('Submitting data:', submissionData)
 
-    const response = await fetch('/api/rack', {
+    const response = await authenticatedFetch('/api/rack', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

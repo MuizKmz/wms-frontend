@@ -265,6 +265,7 @@
 <script setup>
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 import RackInfoModal from './RackInfoModal.vue'
+import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
 // Change emit for update and remove 'open-add-rack' as it's not relevant for editing
 const emit = defineEmits(['item-updated']) 
@@ -341,7 +342,7 @@ const fetchSectionData = async () => {
     try {
         const url = `/api/section/${props.sectionId}` // API call to get single section data
         console.log('Fetching section data from:', url)
-        const response = await fetch(url)
+        const response = await authenticatedFetch(url)
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ message: response.statusText }))
@@ -367,7 +368,7 @@ const fetchSectionData = async () => {
     } else if (sectionData.warehouseId) {
       // fetch warehouse by id to get the code
       try {
-        const wResp = await fetch(`/api/warehouse/${sectionData.warehouseId}`)
+        const wResp = await authenticatedFetch(`/api/warehouse/${sectionData.warehouseId}`)
         if (wResp.ok) {
           const wJson = await wResp.json()
           selectedWarehouseName.value = wJson.warehouseCode || `WH ID: ${sectionData.warehouseId}`
@@ -386,7 +387,7 @@ const fetchSectionData = async () => {
       selectedRackName.value = sectionData.rack.rackCode
     } else if (sectionData.rackId) {
       try {
-        const rResp = await fetch(`/api/rack/${sectionData.rackId}`)
+        const rResp = await authenticatedFetch(`/api/rack/${sectionData.rackId}`)
         if (rResp.ok) {
           const rJson = await rResp.json()
           selectedRackName.value = rJson.rackCode || `RACK ID: ${sectionData.rackId}`
@@ -590,7 +591,7 @@ const submitForm = async () => {
 
     console.log(`Submitting update data (Method: PATCH, URL: ${url}):`, submissionData)
 
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
       method: 'PATCH', // Changed from POST to PATCH
       headers: {
         'Content-Type': 'application/json',

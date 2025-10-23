@@ -303,6 +303,7 @@
 
 <script setup>
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
 const props = defineProps({
   // Now only expecting the ID of the rack to be edited
@@ -363,7 +364,7 @@ const fetchRackData = async () => {
 
     try {
         const url = `/api/rack/${props.rackId}` // API call to get single rack data
-        const response = await fetch(url)
+        const response = await authenticatedFetch(url)
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ message: response.statusText }))
@@ -388,7 +389,7 @@ const fetchRackData = async () => {
     } else if (rackData.warehouseId) {
       // If nested warehouse object not provided, fetch warehouse by id to get the code
       try {
-        const wResp = await fetch(`/api/warehouse/${rackData.warehouseId}`)
+        const wResp = await authenticatedFetch(`/api/warehouse/${rackData.warehouseId}`)
         if (wResp.ok) {
           const wJson = await wResp.json()
           selectedWarehouseName.value = wJson.warehouseCode || `ID: ${rackData.warehouseId}`
@@ -621,7 +622,7 @@ const submitForm = async () => {
 
     console.log(`Submitting update data (Method: PATCH, URL: ${url}):`, submissionData)
 
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
       method: 'PATCH', // HARDCODED PATCH
       headers: {
         'Content-Type': 'application/json',

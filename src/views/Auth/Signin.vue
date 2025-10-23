@@ -263,6 +263,10 @@ const handleSubmit = async () => {
 
     console.log('✅ Login successful! Response:', data)
 
+    // IMPORTANT: Clear old localStorage data first to prevent conflicts
+    localStorage.clear()
+    console.log('🧹 [Signin] Cleared old localStorage data')
+
     // ALWAYS store to localStorage for RBAC to work
     // Store the authentication token
     if (data.token) {
@@ -270,10 +274,11 @@ const handleSubmit = async () => {
       console.log('✅ Token stored in localStorage')
     }
 
-    // Store user data if provided
+    // Store user data if provided - include token in user object for axios interceptor
     if (data.user) {
-      localStorage.setItem('user', JSON.stringify(data.user))
-      console.log('✅ User stored in localStorage:', data.user)
+      const userWithToken = { ...data.user, token: data.token }
+      localStorage.setItem('user', JSON.stringify(userWithToken))
+      console.log('✅ User stored in localStorage (with token):', userWithToken)
     }
 
     // Redirect to dashboard

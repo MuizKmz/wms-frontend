@@ -236,6 +236,7 @@
 import { ref, onMounted, computed, watch } from "vue"
 import OrderView from './OrderView.vue'
 import Swal from 'sweetalert2'
+import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
 // Props for order filters
 const props = defineProps({
@@ -284,7 +285,7 @@ const fetchOrders = async () => {
   loading.value = true
   error.value = null
   try {
-    const response = await fetch(API_URL)
+    const response = await authenticatedFetch(API_URL)
 
     if (!response.ok) throw new Error("Failed to fetch order records")
 
@@ -633,8 +634,8 @@ const bulkDelete = async () => {
       .filter(id => id.startsWith('I-'))
       .map(id => parseInt(id.replace('I-', '')))
 
-    const response = await fetch(`${API_URL}/bulk-delete`, {
-      method: 'POST',
+    const response = await authenticatedFetch(`${API_URL}/bulk-delete`, {
+      method: "POST",
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ orderIds, itemIds })
     })

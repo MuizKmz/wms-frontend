@@ -117,9 +117,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import axios from 'axios'
+import axios from '@/utils/axios'
 
-const API_URL = 'api'
+const API_URL = '' // Empty because axios baseURL is already '/api'
 
 interface Permission {
   id: number

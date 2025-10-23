@@ -203,6 +203,7 @@
 <script setup>
 import { ref, onMounted, computed, watch, onBeforeUnmount } from "vue"
 import Swal from 'sweetalert2'
+import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
 // Props for receiving filters
 const props = defineProps({
@@ -233,7 +234,7 @@ const WAREHOUSE_API_URL = '/api/warehouse'
 const fetchWarehouses = async () => {
   loadingWarehouses.value = true
   try {
-    const response = await fetch(WAREHOUSE_API_URL)
+    const response = await authenticatedFetch(WAREHOUSE_API_URL)
     if (!response.ok) throw new Error('Failed to fetch warehouses')
     const json = await response.json()
     warehouses.value = json || []
@@ -251,7 +252,7 @@ const fetchData = async () => {
   try {
     // Append warehouse filter if selected
     const url = selectedWarehouseId.value ? `${API_URL}?warehouseId=${selectedWarehouseId.value}` : API_URL
-    const response = await fetch(url)
+    const response = await authenticatedFetch(url)
 
     if (!response.ok) throw new Error("Failed to fetch data")
 
@@ -408,7 +409,7 @@ const deleteItem = async (item) => {
 
   const result = { success: false, error: undefined }
   try {
-    const resp = await fetch(`${API_URL}/${item.id}`, { method: 'DELETE' })
+    const resp = await authenticatedFetch(`${API_URL}/${item.id}`, { method: 'DELETE' })
     if (!resp.ok) {
       const body = await resp.text()
       throw new Error(body || 'Failed to delete rack')

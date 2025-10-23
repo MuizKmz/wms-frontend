@@ -14,8 +14,8 @@
     <PageBreadcrumb :pageTitle="currentPageTitle" />
 
     <div class="space-y-5 sm:space-y-6">
-      <ComponentCard 
-        title="All Supplier List" 
+      <ComponentCard
+        title="All Supplier List"
         desc="Overview of all Supplier List"
       >
         <div>
@@ -41,46 +41,62 @@
           </div>
 
           <div class="flex gap-2 my-6">
-            <button @click="openAddSupplierModal"
+            <button
+              v-if="canCreate('Supplier')"
+              @click="openAddSupplierModal"
               class="px-4 py-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Add New Supplier
             </button>
-            <button @click="handleBulkDelete"
+            <button
+              v-if="canDelete('Supplier')"
+              @click="handleBulkDelete"
               class="px-4 py-2 btn btn-error text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Delete
             </button>
-            <button @click="handleImportSupplier"
+            <button
+              v-if="canCreate('Supplier')"
+              @click="handleImportSupplier"
               class="px-4 py-2 btn btn-secondary text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Import Supplier
             </button>
           </div>
 
-          <component 
-            :is="currentComponent" 
+          <component
+            :is="currentComponent"
             v-if="currentComponent"
             ref="supplierTableRef"
             :filters="activeFilters"
             @edit-supplier="openEditSupplierModal"
-            @view-supplier="handleViewSupplier" 
-            @delete-supplier="handleDeleteSupplier" 
+            @view-supplier="handleViewSupplier"
+            @delete-supplier="handleDeleteSupplier"
           />
         </div>
       </ComponentCard>
     </div>
 
-    <AddNewSupplier ref="addSupplierModalRef" @supplier-created="handleSupplierCreated" />
+    <AddNewSupplier
+      v-if="canCreate('Supplier')"
+      ref="addSupplierModalRef"
+      @supplier-created="handleSupplierCreated"
+    />
 
-    <EditSupplier ref="editSupplierModalRef" @supplier-updated="handleSupplierUpdated" />
-    
-    <ImportSupplier 
-        ref="importSupplierModalRef" 
-        @file-uploaded="handleImportSupplierUploaded" 
+    <EditSupplier
+      v-if="canUpdate('Supplier')"
+      ref="editSupplierModalRef"
+      @supplier-updated="handleSupplierUpdated"
+    />
+
+    <ImportSupplier
+        v-if="canCreate('Supplier')"
+        ref="importSupplierModalRef"
+        @file-uploaded="handleImportSupplierUploaded"
     />
   </AdminLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
+import { useAuth } from "@/composables/useAuth";
 import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
@@ -89,7 +105,10 @@ import AddNewSupplier from "./component/AddNewSupplier.vue";
 import EditSupplier from "./component/EditSupplier.vue";
 import SupplierListFilters from "./component/SupplierListFilters.vue";
 // New: Import the ImportSupplier modal component
-import ImportSupplier from "./component/ImportSupplier.vue"; 
+import ImportSupplier from "./component/ImportSupplier.vue";
+
+// Get permission checking functions
+const { canCreate, canUpdate, canDelete } = useAuth();
 
 // Interface definitions
 interface Supplier {
@@ -119,7 +138,7 @@ const activeFilters = ref<Filters>({});
 const addSupplierModalRef = ref<InstanceType<typeof AddNewSupplier> | null>(null);
 const editSupplierModalRef = ref<InstanceType<typeof EditSupplier> | null>(null);
 const supplierTableRef = ref<InstanceType<typeof SupplierListTable> | null>(null);
-const activeTab = ref('table'); 
+const activeTab = ref('table');
 
 // New: Ref for the ImportSupplier modal
 const importSupplierModalRef = ref<InstanceType<typeof ImportSupplier> | null>(null);
@@ -169,7 +188,7 @@ const handleSupplierCreated = async (result: Result) => {
     showToastMessage('Supplier has been successfully added', 'success');
     if (supplierTableRef.value && 'refreshData' in supplierTableRef.value) {
       // Assuming SupplierListTable has a refreshData method
-      await (supplierTableRef.value as any).refreshData(); 
+      await (supplierTableRef.value as any).refreshData();
     }
   } else {
     showToastMessage(result.error || 'Failed to create supplier', 'error');
@@ -220,7 +239,7 @@ const handleDeleteSupplier = async (result: Result) => {
     }
     return
   }
-  
+
   // Handling for bulk/partial delete response structure
   if (result.data && (result.data.count || result.data.deletedCount)) {
     const deletedCount = result.data.count || result.data.deletedCount;
@@ -269,7 +288,7 @@ const handleImportSupplierUploaded = (event: { success: boolean, data?: any, err
         showToastMessage('Suppliers imported successfully!', 'success');
         // Refresh the supplier list table data
         if (supplierTableRef.value && 'refreshData' in supplierTableRef.value) {
-            (supplierTableRef.value as any).refreshData(); 
+            (supplierTableRef.value as any).refreshData();
         }
     } else {
         showToastMessage(event.error || 'Supplier import failed. Please check the file format.', 'error', 3500);

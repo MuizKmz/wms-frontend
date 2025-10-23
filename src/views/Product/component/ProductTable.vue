@@ -159,6 +159,7 @@
                   </svg>
                 </button>
                 <button
+                  v-if="canUpdate('Product')"
                   @click="editProduct(item)"
                   class="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
                   aria-label="Edit"
@@ -170,6 +171,7 @@
                   </svg>
                 </button>
                 <button
+                  v-if="canDelete('Product')"
                   @click="deleteProduct(item)"
                   class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                   aria-label="Delete"
@@ -261,7 +263,12 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from "vue"
+import { useAuth } from "@/composables/useAuth"
+import authenticatedFetch from "@/utils/authenticatedFetch"
 import Swal from 'sweetalert2'
+
+// Get permission checking functions
+const { canUpdate, canDelete } = useAuth()
 
 // Props for receiving filters
 const props = defineProps({
@@ -288,7 +295,7 @@ const fetchProducts = async () => {
   loading.value = true
   error.value = null
   try {
-    const response = await fetch(API_URL)
+    const response = await authenticatedFetch(API_URL)
 
     if (!response.ok) throw new Error("Failed to fetch products")
 
@@ -422,11 +429,8 @@ const deleteProduct = async (product) => {
       throw new Error('Product identifier not found.')
     }
 
-    const response = await fetch(`${API_URL}/${productId}`, {
+    const response = await authenticatedFetch(`${API_URL}/${productId}`, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json'
-      }
     })
 
     if (!response.ok) {
@@ -449,7 +453,7 @@ const deleteProduct = async (product) => {
     }
 
     await fetchProducts()
-    
+
     adjustPageAfterDeletion()
   } catch (error) {
     console.error('Error deleting product:', error)
@@ -480,9 +484,8 @@ const bulkDelete = async () => {
   }
 
   try {
-    const response = await fetch(`${API_URL}/bulk-delete`, {
+    const response = await authenticatedFetch(`${API_URL}/bulk-delete`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ids: selectedItems.value })
     })
 
@@ -499,7 +502,7 @@ const bulkDelete = async () => {
     selectedItems.value = []
     selectAll.value = false
     await fetchProducts()
-    
+
     adjustPageAfterDeletion()
 
     if (deletedCount > 0 && blocked.length === 0) {
@@ -598,7 +601,7 @@ const changePage = (page) => {
 const adjustPageAfterDeletion = () => {
   const totalItems = filteredData.value.length
   const maxPage = Math.ceil(totalItems / itemsPerPage.value) || 1
-  
+
   if (currentPage.value > maxPage) {
     currentPage.value = maxPage
   }

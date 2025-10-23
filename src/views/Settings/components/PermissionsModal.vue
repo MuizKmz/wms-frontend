@@ -120,7 +120,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
-import axios from 'axios'
+import axios from '@/utils/axios'
 
 const props = defineProps({
   role: {
@@ -135,7 +135,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'saved'])
 
-const API_URL = 'api'
+const API_URL = '' // Empty because axios baseURL is already '/api'
 
 const loading = ref(false)
 const saving = ref(false)

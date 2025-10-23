@@ -186,6 +186,7 @@
 
 <script setup>
 import { ref, onMounted, computed, watch, onBeforeUnmount } from "vue"
+import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
 // Props for receiving filters
 const props = defineProps({
@@ -218,7 +219,7 @@ const CUSTOMER_API_URL = '/api/customer'
 const fetchCustomers = async () => {
   loadingCustomers.value = true
   try {
-    const response = await fetch(CUSTOMER_API_URL)
+    const response = await authenticatedFetch(CUSTOMER_API_URL)
     if (!response.ok) throw new Error('Failed to fetch customers')
     const json = await response.json()
     customers.value = json || []
@@ -236,7 +237,7 @@ const fetchData = async () => {
   try {
     // Append customer filter if selected
     const url = selectedCustomerId.value ? `${API_URL}?customerId=${selectedCustomerId.value}` : API_URL
-    const response = await fetch(url)
+    const response = await authenticatedFetch(url)
 
     if (!response.ok) throw new Error("Failed to fetch orders")
 

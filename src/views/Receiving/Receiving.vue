@@ -15,8 +15,8 @@
     <ToolListFilters @filter-change="handleFilterChange" />
 
     <div class="space-y-5 sm:space-y-6">
-      <ComponentCard 
-        title="All Receiving List" 
+      <ComponentCard
+        title="All Receiving List"
         desc="Overview of all Receiving List"
       >
         <div>
@@ -42,25 +42,28 @@
           </div>
 
           <div class="flex gap-2 my-6">
-            <button 
+            <button
+              v-if="canCreate('Receiving')"
               @click="openAddReceivingModal"
               class="px-4 py-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Add New Receiving
             </button>
             <button
+              v-if="canDelete('Receiving')"
               @click="handleBulkDelete"
               class="px-4 py-2 btn btn-error text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Delete
             </button>
-            <button 
+            <button
+              v-if="canCreate('Receiving')"
               @click="handleImportReceiving"
               class="px-4 py-2 btn btn-secondary text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Import from PO
             </button>
           </div>
 
-          <component 
-            :is="currentComponent" 
+          <component
+            :is="currentComponent"
             v-if="currentComponent"
             ref="receivingTableRef"
             :filters="activeFilters"
@@ -72,20 +75,23 @@
       </ComponentCard>
     </div>
 
-    <AddNewReceiving 
+    <AddNewReceiving
+      v-if="canCreate('Receiving')"
       ref="addReceivingModalRef"
       @receiving-created="handleReceivingCreated"
     />
 
     <EditReceiving
+      v-if="canUpdate('Receiving')"
       ref="editReceivingModalRef"
       @receiving-updated="handleReceivingUpdated"
     />
-    
+
     <ReceivingView
       ref="receivingViewModalRef"
     />
     <ImportfromPO
+      v-if="canCreate('Receiving')"
       ref="importFromPoModalRef"
       @file-uploaded="handleImportResult"
     />
@@ -94,10 +100,14 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
+import { useAuth } from "@/composables/useAuth";
 import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
 import ReceivingTable from "./component/ReceivingTable.vue";
+
+// Get permission checking functions
+const { canCreate, canUpdate, canDelete } = useAuth();
 import AddNewReceiving from "./component/AddNewReceiving.vue";
 import EditReceiving from "./component/EditReceiving.vue";
 import ReceivingView from "./component/ReceivingView.vue";
@@ -229,7 +239,7 @@ const handleBulkDelete = async () => {
 
   // Check if there are selected items
   const selectedItems = receivingTableRef.value.selectedItems || [];
-  
+
   if (selectedItems.length === 0) {
     showToastMessage('Please select items to delete', 'error');
     return;

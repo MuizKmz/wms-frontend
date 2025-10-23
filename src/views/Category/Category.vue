@@ -13,11 +13,11 @@
 
   <AdminLayout>
     <PageBreadcrumb :pageTitle="currentPageTitle" />
-  
-    
+
+
     <div class="space-y-5 sm:space-y-6">
-      <ComponentCard 
-        title="All Category List" 
+      <ComponentCard
+        title="All Category List"
         desc="Overview of all Category List"
       >
         <!-- Tab Switcher with action buttons -->
@@ -48,18 +48,21 @@
 
           <!-- Edit Category Modal -->
           <EditCategory
+            v-if="canUpdate('Category')"
             ref="editCategoryModalRef"
             @category-updated="handleCategoryUpdated"
           />
 
           <!-- Action Buttons below tabs -->
           <div v-if="activeTab === 'table'" class="flex gap-2 my-6">
-            <button 
+            <button
+              v-if="canCreate('Category')"
               @click="openAddCategoryModal"
               class="px-4 py-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Add New Category
             </button>
             <button
+              v-if="canDelete('Category')"
               @click="handleBulkDelete"
               class="px-4 py-2 btn btn-error text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Delete
@@ -67,8 +70,8 @@
           </div>
 
           <!-- Tab Content -->
-          <component 
-            :is="currentComponent" 
+          <component
+            :is="currentComponent"
             v-if="currentComponent"
             ref="categoryTableRef"
             :filters="activeFilters"
@@ -80,13 +83,15 @@
     </div>
 
     <!-- Add New Category Modal -->
-    <AddNewCategory 
+    <AddNewCategory
+      v-if="canCreate('Category')"
       ref="addCategoryModalRef"
       @category-created="handleCategoryCreated"
     />
 
     <!-- Edit Category Modal -->
     <EditCategory
+      v-if="canUpdate('Category')"
       ref="editCategoryModalRef"
       @category-updated="handleCategoryUpdated"
     />
@@ -95,9 +100,13 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
+import { useAuth } from "@/composables/useAuth";
 import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
+
+// Get permission checking functions
+const { canCreate, canUpdate, canDelete } = useAuth();
 import CategoryTable from "./component/CategoryTable.vue";
 import CategoryListOverview from "./component/CategoryListOverview.vue";
 import AddNewCategory from "./component/AddNewCategory.vue";

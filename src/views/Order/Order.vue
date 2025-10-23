@@ -43,16 +43,19 @@
 
           <div class="flex gap-2 my-6">
             <button
+              v-if="canCreate('Order')"
               @click="openAddOrderModal"
               class="px-4 py-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Add New Order
             </button>
             <button
+              v-if="canDelete('Order')"
               @click="handleBulkDelete"
               class="px-4 py-2 btn btn-error text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Delete
             </button>
             <button
+              v-if="canCreate('Order')"
               @click="handleImportOrder"
               class="px-4 py-2 btn btn-secondary text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Import Order
@@ -72,11 +75,13 @@
     </div>
 
     <AddNewOrder
+      v-if="canCreate('Order')"
       ref="addOrderModalRef"
       @order-created="handleOrderCreated"
     />
 
     <EditOrder
+      v-if="canUpdate('Order')"
       ref="editOrderModalRef"
       @order-updated="handleOrderUpdated"
     />
@@ -85,6 +90,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
+import { useAuth } from "@/composables/useAuth";
 import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import ComponentCard from "@/components/common/ComponentCard.vue";
@@ -92,6 +98,9 @@ import OrderTable from "./component/OrderTable.vue";
 import AddNewOrder from "./component/AddNewOrder.vue";
 import EditOrder from "./component/EditOrder.vue";
 import OrderListFilter from "./component/OrderListFilter.vue";
+
+// Get permission checking functions
+const { canCreate, canUpdate, canDelete } = useAuth();
 
 
 // Interface definitions

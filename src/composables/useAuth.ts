@@ -1,7 +1,8 @@
 import { ref, computed } from 'vue'
-import axios from 'axios'
+import axios from '@/utils/axios'
+import { isAxiosError } from 'axios'
 
-const API_URL = 'api'
+const API_URL = '' // Empty because axios baseURL is already '/api'
 
 interface Permission {
   id: number
@@ -71,7 +72,7 @@ export function useAuth() {
       console.log(`🎯 [useAuth] Loaded ${flatPermissions.length} permissions:`, flatPermissions)
     } catch (error) {
       console.error('❌ [useAuth] Error loading permissions:', error)
-      if (axios.isAxiosError(error)) {
+      if (isAxiosError(error)) {
         console.error('Response status:', error.response?.status)
         console.error('Response data:', error.response?.data)
 

@@ -216,6 +216,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from "vue"
 import Swal from 'sweetalert2'
+import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
 // --- Type Definitions ---
 interface Product {
@@ -279,7 +280,7 @@ const fetchEPCs = async () => {
   loading.value = true
   error.value = null
   try {
-    const response = await fetch(API_URL)
+    const response = await authenticatedFetch(API_URL)
 
     if (!response.ok) throw new Error("Failed to fetch EPC records")
 
@@ -505,8 +506,8 @@ const bulkDelete = async () => {
       .filter(id => id.startsWith('E-'))
       .map(id => parseInt(id.replace('E-', '')))
 
-    const response = await fetch(`${API_URL}/bulk-delete`, {
-      method: 'POST',
+    const response = await authenticatedFetch(`${API_URL}/bulk-delete`, {
+      method: "POST",
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ids: epcIds }) // Changed from 'epcIds' to 'ids'
     })

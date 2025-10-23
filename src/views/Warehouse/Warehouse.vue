@@ -12,10 +12,10 @@
 
   <AdminLayout>
     <PageBreadcrumb :pageTitle="currentPageTitle" />
-    
+
     <div class="space-y-5 sm:space-y-6">
-      <ComponentCard 
-        title="Inventory Location Management" 
+      <ComponentCard
+        title="Inventory Location Management"
         desc="Overview of all Warehouses, Racks, and Sections"
       >
         <div>
@@ -43,27 +43,30 @@
           </div>
 
           <div v-if="activeTab === 'warehouse'" class="flex gap-2 my-6">
-            <button 
+            <button
+              v-if="canCreate('Warehouse')"
               @click="openAddWarehouseModal"
               class="px-4 py-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Add New Warehouse
             </button>
           </div>
           <div v-if="activeTab === 'rack'" class="flex gap-2 my-6">
-            <button 
+            <button
+              v-if="canCreate('Rack')"
               @click="openAddRackModal"
               class="px-4 py-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Add New Rack
             </button>
-            <button 
+            <button
+              v-if="canCreate('Section')"
               @click="openAddSectionModal"
               class="px-4 py-2 mr-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Add New Section
             </button>
           </div>
 
-          <component 
-            :is="currentComponent" 
+          <component
+            :is="currentComponent"
             v-if="currentComponent"
             ref="activeComponentRef"
             :filters="activeFilters"
@@ -74,29 +77,35 @@
       </ComponentCard>
     </div>
 
-    <AddNewWarehouse 
+    <AddNewWarehouse
+      v-if="canCreate('Warehouse')"
       ref="addWarehouseModalRef"
       @item-created="handleItemCreated"
     />
-    <AddNewRack 
+    <AddNewRack
+      v-if="canCreate('Rack')"
       ref="addRackModalRef"
       @item-created="handleItemCreated"
     />
-    <AddNewSection 
+    <AddNewSection
+      v-if="canCreate('Section')"
       ref="addSectionModalRef"
       @item-created="handleItemCreated"
       @open-add-rack="handleOpenAddRack"
     />
     <EditWarehouse
+      v-if="canUpdate('Warehouse')"
       ref="editWarehouseModalRef"
       @item-updated="handleItemUpdated"
     />
     <EditRack
+      v-if="canUpdate('Rack')"
       ref="editRackModalRef"
       :rackId="editingRack.id"
       @item-updated="handleItemUpdated"
     />
     <EditSection
+      v-if="canUpdate('Section')"
       ref="editSectionModalRef"
       :sectionId="editingSection.id"
       @item-updated="handleItemUpdated"
@@ -106,6 +115,8 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from "vue";
+import { useAuth } from "@/composables/useAuth";
+
 // Assuming you have renamed/created these components
 import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
@@ -122,6 +133,9 @@ import WarehouseFilters from "./component/WarehouseFilters.vue";
 import EditWarehouse from "./component/EditWarehouse.vue";
 import EditRack from "./component/EditRack.vue";
 import EditSection from "./component/EditSection.vue";
+
+// Get permission checking functions
+const { canCreate, canUpdate, canDelete, canExport } = useAuth();
 
 // Interfaces (simplified for the new domain)
 interface Result {
@@ -149,7 +163,7 @@ const editingRack = ref<any>({})
 // Reactive holder for the section being edited
 const editingSection = ref<any>({})
 // Generic ref for the currently active component (Table/Overview)
-const activeComponentRef = ref<any | null>(null); 
+const activeComponentRef = ref<any | null>(null);
 const activeTab = ref('warehouse'); // Default to warehouse
 
 // Toast state
@@ -261,7 +275,7 @@ const handleItemUpdated = async (result: Result) => {
 // FIXED: Handle opening Add Rack modal from Section modal
 const handleOpenAddRack = ({ warehouseId }: { warehouseId: number }) => {
   console.log('Opening Add Rack modal with warehouseId:', warehouseId);
-  
+
   if (addRackModalRef.value && addRackModalRef.value.openModal) {
     // Pass the warehouseId to pre-select the warehouse in the rack modal
     addRackModalRef.value.openModal(warehouseId);

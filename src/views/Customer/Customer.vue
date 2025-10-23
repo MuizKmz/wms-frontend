@@ -14,8 +14,8 @@
     <PageBreadcrumb :pageTitle="currentPageTitle" />
 
     <div class="space-y-5 sm:space-y-6">
-      <ComponentCard 
-        title="All Customer List" 
+      <ComponentCard
+        title="All Customer List"
         desc="Overview of all Customer List"
       >
         <div>
@@ -56,55 +56,74 @@
           </div>
 
           <div  v-if="activeTab === 'overview'" class="flex gap-2 my-6">
-            <button @click="openAddCustomerModal"
+            <button
+              v-if="canCreate('Customer')"
+              @click="openAddCustomerModal"
               class="px-4 py-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Add New Customer
             </button>
-            <button @click="handleBulkDelete"
+            <button
+              v-if="canDelete('Customer')"
+              @click="handleBulkDelete"
               class="px-4 py-2 btn btn-error text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Delete
             </button>
-            <button @click="handleImportCustomer"
+            <button
+              v-if="canCreate('Customer')"
+              @click="handleImportCustomer"
               class="px-4 py-2 btn btn-secondary text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Import Customer
             </button>
           </div>
 
-          <component 
-            :is="currentComponent" 
+          <component
+            :is="currentComponent"
             v-if="currentComponent"
             ref="customerTableRef"
             :filters="activeFilters"
             @edit-customer="openEditCustomerModal"
-            @view-customer="handleViewCustomer" 
-            @delete-customer="handleDeleteCustomer" 
+            @view-customer="handleViewCustomer"
+            @delete-customer="handleDeleteCustomer"
           />
         </div>
       </ComponentCard>
     </div>
 
-    <AddNewCustomer ref="addCustomerModalRef" @customer-created="handleCustomerCreated" />
+    <AddNewCustomer
+      v-if="canCreate('Customer')"
+      ref="addCustomerModalRef"
+      @customer-created="handleCustomerCreated"
+    />
 
-    <EditCustomer ref="editCustomerModalRef" @customer-updated="handleCustomerUpdated" />
-    
-    <ImportCustomer 
-        ref="importCustomerModalRef" 
-        @file-uploaded="handleImportCustomerUploaded" 
+    <EditCustomer
+      v-if="canUpdate('Customer')"
+      ref="editCustomerModalRef"
+      @customer-updated="handleCustomerUpdated"
+    />
+
+    <ImportCustomer
+        v-if="canCreate('Customer')"
+        ref="importCustomerModalRef"
+        @file-uploaded="handleImportCustomerUploaded"
     />
   </AdminLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
+import { useAuth } from "@/composables/useAuth";
 import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
+
+// Get permission checking functions
+const { canCreate, canUpdate, canDelete } = useAuth();
 import ComponentCard from "@/components/common/ComponentCard.vue";
 import CustomerListOverview from "./component/CustomerListOverview.vue";
 import OrderList from "./component/OrderList.vue";
 import AddNewCustomer from "./component/AddNewCustomer.vue";
 import EditCustomer from "./component/EditCustomer.vue";
 import CustomerListFilters from "./component/CustomerListFilters.vue";
-import ImportCustomer from "./component/ImportCustomer.vue"; 
+import ImportCustomer from "./component/ImportCustomer.vue";
 
 // Interface definitions
 interface Customer {
@@ -133,7 +152,7 @@ const activeFilters = ref<Filters>({});
 const addCustomerModalRef = ref<InstanceType<typeof AddNewCustomer> | null>(null);
 const editCustomerModalRef = ref<InstanceType<typeof EditCustomer> | null>(null);
 const customerTableRef = ref<InstanceType<typeof CustomerListOverview | typeof OrderList> | null>(null);
-const activeTab = ref('overview'); 
+const activeTab = ref('overview');
 
 // Ref for the ImportCustomer modal
 const importCustomerModalRef = ref<InstanceType<typeof ImportCustomer> | null>(null);
@@ -186,7 +205,7 @@ const handleCustomerCreated = async (result: Result) => {
   if (result.success) {
     showToastMessage('Customer has been successfully added', 'success');
     if (customerTableRef.value && 'refreshData' in customerTableRef.value) {
-      await (customerTableRef.value as any).refreshData(); 
+      await (customerTableRef.value as any).refreshData();
     }
   } else {
     showToastMessage(result.error || 'Failed to create customer', 'error');
@@ -236,7 +255,7 @@ const handleDeleteCustomer = async (result: Result) => {
     }
     return
   }
-  
+
   // Handling for bulk/partial delete response structure
   if (result.data && (result.data.count || result.data.deletedCount)) {
     const deletedCount = result.data.count || result.data.deletedCount;
@@ -282,7 +301,7 @@ const handleImportCustomerUploaded = (event: { success: boolean, data?: any, err
         showToastMessage('Customers imported successfully!', 'success');
         // Refresh the customer list table data
         if (customerTableRef.value && 'refreshData' in customerTableRef.value) {
-            (customerTableRef.value as any).refreshData(); 
+            (customerTableRef.value as any).refreshData();
         }
     } else {
         showToastMessage(event.error || 'Customer import failed. Please check the file format.', 'error', 3500);

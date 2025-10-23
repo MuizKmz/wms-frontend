@@ -257,6 +257,7 @@
 <script setup>
 import { ref, onMounted, computed, watch } from "vue"
 import Swal from 'sweetalert2'
+import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
 // Props for receiving filters
 const props = defineProps({
@@ -283,7 +284,7 @@ const fetchShipments = async () => {
   loading.value = true
   error.value = null
   try {
-    const response = await fetch(API_URL)
+    const response = await authenticatedFetch(API_URL)
 
     if (!response.ok) throw new Error("Failed to fetch shipments")
 
@@ -410,8 +411,8 @@ const deleteShipment = async (shipment) => {
       throw new Error('Shipment identifier not found.')
     }
 
-    const response = await fetch(`${API_URL}/${shipmentId}`, {
-      method: 'DELETE',
+    const response = await authenticatedFetch(`${API_URL}/${shipmentId}`, {
+      method: "DELETE",
       headers: {
         'Content-Type': 'application/json'
       }
@@ -468,8 +469,8 @@ const bulkDelete = async () => {
   }
 
   try {
-    const response = await fetch(`${API_URL}/bulk-delete`, {
-      method: 'POST',
+    const response = await authenticatedFetch(`${API_URL}/bulk-delete`, {
+      method: "POST",
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ids: selectedItems.value })
     })

@@ -332,6 +332,7 @@
 <script setup>
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 import RackInfoModal from './RackInfoModal.vue'
+import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
 const emit = defineEmits(['item-created', 'open-add-rack'])
 
@@ -390,7 +391,7 @@ const getRackButtonText = () => {
 /* Fetch warehouses */
 const fetchWarehouses = async () => {
   try {
-    const response = await fetch('/api/warehouse')
+    const response = await authenticatedFetch('/api/warehouse')
     if (!response.ok) throw new Error('Failed to fetch warehouses')
     const json = await response.json()
     warehouses.value = json || []
@@ -408,7 +409,7 @@ const fetchRacks = async () => {
   
   loadingRacks.value = true
   try {
-    const response = await fetch(`/api/rack?warehouseId=${form.warehouseId}`)
+    const response = await authenticatedFetch(`/api/rack?warehouseId=${form.warehouseId}`)
     if (!response.ok) throw new Error('Failed to fetch racks')
     const json = await response.json()
     // Filter to ensure only racks for selected warehouse are shown
@@ -643,7 +644,7 @@ const submitForm = async () => {
       remark: form.remarks || null
     }
 
-    const response = await fetch('/api/section', {
+    const response = await authenticatedFetch('/api/section', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
