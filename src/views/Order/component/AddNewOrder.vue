@@ -401,6 +401,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch, computed } from 'vue'
+import authenticatedFetch from '@/utils/authenticatedFetch'
 import flatpickr from 'flatpickr'
 import 'flatpickr/dist/flatpickr.css'
 
@@ -515,8 +516,8 @@ const fetchData = async () => {
   loadingProducts.value = true
   try {
     const [customersRes, productsRes] = await Promise.all([
-      fetch('/api/customer'),
-      fetch('/api/product')
+      authenticatedFetch('/api/customer'),
+      authenticatedFetch('/api/product')
     ])
 
     if (customersRes.ok) customers.value = await customersRes.json()
@@ -706,7 +707,7 @@ const submitForm = async () => {
       }))
     }
 
-    const response = await fetch('/api/order', {
+    const response = await authenticatedFetch('/api/order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(submissionData)

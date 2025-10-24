@@ -195,7 +195,7 @@
 
 <script setup>
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount } from 'vue'
-import { authenticatedFetch } from '@/utils/authenticatedFetch'
+import authenticatedFetch from '@/utils/authenticatedFetch'
 
 const emit = defineEmits(['file-uploaded'])
 
@@ -328,7 +328,7 @@ const uploadFile = async () => {
     formData.append('file', selectedFile.value)
 
     // Make the API call
-    const response = await fetch('/api/inventory/import', {
+    const response = await authenticatedFetch('/api/inventory/import', {
       method: 'POST',
       body: formData
     })

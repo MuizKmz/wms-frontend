@@ -70,6 +70,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick, defineExpose } from 'vue'
+import authenticatedFetch from '@/utils/authenticatedFetch'
 import {
   Chart,
   CategoryScale,
@@ -131,7 +132,7 @@ const fetchData = async () => {
   error.value = null
   try {
     console.log('WorkOrderBarChart: Fetching from', API_URL)
-    const response = await fetch(API_URL)
+    const response = await authenticatedFetch(API_URL)
     console.log('WorkOrderBarChart: Response status:', response.status)
     if (!response.ok) throw new Error('Failed to fetch orders')
     

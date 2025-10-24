@@ -87,6 +87,7 @@
 
 <script setup>
 import { ref, computed, onMounted, defineExpose } from 'vue'
+import authenticatedFetch from '@/utils/authenticatedFetch'
 
 const chartContainer = ref(null)
 const loading = ref(true)
@@ -113,7 +114,7 @@ const fetchData = async () => {
   loading.value = true
   error.value = null
   try {
-    const response = await fetch(API_URL)
+    const response = await authenticatedFetch(API_URL)
     if (!response.ok) throw new Error('Failed to fetch customer metrics')
     
     const data = await response.json()

@@ -236,7 +236,7 @@
 import { ref, onMounted, computed, watch } from "vue"
 import OrderView from './OrderView.vue'
 import Swal from 'sweetalert2'
-import { authenticatedFetch } from '@/utils/authenticatedFetch'
+import authenticatedFetch from '@/utils/authenticatedFetch'
 
 // Props for order filters
 const props = defineProps({
@@ -558,7 +558,7 @@ const deleteOrder = async (item) => {
       ? `${API_URL}/${item.id}`
       : `${API_URL}/items/${item.id}`
 
-    const response = await fetch(endpoint, {
+    const response = await authenticatedFetch(endpoint, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' }
     })

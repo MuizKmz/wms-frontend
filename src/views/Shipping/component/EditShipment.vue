@@ -293,6 +293,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+import authenticatedFetch from '@/utils/authenticatedFetch'
 import flatpickr from 'flatpickr'
 import 'flatpickr/dist/flatpickr.css'
 
@@ -376,7 +377,7 @@ const openDropdowns = reactive({ status: false, order: false })
 const fetchOrder = async () => {
   loadingOrders.value = true
   try {
-    const response = await fetch('/api/order')
+    const response = await authenticatedFetch('/api/order')
     if (!response.ok) throw new Error('Failed to fetch orders')
     const data = await response.json()
     orders.value = data
@@ -638,7 +639,7 @@ const submitForm = async () => {
     }
 
     // PATCH to shipments endpoint
-    const response = await fetch(`/api/shipping/${currentShipmentId.value}`, {
+    const response = await authenticatedFetch(`/api/shipping/${currentShipmentId.value}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',

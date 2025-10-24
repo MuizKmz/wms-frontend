@@ -111,6 +111,7 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick, onBeforeUnmount } from "vue";
+import authenticatedFetch from '@/utils/authenticatedFetch'
 
 // Define Props and Emits
 const props = defineProps<{
@@ -152,7 +153,7 @@ const fetchCodeImage = async () => {
     const API_URL = `/api/epc/code/image?epcCode=${encodeURIComponent(code)}&type=${codeType}`;
 
     try {
-        const response = await fetch(API_URL);
+        const response = await authenticatedFetch(API_URL);
 
         if (!response.ok) {
             // Attempt to read a specific error message from the response body

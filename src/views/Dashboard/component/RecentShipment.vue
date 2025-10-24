@@ -127,6 +127,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import authenticatedFetch from '@/utils/authenticatedFetch'
 
 const chartContainer = ref(null)
 const data = ref([])
@@ -142,7 +143,7 @@ const fetchShipments = async () => {
   loading.value = true
   error.value = null
   try {
-    const response = await fetch(API_URL)
+    const response = await authenticatedFetch(API_URL)
 
     if (!response.ok) throw new Error("Failed to fetch shipments")
 

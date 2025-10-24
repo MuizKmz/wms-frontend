@@ -42,6 +42,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import authenticatedFetch from '@/utils/authenticatedFetch'
 import { Chart, ArcElement, Tooltip, Legend } from 'chart.js'
 
 Chart.register(ArcElement, Tooltip, Legend)
@@ -60,7 +61,7 @@ const fetchData = async () => {
   loading.value = true
   error.value = null
   try {
-    const response = await fetch(API_URL)
+    const response = await authenticatedFetch(API_URL)
     if (!response.ok) throw new Error('Failed to fetch orders')
     
     const orders = await response.json()

@@ -271,6 +271,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch, computed } from 'vue'
+import authenticatedFetch from '@/utils/authenticatedFetch'
 
 interface Product {
   id: number
@@ -375,8 +376,8 @@ const fetchData = async () => {
   loadingProducts.value = true
   try {
     const [corpCodesRes, productsRes] = await Promise.all([
-      fetch('/api/corp-code'),
-      fetch('/api/product')
+      authenticatedFetch('/api/corp-code'),
+      authenticatedFetch('/api/product')
     ])
 
     if (corpCodesRes.ok) {
@@ -535,7 +536,7 @@ const submitForm = async () => {
       remarks: form.remarks || null,
     }
 
-    const response = await fetch('/api/epc/generate', {
+    const response = await authenticatedFetch('/api/epc/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(submissionData)

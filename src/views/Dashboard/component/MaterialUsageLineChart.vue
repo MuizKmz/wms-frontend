@@ -32,6 +32,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import authenticatedFetch from '@/utils/authenticatedFetch'
 import {
   Chart,
   CategoryScale,
@@ -88,7 +89,7 @@ const fetchMaterialUsageData = async () => {
   loading.value = true
   error.value = null
   try {
-    const response = await fetch('/api/material-usage/chart-data')
+    const response = await authenticatedFetch('/api/material-usage/chart-data')
     if (!response.ok) throw new Error('Failed to fetch material usage')
     const data = await response.json()
     if (!data || !data.labels || !data.datasets) throw new Error('Invalid API format')

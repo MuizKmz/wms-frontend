@@ -42,6 +42,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, defineExpose } from 'vue'
+import authenticatedFetch from '@/utils/authenticatedFetch'
 import {
   Chart,
   CategoryScale,
@@ -79,7 +80,7 @@ const fetchData = async () => {
   loading.value = true
   error.value = null
   try {
-    const response = await fetch(`${API_URL}?days=${selectedRange.value}`)
+    const response = await authenticatedFetch(`${API_URL}?days=${selectedRange.value}`)
     if (!response.ok) throw new Error('Failed to fetch receiving activity')
     
     const activity = await response.json()
