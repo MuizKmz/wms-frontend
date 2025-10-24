@@ -234,6 +234,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
 const emit = defineEmits(['close'])
 
@@ -344,7 +345,7 @@ const applyBulkStatus = async () => {
   if (!bulkStatus.value || selectedEpcs.value.length === 0) return
   loadingBulk.value = true
   try {
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/epc/bulk-update-status`, {
+    const response = await authenticatedFetch('/api/epc/bulk-update-status', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ids: selectedEpcs.value, status: bulkStatus.value })

@@ -73,8 +73,8 @@
                   @dragleave.prevent="isDragging = false"
                   :class="[
                     'border-2 border-dashed rounded-lg p-12 text-center transition-colors',
-                    isDragging 
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                    isDragging
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                       : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50',
                     errors.file ? 'border-red-500' : ''
                   ]"
@@ -93,8 +93,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                       <span class="text-sm font-medium text-gray-900 dark:text-white">{{ selectedFile.name }}</span>
-                      <button 
-                        @click.stop="removeFile" 
+                      <button
+                        @click.stop="removeFile"
                         class="text-gray-500 hover:text-red-600 dark:hover:text-red-400"
                         :disabled="isUploading"
                       >
@@ -109,7 +109,7 @@
                   <p class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
                     {{ selectedFile ? 'File selected' : 'Drop files here' }}
                   </p>
-                  
+
                   <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
                     Supported format: .xls, .xlsx
                   </p>
@@ -159,24 +159,24 @@
 
               <!-- footer -->
               <div class="flex items-center justify-between p-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button 
-                  @click="downloadTemplate" 
+                <button
+                  @click="downloadTemplate"
                   class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm transition-colors"
                   :disabled="isUploading"
                 >
                   Download Template
                 </button>
-                
+
                 <div class="flex gap-2">
-                  <button 
-                    @click="closeModal" 
+                  <button
+                    @click="closeModal"
                     class="btn btn-outline"
                     :disabled="isUploading"
                   >
                     Cancel
                   </button>
-                  <button 
-                    @click="uploadFile" 
+                  <button
+                    @click="uploadFile"
                     class="btn btn-primary"
                     :disabled="!selectedFile || isUploading"
                   >
@@ -195,6 +195,7 @@
 
 <script setup>
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
 const emit = defineEmits(['file-uploaded'])
 
@@ -246,7 +247,7 @@ const unlockScroll = () => {
 /* File validation */
 const validateFile = (file) => {
   errors.file = ''
-  
+
   if (!file) {
     errors.file = 'Please select a file'
     return false
@@ -254,7 +255,7 @@ const validateFile = (file) => {
 
   const validExtensions = ['.xls', '.xlsx']
   const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase()
-  
+
   if (!validExtensions.includes(fileExtension)) {
     errors.file = 'Invalid file format. Please upload .xls or .xlsx file'
     return false
@@ -274,7 +275,7 @@ const validateFile = (file) => {
 const handleDrop = (event) => {
   isDragging.value = false
   const files = event.dataTransfer.files
-  
+
   if (files.length > 0) {
     const file = files[0]
     if (validateFile(file)) {

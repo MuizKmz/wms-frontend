@@ -483,6 +483,8 @@
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 import flatpickr from 'flatpickr'
 import 'flatpickr/dist/flatpickr.css'
+import { authenticatedFetch } from '@/utils/authenticatedFetch'
+
 
 const emit = defineEmits(['receiving-created'])
 
@@ -583,7 +585,7 @@ const unlockScroll = () => {
 /* Fetch API Data */
 const fetchWarehouses = async () => {
   try {
-    const response = await fetch('/api/warehouse')
+    const response = await authenticatedFetch('/api/warehouse')
     if (response.ok) {
       warehouses.value = await response.json()
     }
@@ -598,7 +600,7 @@ const fetchRacks = async (warehouseId) => {
     return
   }
   try {
-    const response = await fetch(`/api/rack?warehouseId=${warehouseId}`)
+    const response = await authenticatedFetch(`/api/rack?warehouseId=${warehouseId}`)
     if (response.ok) {
       racks.value = await response.json()
       console.log(racks.value)
@@ -614,7 +616,7 @@ const fetchSections = async (rackId) => {
     return
   }
   try {
-    const response = await fetch(`/api/section?rackId=${rackId}`)
+    const response = await authenticatedFetch(`/api/section?rackId=${rackId}`)
     if (response.ok) {
       sections.value = await response.json()
       console.log(sections.value)
@@ -626,7 +628,7 @@ const fetchSections = async (rackId) => {
 
 const fetchSuppliers = async () => {
   try {
-    const response = await fetch('/api/supplier')
+    const response = await authenticatedFetch('/api/supplier')
     if (response.ok) {
       suppliers.value = await response.json()
     }
@@ -637,7 +639,7 @@ const fetchSuppliers = async () => {
 
 const fetchProducts = async () => {
   try {
-    const response = await fetch('/api/product')
+    const response = await authenticatedFetch('/api/product')
     if (response.ok) {
       products.value = await response.json()
     }
@@ -761,7 +763,7 @@ const positionUnitMenu = (index) => {
   if (!btn) return
 
   const rect = btn.getBoundingClientRect()
-  
+
   // try to compute panel width so dropdown can expand to full modal content width
   const panelRect = panelRef.value ? panelRef.value.getBoundingClientRect() : null
 
@@ -1018,7 +1020,7 @@ const openModal = async () => {
   isOpen.value = true
   lockScroll()
   await nextTick()
-  
+
   // Initialize Flatpickr
   if (receivingDateInput.value && !flatpickrInstance) {
     flatpickrInstance = flatpickr(receivingDateInput.value, {
@@ -1029,19 +1031,19 @@ const openModal = async () => {
       }
     })
   }
-  
+
   panelRef.value?.querySelector('input,select,textarea,button')?.focus()
 }
 
 const closeModal = async () => {
   Object.keys(openDropdowns).forEach(key => openDropdowns[key] = false)
-  
+
   // Destroy Flatpickr instance
   if (flatpickrInstance) {
     flatpickrInstance.destroy()
     flatpickrInstance = null
   }
-  
+
   isOpen.value = false
 
   // Reset form after modal is closed
@@ -1100,7 +1102,7 @@ const submitForm = async () => {
     console.debug('Submitting receiving:', submissionData)
 
     // Make the API call
-    const response = await fetch('/api/receiving', {
+    const response = await authenticatedFetch('/api/receiving', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1151,13 +1153,13 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
-  
+
   // Clean up Flatpickr
   if (flatpickrInstance) {
     flatpickrInstance.destroy()
     flatpickrInstance = null
   }
-  
+
   if (isOpen.value) {
     unlockScroll()
   }

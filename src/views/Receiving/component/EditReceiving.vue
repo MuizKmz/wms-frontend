@@ -501,6 +501,9 @@
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 import flatpickr from 'flatpickr'
 import 'flatpickr/dist/flatpickr.css'
+import { authenticatedFetch } from '@/utils/authenticatedFetch'
+
+
 
 const emit = defineEmits(['receiving-created', 'receiving-updated'])
 
@@ -606,7 +609,7 @@ const unlockScroll = () => {
 /* Fetch API Data */
 const fetchWarehouses = async () => {
   try {
-    const response = await fetch('/api/warehouse')
+    const response = await authenticatedFetch('/api/warehouse')
     if (response.ok) {
       warehouses.value = await response.json()
     }
@@ -621,7 +624,7 @@ const fetchRacks = async (warehouseId) => {
     return
   }
   try {
-    const response = await fetch(`/api/rack?warehouseId=${warehouseId}`)
+    const response = await authenticatedFetch(`/api/rack?warehouseId=${warehouseId}`)
     if (response.ok) {
       racks.value = await response.json()
       console.log(racks.value)
@@ -637,7 +640,7 @@ const fetchSections = async (rackId) => {
     return
   }
   try {
-    const response = await fetch(`/api/section?rackId=${rackId}`)
+    const response = await authenticatedFetch(`/api/section?rackId=${rackId}`)
     if (response.ok) {
       sections.value = await response.json()
       console.log(sections.value)
@@ -649,7 +652,7 @@ const fetchSections = async (rackId) => {
 
 const fetchSuppliers = async () => {
   try {
-    const response = await fetch('/api/supplier')
+    const response = await authenticatedFetch('/api/supplier')
     if (response.ok) {
       suppliers.value = await response.json()
     }
@@ -660,7 +663,7 @@ const fetchSuppliers = async () => {
 
 const fetchProducts = async () => {
   try {
-    const response = await fetch('/api/product')
+    const response = await authenticatedFetch('/api/product')
     if (response.ok) {
       products.value = await response.json()
     }
@@ -1170,7 +1173,7 @@ const submitForm = async () => {
     let response
     if (isEditMode.value && currentReceivingId.value) {
       // For update: first update header, then update items
-      response = await fetch(`/api/receiving/${currentReceivingId.value}`, {
+      response = await authenticatedFetch(`/api/receiving/${currentReceivingId.value}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1189,14 +1192,14 @@ const submitForm = async () => {
 
       // Then update items separately
       if (response.ok) {
-        response = await fetch(`/api/receiving/${currentReceivingId.value}/items`, {
+        response = await authenticatedFetch(`/api/receiving/${currentReceivingId.value}/items`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ receivingItems: submissionData.receivingItems })
         })
       }
     } else {
-      response = await fetch('/api/receiving', {
+      response = await authenticatedFetch('/api/receiving', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submissionData)
