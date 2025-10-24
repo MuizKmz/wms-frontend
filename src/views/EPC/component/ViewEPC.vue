@@ -95,7 +95,7 @@
                 </button>
                 <button
                     @click="downloadCode"
-                    class="btn btn-primary"
+                    class="btn bg-brand-500 hover:bg-brand-600 border-none"
                     :disabled="loading || !codeImageUrl"
                 >
                     Download

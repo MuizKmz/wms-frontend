@@ -221,6 +221,7 @@ const openGroups = ref(new Set(['STOCK', 'REPORTS'])); // Track which groups are
 const logoUrl = ref('')
 const companyName = ref('WMS Console')
 const brandingLoaded = ref(false)
+const themeVersion = ref(0) // Used to force reactive updates when theme changes
 
 // Update logo and company name from localStorage directly
 const updateBranding = () => {
@@ -243,6 +244,9 @@ const updateBranding = () => {
     }
     // Mark as loaded immediately now that we have skeleton
     brandingLoaded.value = true
+    
+    // Force reactive update for menu styles
+    themeVersion.value++
   } catch (e) {
     console.error('❌ [AppSidebar] Error loading branding:', e)
     brandingLoaded.value = true
@@ -251,6 +255,9 @@ const updateBranding = () => {
 
 // Computed styles for active menu items that adapt to theme
 const activeMenuStyle = computed(() => {
+  // Access themeVersion to make this reactive to theme changes
+  themeVersion.value
+  
   const sidebarColor = getComputedStyle(document.documentElement).getPropertyValue('--sidebar-color').trim() || '#0f172a'
   const isDark = document.documentElement.classList.contains('dark')
   

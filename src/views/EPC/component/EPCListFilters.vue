@@ -48,7 +48,7 @@
 
           <button
             @click="applyFilters"
-            class="btn btn-primary flex items-center gap-2"
+            class="btn bg-brand-500 hover:bg-brand-600 flex items-center gap-2 border-none"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

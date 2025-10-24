@@ -5,7 +5,7 @@
         <button
           type="button"
           @click="openChartSelector"
-          class="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors shadow-sm"
+          class="flex items-center gap-2 px-4 py-2 lg:ml-[-20px] bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition-colors shadow-sm"
         >
           <PlusIcon class="w-5 h-5" />
           <span class="font-medium">Add Chart</span>

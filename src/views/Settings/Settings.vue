@@ -17,14 +17,14 @@
               :class="[
                 'px-4 py-3 font-medium text-sm transition-all relative',
                 activeTab === tab.id
-                  ? 'text-blue-600 dark:text-blue-400'
+                  ? 'text-brand-500 dark:text-brand-400'
                   : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
               ]"
             >
               {{ tab.label }}
               <div
                 v-if="activeTab === tab.id"
-                class="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400"
+                class="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-500 dark:bg-brand-400"
               />
             </button>
           </div>

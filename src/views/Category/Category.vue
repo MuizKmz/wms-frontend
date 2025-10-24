@@ -27,20 +27,18 @@
             <CategoryListFilters @filter-change="handleFilterChange" />
             <div class="flex gap-1">
               <button
-                v-for="tab in categoryTabs"
-                :key="tab.id"
-                @click="handleTabChange(tab.id)"
+                @click="handleTabChange('table')"
                 :class="[
                   'px-4 py-3 font-medium text-sm transition-all relative',
-                  activeTab === tab.id
-                    ? 'text-blue-600 dark:text-blue-400'
+                  activeTab === 'table'
+                    ? 'text-brand-500 dark:text-brand-400'
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                 ]"
               >
-                {{ tab.label }}
+                List of Categories
                 <div
-                  v-if="activeTab === tab.id"
-                  class="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400 rounded-t"
+                  v-if="activeTab === 'table'"
+                  class="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-500 dark:bg-brand-400 rounded-t"
                 />
               </button>
             </div>
@@ -58,7 +56,7 @@
             <button
               v-if="canCreate('Category')"
               @click="openAddCategoryModal"
-              class="px-4 py-2 btn btn-accent text-white text-sm font-medium rounded-lg transition-colors duration-200">
+              class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium rounded-lg transition-colors duration-200">
               Add New Category
             </button>
             <button

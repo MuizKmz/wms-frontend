@@ -71,6 +71,9 @@ function applyThemeSettings(settings: any) {
   const headerTextColor = getTextColor(settings.headerColor || '#ffffff')
   const footerTextColor = getTextColor(settings.footerColor || '#ffffff')
 
+  // Set primary color for buttons, tabs, and other brand elements
+  root.style.setProperty('--primary-color', settings.sidebarColor || '#0f172a')
+
   // Apply colors (dark mode overrides)
   if (isDark) {
     root.style.setProperty('--sidebar-color', '#1e293b')

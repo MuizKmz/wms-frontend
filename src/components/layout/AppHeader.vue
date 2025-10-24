@@ -31,7 +31,7 @@
         <div class="text-sm font-mono hidden sm:block" :style="{ color: 'var(--header-text-color, inherit)' }">
           {{ currentTime }}
         </div>
-        <ThemeToggler />
+        <!-- <ThemeToggler /> -->
         <!-- <NotificationMenu /> -->
         
         <!-- User Email with Tooltip -->

@@ -182,7 +182,7 @@
               :class="[
                 'px-4 py-2 rounded-md border transition-all',
                 themeSettings.backgroundType === 'solid'
-                  ? 'bg-blue-600 text-white border-blue-600'
+                  ? 'bg-brand-500 text-white border-brand-500'
                   : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
               ]"
             >
@@ -193,7 +193,7 @@
               :class="[
                 'px-4 py-2 rounded-md border transition-all',
                 themeSettings.backgroundType === 'image'
-                  ? 'bg-blue-600 text-white border-blue-600'
+                  ? 'bg-brand-500 text-white border-brand-500'
                   : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
               ]"
             >
@@ -205,7 +205,7 @@
         <!-- Solid Background Color -->
         <div v-if="themeSettings.backgroundType === 'solid'" class="mt-4">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Background Color (Light Mode)
+            Background Color
           </label>
           <div class="flex items-center gap-3 mb-4">
             <input
@@ -221,7 +221,7 @@
             />
           </div>
 
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <!-- <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Background Color (Dark Mode)
           </label>
           <div class="flex items-center gap-3">
@@ -236,14 +236,14 @@
               class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               placeholder="#111827"
             />
-          </div>
+          </div> -->
         </div>
 
         <!-- Background Image Settings -->
         <div v-if="themeSettings.backgroundType === 'image'" class="space-y-4 mt-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Background Image (Light Mode)
+              Background Image
             </label>
             <div class="space-y-3">
               <!-- Image Preview -->
@@ -279,11 +279,10 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <!-- <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Background Image (Dark Mode)
-            </label>
-            <div class="space-y-3">
-              <!-- Image Preview -->
+            </label> -->
+            <!-- <div class="space-y-3">
               <div v-if="themeSettings.backgroundImageUrlDark" class="relative w-full h-32 rounded-lg border-2 border-gray-300 dark:border-gray-600 overflow-hidden">
                 <img :src="themeSettings.backgroundImageUrlDark" alt="Background preview dark" class="w-full h-full object-cover" />
                 <button
@@ -296,7 +295,6 @@
                 </button>
               </div>
               
-              <!-- File Upload -->
               <div class="flex items-center gap-3">
                 <label class="flex-1 cursor-pointer">
                   <div class="px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md hover:border-blue-500 dark:hover:border-blue-400 transition-colors text-center">
@@ -312,7 +310,7 @@
                   />
                 </label>
               </div>
-            </div>
+            </div> -->
           </div>
 
           <div>
@@ -445,7 +443,7 @@
         </button>
         <button
           @click="applyChanges"
-          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          class="px-4 py-2 bg-brand-500 text-white rounded-md hover:bg-brand-600 transition-colors"
         >
           Apply Changes
         </button>
@@ -604,6 +602,7 @@ const previewStyle = computed(() => {
 
 // Select predefined theme
 const selectTheme = (theme: PredefinedTheme) => {
+  themeSettings.value.primaryColor = theme.color
   themeSettings.value.sidebarColor = theme.color
   themeSettings.value.headerColor = theme.color
   // Keep footer light for contrast
@@ -613,6 +612,8 @@ const selectTheme = (theme: PredefinedTheme) => {
   } else {
     themeSettings.value.footerColor = theme.color
   }
+  // Apply theme immediately for live preview
+  onColorChange()
 }
 
 // Handle color change - auto refresh
@@ -718,6 +719,9 @@ const applyTheme = (settings: ThemeSettings) => {
   const sidebarTextColor = getTextColor(settings.sidebarColor)
   const headerTextColor = getTextColor(settings.headerColor)
   const footerTextColor = getTextColor(settings.footerColor)
+
+  // Set primary color for buttons, tabs, and other brand elements
+  root.style.setProperty('--primary-color', settings.sidebarColor || '#0f172a')
 
   // In dark mode, use dark variants for sidebar, header, footer
   if (isDark) {

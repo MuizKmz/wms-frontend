@@ -27,14 +27,14 @@
                 :class="[
                   'px-4 py-3 font-medium text-sm transition-all relative',
                   activeTab === 'table'
-                    ? 'text-blue-600 dark:text-blue-400'
+                    ? 'text-brand-500 dark:text-brand-400'
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                 ]"
               >
                 List of Inventory
                 <div
                   v-if="activeTab === 'table'"
-                  class="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400 rounded-t"
+                  class="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-500 dark:bg-brand-400 rounded-t"
                 />
               </button>
             </div>
