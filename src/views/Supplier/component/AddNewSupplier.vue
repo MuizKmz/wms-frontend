@@ -322,6 +322,7 @@
 
 <script setup>
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
 const emit = defineEmits(['supplier-created'])
 
@@ -613,7 +614,7 @@ const submitForm = async () => {
     }
 
     // Make the API call to the correct endpoint
-    const response = await fetch('api/supplier', {
+    const response = await authenticatedFetch('api/supplier', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

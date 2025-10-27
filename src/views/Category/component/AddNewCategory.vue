@@ -255,6 +255,7 @@
 </template>
 
 <script setup lang="ts">
+import authenticatedFetch from '@/utils/authenticatedFetch'
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 
 interface Category {
@@ -303,7 +304,7 @@ const openDropdowns = reactive({ status: false, parentCategory: false })
 const fetchParentCategories = async () => {
   loadingCategories.value = true
   try {
-    const response = await fetch('/api/category')
+    const response = await authenticatedFetch('/api/category')
     if (!response.ok) throw new Error('Failed to fetch categories')
     const data = await response.json()
     parentCategories.value = data
@@ -492,7 +493,7 @@ const submitForm = async () => {
       }
 
     // Make the API call to the correct endpoint
-    const response = await fetch('/api/category', {
+    const response = await authenticatedFetch('/api/category', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
