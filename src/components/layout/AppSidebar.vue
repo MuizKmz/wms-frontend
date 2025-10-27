@@ -34,7 +34,7 @@
             <div class="h-[27px] bg-white/20 rounded w-32"></div>
           </div>
         </div>
-        
+
         <!-- Actual Logo -->
         <router-link v-else to="/" class="block" @click="closeMobileSidebar">
           <div v-if="logoUrl" class="bg-white rounded-lg p-3 mb-3 w-fit">
@@ -60,11 +60,11 @@
             class="w-full flex items-center justify-between px-6 py-3 text-xs font-semibold text-slate-400 tracking-wider hover:text-slate-300 transition-colors"
           >
             <span>{{ group.title }}</span>
-            <svg 
-              class="w-4 h-4 transition-transform duration-200" 
+            <svg
+              class="w-4 h-4 transition-transform duration-200"
               :class="{ 'rotate-180': isGroupOpen(group.title) }"
-              fill="none" 
-              stroke="currentColor" 
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -221,7 +221,6 @@ const openGroups = ref(new Set(['STOCK', 'REPORTS'])); // Track which groups are
 const logoUrl = ref('')
 const companyName = ref('WMS Console')
 const brandingLoaded = ref(false)
-const themeVersion = ref(0) // Used to force reactive updates when theme changes
 
 // Update logo and company name from localStorage directly
 const updateBranding = () => {
@@ -229,12 +228,12 @@ const updateBranding = () => {
     const saved = localStorage.getItem('themeCustomization')
     if (saved) {
       const settings = JSON.parse(saved)
-      console.log('🎨 [AppSidebar] updateBranding from localStorage:', { 
-        hasLogo: !!settings.logoUrl, 
+      console.log('🎨 [AppSidebar] updateBranding from localStorage:', {
+        hasLogo: !!settings.logoUrl,
         companyName: settings.companyName,
-        logoLength: settings.logoUrl?.length 
+        logoLength: settings.logoUrl?.length
       })
-      
+
       if (settings.logoUrl) {
         logoUrl.value = settings.logoUrl
       }
@@ -244,9 +243,6 @@ const updateBranding = () => {
     }
     // Mark as loaded immediately now that we have skeleton
     brandingLoaded.value = true
-    
-    // Force reactive update for menu styles
-    themeVersion.value++
   } catch (e) {
     console.error('❌ [AppSidebar] Error loading branding:', e)
     brandingLoaded.value = true
@@ -255,19 +251,16 @@ const updateBranding = () => {
 
 // Computed styles for active menu items that adapt to theme
 const activeMenuStyle = computed(() => {
-  // Access themeVersion to make this reactive to theme changes
-  themeVersion.value
-  
   const sidebarColor = getComputedStyle(document.documentElement).getPropertyValue('--sidebar-color').trim() || '#0f172a'
   const isDark = document.documentElement.classList.contains('dark')
-  
+
   // Calculate a lighter/accent color based on sidebar color
   const rgb = parseInt(sidebarColor.slice(1), 16)
   const r = Math.min(255, ((rgb >> 16) & 0xff) + 60)
   const g = Math.min(255, ((rgb >> 8) & 0xff) + 60)
   const b = Math.min(255, (rgb & 0xff) + 60)
   const accentColor = `rgb(${r}, ${g}, ${b})`
-  
+
   return {
     backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : accentColor,
     color: isDark ? '#60a5fa' : '#ffffff'
@@ -292,10 +285,10 @@ onMounted(async () => {
   console.log('🚀 [AppSidebar] Component mounted, loading permissions...');
   await loadUserPermissions();
   console.log('✅ [AppSidebar] Permissions loaded, count:', userPermissions.value.length);
-  
+
   // Update branding
   setTimeout(() => updateBranding(), 100)
-  
+
   // Listen for theme changes
   window.addEventListener('themeChanged', updateBranding)
 });

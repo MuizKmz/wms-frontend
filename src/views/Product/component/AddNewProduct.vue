@@ -315,6 +315,7 @@
 </template>
 
 <script setup lang="ts">
+import authenticatedFetch from '@/utils/authenticatedFetch'
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 
 interface Category {
@@ -371,7 +372,7 @@ const openDropdowns = reactive({ status: false, category: false, supplier: false
 const fetchCategories = async () => {
   loadingCategories.value = true
   try {
-    const response = await fetch('/api/category')
+    const response = await authenticatedFetch('/api/category')
     if (!response.ok) throw new Error('Failed to fetch categories')
     const data = await response.json()
     categories.value = data
@@ -387,7 +388,7 @@ const fetchSuppliers = async () => {
   try {
     suppliersError.value = null
     // backend route is /api/supplier (singular) and returns supplier objects
-    const response = await fetch('/api/supplier')
+    const response = await authenticatedFetch('/api/supplier')
     if (!response.ok) throw new Error('Failed to fetch suppliers')
     const data = await response.json()
     // normalize to { id, name } so the dropdown uses supplier.name
@@ -606,7 +607,7 @@ const submitForm = async () => {
     }
 
     // Make the API call to the correct endpoint
-  const response = await fetch('/api/product', {
+  const response = await authenticatedFetch('/api/product', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

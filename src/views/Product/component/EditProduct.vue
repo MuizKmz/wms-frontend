@@ -315,6 +315,7 @@
 </template>
 
 <script setup lang="ts">
+import authenticatedFetch from '@/utils/authenticatedFetch'
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 
 interface Category {
@@ -403,7 +404,7 @@ const openDropdowns = reactive({ status: false, category: false, supplier: false
 const fetchCategories = async () => {
   loadingCategories.value = true
   try {
-    const response = await fetch('/api/category')
+    const response = await authenticatedFetch('/api/category')
     if (!response.ok) throw new Error('Failed to fetch categories')
     const data = await response.json()
     categories.value = data
@@ -418,7 +419,7 @@ const fetchSuppliers = async () => {
   loadingSuppliers.value = true
   try {
     suppliersError.value = null
-    const response = await fetch('/api/supplier')
+    const response = await authenticatedFetch('/api/supplier')
     if (!response.ok) throw new Error('Failed to fetch suppliers')
     const data = await response.json()
     suppliers.value = (data || []).map((s: any) => ({
@@ -560,7 +561,7 @@ const handleClickOutside = (event: MouseEvent) => {
 const openModal = async (product: any) => {
   console.log('=== OPENING EDIT MODAL ===')
   console.log('1. Product received:', product)
-  
+
   // Fetch categories and suppliers when modal opens
   await Promise.all([fetchCategories(), fetchSuppliers()])
 
@@ -569,7 +570,7 @@ const openModal = async (product: any) => {
 
   // Use raw data if available (your table is transforming the data)
   const actualProduct = product.raw || product
-  
+
   console.log('3.5. Using data from:', actualProduct)
 
   // Store product ID for update
@@ -682,7 +683,7 @@ const submitForm = async () => {
     }
 
     // Use PATCH method to update the product
-    const response = await fetch(`/api/product/${productId.value}`, {
+    const response = await authenticatedFetch(`/api/product/${productId.value}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
