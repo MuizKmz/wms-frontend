@@ -64,6 +64,7 @@ import OrderIcon from './OrderIcon.vue';
 import ShippingIcon from './ShippingIcon.vue';
 import CustomerIcon from './CustomerIcon.vue';
 import LabelIcon from './LabelIcon.vue';
+import QRCodeIcon from './QRCodeIcon.vue';
 
 export {
   BellIcon,
@@ -132,4 +133,5 @@ export {
   ShippingIcon,
   CustomerIcon,
   LabelIcon,
+  QRCodeIcon,
 };
