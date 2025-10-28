@@ -1,6 +1,5 @@
 <template>
   <div class="overflow-hidden">
-
     <div class="mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
         Showing {{ filteredData.length }} warehouse items
@@ -12,62 +11,93 @@
         <thead>
           <tr class="border-b border-gray-200 dark:border-gray-700">
             <th class="px-6 py-3 text-left w-12">
-              <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select all"
-                :checked="selectAll" @change="toggleSelectAll" />
+              <input
+                type="checkbox"
+                class="checkbox checkbox-primary checkbox-sm"
+                aria-label="select all"
+                :checked="selectAll"
+                @change="toggleSelectAll"
+              />
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Warehouse Code
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Warehouse Name
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Address
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Manager Name
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Contact Phone
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Email
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Status
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Remark
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Action
               </p>
             </th>
-            </tr>
+          </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-          <tr v-for="item in paginatedData" :key="item.id"
-            class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+          <tr
+            v-for="item in paginatedData"
+            :key="item.id"
+            class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+          >
             <td class="px-6 py-4">
-              <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select item"
-                :checked="isSelected(item.id)" @change="toggleItemSelection(item.id)" />
+              <input
+                type="checkbox"
+                class="checkbox checkbox-primary checkbox-sm"
+                aria-label="select item"
+                :checked="isSelected(item.id)"
+                @change="toggleItemSelection(item.id)"
+              />
             </td>
 
             <td class="px-6 py-4">
@@ -107,12 +137,14 @@
             </td>
 
             <td class="px-6 py-4">
-              <span :class="{
-                'px-3 py-1 text-xs rounded-full font-medium': true,
-                'bg-green-100 text-green-600': item.status === 'Active',
-                'bg-blue-100 text-blue-600': item.status === 'Inactive',
-                'bg-yellow-100 text-yellow-600': item.status === 'Pending'
-              }">
+              <span
+                :class="{
+                  'px-3 py-1 text-xs rounded-full font-medium': true,
+                  'bg-green-100 text-green-600': item.status === 'Active',
+                  'bg-blue-100 text-blue-600': item.status === 'Inactive',
+                  'bg-yellow-100 text-yellow-600': item.status === 'Pending',
+                }"
+              >
                 {{ item.status }}
               </span>
             </td>
@@ -131,8 +163,12 @@
                   title="Edit Warehouse"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
                   </svg>
                 </button>
                 <button
@@ -142,8 +178,12 @@
                   title="Delete Warehouse"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
                   </svg>
                 </button>
               </div>
@@ -154,49 +194,80 @@
 
       <div v-if="totalPages > 1" class="mt-6 flex justify-center">
         <nav class="flex items-center gap-x-1">
-          <button type="button" class="btn btn-text dark:text-gray-300" :disabled="currentPage === 1"
-            @click="changePage(currentPage - 1)">
+          <button
+            type="button"
+            class="btn btn-text dark:text-gray-300"
+            :disabled="currentPage === 1"
+            @click="changePage(currentPage - 1)"
+          >
             Previous
           </button>
 
           <div class="flex items-center gap-x-1">
-            <button v-for="page in totalPages" :key="page" type="button"
+            <button
+              v-for="page in totalPages"
+              :key="page"
+              type="button"
               class="btn btn-text btn-square aria-[current='page']:text-bg-primary dark:text-gray-300"
-              :class="{ 'text-bg-primary': page === currentPage }" :aria-current="page === currentPage ? 'page' : null"
-              @click="changePage(page)">
+              :class="{ 'text-bg-primary': page === currentPage }"
+              :aria-current="page === currentPage ? 'page' : null"
+              @click="changePage(page)"
+            >
               {{ page }}
             </button>
           </div>
 
-          <button type="button" class="btn btn-text dark:text-gray-300" :disabled="currentPage === totalPages"
-            @click="changePage(currentPage + 1)">
+          <button
+            type="button"
+            class="btn btn-text dark:text-gray-300"
+            :disabled="currentPage === totalPages"
+            @click="changePage(currentPage + 1)"
+          >
             Next
           </button>
         </nav>
       </div>
 
       <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
-        <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
+        <div
+          class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"
+        ></div>
         <p>Loading warehouses...</p>
       </div>
 
       <div v-if="!loading && filteredData.length === 0" class="p-8 text-center text-gray-500">
-        <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        <svg
+          class="mx-auto h-12 w-12 text-gray-300"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
         </svg>
-        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
-          No warehouses found
-        </p>
+        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No warehouses found</p>
         <p class="text-sm text-gray-500 dark:text-gray-400">
           Try adjusting your filters or create a new warehouse.
         </p>
       </div>
 
       <div v-if="error" class="p-8 text-center text-red-500 text-sm">
-        <svg class="mx-auto h-12 w-12 text-red-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z" />
+        <svg
+          class="mx-auto h-12 w-12 text-red-300 mb-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z"
+          />
         </svg>
         <p class="font-medium">Error loading warehouses</p>
         <p class="text-xs mt-1">{{ error }}</p>
@@ -206,7 +277,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from "vue"
+import { ref, onMounted, computed, watch } from 'vue'
 import Swal from 'sweetalert2'
 import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
@@ -214,8 +285,8 @@ import { authenticatedFetch } from '@/utils/authenticatedFetch'
 const props = defineProps({
   filters: {
     type: Object,
-    default: () => ({})
-  }
+    default: () => ({}),
+  },
 })
 
 // Emits for parent component
@@ -239,7 +310,7 @@ const fetchItems = async () => {
   try {
     const response = await authenticatedFetch(API_URL)
 
-    if (!response.ok) throw new Error("Failed to fetch warehouses")
+    if (!response.ok) throw new Error('Failed to fetch warehouses')
 
     const json = await response.json()
     data.value = json || []
@@ -260,7 +331,7 @@ onMounted(() => {
 
 // Computed list of IDs for currently visible (paginated) data
 const visibleItemIds = computed(() => {
-  return paginatedData.value.map(item => item.id)
+  return paginatedData.value.map((item) => item.id)
 })
 
 // Update select all checkbox state
@@ -271,7 +342,7 @@ const updateSelectAllState = () => {
     return
   }
   // Check if every visible item ID is present in selectedItems
-  selectAll.value = visibleIds.every(id => selectedItems.value.includes(id))
+  selectAll.value = visibleIds.every((id) => selectedItems.value.includes(id))
 }
 
 // Check if item is selected
@@ -294,12 +365,12 @@ const toggleItemSelection = (itemId) => {
 const toggleSelectAll = () => {
   if (selectAll.value) {
     // Deselect all visible items
-    selectedItems.value = selectedItems.value.filter(id => !visibleItemIds.value.includes(id))
+    selectedItems.value = selectedItems.value.filter((id) => !visibleItemIds.value.includes(id))
     selectAll.value = false
   } else {
     // Select all visible items
     const visibleIds = visibleItemIds.value
-    visibleIds.forEach(id => {
+    visibleIds.forEach((id) => {
       if (!selectedItems.value.includes(id)) {
         selectedItems.value.push(id)
       }
@@ -320,46 +391,37 @@ const filteredData = computed(() => {
     // Warehouse Code filter
     if (
       filters.warehouseCode &&
-      !item.warehouseCode
-        ?.toLowerCase()
-        .includes(filters.warehouseCode.toLowerCase())
+      !item.warehouseCode?.toLowerCase().includes(filters.warehouseCode.toLowerCase())
     ) {
       return false
     }
     // Warehouse Name filter (backend uses `name`)
-    if (
-      filters.name &&
-      !item.name
-        ?.toLowerCase()
-        .includes(filters.name.toLowerCase())
-    ) {
+    if (filters.name && !item.name?.toLowerCase().includes(filters.name.toLowerCase())) {
       return false
     }
     // Manager Name filter (Assuming filter field is managerName or picName)
     const managerName = item.managerName || item.manager || ''
     if (
       filters.managerName &&
-      !managerName
-        .toLowerCase()
-        .includes(filters.managerName.toLowerCase())
+      !managerName.toLowerCase().includes(filters.managerName.toLowerCase())
     ) {
       return false
     }
     // Email filter (Assuming filter field is email)
     const email = item.email || item.managerEmail || ''
-    if (
-      filters.email &&
-      !email
-        .toLowerCase()
-        .includes(filters.email.toLowerCase())
-    ) {
+    if (filters.email && !email.toLowerCase().includes(filters.email.toLowerCase())) {
       return false
     }
     // Status filter
     if (filters.status && item.status !== filters.status) {
       return false
     }
-    // Note: Other filters like Address and Contact Phone can be added here if needed
+
+    // Address filter
+    const itemAddress = item.address || item.location || ''
+    if (filters.address && !itemAddress.toLowerCase().includes(filters.address.toLowerCase())) {
+      return false
+    }
 
     return true
   })
@@ -369,9 +431,7 @@ const filteredData = computed(() => {
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
 
-const totalPages = computed(() =>
-  Math.ceil(filteredData.value.length / itemsPerPage.value)
-)
+const totalPages = computed(() => Math.ceil(filteredData.value.length / itemsPerPage.value))
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
@@ -384,11 +444,14 @@ const changePage = (page) => {
 }
 
 // Watch for filter changes and pagination changes to update 'select all' state
-watch([() => props.filters, currentPage], () => {
-  // Use a timeout to ensure paginatedData is updated before running logic
-  setTimeout(updateSelectAllState, 0)
-}, { deep: true })
-
+watch(
+  [() => props.filters, currentPage],
+  () => {
+    // Use a timeout to ensure paginatedData is updated before running logic
+    setTimeout(updateSelectAllState, 0)
+  },
+  { deep: true },
+)
 
 // --- Actions ---
 
@@ -399,12 +462,12 @@ const editItem = (item) => {
 const deleteItem = async (item) => {
   const result = await Swal.fire({
     title: 'Are you sure?',
-  text: `You are about to delete warehouse: ${item.name}. This action cannot be undone.`,
+    text: `You are about to delete warehouse: ${item.name}. This action cannot be undone.`,
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#d33', // Red color for delete
     cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, delete it!'
+    confirmButtonText: 'Yes, delete it!',
   })
 
   if (!result.isConfirmed) {
@@ -414,16 +477,17 @@ const deleteItem = async (item) => {
   // --- Deletion Logic (only runs if confirmed) ---
   try {
     // Use warehouseCode as fallback ID
-    const itemId = item.id || item.warehouseCode;
+    const itemId = item.id || item.warehouseCode
     if (!itemId) {
-        throw new Error('Warehouse identifier not found.');
+      throw new Error('Warehouse identifier not found.')
     }
 
-    const response = await authenticatedFetch(`${API_URL}/${itemId}`, { // Changed endpoint to use API_URL
-      method: "DELETE",
+    const response = await authenticatedFetch(`${API_URL}/${itemId}`, {
+      // Changed endpoint to use API_URL
+      method: 'DELETE',
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     })
 
     if (!response.ok) {
@@ -433,14 +497,14 @@ const deleteItem = async (item) => {
     // Show success notification
     Swal.fire({
       title: 'Deleted!',
-    text: `Warehouse ${item.name} has been deleted.`,
+      text: `Warehouse ${item.name} has been deleted.`,
       icon: 'success',
       timer: 2000,
-      showConfirmButton: false
+      showConfirmButton: false,
     })
 
     // Emit event to parent for toast notification
-  emit('delete-item', { success: true, data: { itemName: item.name, id: item.id } }) // Changed 'supplierName' to 'itemName'
+    emit('delete-item', { success: true, data: { itemName: item.name, id: item.id } }) // Changed 'supplierName' to 'itemName'
 
     // Remove deleted item from selectedItems if present
     const index = selectedItems.value.indexOf(item.id)
@@ -454,14 +518,18 @@ const deleteItem = async (item) => {
     console.error('Error deleting warehouse:', error)
     emit('delete-item', { success: false, error: error.message }) // Changed emit
     // Show error notification
-    Swal.fire('Error', `Failed to delete warehouse: This warehouse has racks or sections or products`, 'error')
+    Swal.fire(
+      'Error',
+      `Failed to delete warehouse: This warehouse has racks or sections or products`,
+      'error',
+    )
   }
 }
 
 // Bulk delete selected items
 const bulkDelete = async () => {
   if (!selectedItems.value || selectedItems.value.length === 0) {
-    Swal.fire('No Selection', 'Please select at least one warehouse to delete.', 'info');
+    Swal.fire('No Selection', 'Please select at least one warehouse to delete.', 'info')
     return { success: false, error: 'No items selected' }
   }
 
@@ -473,7 +541,7 @@ const bulkDelete = async () => {
     showCancelButton: true,
     confirmButtonColor: '#d33', // Red color for delete
     cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, proceed with bulk delete'
+    confirmButtonText: 'Yes, proceed with bulk delete',
   })
 
   if (!confirmResult.isConfirmed) {
@@ -482,10 +550,11 @@ const bulkDelete = async () => {
 
   // --- Bulk Deletion Logic (only runs if confirmed) ---
   try {
-    const response = await authenticatedFetch(`${API_URL}/bulk-delete`, { // Changed endpoint to use API_URL
-      method: "POST",
+    const response = await authenticatedFetch(`${API_URL}/bulk-delete`, {
+      // Changed endpoint to use API_URL
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ids: selectedItems.value })
+      body: JSON.stringify({ ids: selectedItems.value }),
     })
 
     if (!response.ok) {
@@ -509,17 +578,19 @@ const bulkDelete = async () => {
       Swal.fire('Success', `${deletedCount} warehouses deleted successfully.`, 'success')
       return { success: true, data: result }
     } else if (deletedCount > 0 && blocked.length > 0) {
-      const message = `${deletedCount} deleted, ${blocked.length} blocked due to existing relations`;
+      const message = `${deletedCount} deleted, ${blocked.length} blocked due to existing relations`
       emit('delete-item', { success: false, error: message, data: { deletedCount, blocked } })
       Swal.fire('Partial Success', message, 'warning')
       return { success: false, error: message, data: result }
     } else {
-        const message = blocked.length > 0 ? `${blocked.length} warehouses were blocked from deletion due to existing relations.` : 'No warehouses were deleted.';
-        emit('delete-item', { success: false, error: message, data: result })
-        Swal.fire('Deletion Failed', message, 'error')
-        return { success: false, error: message }
+      const message =
+        blocked.length > 0
+          ? `${blocked.length} warehouses were blocked from deletion due to existing relations.`
+          : 'No warehouses were deleted.'
+      emit('delete-item', { success: false, error: message, data: result })
+      Swal.fire('Deletion Failed', message, 'error')
+      return { success: false, error: message }
     }
-
   } catch (error) {
     console.error('Error bulk deleting warehouses:', error)
     emit('delete-item', { success: false, error: error.message }) // Changed emit
@@ -542,10 +613,10 @@ defineExpose({ refreshData, selectedItems, bulkDelete })
 watch(
   () => props.filters,
   (newFilters) => {
-    console.log("Filters updated:", newFilters)
+    console.log('Filters updated:', newFilters)
     currentPage.value = 1 // reset to first page on filter change
   },
-  { deep: true }
+  { deep: true },
 )
 </script>
 
