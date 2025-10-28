@@ -15,7 +15,17 @@
               <div class="grid grid-cols-2 gap-4">
                 <div>
                   <p class="text-xs text-gray-500">Order Number</p>
-                  <p class="font-medium text-gray-900 dark:text-white">{{ order.orderNo || '-' }}</p>
+                  <div class="flex items-center gap-2">
+                    <p class="font-medium text-gray-900 dark:text-white">{{ order.orderNo || '-' }}</p>
+                    <button
+                      v-if="order.orderNo"
+                      @click="showQRCode"
+                      class="text-gray-500 hover:text-brand-500 dark:text-gray-400 dark:hover:text-brand-400 transition-colors"
+                      title="Show QR Code"
+                    >
+                      <QRCodeIcon class="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <p class="text-xs text-gray-500">Customer / Supplier</p>
@@ -93,14 +103,20 @@
       </div>
     </transition>
   </teleport>
+
+  <!-- QR Code Modal -->
+  <OrderQRModal ref="qrModalRef" :show="false" :initialOrderNo="null" @close="closeQRModal" />
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import QRCodeIcon from '@/icons/QRCodeIcon.vue'
+import OrderQRModal from './OrderQRModal.vue'
 
 const isOpen = ref(false)
 const order = ref<any>({})
 const panelRef = ref<HTMLElement | null>(null)
+const qrModalRef = ref<InstanceType<typeof OrderQRModal> | null>(null)
 
 // Reuse similar status color mapping as table
 const statusClass = (status: string) => {
@@ -177,6 +193,16 @@ const formatDate = (dateString: string) => {
   } catch {
     return dateString
   }
+}
+
+const showQRCode = () => {
+  if (qrModalRef.value && order.value.orderNo) {
+    qrModalRef.value.openModal(order.value.orderNo)
+  }
+}
+
+const closeQRModal = () => {
+  // Handler for when QR modal closes
 }
 
 defineExpose({ openModal, closeModal })

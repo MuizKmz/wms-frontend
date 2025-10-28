@@ -1,16 +1,47 @@
 <template>
   <div ref="chartContainer" class="w-full h-full relative flex flex-col">
-    <!-- Date Range Filter -->
+    <!-- Header with Responsive Dropdown -->
     <div class="flex justify-end mb-3 flex-shrink-0">
-      <select 
-        v-model="selectedRange"
-        @change="fetchData"
-        class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      >
-        <option value="all">All Time</option>
-        <option value="7">Last 7 Days</option>
-        <option value="30">Last 30 Days</option>
-      </select>
+      <div class="relative">
+        <button
+          @click="toggleDropdown"
+          :class="[
+            'flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg',
+            'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700',
+            'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
+            'focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all',
+            isCardSmall ? 'w-[50px] justify-center' : 'min-w-[140px]'
+          ]"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span v-if="!isCardSmall" class="font-medium">{{ selectedRangeLabel }}</span>
+          <span v-else class="font-medium">...</span>
+          <svg v-if="!isCardSmall" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        <!-- Dropdown Menu (Fixed Position) -->
+        <div
+          v-if="dropdownOpen"
+          ref="dropdownMenu"
+          class="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 min-w-[160px] z-[9999]"
+        >
+          <button
+            v-for="option in dateOptions"
+            :key="option.value"
+            @click="selectRange(option.value)"
+            :class="[
+              'w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors',
+              selectedRange === option.value ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-medium' : 'text-gray-700 dark:text-gray-300'
+            ]"
+          >
+            {{ option.label }}
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Loading State -->
@@ -21,27 +52,26 @@
       </div>
     </div>
 
-    <!-- Error State -->
-    <div v-else-if="error" class="flex-1 flex items-center justify-center">
-      <div class="text-center text-red-500">
-        <svg class="mx-auto h-8 w-8 text-red-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+    <!-- Error Overlay -->
+    <div v-if="error" class="absolute inset-0 flex items-center justify-center z-10 bg-white/50 dark:bg-gray-800/50">
+      <div class="text-center text-orange-500">
+        <svg class="mx-auto h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z" />
         </svg>
-        <p class="text-sm font-medium">Error loading inventory</p>
-        <p class="text-xs mt-1">{{ error }}</p>
+        <p class="text-xs font-medium">API Error - Using Mock Data</p>
       </div>
     </div>
 
     <!-- Chart -->
-    <div v-else class="flex-1 min-h-0">
+    <div v-show="!loading" class="flex-1 min-h-0">
       <canvas ref="chartCanvas"></canvas>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, computed, defineExpose } from 'vue'
 import authenticatedFetch from '@/utils/authenticatedFetch'
 import {
   Chart,
@@ -61,13 +91,67 @@ const chartInstance = ref(null)
 const loading = ref(true)
 const error = ref(null)
 const resizeObserver = ref(null)
-const selectedRange = ref('all')
+const cardWidthObserver = ref(null)
+const selectedRange = ref('7')
+const dropdownOpen = ref(false)
+const dropdownMenu = ref(null)
+const isCardSmall = ref(false)
 
 const API_URL = '/api/inventory'
+
+const dateOptions = [
+  { value: '7', label: 'Last 7 Days' },
+  { value: '30', label: 'Last 30 Days' },
+  { value: '90', label: 'Last 90 Days' },
+  { value: 'all', label: 'All Time' }
+]
+
+const selectedRangeLabel = computed(() => {
+  return dateOptions.find(opt => opt.value === selectedRange.value)?.label || 'Last 7 Days'
+})
+
+const toggleDropdown = async () => {
+  dropdownOpen.value = !dropdownOpen.value
+  if (dropdownOpen.value) {
+    await nextTick()
+    positionDropdown()
+  }
+}
+
+const positionDropdown = () => {
+  if (!dropdownMenu.value || !chartContainer.value) return
+  const button = chartContainer.value.querySelector('button')
+  if (!button) return
+  
+  const buttonRect = button.getBoundingClientRect()
+  dropdownMenu.value.style.top = `${buttonRect.bottom + 4}px`
+  dropdownMenu.value.style.left = `${buttonRect.left}px`
+}
+
+const selectRange = (value) => {
+  selectedRange.value = value
+  dropdownOpen.value = false
+  fetchData()
+}
+
+const closeDropdown = (event) => {
+  if (dropdownMenu.value && !dropdownMenu.value.contains(event.target) && 
+      !event.target.closest('button')?.contains(chartContainer.value?.querySelector('button > svg'))) {
+    dropdownOpen.value = false
+  }
+}
+
+// Mock data generator
+const getMockData = () => {
+  const products = ['Widget A', 'Widget B', 'Gadget X', 'Gadget Y', 'Device Z', 'Component 1', 'Component 2', 'Part 3', 'Tool 4', 'Material 5']
+  const data = products.map(() => Math.floor(Math.random() * 500) + 50)
+  return { labels: products, data }
+}
 
 const fetchData = async () => {
   loading.value = true
   error.value = null
+  
   try {
     const response = await authenticatedFetch(API_URL)
     if (!response.ok) throw new Error('Failed to fetch inventory')
@@ -99,6 +183,10 @@ const fetchData = async () => {
   } catch (e) {
     error.value = e.message
     console.error('Error fetching inventory:', e)
+    
+    // Use mock data on error
+    const mockData = getMockData()
+    createChart(mockData.labels, mockData.data)
   } finally {
     loading.value = false
   }
@@ -108,6 +196,8 @@ const createChart = (labels, data) => {
   const ctx = chartCanvas.value?.getContext('2d')
   if (!ctx) return
   if (chartInstance.value) chartInstance.value.destroy()
+
+  const isDarkMode = document.documentElement.classList.contains('dark')
 
   chartInstance.value = new Chart(ctx, {
     type: 'bar',
@@ -141,20 +231,23 @@ const createChart = (labels, data) => {
           grid: { display: false },
           border: { display: false },
           ticks: { 
-            color: '#6b7280',
+            color: isDarkMode ? '#9ca3af' : '#6b7280',
             maxRotation: 45,
             minRotation: 45
           }
         },
         y: {
           beginAtZero: true,
-          grid: { display: false },
+          grid: { 
+            color: isDarkMode ? '#374151' : '#f3f4f6',
+            drawBorder: false
+          },
           border: { display: false },
-          ticks: { color: '#6b7280' },
+          ticks: { color: isDarkMode ? '#9ca3af' : '#6b7280' },
           title: {
             display: true,
             text: 'Quantity',
-            color: '#374151',
+            color: isDarkMode ? '#d1d5db' : '#374151',
             font: { size: 12, weight: 'bold' }
           }
         }
@@ -166,6 +259,7 @@ const createChart = (labels, data) => {
 onMounted(async () => {
   await fetchData()
 
+  // Chart resize observer
   if (chartContainer.value) {
     resizeObserver.value = new ResizeObserver(() => {
       if (chartInstance.value) {
@@ -174,10 +268,43 @@ onMounted(async () => {
     })
     resizeObserver.value.observe(chartContainer.value)
   }
+
+  // Card width observer for responsive dropdown
+  if (chartContainer.value) {
+    cardWidthObserver.value = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        isCardSmall.value = entry.contentRect.width < 400
+      }
+    })
+    cardWidthObserver.value.observe(chartContainer.value)
+  }
+
+  // Theme observer for dark mode
+  const themeObserver = new MutationObserver(() => {
+    if (chartInstance.value) {
+      const isDarkMode = document.documentElement.classList.contains('dark')
+      const xScale = chartInstance.value.options.scales.x
+      const yScale = chartInstance.value.options.scales.y
+      
+      xScale.ticks.color = isDarkMode ? '#9ca3af' : '#6b7280'
+      yScale.ticks.color = isDarkMode ? '#9ca3af' : '#6b7280'
+      yScale.grid.color = isDarkMode ? '#374151' : '#f3f4f6'
+      yScale.title.color = isDarkMode ? '#d1d5db' : '#374151'
+      
+      chartInstance.value.update()
+    }
+  })
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+
+  document.addEventListener('click', closeDropdown)
 })
 
 onUnmounted(() => {
   if (chartInstance.value) chartInstance.value.destroy()
   if (resizeObserver.value) resizeObserver.value.disconnect()
+  if (cardWidthObserver.value) cardWidthObserver.value.disconnect()
+  document.removeEventListener('click', closeDropdown)
 })
+
+defineExpose({ refresh: fetchData })
 </script>
