@@ -1,8 +1,8 @@
 <template>
   <header
     class="sticky top-0 border-b z-50 transition-all duration-300"
-    :style="{ 
-      backgroundColor: headerBgColor, 
+    :style="{
+      backgroundColor: headerBgColor,
       color: headerTextColor,
       borderColor: 'rgba(0, 0, 0, 0.1)'
     }"
@@ -31,9 +31,9 @@
         <div class="text-sm font-mono hidden sm:block" :style="{ color: 'var(--header-text-color, inherit)' }">
           {{ currentTime }}
         </div>
-        <!-- <ThemeToggler /> -->
+        <ThemeToggler />
         <!-- <NotificationMenu /> -->
-        
+
         <!-- User Email with Tooltip -->
         <div class="relative group">
           <div class="flex items-center gap-2 px-3 py-2 rounded-lg hover:opacity-80 transition-colors cursor-pointer">
@@ -111,18 +111,18 @@ let observer: MutationObserver | null = null
 onMounted(() => {
   updateDateTime()
   intervalId = window.setInterval(updateDateTime, 1000)
-  
+
   // Update colors initially
   setTimeout(() => updateHeaderColors(), 100)
-  
+
   // Listen for theme changes
   window.addEventListener('themeChanged', updateHeaderColors)
-  
+
   // Watch for dark mode toggle
   observer = new MutationObserver(() => {
     setTimeout(() => updateHeaderColors(), 50)
   })
-  
+
   observer.observe(document.documentElement, {
     attributes: true,
     attributeFilter: ['class']
