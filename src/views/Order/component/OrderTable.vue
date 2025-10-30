@@ -151,6 +151,13 @@
             <!-- Action -->
             <td class="px-6 py-4">
               <div class="flex items-center gap-2">
+                <button
+                  v-if="row.isOrder && row.orderNo"
+                  @click="showQRCode(row)"
+                  class="p-1.5 rounded text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20 transition-colors"
+                  aria-label="Show QR Code" title="Show QR Code">
+                  <QRCodeIcon class="w-5 h-5" />
+                </button>
                 <button @click="editOrder(row)"
                   class="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
                   aria-label="Edit" title="Edit">
@@ -229,12 +236,15 @@
     </div>
 
     <OrderView ref="orderViewRef" />
+    <OrderQRModal ref="qrModalRef" :show="false" :initialOrderNo="null" @close="closeQRModal" />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed, watch } from "vue"
 import OrderView from './OrderView.vue'
+import OrderQRModal from './OrderQRModal.vue'
+import QRCodeIcon from '@/icons/QRCodeIcon.vue'
 import Swal from 'sweetalert2'
 import authenticatedFetch from '@/utils/authenticatedFetch'
 
@@ -676,6 +686,7 @@ const adjustPageAfterDeletion = () => {
 
 // Modal ref for viewing order
 const orderViewRef = ref(null)
+const qrModalRef = ref(null)
 
 // Open order modal and emit event
 const viewOrder = (row) => {
@@ -685,6 +696,18 @@ const viewOrder = (row) => {
   if (!payload) return
   orderViewRef.value.openModal(payload)
   emit('view-order', payload)
+}
+
+// Show QR Code modal
+const showQRCode = (row) => {
+  if (qrModalRef.value && row.orderNo) {
+    qrModalRef.value.openModal(row.orderNo)
+  }
+}
+
+// Close QR modal handler
+const closeQRModal = () => {
+  // Handler for when QR modal closes
 }
 
 // Expose refresh method for parent component
