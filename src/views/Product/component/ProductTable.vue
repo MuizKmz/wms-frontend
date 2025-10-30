@@ -1,6 +1,5 @@
 <template>
   <div class="overflow-hidden">
-
     <!-- Results count -->
     <div class="mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -22,47 +21,65 @@
               />
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Product Name
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 SKU Code
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Category
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Supplier Name
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Quantity
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Status
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Remark
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Created Time
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Action
               </p>
             </th>
@@ -121,12 +138,14 @@
 
             <!-- Status -->
             <td class="px-6 py-4">
-              <span :class="{
-                'px-3 py-1 text-xs rounded-full font-medium': true,
-                'bg-green-100 text-green-600': item.status === 'Active',
-                'bg-gray-100 text-gray-600': item.status === 'Inactive',
-                'bg-yellow-100 text-yellow-600': item.status === 'Pending'
-              }">
+              <span
+                :class="{
+                  'px-3 py-1 text-xs rounded-full font-medium': true,
+                  'bg-green-100 text-green-600': item.status === 'Active',
+                  'bg-blue-100 text-blue-600': item.status === 'Inactive',
+                  'bg-yellow-100 text-yellow-600': item.status === 'Pending',
+                }"
+              >
                 {{ item.status || 'Unknown' }}
               </span>
             </td>
@@ -154,8 +173,12 @@
                   title="Generate EPC"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
                   </svg>
                 </button>
                 <button
@@ -166,8 +189,12 @@
                   title="Edit Product"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
                   </svg>
                 </button>
                 <button
@@ -178,8 +205,12 @@
                   title="Delete Product"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
                   </svg>
                 </button>
               </div>
@@ -189,37 +220,42 @@
       </table>
 
       <!-- Pagination -->
-      <div v-if="totalPages > 1" class="mt-6 flex justify-center">
-        <nav class="flex items-center gap-x-1">
-          <!-- Previous -->
+      <div class="mt-6 flex justify-center">
+        <nav class="flex items-center gap-x-2">
+          <!-- Previous Button -->
           <button
             type="button"
-            class="btn btn-text dark:text-gray-300"
+            class="btn btn-sm btn-outline dark:text-gray-300"
             :disabled="currentPage === 1"
             @click="changePage(currentPage - 1)"
           >
             Previous
           </button>
 
-          <!-- Pages -->
+          <!-- Page Numbers -->
           <div class="flex items-center gap-x-1">
-            <button
-              v-for="page in totalPages"
-              :key="page"
-              type="button"
-              class="btn btn-text btn-square aria-[current='page']:text-bg-primary dark:text-gray-300"
-              :class="{ 'text-bg-primary': page === currentPage }"
-              :aria-current="page === currentPage ? 'page' : null"
-              @click="changePage(page)"
-            >
-              {{ page }}
-            </button>
+            <template v-for="page in displayPages" :key="page">
+              <span v-if="page === -1" class="px-2" aria-hidden="true">...</span>
+              <button
+                v-else
+                type="button"
+                class="btn btn-sm btn-outline min-w-[40px]"
+                :class="
+                  page === currentPage
+                    ? '!bg-blue-100 !text-blue-600 !border-blue-300 !border'
+                    : 'text-gray-700 border-gray-300 hover:bg-blue-50 hover:text-blue-600'
+                "
+                @click="changePage(page)"
+              >
+                {{ page }}
+              </button>
+            </template>
           </div>
 
-          <!-- Next -->
+          <!-- Next Button -->
           <button
             type="button"
-            class="btn btn-text dark:text-gray-300"
+            class="btn btn-sm btn-outline dark:text-gray-300"
             :disabled="currentPage === totalPages"
             @click="changePage(currentPage + 1)"
           >
@@ -230,19 +266,28 @@
 
       <!-- Loading -->
       <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
-        <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
+        <div
+          class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"
+        ></div>
         <p>Loading products...</p>
       </div>
 
       <!-- Empty State -->
       <div v-if="!loading && filteredData.length === 0" class="p-8 text-center text-gray-500">
-        <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+        <svg
+          class="mx-auto h-12 w-12 text-gray-300"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+          />
         </svg>
-        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
-          No products found
-        </p>
+        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No products found</p>
         <p class="text-sm text-gray-500 dark:text-gray-400">
           Try adjusting your filters or add a new product.
         </p>
@@ -250,9 +295,18 @@
 
       <!-- Error -->
       <div v-if="error" class="p-8 text-center text-red-500 text-sm">
-        <svg class="mx-auto h-12 w-12 text-red-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z" />
+        <svg
+          class="mx-auto h-12 w-12 text-red-300 mb-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z"
+          />
         </svg>
         <p class="font-medium">Error loading products</p>
         <p class="text-xs mt-1">{{ error }}</p>
@@ -261,10 +315,10 @@
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted, computed, watch } from "vue"
-import { useAuth } from "@/composables/useAuth"
-import authenticatedFetch from "@/utils/authenticatedFetch"
+<script setup lang="ts">
+import { ref, onMounted, computed, watch } from 'vue'
+import { useAuth } from '@/composables/useAuth'
+import authenticatedFetch from '@/utils/authenticatedFetch'
 import Swal from 'sweetalert2'
 
 // Get permission checking functions
@@ -274,8 +328,8 @@ const { canUpdate, canDelete } = useAuth()
 const props = defineProps({
   filters: {
     type: Object,
-    default: () => ({})
-  }
+    default: () => ({}),
+  },
 })
 
 // Emits for parent component
@@ -297,7 +351,7 @@ const fetchProducts = async () => {
   try {
     const response = await authenticatedFetch(API_URL)
 
-    if (!response.ok) throw new Error("Failed to fetch products")
+    if (!response.ok) throw new Error('Failed to fetch products')
 
     const json = await response.json()
     // Normalize server product objects to the shape used by the table
@@ -312,8 +366,10 @@ const fetchProducts = async () => {
         id: p.id,
         productName: p.name || p.productName || '',
         skuCode: p.skuCode || p.sku || '',
-        category: p.category ? (p.category.name || p.category.categoryCode) : (p.category || ''),
-        supplierName: p.supplier ? (p.supplier.supplierName || p.supplier.supplierCode || p.supplier.name) : (p.supplierName || ''),
+        category: p.category ? p.category.name || p.category.categoryCode : p.category || '',
+        supplierName: p.supplier
+          ? p.supplier.supplierName || p.supplier.supplierCode || p.supplier.name
+          : p.supplierName || '',
         quantity,
         status: p.status,
         remark: p.remarks || p.remark || p.remark || '',
@@ -338,7 +394,7 @@ onMounted(() => {
 
 // Computed list of IDs for currently visible (paginated) data
 const visibleItemIds = computed(() => {
-  return paginatedData.value.map(item => item.id)
+  return paginatedData.value.map((item) => item.id)
 })
 
 // Update select all checkbox state
@@ -348,17 +404,17 @@ const updateSelectAllState = () => {
     selectAll.value = false
     return
   }
-  selectAll.value = visibleIds.every(id => selectedItems.value.includes(id))
+  selectAll.value = visibleIds.every((id) => selectedItems.value.includes(id))
 }
 
 // Toggle select all
 const toggleSelectAll = () => {
   if (selectAll.value) {
-    selectedItems.value = selectedItems.value.filter(id => !visibleItemIds.value.includes(id))
+    selectedItems.value = selectedItems.value.filter((id) => !visibleItemIds.value.includes(id))
     selectAll.value = false
   } else {
     const visibleIds = visibleItemIds.value
-    visibleIds.forEach(id => {
+    visibleIds.forEach((id) => {
       if (!selectedItems.value.includes(id)) {
         selectedItems.value.push(id)
       }
@@ -416,7 +472,7 @@ const deleteProduct = async (product) => {
     showCancelButton: true,
     confirmButtonColor: '#d33',
     cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, delete it!'
+    confirmButtonText: 'Yes, delete it!',
   })
 
   if (!result.isConfirmed) {
@@ -442,10 +498,13 @@ const deleteProduct = async (product) => {
       text: `Product ${product.productName} has been deleted.`,
       icon: 'success',
       timer: 2000,
-      showConfirmButton: false
+      showConfirmButton: false,
     })
 
-    emit('delete-product', { success: true, data: { productName: product.productName, id: product.id } })
+    emit('delete-product', {
+      success: true,
+      data: { productName: product.productName, id: product.id },
+    })
 
     const index = selectedItems.value.indexOf(product.id)
     if (index > -1) {
@@ -476,7 +535,7 @@ const bulkDelete = async () => {
     showCancelButton: true,
     confirmButtonColor: '#d33',
     cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, proceed with bulk delete'
+    confirmButtonText: 'Yes, proceed with bulk delete',
   })
 
   if (!confirmResult.isConfirmed) {
@@ -486,7 +545,7 @@ const bulkDelete = async () => {
   try {
     const response = await authenticatedFetch(`${API_URL}/bulk-delete`, {
       method: 'POST',
-      body: JSON.stringify({ ids: selectedItems.value })
+      body: JSON.stringify({ ids: selectedItems.value }),
     })
 
     if (!response.ok) {
@@ -515,12 +574,14 @@ const bulkDelete = async () => {
       Swal.fire('Partial Success', message, 'warning')
       return { success: false, error: message, data: result }
     } else {
-      const message = blocked.length > 0 ? `${blocked.length} products were blocked from deletion due to existing relations.` : 'No products were deleted.'
+      const message =
+        blocked.length > 0
+          ? `${blocked.length} products were blocked from deletion due to existing relations.`
+          : 'No products were deleted.'
       emit('delete-product', { success: false, error: message, data: result })
       Swal.fire('Deletion Failed', message, 'error')
       return { success: false, error: message }
     }
-
   } catch (error) {
     console.error('Error bulk deleting products:', error)
     emit('delete-product', { success: false, error: error.message })
@@ -542,10 +603,7 @@ const filteredData = computed(() => {
     ) {
       return false
     }
-    if (
-      filters.skuCode &&
-      !item.skuCode?.toLowerCase().includes(filters.skuCode.toLowerCase())
-    ) {
+    if (filters.skuCode && !item.skuCode?.toLowerCase().includes(filters.skuCode.toLowerCase())) {
       return false
     }
     if (
@@ -583,14 +641,64 @@ const filteredData = computed(() => {
 // Pagination
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
-const totalPages = computed(() =>
-  Math.ceil(filteredData.value.length / itemsPerPage.value)
-)
+
+// Calculate total number of pages
+const totalPages = computed(() => Math.ceil(filteredData.value.length / itemsPerPage.value))
+
+// Get paginated data for current page
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
   return filteredData.value.slice(start, end)
 })
+
+// Calculate page numbers to display
+const displayPages = computed(() => {
+  const total = totalPages.value
+  if (total <= 0) return [] // Return empty array if no pages
+
+  const current = currentPage.value
+  const range = []
+
+  if (total === 1) {
+    return [1]
+  }
+
+  // Always show first page
+  if (current > 2) {
+    range.push(1)
+    // Only show ellipsis if there's a gap
+    if (current > 3) {
+      range.push(-1)
+    }
+  }
+
+  // Show previous page if not at start
+  if (current > 1) {
+    range.push(current - 1)
+  }
+
+  // Show current page
+  range.push(current)
+
+  // Show next page if not at end
+  if (current < total) {
+    range.push(current + 1)
+  }
+
+  // Show last page with ellipsis if needed
+  if (current < total - 1) {
+    // Only show ellipsis if there's a gap
+    if (current < total - 2) {
+      range.push(-1)
+    }
+    range.push(total)
+  }
+
+  return range
+})
+
+// Handle page change with validation
 const changePage = (page) => {
   if (page >= 1 && page <= totalPages.value) {
     currentPage.value = page
@@ -608,10 +716,13 @@ const adjustPageAfterDeletion = () => {
 }
 
 // Watch for filter changes and pagination changes to update 'select all' state
-watch([() => props.filters, currentPage], () => {
-  setTimeout(updateSelectAllState, 0)
-}, { deep: true })
-
+watch(
+  [() => props.filters, currentPage],
+  () => {
+    setTimeout(updateSelectAllState, 0)
+  },
+  { deep: true },
+)
 // Expose refresh method for parent component
 const refreshData = () => {
   fetchProducts()
@@ -625,10 +736,10 @@ defineExpose({ refreshData, selectedItems, bulkDelete })
 watch(
   () => props.filters,
   (newFilters) => {
-    console.log("Filters updated:", newFilters)
+    console.log('Filters updated:', newFilters)
     currentPage.value = 1
   },
-  { deep: true }
+  { deep: true },
 )
 </script>
 

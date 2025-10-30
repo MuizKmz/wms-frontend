@@ -10,16 +10,32 @@
             'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700',
             'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
             'focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all',
-            isCardSmall ? 'w-[50px] justify-center' : 'min-w-[140px]'
+            isCardSmall ? 'w-[50px] justify-center' : 'min-w-[140px]',
           ]"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
           </svg>
           <span v-if="!isCardSmall" class="font-medium">{{ selectedRangeLabel }}</span>
           <span v-else class="font-medium">...</span>
-          <svg v-if="!isCardSmall" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          <svg
+            v-if="!isCardSmall"
+            class="w-3 h-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
         </button>
 
@@ -35,7 +51,9 @@
             @click="selectRange(option.value)"
             :class="[
               'w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors',
-              selectedRange === option.value ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-medium' : 'text-gray-700 dark:text-gray-300'
+              selectedRange === option.value
+                ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-medium'
+                : 'text-gray-700 dark:text-gray-300',
             ]"
           >
             {{ option.label }}
@@ -47,17 +65,26 @@
     <!-- Loading State -->
     <div v-if="loading" class="flex-1 flex items-center justify-center">
       <div class="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-        <div class="w-5 h-5 border-2 border-gray-300 border-t-orange-600 rounded-full animate-spin"></div>
+        <div
+          class="w-5 h-5 border-2 border-gray-300 border-t-orange-600 rounded-full animate-spin"
+        ></div>
         <span class="text-sm">Loading category data...</span>
       </div>
     </div>
 
     <!-- Error Overlay -->
-    <div v-if="error" class="absolute inset-0 flex items-center justify-center z-10 bg-white/50 dark:bg-gray-800/50">
+    <div
+      v-if="error"
+      class="absolute inset-0 flex items-center justify-center z-10 bg-white/50 dark:bg-gray-800/50"
+    >
       <div class="text-center text-orange-500">
         <svg class="mx-auto h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z"
+          />
         </svg>
         <p class="text-xs font-medium">API Error - Using Mock Data</p>
       </div>
@@ -95,11 +122,11 @@ const dateOptions = [
   { value: '7', label: 'Last 7 Days' },
   { value: '30', label: 'Last 30 Days' },
   { value: '90', label: 'Last 90 Days' },
-  { value: 'all', label: 'All Time' }
+  { value: 'all', label: 'All Time' },
 ]
 
 const selectedRangeLabel = computed(() => {
-  return dateOptions.find(opt => opt.value === selectedRange.value)?.label || 'Last 30 Days'
+  return dateOptions.find((opt) => opt.value === selectedRange.value)?.label || 'Last 30 Days'
 })
 
 const toggleDropdown = async () => {
@@ -114,7 +141,7 @@ const positionDropdown = () => {
   if (!dropdownMenu.value || !chartContainer.value) return
   const button = chartContainer.value.querySelector('button')
   if (!button) return
-  
+
   const buttonRect = button.getBoundingClientRect()
   dropdownMenu.value.style.top = `${buttonRect.bottom + 4}px`
   dropdownMenu.value.style.left = `${buttonRect.left}px`
@@ -127,15 +154,25 @@ const selectRange = (value) => {
 }
 
 const closeDropdown = (event) => {
-  if (dropdownMenu.value && !dropdownMenu.value.contains(event.target) && 
-      !event.target.closest('button')?.contains(chartContainer.value?.querySelector('button > svg'))) {
+  if (
+    dropdownMenu.value &&
+    !dropdownMenu.value.contains(event.target) &&
+    !event.target.closest('button')?.contains(chartContainer.value?.querySelector('button > svg'))
+  ) {
     dropdownOpen.value = false
   }
 }
 
 // Mock data generator
 const getMockData = () => {
-  const categories = ['Electronics', 'Furniture', 'Clothing', 'Food & Beverage', 'Office Supplies', 'Industrial']
+  const categories = [
+    'Electronics',
+    'Furniture',
+    'Clothing',
+    'Food & Beverage',
+    'Office Supplies',
+    'Industrial',
+  ]
   const counts = categories.map(() => Math.floor(Math.random() * 200) + 50)
   return { labels: categories, counts }
 }
@@ -143,21 +180,21 @@ const getMockData = () => {
 const fetchData = async () => {
   loading.value = true
   error.value = null
-  
+
   try {
     const response = await authenticatedFetch(API_URL)
     if (!response.ok) throw new Error('Failed to fetch category distribution')
-    
+
     const categories = await response.json()
-    
-    const labels = categories.map(c => c.categoryName || c.name || 'Uncategorized')
-    const counts = categories.map(c => c.productCount || 0)
+
+    const labels = categories.map((c) => c.categoryName || c.name || 'Uncategorized')
+    const counts = categories.map((c) => c.productCount || 0)
 
     createChart(labels, counts)
   } catch (e) {
     error.value = e.message
     console.error('Error fetching category distribution:', e)
-    
+
     // Use mock data on error
     const mockData = getMockData()
     createChart(mockData.labels, mockData.counts)
@@ -172,22 +209,32 @@ const createChart = (labels, counts) => {
   if (chartInstance.value) chartInstance.value.destroy()
 
   const isDark = document.documentElement.classList.contains('dark')
-  
+
   const colors = [
-    '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
-    '#EC4899', '#14B8A6', '#F97316', '#6366F1', '#84CC16'
+    '#3B82F6',
+    '#10B981',
+    '#F59E0B',
+    '#EF4444',
+    '#8B5CF6',
+    '#EC4899',
+    '#14B8A6',
+    '#F97316',
+    '#6366F1',
+    '#84CC16',
   ]
 
   chartInstance.value = new Chart(ctx, {
     type: 'pie',
     data: {
       labels: labels,
-      datasets: [{
-        data: counts,
-        backgroundColor: colors.slice(0, labels.length),
-        borderWidth: 2,
-        borderColor: isDark ? '#1f2937' : '#fff'
-      }]
+      datasets: [
+        {
+          data: counts,
+          backgroundColor: colors.slice(0, labels.length),
+          borderWidth: 2,
+          borderColor: isDark ? '#1f2937' : '#fff',
+        },
+      ],
     },
     options: {
       responsive: true,
@@ -201,7 +248,7 @@ const createChart = (labels, counts) => {
             color: isDark ? '#e5e7eb' : '#6b7280',
             usePointStyle: true,
             pointStyle: 'circle',
-            generateLabels: function(chart) {
+            generateLabels: function (chart) {
               const data = chart.data
               if (data.labels.length && data.datasets.length) {
                 return data.labels.map((label, i) => {
@@ -212,13 +259,13 @@ const createChart = (labels, counts) => {
                     text: `${label} (${percentage}%)`,
                     fillStyle: data.datasets[0].backgroundColor[i],
                     hidden: false,
-                    index: i
+                    index: i,
                   }
                 })
               }
               return []
-            }
-          }
+            },
+          },
         },
         tooltip: {
           backgroundColor: 'rgba(31, 41, 55, 0.9)',
@@ -227,17 +274,17 @@ const createChart = (labels, counts) => {
           titleColor: '#fff',
           bodyColor: '#f9fafb',
           callbacks: {
-            label: function(context) {
+            label: function (context) {
               const label = context.label || ''
               const value = context.parsed
               const total = context.dataset.data.reduce((a, b) => a + b, 0)
               const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0
               return `${label}: ${value} products (${percentage}%)`
-            }
-          }
-        }
-      }
-    }
+            },
+          },
+        },
+      },
+    },
   })
 
   // Watch for theme changes
