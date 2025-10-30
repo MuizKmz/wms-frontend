@@ -272,26 +272,26 @@
                     <div class="dropdown relative inline-flex w-full" ref="purposeDropdownRef">
                       <button
                         type="button"
-                        :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.purpose }]"
-                          :aria-expanded="openDropdowns.purpose"
-                          @click.stop="!isViewMode && toggleDropdown('purpose')"
+                        :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.receivingPurpose }]"
+                          :aria-expanded="openDropdowns.receivingPurpose"
+                          @click.stop="!isViewMode && toggleDropdown('receivingPurpose')"
                           :disabled="isViewMode"
                       >
-                        {{ form.purpose || 'Select Receiving Purpose' }}
+                        {{ form.receivingPurpose || 'Select Receiving Purpose' }}
                         <span
                           class="icon-[tabler--chevron-down] size-4 transition-transform"
-                          :class="{ 'rotate-180': openDropdowns.purpose }"
+                          :class="{ 'rotate-180': openDropdowns.receivingPurpose }"
                         ></span>
                       </button>
 
                       <ul
                         class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
-                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.purpose, 'opacity-0 pointer-events-none': !openDropdowns.purpose }"
+                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.receivingPurpose, 'opacity-0 pointer-events-none': !openDropdowns.receivingPurpose }"
                         role="menu"
                       >
-                        <li v-for="purpose in purposeOptions" :key="purpose">
-                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg" @click="selectPurpose(purpose)">
-                            {{ purpose }}
+                        <li v-for="receivingPurpose in purposeOptions" :key="receivingPurpose">
+                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg" @click="selectPurpose(receivingPurpose)">
+                            {{ receivingPurpose }}
                           </a>
                         </li>
                       </ul>
@@ -541,7 +541,7 @@ const form = reactive({
   sectionId: null,
   supplierId: null,
   source: '',
-  purpose: '',
+  receivingPurpose: '',
   receivedBy: '',
   receivingDate: new Date().toISOString().split('T')[0],
   remarks: '',
@@ -558,7 +558,7 @@ const errors = reactive({
   sectionId: '',
   supplierId: '',
   source: '',
-  purpose: '',
+  receivingPurpose: '',
   receivedBy: '',
   receivingDate: '',
   remarks: '',
@@ -864,9 +864,9 @@ const selectSupplier = (id) => {
   openDropdowns.supplier = false
 }
 
-const selectPurpose = (purpose) => {
-  form.purpose = purpose
-  openDropdowns.purpose = false
+const selectPurpose = (receivingPurpose) => {
+  form.receivingPurpose = receivingPurpose
+  openDropdowns.receivingPurpose = false
 }
 
 const selectProduct = (index, productId) => {
@@ -942,8 +942,8 @@ const validateForm = () => {
   }
 
   // Purpose validation
-  if (!form.purpose) {
-    errors.purpose = 'Receiving Purpose is required'
+  if (!form.receivingPurpose) {
+    errors.receivingPurpose = 'Receiving Purpose is required'
     isValid = false
   }
 
@@ -972,7 +972,7 @@ const validateForm = () => {
 watch(() => form.receivingCode, () => { if (errors.receivingCode) errors.receivingCode = '' })
 watch(() => form.supplierId, () => { if (errors.supplierId) errors.supplierId = '' })
 watch(() => form.source, () => { if (errors.source) errors.source = '' })
-watch(() => form.purpose, () => { if (errors.purpose) errors.purpose = '' })
+watch(() => form.receivingPurpose, () => { if (errors.receivingPurpose) errors.receivingPurpose = '' })
 watch(() => form.receivedBy, () => { if (errors.receivedBy) errors.receivedBy = '' })
 
 /* close dropdowns when clicking outside */
@@ -1022,7 +1022,7 @@ const openModal = async (receiving = null, viewOnly = false) => {
   form.sectionId = null
   form.supplierId = null
   form.source = ''
-  form.purpose = ''
+  form.receivingPurpose = ''
   form.receivedBy = ''
   form.receivingDate = new Date().toISOString().split('T')[0]
   form.remarks = ''
@@ -1052,7 +1052,7 @@ const openModal = async (receiving = null, viewOnly = false) => {
     form.sectionId = receiving.sectionId || null
     form.supplierId = receiving.supplierId || null
     form.source = receiving.source || ''
-    form.purpose = receiving.purpose || ''
+    form.receivingPurpose = receiving.receivingPurpose || ''
     form.receivedBy = receiving.receivedBy || ''
     form.receivingDate = receiving.receivingDate ? receiving.receivingDate.split('T')[0] : form.receivingDate
     form.remarks = receiving.remarks || ''
@@ -1117,7 +1117,7 @@ const closeModal = async () => {
   form.sectionId = null
   form.supplierId = null
   form.source = ''
-  form.purpose = ''
+  form.receivingPurpose = ''
   form.receivedBy = ''
   form.receivingDate = new Date().toISOString().split('T')[0]
   form.remarks = ''
@@ -1157,6 +1157,7 @@ const submitForm = async () => {
       supplierId: form.supplierId,
       receivingDate: form.receivingDate,
       receivedBy: form.receivedBy,
+      receivingPurpose: form.receivingPurpose || null,
       remarks: form.remarks || null,
       receivingItems: form.products.map(p => ({
         productId: p.productId,
@@ -1186,6 +1187,7 @@ const submitForm = async () => {
           supplierId: submissionData.supplierId,
           receivingDate: submissionData.receivingDate,
           receivedBy: submissionData.receivedBy,
+          receivingPurpose: submissionData.receivingPurpose, // include purpose so backend persists changes
           remarks: submissionData.remarks
         })
       })
