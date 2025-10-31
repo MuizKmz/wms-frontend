@@ -186,17 +186,8 @@
 
             <!-- Receiving Purpose -->
             <td class="px-6 py-4">
-              <span
-                class="text-sm text-gray-900 dark:text-white"
-                :title="
-                  row.isReceiving && row.aggregatedPurposes ? row.aggregatedPurposes.full : ''
-                "
-              >
-                {{
-                  row.isReceiving
-                    ? row.aggregatedPurposes?.display || '-'
-                    : row.purpose || 'Raw Material'
-                }}
+              <span class="text-sm text-gray-900 dark:text-white" :title="row.isReceiving && row.aggregatedPurposes ? row.aggregatedPurposes.full : ''">
+                {{ row.isReceiving ? (row.aggregatedPurposes?.display || '-') : (row.receivingPurpose || '') }}
               </span>
             </td>
 
@@ -468,14 +459,24 @@ const aggregateSources = (receiving) => {
   }
 }
 
-// Function to aggregate purposes from receiving items
+// Function to aggregate purposes from receiving items or fall back to the receiving's purpose
 const aggregatePurposes = (receiving) => {
+  // If no items, fall back to parent receiving purpose (or Raw Material)
   if (!receiving.receivingItems || receiving.receivingItems.length === 0) {
-    return { display: '-', full: '' }
+    const fallback = receiving.receivingPurpose || ''
+    return { display: fallback, full: fallback }
   }
 
-  const purposes = receiving.receivingItems.map((item) => item.purpose || 'Raw Material')
-  const uniquePurposes = [...new Set(purposes)]
+  // Prefer item-level purposes when present
+  const itemPurposes = receiving.receivingItems
+    .map(item => item.purpose)
+    .filter(Boolean)
+
+  const purposesList = itemPurposes.length > 0
+    ? itemPurposes
+    : [receiving.receivingPurpose || '']
+
+  const uniquePurposes = [...new Set(purposesList)]
   const maxDisplay = 2
   const displayPurposes = uniquePurposes.slice(0, maxDisplay)
   const remaining = uniquePurposes.length - maxDisplay
