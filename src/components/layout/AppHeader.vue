@@ -40,7 +40,7 @@
         >
           {{ currentTime }}
         </div>
-        <!-- <ThemeToggler /> -->
+        <ThemeToggler />
         <!-- <NotificationMenu /> -->
 
         <!-- User Email with Tooltip -->
