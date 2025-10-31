@@ -2,7 +2,7 @@
   <div class="overflow-hidden">
     <div class="mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        Showing {{ filteredData.length }} order records
+        Showing {{ filteredData.length }} report receiving records
       </p>
     </div>
 
@@ -23,21 +23,14 @@
               <p
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
               >
-                Order Number
+                Receiving Code
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
               >
-                Customer ID
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                PIC
+                DO Number
               </p>
             </th>
             <th class="px-6 py-3 text-left">
@@ -58,14 +51,35 @@
               <p
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
               >
-                Stock Out Quantity
+                Received Quantity
               </p>
             </th>
             <th class="px-6 py-3 text-left">
               <p
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
               >
-                Status
+                Receiving Source
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
+                Receiving Purpose
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
+                Received By
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
+                Date Received
               </p>
             </th>
             <th class="px-6 py-3 text-left">
@@ -73,20 +87,6 @@
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
               >
                 Remarks
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Estimated Delivery
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Action
               </p>
             </th>
           </tr>
@@ -111,7 +111,7 @@
               />
             </td>
 
-            <!-- Order Number with expand/collapse -->
+            <!-- Receiving ID with expand/collapse -->
             <td class="px-6 py-4">
               <div
                 class="flex items-center gap-2"
@@ -120,29 +120,18 @@
                 <div class="w-4 h-4"></div>
 
                 <button
-                  @click="viewOrder(row)"
+                  @click="viewReceiving(row)"
                   class="text-left font-bold text-sm text-blue-600 dark:text-blue-400 hover:underline"
                 >
-                  {{ row.orderNo || '-' }}
+                  {{ row.receivingCode || '-' }}
                 </button>
               </div>
             </td>
 
-            <!-- Customer ID -->
+            <!-- DO Number -->
             <td class="px-6 py-4">
               <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{
-                  row.isOrder
-                    ? row.customer?.customerCode || row.supplier?.supplierCode || '-'
-                    : '-'
-                }}
-              </span>
-            </td>
-
-            <!-- PIC -->
-            <td class="px-6 py-4">
-              <span class="text-sm text-gray-900 dark:text-white">
-                {{ row.isOrder ? row.picName || '-' : '-' }}
+                {{ row.doNumber || '-' }}
               </span>
             </td>
 
@@ -150,10 +139,14 @@
             <td class="px-6 py-4">
               <span
                 class="text-sm text-gray-900 dark:text-white"
-                :title="row.isOrder && row.aggregatedProducts ? row.aggregatedProducts.full : ''"
+                :title="
+                  row.isReceiving && row.aggregatedProducts ? row.aggregatedProducts.full : ''
+                "
               >
                 {{
-                  row.isOrder ? row.aggregatedProducts?.display || '-' : row.product?.name || '-'
+                  row.isReceiving
+                    ? row.aggregatedProducts?.display || '-'
+                    : row.product?.name || '-'
                 }}
               </span>
             </td>
@@ -161,75 +154,64 @@
             <!-- Expected Quantity -->
             <td class="px-6 py-4">
               <span class="text-sm text-gray-900 dark:text-white">
-                {{ row.isOrder ? row.totalExpectedQuantity || '-' : row.quantity || '-' }}
+                {{
+                  row.isReceiving ? row.totalExpectedQuantity || '-' : row.expectedQuantity || '-'
+                }}
               </span>
             </td>
 
-            <!-- Stock Out Quantity -->
+            <!-- Received Quantity -->
             <td class="px-6 py-4">
               <span class="text-sm text-gray-900 dark:text-white">
-                {{ row.isOrder ? row.totalStockOutQuantity || '0' : '-' }}
+                {{ row.isReceiving ? row.totalReceivedQuantity || '-' : row.quantity || '-' }}
               </span>
             </td>
 
-            <!-- Status -->
+            <!-- Receiving Source -->
             <td class="px-6 py-4">
               <span
-                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-wide"
-                :class="statusClass(row.status)"
+                class="text-sm text-gray-900 dark:text-white"
+                :title="row.isReceiving && row.aggregatedSources ? row.aggregatedSources.full : ''"
               >
-                {{ row.status || '-' }}
+                {{ row.isReceiving ? row.aggregatedSources?.display || '-' : '-' }}
+              </span>
+            </td>
+
+            <!-- Receiving Purpose -->
+            <td class="px-6 py-4">
+              <span
+                class="text-sm text-gray-900 dark:text-white"
+                :title="
+                  row.isReceiving && row.aggregatedPurposes ? row.aggregatedPurposes.full : ''
+                "
+              >
+                {{
+                  row.isReceiving
+                    ? row.aggregatedPurposes?.display || '-'
+                    : row.purpose || 'Raw Material'
+                }}
+              </span>
+            </td>
+
+            <!-- Received By -->
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-900 dark:text-white">
+                {{ row.isReceiving ? row.receivedBy || '-' : '-' }}
+              </span>
+            </td>
+
+            <!-- Date Received -->
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-900 dark:text-white">
+                {{ row.isReceiving ? formatDate(row.receivingDate) : '-' }}
               </span>
             </td>
 
             <!-- Remarks -->
             <td class="px-6 py-4">
               <span class="text-sm text-gray-900 dark:text-white">
-                {{ row.isOrder ? row.remarks || '-' : '-' }}
+                {{ row.isReceiving ? row.remarks || '-' : '-' }}
               </span>
-            </td>
-
-            <!-- Estimated Delivery -->
-            <td class="px-6 py-4">
-              <span class="text-sm text-gray-900 dark:text-white">
-                {{ row.isOrder ? formatDate(row.estimatedDeliveryTime) : '-' }}
-              </span>
-            </td>
-
-            <!-- Action -->
-            <td class="px-6 py-4">
-              <div class="flex items-center gap-2">
-                <button
-                  @click="editOrder(row)"
-                  class="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
-                  aria-label="Edit"
-                  title="Edit"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    />
-                  </svg>
-                </button>
-                <button
-                  @click="deleteOrder(row)"
-                  class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                  aria-label="Delete"
-                  title="Delete"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                  </svg>
-                </button>
-              </div>
             </td>
           </tr>
         </tbody>
@@ -285,7 +267,7 @@
         <div
           class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"
         ></div>
-        <p>Loading order records...</p>
+        <p>Loading receiving records...</p>
       </div>
 
       <!-- Empty State -->
@@ -303,9 +285,11 @@
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
           />
         </svg>
-        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No order records found</p>
+        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
+          No receiving records found
+        </p>
         <p class="text-sm text-gray-500 dark:text-gray-400">
-          Try adjusting your filters or create a new order record.
+          Try adjusting your filters or create a new receiving record.
         </p>
       </div>
 
@@ -324,25 +308,19 @@
             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z"
           />
         </svg>
-        <p class="font-medium">Error loading order records</p>
+        <p class="font-medium">Error loading receiving records</p>
         <p class="text-xs mt-1">{{ error }}</p>
       </div>
     </div>
-
-    <OrderView ref="orderViewRef" />
-    <OrderQRModal ref="qrModalRef" :show="false" :initialOrderNo="null" @close="closeQRModal" />
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
-import OrderView from './OrderView.vue'
-import OrderQRModal from './OrderQRModal.vue'
-import QRCodeIcon from '@/icons/QRCodeIcon.vue'
 import Swal from 'sweetalert2'
-import authenticatedFetch from '@/utils/authenticatedFetch'
+import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
-// Props for order filters
+// Props for receiving filters
 const props = defineProps({
   filters: {
     type: Object,
@@ -351,7 +329,7 @@ const props = defineProps({
 })
 
 // Emits for parent component
-const emit = defineEmits(['edit-order', 'delete-order', 'view-order'])
+const emit = defineEmits(['edit-receiving', 'delete-receiving', 'view-receiving'])
 
 const data = ref([])
 const loading = ref(false)
@@ -360,44 +338,36 @@ const expandedRows = ref([])
 const selectedItems = ref([])
 const selectAll = ref(false)
 
-// Map order statuses to badge color classes
-const statusClass = (status) => {
-  if (!status) return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+const purposeClass = (purpose) => {
+  if (!purpose) return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
   const map = {
-    Created: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
-    Processing: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
-    Preparing: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
-    Confirmed: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200',
-    Allocated: 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200',
-    Picked: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-200',
-    Packed: 'bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-200',
-    Shipped: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200',
-    Delivered: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200',
-    Completed: 'bg-green-200 text-green-900 dark:bg-green-900/60 dark:text-green-100',
-    Backordered: 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200',
-    Rejected: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200',
-    Cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200',
+    'Raw Material': 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
+    'Finished Goods': 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
+    Packaging: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
+    Consumables: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200',
+    Equipment: 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200',
+    Returns: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200',
   }
-  return map[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+  return map[purpose] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
 }
 
-// API endpoint for orders
-const API_URL = '/api/order'
+// API endpoint for receivings
+const API_URL = '/api/receiving'
 
-// Function to fetch orders from the API
-const fetchOrders = async () => {
+// Function to fetch receivings from the API
+const fetchReceivings = async () => {
   loading.value = true
   error.value = null
   try {
     const response = await authenticatedFetch(API_URL)
 
-    if (!response.ok) throw new Error('Failed to fetch order records')
+    if (!response.ok) throw new Error('Failed to fetch receiving records')
 
     const json = await response.json()
     data.value = json || []
   } catch (e) {
     error.value = e.message
-    console.error('Error fetching orders:', e)
+    console.error('Error fetching receivings:', e)
   } finally {
     loading.value = false
   }
@@ -405,20 +375,20 @@ const fetchOrders = async () => {
 
 // Fetch data on component mount
 onMounted(() => {
-  fetchOrders()
+  fetchReceivings()
 })
 
 // ------------------------------------------------
 // --- Helper Functions for Aggregation ---
 // ------------------------------------------------
 
-// Function to aggregate products from order items
-const aggregateProducts = (order) => {
-  if (!order.orderItems || order.orderItems.length === 0) {
+// Function to aggregate products from receiving items
+const aggregateProducts = (receiving) => {
+  if (!receiving.receivingItems || receiving.receivingItems.length === 0) {
     return { display: '-', full: '' }
   }
 
-  const products = order.orderItems.map((item) => item.product?.name || 'Unknown')
+  const products = receiving.receivingItems.map((item) => item.product?.name || 'Unknown')
   const uniqueProducts = [...new Set(products)]
   const maxDisplay = 2
   const displayProducts = uniqueProducts.slice(0, maxDisplay)
@@ -437,26 +407,86 @@ const aggregateProducts = (order) => {
   }
 }
 
+// Function to aggregate sources from receiving items
+const aggregateSources = (receiving) => {
+  if (!receiving.receivingItems || receiving.receivingItems.length === 0) {
+    return { display: '-', full: '' }
+  }
+
+  const sources = receiving.receivingItems
+    .map((item) => item.source || 'Unknown')
+    .filter((s) => s !== 'Unknown')
+  const uniqueSources = [...new Set(sources)]
+  const maxDisplay = 2
+  const displaySources = uniqueSources.slice(0, maxDisplay)
+  const remaining = uniqueSources.length - maxDisplay
+
+  if (uniqueSources.length === 0) {
+    return { display: '-', full: '' }
+  }
+
+  if (remaining > 0) {
+    return {
+      display: displaySources.join(', ') + `, +${remaining} more`,
+      full: uniqueSources.join(', '),
+    }
+  }
+
+  return {
+    display: displaySources.join(', '),
+    full: displaySources.join(', '),
+  }
+}
+
+// Function to aggregate purposes from receiving items
+const aggregatePurposes = (receiving) => {
+  if (!receiving.receivingItems || receiving.receivingItems.length === 0) {
+    return { display: '-', full: '' }
+  }
+
+  const purposes = receiving.receivingItems.map((item) => item.purpose || 'Raw Material')
+  const uniquePurposes = [...new Set(purposes)]
+  const maxDisplay = 2
+  const displayPurposes = uniquePurposes.slice(0, maxDisplay)
+  const remaining = uniquePurposes.length - maxDisplay
+
+  if (remaining > 0) {
+    return {
+      display: displayPurposes.join(', ') + `, +${remaining} more`,
+      full: uniquePurposes.join(', '),
+    }
+  }
+
+  return {
+    display: displayPurposes.join(', '),
+    full: displayPurposes.join(', '),
+  }
+}
+
 // Function to calculate total expected quantity
-const calculateTotalExpectedQuantity = (order) => {
-  if (!order.orderItems || order.orderItems.length === 0) {
+const calculateTotalExpectedQuantity = (receiving) => {
+  if (!receiving.receivingItems || receiving.receivingItems.length === 0) {
     return '-'
   }
 
-  const total = order.orderItems.reduce((sum, item) => {
-    return sum + (item.quantity || 0)
+  const total = receiving.receivingItems.reduce((sum, item) => {
+    return sum + (item.expectedQuantity || 0)
   }, 0)
 
   return total > 0 ? total : '-'
 }
 
-// Function to calculate total stock out quantity (default 0)
-const calculateTotalStockOutQuantity = (order) => {
-  if (!order.orderItems || order.orderItems.length === 0) {
-    return 0
+// Function to calculate total received quantity
+const calculateTotalReceivedQuantity = (receiving) => {
+  if (!receiving.receivingItems || receiving.receivingItems.length === 0) {
+    return '-'
   }
-  // This field may be added later, defaulting to 0 for now
-  return 0
+
+  const total = receiving.receivingItems.reduce((sum, item) => {
+    return sum + (item.quantity || 0)
+  }, 0)
+
+  return total > 0 ? total : '-'
 }
 
 // ------------------------------------------------
@@ -465,49 +495,50 @@ const calculateTotalStockOutQuantity = (order) => {
 
 // Filtered data based on props.filters
 const filteredData = computed(() => {
+  if (!props.filters) return data.value
+
   return data.value.filter((item) => {
+    const filters = props.filters
+
+    // Receiving Code filter
     if (
-      props.filters.orderNumber &&
-      !item.orderNo.toLowerCase().includes(props.filters.orderNumber.toLowerCase())
-    )
+      filters.receivingCode &&
+      !item.receivingCode?.toLowerCase().includes(filters.receivingCode.toLowerCase())
+    ) {
       return false
-    if (
-      props.filters.customerCode &&
-      ((!item.customer && !item.supplier) ||
-        (item.customer &&
-          !item.customer.customerCode
-            ?.toLowerCase()
-            .includes(props.filters.customerCode.toLowerCase())) ||
-        (item.supplier &&
-          !item.supplier.supplierCode
-            ?.toLowerCase()
-            .includes(props.filters.customerCode.toLowerCase())))
-    )
-      return false
-    if (
-      props.filters.pic &&
-      (!item.picName || !item.picName.toLowerCase().includes(props.filters.pic.toLowerCase()))
-    )
-      return false
-    if (props.filters.status && item.status !== props.filters.status) return false
-    // Date filter (compare only the date part, assuming filters.date is 'YYYY-MM-DD')
-    if (props.filters.date) {
-      // Choose the field to filter by; using estimatedDeliveryTime here
-      const rawDate = item.estimatedDeliveryTime || item.orderDate || null
-      if (!rawDate) return false
-      const itemDate = new Date(rawDate)
-      if (isNaN(itemDate.getTime())) return false
-      // Normalize to YYYY-MM-DD in local timezone
-      const yyyy = itemDate.getFullYear()
-      const mm = String(itemDate.getMonth() + 1).padStart(2, '0')
-      const dd = String(itemDate.getDate()).padStart(2, '0')
-      const normalized = `${yyyy}-${mm}-${dd}`
-      if (normalized !== props.filters.date) return false
     }
+
+    // Product Name filter - check in receiving items
+    if (filters.name && item.receivingItems) {
+      const hasMatchingProduct = item.receivingItems.some((ri) =>
+        ri.product?.name?.toLowerCase().includes(filters.name.toLowerCase()),
+      )
+      if (!hasMatchingProduct) {
+        return false
+      }
+    }
+
+    // Date filter
+    if (filters.date && item.receivingDate) {
+      const filterDate = new Date(filters.date).toISOString().split('T')[0]
+      const itemDate = new Date(item.receivingDate).toISOString().split('T')[0]
+      if (filterDate !== itemDate) {
+        return false
+      }
+    }
+    // Fixed: Purpose filter now checks receivingItems
+    if (filters.purpose && item.receivingItems) {
+      const hasMatchingPurpose = item.receivingItems.some((ri) => ri.purpose === filters.purpose)
+      if (!hasMatchingPurpose) {
+        return false
+      }
+    }
+
     return true
   })
 })
 
+// Pagination state
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
 
@@ -518,33 +549,41 @@ const paginatedData = computed(() => {
   return filteredData.value.slice(start, end)
 })
 
-// Generate visible rows (simplified - just show paginated data)
+// Generate visible rows (parent + expanded children)
 const visibleRows = computed(() => {
-  return paginatedData.value.map((order) => {
-    const hasItems = order.orderItems && order.orderItems.length > 0
-    const isExpanded = expandedRows.value.includes(order.id)
+  const rows = []
 
-    return {
-      ...order,
-      isOrder: true,
+  paginatedData.value.forEach((receiving) => {
+    const hasItems = receiving.receivingItems && receiving.receivingItems.length > 0
+    const isExpanded = expandedRows.value.includes(receiving.id)
+
+    // Add parent receiving row with aggregated data
+    rows.push({
+      ...receiving,
+      isReceiving: true,
       depth: 0,
       hasItems: hasItems,
       isExpanded: isExpanded,
-      uniqueId: `O-${order.id}`,
-      aggregatedProducts: aggregateProducts(order),
-      totalExpectedQuantity: calculateTotalExpectedQuantity(order),
-      totalStockOutQuantity: calculateTotalStockOutQuantity(order),
-    }
+      uniqueId: `R-${receiving.id}`,
+      aggregatedProducts: aggregateProducts(receiving),
+      aggregatedSources: aggregateSources(receiving),
+      aggregatedPurposes: aggregatePurposes(receiving),
+      totalExpectedQuantity: calculateTotalExpectedQuantity(receiving),
+      totalReceivedQuantity: calculateTotalReceivedQuantity(receiving),
+    })
+
+    // NOTE: Subitems removed — only parent receiving rows are shown in the table
   })
+
+  return rows
 })
 
-// Calculate total number of pages
 const totalPages = computed(() => Math.ceil(filteredData.value.length / itemsPerPage.value))
 
 // Calculate page numbers to display
 const displayPages = computed(() => {
   const total = totalPages.value
-  if (total <= 0) return [] // Return empty array if no pages
+  if (total <= 0) return [] // Return empty array if no data
 
   const current = currentPage.value
   const range = []
@@ -587,20 +626,27 @@ const displayPages = computed(() => {
   return range
 })
 
-// Handle page change with validation
-const changePage = (page) => {
+const changePage = (page: number) => {
   if (page >= 1 && page <= totalPages.value) {
     currentPage.value = page
   }
 }
 
-// Toggle expand/collapse for orders with items
-const toggleExpand = (orderId) => {
-  const index = expandedRows.value.indexOf(orderId)
+watch(
+  () => props.filters,
+  () => {
+    currentPage.value = 1
+  },
+  { deep: true },
+)
+
+// Toggle expand/collapse for receivings with items
+const toggleExpand = (receivingId) => {
+  const index = expandedRows.value.indexOf(receivingId)
   if (index > -1) {
     expandedRows.value.splice(index, 1)
   } else {
-    expandedRows.value.push(orderId)
+    expandedRows.value.push(receivingId)
   }
   setTimeout(updateSelectAllState, 0)
 }
@@ -687,136 +733,8 @@ const formatDate = (dateString) => {
 // --- Actions & Exposed Methods ---
 // ------------------------------------------------
 
-const editOrder = (row) => {
-  emit('edit-order', row)
-}
-
-const deleteOrder = async (item) => {
-  const result = await Swal.fire({
-    title: 'Are you sure?',
-    text: `You are about to delete ${item.isOrder ? 'order record' : 'order item'}: ${item.orderNo}. This action cannot be undone.`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, delete it!',
-  })
-
-  if (!result.isConfirmed) {
-    return
-  }
-
-  try {
-    const endpoint = item.isOrder ? `${API_URL}/${item.id}` : `${API_URL}/items/${item.id}`
-
-    const response = await authenticatedFetch(endpoint, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-    })
-
-    let body = null
-    try {
-      body = await response.json()
-      CONSOLE.log('Delete response body:', body)
-    } catch (e) {
-      // ignore parse errors
-    }
-
-    if (!response.ok) {
-      const msg =
-        body && (body.message || body.error) ? body.message || body.error : 'Failed to delete'
-      console.error('Delete failed:', msg, body)
-      emit('delete-order', { success: false, error: msg, details: body })
-      Swal.fire('Error', `Failed to delete: ${msg}`, 'error')
-      return
-    }
-
-    // Clear selection for deleted item
-    selectedItems.value = selectedItems.value.filter((id) => id !== item.uniqueId)
-
-    Swal.fire({
-      title: 'Deleted!',
-      text: `${item.isOrder ? 'Order record' : 'Item'} has been deleted.`,
-      icon: 'success',
-      timer: 2000,
-      showConfirmButton: false,
-    })
-
-    emit('delete-order', { success: true, data: item })
-
-    // Refresh the table
-    await fetchOrders()
-
-    // Adjust page if current page is now empty
-    adjustPageAfterDeletion()
-  } catch (error) {
-    console.error('Error deleting:', error)
-    emit('delete-order', { success: false, error: error.message })
-    Swal.fire('Error', `Failed to delete: ${error.message}`, 'error')
-  }
-}
-
-// Bulk delete selected items
-const bulkDelete = async () => {
-  if (!selectedItems.value || selectedItems.value.length === 0) {
-    Swal.fire('No Selection', 'Please select at least one item to delete.', 'info')
-    return { success: false, error: 'No items selected' }
-  }
-
-  const confirmResult = await Swal.fire({
-    title: 'Confirm Bulk Deletion',
-    text: `Are you sure you want to delete ${selectedItems.value.length} selected item(s)? This action cannot be undone.`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, proceed with bulk delete',
-  })
-
-  if (!confirmResult.isConfirmed) {
-    return { success: false, error: 'Cancelled by user' }
-  }
-
-  try {
-    const orderIds = selectedItems.value
-      .filter((id) => id.startsWith('O-'))
-      .map((id) => parseInt(id.replace('O-', '')))
-
-    const itemIds = selectedItems.value
-      .filter((id) => id.startsWith('I-'))
-      .map((id) => parseInt(id.replace('I-', '')))
-
-    const response = await authenticatedFetch(`${API_URL}/bulk-delete`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderIds, itemIds }),
-    })
-
-    if (!response.ok) {
-      const err = await response.text()
-      throw new Error(err || 'Failed to bulk delete')
-    }
-
-    const result = await response.json()
-
-    selectedItems.value = []
-    selectAll.value = false
-    await fetchOrders()
-    adjustPageAfterDeletion()
-
-    emit('delete-order', { success: true, data: result })
-    Swal.fire(
-      'Success',
-      `${result.deletedCount || selectedItems.value.length} items deleted successfully.`,
-      'success',
-    )
-    return { success: true, data: result }
-  } catch (error) {
-    console.error('Error bulk deleting:', error)
-    emit('delete-order', { success: false, error: error.message })
-    Swal.fire('Error', `Failed to bulk delete: ${error.message}`, 'error')
-    return { success: false, error: error.message }
-  }
+const viewReceiving = (row) => {
+  emit('view-receiving', row)
 }
 
 // Helper function to adjust page after deletion
@@ -829,40 +747,14 @@ const adjustPageAfterDeletion = () => {
   }
 }
 
-// Modal ref for viewing order
-const orderViewRef = ref(null)
-const qrModalRef = ref(null)
-
-// Open order modal and emit event
-const viewOrder = (row) => {
-  if (!orderViewRef.value) return
-  // only open for parent order rows
-  const payload = row && row.isOrder ? row : null
-  if (!payload) return
-  orderViewRef.value.openModal(payload)
-  emit('view-order', payload)
-}
-
-// Show QR Code modal
-const showQRCode = (row) => {
-  if (qrModalRef.value && row.orderNo) {
-    qrModalRef.value.openModal(row.orderNo)
-  }
-}
-
-// Close QR modal handler
-const closeQRModal = () => {
-  // Handler for when QR modal closes
-}
-
 // Expose refresh method for parent component
 const refreshData = () => {
-  fetchOrders()
+  fetchReceivings()
   selectedItems.value = []
   selectAll.value = false
 }
 
-defineExpose({ refreshData, selectedItems, bulkDelete })
+defineExpose({ refreshData, selectedItems })
 </script>
 
 <style scoped>
@@ -884,5 +776,3 @@ defineExpose({ refreshData, selectedItems, bulkDelete })
   background: #a8a8a8;
 }
 </style>
-
-<!-- Test -->

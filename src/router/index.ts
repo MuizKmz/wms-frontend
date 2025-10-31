@@ -100,15 +100,15 @@ const router = createRouter({
       component: () => import('../views/Customer/Customer.vue'),
       meta: {
         title: 'Customer',
-    },
+      },
     },
     {
       path: '/receivingreport',
       name: 'Receiving Report',
-      component: () => import('../views/Reports/Receiving/ReceivingReport.vue'),
+      component: () => import('../views/Reports/Receiving/ReportReceiving.vue'),
       meta: {
         title: 'Receiving Report',
-    },
+      },
     },
     {
       path: '/labelreport',
@@ -116,7 +116,7 @@ const router = createRouter({
       component: () => import('../views/Reports/Label/LabelReport.vue'),
       meta: {
         title: 'Label Generation Report',
-    },
+      },
     },
     {
       path: '/inventoryreport',
@@ -124,7 +124,7 @@ const router = createRouter({
       component: () => import('../views/Reports/Inventory/InventoryReport.vue'),
       meta: {
         title: 'Inventory Report',
-    },
+      },
     },
     {
       path: '/orderreport',
@@ -132,7 +132,7 @@ const router = createRouter({
       component: () => import('../views/Reports/Order/OrderReport.vue'),
       meta: {
         title: 'Order Report',
-    },
+      },
     },
     {
       path: '/settings',
@@ -140,9 +140,8 @@ const router = createRouter({
       component: () => import('../views/Settings/Settings.vue'),
       meta: {
         title: 'Settings',
+      },
     },
-    },
-
   ],
 })
 
@@ -150,11 +149,11 @@ export default router
 
 router.beforeEach((to, from, next) => {
   document.title = `${to.meta.title} | WMS`
-  
+
   // Check if user is logged in
   const userStr = localStorage.getItem('user')
   const isAuthenticated = !!userStr
-  
+
   // If trying to access signin page
   if (to.path === '/signin') {
     // If already logged in, redirect to dashboard

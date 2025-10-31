@@ -5,23 +5,20 @@ import vueJsx from '@vitejs/plugin-vue-jsx'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-    vue(),
-    vueJsx(),
-  ],
+  plugins: [vue(), vueJsx()],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
   server: {
     proxy: {
       '/api': {
-        target: process.env.VITE_BACKEND_URL || 'http://172.19.1.22:3000',
+        target: process.env.VITE_BACKEND_URL || 'http://192.168.0.123:3000',
         changeOrigin: true,
-        secure: false
+        secure: false,
         // No rewrite: backend now serves with global prefix /api/*
-      }
-    }
-  }
+      },
+    },
+  },
 })
