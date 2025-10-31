@@ -1,6 +1,6 @@
 <template>
-  <div class="p-6">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+  <div v-if="!$route.path.includes('/RackListOverview')" class="p-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <div>
         <input
           v-model="filters.name"
@@ -70,7 +70,7 @@
         </ul>
       </div>
 
-      <div class="flex justify-end gap-2">
+      <div class="flex justify-end gap-2 lg:col-span-3 md:col-span-2 sm:col-span-1">
         <button @click="clearFilters" class="btn btn-outline btn-error flex items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path

@@ -1,6 +1,5 @@
 <template>
   <div class="overflow-hidden">
-
     <div class="mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
         Showing {{ filteredData.length }} order records
@@ -12,56 +11,81 @@
         <thead>
           <tr class="border-b border-gray-200 dark:border-gray-700">
             <th class="px-6 py-3 text-left w-12">
-              <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select all"
-                :checked="selectAll" @change="toggleSelectAll" />
+              <input
+                type="checkbox"
+                class="checkbox checkbox-primary checkbox-sm"
+                aria-label="select all"
+                :checked="selectAll"
+                @change="toggleSelectAll"
+              />
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Order Number
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Customer ID
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 PIC
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Product Name
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Expected Quantity
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Stock Out Quantity
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Status
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Remarks
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Estimated Delivery
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Action
               </p>
             </th>
@@ -69,21 +93,36 @@
         </thead>
 
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-          <tr v-for="row in visibleRows" :key="row.uniqueId" :class="{
+          <tr
+            v-for="row in visibleRows"
+            :key="row.uniqueId"
+            :class="{
               'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors': true,
               'bg-gray-25 dark:bg-gray-900/30': row.depth > 0,
-          }">
+            }"
+          >
             <td class="px-6 py-4">
-              <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select item"
-                :checked="isSelected(row.uniqueId)" @change="toggleItemSelection(row.uniqueId)" />
+              <input
+                type="checkbox"
+                class="checkbox checkbox-primary checkbox-sm"
+                aria-label="select item"
+                :checked="isSelected(row.uniqueId)"
+                @change="toggleItemSelection(row.uniqueId)"
+              />
             </td>
 
             <!-- Order Number with expand/collapse -->
             <td class="px-6 py-4">
-              <div class="flex items-center gap-2" :style="{ 'padding-left': (row.depth * 2) + 'rem' }">
+              <div
+                class="flex items-center gap-2"
+                :style="{ 'padding-left': row.depth * 2 + 'rem' }"
+              >
                 <div class="w-4 h-4"></div>
 
-                <button @click="viewOrder(row)" class="text-left font-bold text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                <button
+                  @click="viewOrder(row)"
+                  class="text-left font-bold text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                >
                   {{ row.orderNo || '-' }}
                 </button>
               </div>
@@ -92,35 +131,44 @@
             <!-- Customer ID -->
             <td class="px-6 py-4">
               <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ row.isOrder ? (row.customer?.customerCode || row.supplier?.supplierCode || '-') : '-' }}
+                {{
+                  row.isOrder
+                    ? row.customer?.customerCode || row.supplier?.supplierCode || '-'
+                    : '-'
+                }}
               </span>
             </td>
 
             <!-- PIC -->
             <td class="px-6 py-4">
               <span class="text-sm text-gray-900 dark:text-white">
-                {{ row.isOrder ? (row.picName || '-') : '-' }}
+                {{ row.isOrder ? row.picName || '-' : '-' }}
               </span>
             </td>
 
             <!-- Product Name -->
             <td class="px-6 py-4">
-              <span class="text-sm text-gray-900 dark:text-white" :title="row.isOrder && row.aggregatedProducts ? row.aggregatedProducts.full : ''">
-                {{ row.isOrder ? (row.aggregatedProducts?.display || '-') : (row.product?.name || '-') }}
+              <span
+                class="text-sm text-gray-900 dark:text-white"
+                :title="row.isOrder && row.aggregatedProducts ? row.aggregatedProducts.full : ''"
+              >
+                {{
+                  row.isOrder ? row.aggregatedProducts?.display || '-' : row.product?.name || '-'
+                }}
               </span>
             </td>
 
             <!-- Expected Quantity -->
             <td class="px-6 py-4">
               <span class="text-sm text-gray-900 dark:text-white">
-                {{ row.isOrder ? (row.totalExpectedQuantity || '-') : (row.quantity || '-') }}
+                {{ row.isOrder ? row.totalExpectedQuantity || '-' : row.quantity || '-' }}
               </span>
             </td>
 
             <!-- Stock Out Quantity -->
             <td class="px-6 py-4">
               <span class="text-sm text-gray-900 dark:text-white">
-                {{ row.isOrder ? (row.totalStockOutQuantity || '0') : '-' }}
+                {{ row.isOrder ? row.totalStockOutQuantity || '0' : '-' }}
               </span>
             </td>
 
@@ -137,7 +185,7 @@
             <!-- Remarks -->
             <td class="px-6 py-4">
               <span class="text-sm text-gray-900 dark:text-white">
-                {{ row.isOrder ? (row.remarks || '-') : '-' }}
+                {{ row.isOrder ? row.remarks || '-' : '-' }}
               </span>
             </td>
 
@@ -152,26 +200,33 @@
             <td class="px-6 py-4">
               <div class="flex items-center gap-2">
                 <button
-                  v-if="row.isOrder && row.orderNo"
-                  @click="showQRCode(row)"
-                  class="p-1.5 rounded text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20 transition-colors"
-                  aria-label="Show QR Code" title="Show QR Code">
-                  <QRCodeIcon class="w-5 h-5" />
-                </button>
-                <button @click="editOrder(row)"
+                  @click="editOrder(row)"
                   class="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
-                  aria-label="Edit" title="Edit">
+                  aria-label="Edit"
+                  title="Edit"
+                >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
                   </svg>
                 </button>
-                <button @click="deleteOrder(row)"
+                <button
+                  @click="deleteOrder(row)"
                   class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                  aria-label="Delete" title="Delete">
+                  aria-label="Delete"
+                  title="Delete"
+                >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
                   </svg>
                 </button>
               </div>
@@ -181,24 +236,45 @@
       </table>
 
       <!-- Pagination -->
-      <div v-if="totalPages > 1" class="mt-6 flex justify-center">
-        <nav class="flex items-center gap-x-1">
-          <button type="button" class="btn btn-text dark:text-gray-300" :disabled="currentPage === 1"
-            @click="changePage(currentPage - 1)">
+      <div class="mt-6 flex justify-center">
+        <nav class="flex items-center gap-x-2">
+          <!-- Previous Button -->
+          <button
+            type="button"
+            class="btn btn-sm btn-outline dark:text-gray-300"
+            :disabled="currentPage === 1"
+            @click="changePage(currentPage - 1)"
+          >
             Previous
           </button>
 
+          <!-- Page Numbers -->
           <div class="flex items-center gap-x-1">
-            <button v-for="page in totalPages" :key="page" type="button"
-              class="btn btn-text btn-square aria-[current='page']:text-bg-primary dark:text-gray-300"
-              :class="{ 'text-bg-primary': page === currentPage }" :aria-current="page === currentPage ? 'page' : null"
-              @click="changePage(page)">
-              {{ page }}
-            </button>
+            <template v-for="page in displayPages" :key="page">
+              <span v-if="page === -1" class="px-2" aria-hidden="true">...</span>
+              <button
+                v-else
+                type="button"
+                class="btn btn-sm btn-outline min-w-[40px]"
+                :class="
+                  page === currentPage
+                    ? '!bg-blue-100 !text-blue-600 !border-blue-300 !border'
+                    : 'text-gray-700 border-gray-300 hover:bg-blue-50 hover:text-blue-600'
+                "
+                @click="changePage(page)"
+              >
+                {{ page }}
+              </button>
+            </template>
           </div>
 
-          <button type="button" class="btn btn-text dark:text-gray-300" :disabled="currentPage === totalPages"
-            @click="changePage(currentPage + 1)">
+          <!-- Next Button -->
+          <button
+            type="button"
+            class="btn btn-sm btn-outline dark:text-gray-300"
+            :disabled="currentPage === totalPages"
+            @click="changePage(currentPage + 1)"
+          >
             Next
           </button>
         </nav>
@@ -206,19 +282,28 @@
 
       <!-- Loading State -->
       <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
-        <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
+        <div
+          class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"
+        ></div>
         <p>Loading order records...</p>
       </div>
 
       <!-- Empty State -->
       <div v-if="!loading && filteredData.length === 0" class="p-8 text-center text-gray-500">
-        <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        <svg
+          class="mx-auto h-12 w-12 text-gray-300"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
         </svg>
-        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
-          No order records found
-        </p>
+        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No order records found</p>
         <p class="text-sm text-gray-500 dark:text-gray-400">
           Try adjusting your filters or create a new order record.
         </p>
@@ -226,9 +311,18 @@
 
       <!-- Error State -->
       <div v-if="error" class="p-8 text-center text-red-500 text-sm">
-        <svg class="mx-auto h-12 w-12 text-red-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z" />
+        <svg
+          class="mx-auto h-12 w-12 text-red-300 mb-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z"
+          />
         </svg>
         <p class="font-medium">Error loading order records</p>
         <p class="text-xs mt-1">{{ error }}</p>
@@ -241,7 +335,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from "vue"
+import { ref, onMounted, computed, watch } from 'vue'
 import OrderView from './OrderView.vue'
 import OrderQRModal from './OrderQRModal.vue'
 import QRCodeIcon from '@/icons/QRCodeIcon.vue'
@@ -252,8 +346,8 @@ import authenticatedFetch from '@/utils/authenticatedFetch'
 const props = defineProps({
   filters: {
     type: Object,
-    default: () => ({})
-  }
+    default: () => ({}),
+  },
 })
 
 // Emits for parent component
@@ -282,7 +376,7 @@ const statusClass = (status) => {
     Completed: 'bg-green-200 text-green-900 dark:bg-green-900/60 dark:text-green-100',
     Backordered: 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200',
     Rejected: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200',
-    Cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200'
+    Cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200',
   }
   return map[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
 }
@@ -297,7 +391,7 @@ const fetchOrders = async () => {
   try {
     const response = await authenticatedFetch(API_URL)
 
-    if (!response.ok) throw new Error("Failed to fetch order records")
+    if (!response.ok) throw new Error('Failed to fetch order records')
 
     const json = await response.json()
     data.value = json || []
@@ -324,7 +418,7 @@ const aggregateProducts = (order) => {
     return { display: '-', full: '' }
   }
 
-  const products = order.orderItems.map(item => item.product?.name || 'Unknown')
+  const products = order.orderItems.map((item) => item.product?.name || 'Unknown')
   const uniqueProducts = [...new Set(products)]
   const maxDisplay = 2
   const displayProducts = uniqueProducts.slice(0, maxDisplay)
@@ -333,13 +427,13 @@ const aggregateProducts = (order) => {
   if (remaining > 0) {
     return {
       display: displayProducts.join(', ') + `, +${remaining} more`,
-      full: uniqueProducts.join(', ')
+      full: uniqueProducts.join(', '),
     }
   }
 
   return {
     display: displayProducts.join(', '),
-    full: displayProducts.join(', ')
+    full: displayProducts.join(', '),
   }
 }
 
@@ -375,21 +469,27 @@ const filteredData = computed(() => {
     if (
       props.filters.orderNumber &&
       !item.orderNo.toLowerCase().includes(props.filters.orderNumber.toLowerCase())
-    ) return false
+    )
+      return false
     if (
       props.filters.customerCode &&
-      (!item.customer && !item.supplier ||
-        (item.customer && !item.customer.customerCode?.toLowerCase().includes(props.filters.customerCode.toLowerCase())) ||
-        (item.supplier && !item.supplier.supplierCode?.toLowerCase().includes(props.filters.customerCode.toLowerCase())))
-    ) return false
+      ((!item.customer && !item.supplier) ||
+        (item.customer &&
+          !item.customer.customerCode
+            ?.toLowerCase()
+            .includes(props.filters.customerCode.toLowerCase())) ||
+        (item.supplier &&
+          !item.supplier.supplierCode
+            ?.toLowerCase()
+            .includes(props.filters.customerCode.toLowerCase())))
+    )
+      return false
     if (
       props.filters.pic &&
       (!item.picName || !item.picName.toLowerCase().includes(props.filters.pic.toLowerCase()))
-    ) return false
-    if (
-      props.filters.status &&
-      item.status !== props.filters.status
-    ) return false
+    )
+      return false
+    if (props.filters.status && item.status !== props.filters.status) return false
     // Date filter (compare only the date part, assuming filters.date is 'YYYY-MM-DD')
     if (props.filters.date) {
       // Choose the field to filter by; using estimatedDeliveryTime here
@@ -418,16 +518,13 @@ const paginatedData = computed(() => {
   return filteredData.value.slice(start, end)
 })
 
-// Generate visible rows (parent + expanded children)
+// Generate visible rows (simplified - just show paginated data)
 const visibleRows = computed(() => {
-  const rows = []
-
-  paginatedData.value.forEach((order) => {
+  return paginatedData.value.map((order) => {
     const hasItems = order.orderItems && order.orderItems.length > 0
     const isExpanded = expandedRows.value.includes(order.id)
 
-    // Add parent order row with aggregated data
-    rows.push({
+    return {
       ...order,
       isOrder: true,
       depth: 0,
@@ -436,19 +533,61 @@ const visibleRows = computed(() => {
       uniqueId: `O-${order.id}`,
       aggregatedProducts: aggregateProducts(order),
       totalExpectedQuantity: calculateTotalExpectedQuantity(order),
-      totalStockOutQuantity: calculateTotalStockOutQuantity(order)
-    })
-
-    // NOTE: Subitems removed — only parent order rows are shown in the table
+      totalStockOutQuantity: calculateTotalStockOutQuantity(order),
+    }
   })
-
-  return rows
 })
 
-const totalPages = computed(() =>
-  Math.ceil(filteredData.value.length / itemsPerPage.value)
-)
+// Calculate total number of pages
+const totalPages = computed(() => Math.ceil(filteredData.value.length / itemsPerPage.value))
 
+// Calculate page numbers to display
+const displayPages = computed(() => {
+  const total = totalPages.value
+  if (total <= 0) return [] // Return empty array if no pages
+
+  const current = currentPage.value
+  const range = []
+
+  if (total === 1) {
+    return [1]
+  }
+
+  // Always show first page
+  if (current > 2) {
+    range.push(1)
+    // Only show ellipsis if there's a gap
+    if (current > 3) {
+      range.push(-1)
+    }
+  }
+
+  // Show previous page if not at start
+  if (current > 1) {
+    range.push(current - 1)
+  }
+
+  // Show current page
+  range.push(current)
+
+  // Show next page if not at end
+  if (current < total) {
+    range.push(current + 1)
+  }
+
+  // Show last page with ellipsis if needed
+  if (current < total - 1) {
+    // Only show ellipsis if there's a gap
+    if (current < total - 2) {
+      range.push(-1)
+    }
+    range.push(total)
+  }
+
+  return range
+})
+
+// Handle page change with validation
 const changePage = (page) => {
   if (page >= 1 && page <= totalPages.value) {
     currentPage.value = page
@@ -467,9 +606,13 @@ const toggleExpand = (orderId) => {
 }
 
 // Watch filters to reset page
-watch(() => props.filters, () => {
-  currentPage.value = 1
-}, { deep: true })
+watch(
+  () => props.filters,
+  () => {
+    currentPage.value = 1
+  },
+  { deep: true },
+)
 
 // ------------------------------------------------
 // --- Checkbox/Selection Logic ---
@@ -477,17 +620,17 @@ watch(() => props.filters, () => {
 
 // Get all currently visible item IDs
 const allVisibleItemIds = computed(() => {
-  return visibleRows.value.map(row => row.uniqueId)
+  return visibleRows.value.map((row) => row.uniqueId)
 })
 
 // Toggle select all
 const toggleSelectAll = () => {
   const visibleIds = allVisibleItemIds.value
   if (selectAll.value) {
-    selectedItems.value = selectedItems.value.filter(id => !visibleIds.includes(id))
+    selectedItems.value = selectedItems.value.filter((id) => !visibleIds.includes(id))
     selectAll.value = false
   } else {
-    visibleIds.forEach(id => {
+    visibleIds.forEach((id) => {
       if (!selectedItems.value.includes(id)) {
         selectedItems.value.push(id)
       }
@@ -519,7 +662,7 @@ const updateSelectAllState = () => {
     selectAll.value = false
     return
   }
-  selectAll.value = visibleIds.every(id => selectedItems.value.includes(id))
+  selectAll.value = visibleIds.every((id) => selectedItems.value.includes(id))
 }
 
 // Watch for changes in paginated data or expanded rows
@@ -536,7 +679,7 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString('en-GB', {
     day: '2-digit',
     month: '2-digit',
-    year: 'numeric'
+    year: 'numeric',
   })
 }
 
@@ -556,7 +699,7 @@ const deleteOrder = async (item) => {
     showCancelButton: true,
     confirmButtonColor: '#d33',
     cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, delete it!'
+    confirmButtonText: 'Yes, delete it!',
   })
 
   if (!result.isConfirmed) {
@@ -564,13 +707,11 @@ const deleteOrder = async (item) => {
   }
 
   try {
-    const endpoint = item.isOrder
-      ? `${API_URL}/${item.id}`
-      : `${API_URL}/items/${item.id}`
+    const endpoint = item.isOrder ? `${API_URL}/${item.id}` : `${API_URL}/items/${item.id}`
 
     const response = await authenticatedFetch(endpoint, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     })
 
     let body = null
@@ -582,7 +723,8 @@ const deleteOrder = async (item) => {
     }
 
     if (!response.ok) {
-      const msg = (body && (body.message || body.error)) ? (body.message || body.error) : 'Failed to delete'
+      const msg =
+        body && (body.message || body.error) ? body.message || body.error : 'Failed to delete'
       console.error('Delete failed:', msg, body)
       emit('delete-order', { success: false, error: msg, details: body })
       Swal.fire('Error', `Failed to delete: ${msg}`, 'error')
@@ -590,14 +732,14 @@ const deleteOrder = async (item) => {
     }
 
     // Clear selection for deleted item
-    selectedItems.value = selectedItems.value.filter(id => id !== item.uniqueId)
+    selectedItems.value = selectedItems.value.filter((id) => id !== item.uniqueId)
 
     Swal.fire({
       title: 'Deleted!',
       text: `${item.isOrder ? 'Order record' : 'Item'} has been deleted.`,
       icon: 'success',
       timer: 2000,
-      showConfirmButton: false
+      showConfirmButton: false,
     })
 
     emit('delete-order', { success: true, data: item })
@@ -628,7 +770,7 @@ const bulkDelete = async () => {
     showCancelButton: true,
     confirmButtonColor: '#d33',
     cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, proceed with bulk delete'
+    confirmButtonText: 'Yes, proceed with bulk delete',
   })
 
   if (!confirmResult.isConfirmed) {
@@ -637,17 +779,17 @@ const bulkDelete = async () => {
 
   try {
     const orderIds = selectedItems.value
-      .filter(id => id.startsWith('O-'))
-      .map(id => parseInt(id.replace('O-', '')))
+      .filter((id) => id.startsWith('O-'))
+      .map((id) => parseInt(id.replace('O-', '')))
 
     const itemIds = selectedItems.value
-      .filter(id => id.startsWith('I-'))
-      .map(id => parseInt(id.replace('I-', '')))
+      .filter((id) => id.startsWith('I-'))
+      .map((id) => parseInt(id.replace('I-', '')))
 
     const response = await authenticatedFetch(`${API_URL}/bulk-delete`, {
-      method: "POST",
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderIds, itemIds })
+      body: JSON.stringify({ orderIds, itemIds }),
     })
 
     if (!response.ok) {
@@ -663,9 +805,12 @@ const bulkDelete = async () => {
     adjustPageAfterDeletion()
 
     emit('delete-order', { success: true, data: result })
-    Swal.fire('Success', `${result.deletedCount || selectedItems.value.length} items deleted successfully.`, 'success')
+    Swal.fire(
+      'Success',
+      `${result.deletedCount || selectedItems.value.length} items deleted successfully.`,
+      'success',
+    )
     return { success: true, data: result }
-
   } catch (error) {
     console.error('Error bulk deleting:', error)
     emit('delete-order', { success: false, error: error.message })

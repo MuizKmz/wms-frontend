@@ -89,7 +89,7 @@ tbody td button.text-blue-600:hover {
   text-decoration: underline;
 }
 
-/* Card backgrounds adapt to theme */
+/*  backgrounds adapt to theme */
 .bg-white {
   background-color: var(--card-bg-light, #ffffff);
 }

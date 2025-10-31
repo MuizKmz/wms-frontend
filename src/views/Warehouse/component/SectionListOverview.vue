@@ -1,6 +1,5 @@
 <template>
   <div class="overflow-visible">
-
     <div class="mb-4 flex items-center gap-4 mt-5">
       <div class="flex items-center gap-2">
         <label class="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
@@ -23,11 +22,17 @@
 
           <ul
             class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
-            :class="{ 'opacity-100 pointer-events-auto': isWarehouseDropdownOpen, 'opacity-0 pointer-events-none': !isWarehouseDropdownOpen }"
+            :class="{
+              'opacity-100 pointer-events-auto': isWarehouseDropdownOpen,
+              'opacity-0 pointer-events-none': !isWarehouseDropdownOpen,
+            }"
             role="menu"
           >
             <li>
-              <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectWarehouse(null, 'All Warehouses')">
+              <a
+                class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer"
+                @click="selectWarehouse(null, 'All Warehouses')"
+              >
                 All Warehouses
               </a>
             </li>
@@ -67,11 +72,17 @@
 
           <ul
             class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
-            :class="{ 'opacity-100 pointer-events-auto': isRackDropdownOpen, 'opacity-0 pointer-events-none': !isRackDropdownOpen }"
+            :class="{
+              'opacity-100 pointer-events-auto': isRackDropdownOpen,
+              'opacity-0 pointer-events-none': !isRackDropdownOpen,
+            }"
             role="menu"
           >
             <li>
-              <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectRack(null, 'All Racks')">
+              <a
+                class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer"
+                @click="selectRack(null, 'All Racks')"
+              >
                 All Racks
               </a>
             </li>
@@ -96,26 +107,34 @@
         <thead>
           <tr class="border-b border-gray-200 dark:border-gray-700">
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Section
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Product
               </p>
             </th>
             <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Action
               </p>
             </th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-          <tr v-for="(item, index) in paginatedData" :key="index"
-            class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-
+          <tr
+            v-for="(item, index) in paginatedData"
+            :key="index"
+            class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+          >
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
                 {{ item.section || '-' }}
@@ -124,7 +143,7 @@
 
             <td class="px-6 py-4">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.inventory?.map(i => i.product?.name).join(', ') || '-' }}
+                {{ item.inventory?.map((i) => i.product?.name).join(', ') || '-' }}
               </p>
             </td>
 
@@ -137,8 +156,12 @@
                   title="Edit Section"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
                   </svg>
                 </button>
                 <button
@@ -148,8 +171,12 @@
                   title="Delete Section"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
                   </svg>
                 </button>
               </div>
@@ -158,51 +185,88 @@
         </tbody>
       </table>
 
-      <div v-if="totalPages > 1" class="mt-6 flex justify-center">
-        <nav class="flex items-center gap-x-1">
-          <button type="button" class="btn btn-text dark:text-gray-300" :disabled="currentPage === 1"
-            @click="changePage(currentPage - 1)">
+      <div class="mt-6 flex justify-center">
+        <nav class="flex items-center gap-x-2">
+          <!-- Previous Button -->
+          <button
+            type="button"
+            class="btn btn-sm btn-outline dark:text-gray-300"
+            :disabled="currentPage === 1"
+            @click="changePage(currentPage - 1)"
+          >
             Previous
           </button>
 
+          <!-- Page Numbers -->
           <div class="flex items-center gap-x-1">
-            <button v-for="page in totalPages" :key="page" type="button"
-              class="btn btn-text btn-square aria-[current='page']:text-bg-primary dark:text-gray-300"
-              :class="{ 'text-bg-primary': page === currentPage }" :aria-current="page === currentPage ? 'page' : null"
-              @click="changePage(page)">
-              {{ page }}
-            </button>
+            <template v-for="page in displayPages" :key="page">
+              <span v-if="page === -1" class="px-2" aria-hidden="true">...</span>
+              <button
+                v-else
+                type="button"
+                class="btn btn-sm btn-outline min-w-[40px]"
+                :class="
+                  page === currentPage
+                    ? '!bg-blue-100 !text-blue-600 !border-blue-300 !border'
+                    : 'text-gray-700 border-gray-300 hover:bg-blue-50 hover:text-blue-600'
+                "
+                @click="changePage(page)"
+              >
+                {{ page }}
+              </button>
+            </template>
           </div>
 
-          <button type="button" class="btn btn-text dark:text-gray-300" :disabled="currentPage === totalPages"
-            @click="changePage(currentPage + 1)">
+          <!-- Next Button -->
+          <button
+            type="button"
+            class="btn btn-sm btn-outline dark:text-gray-300"
+            :disabled="currentPage === totalPages"
+            @click="changePage(currentPage + 1)"
+          >
             Next
           </button>
         </nav>
       </div>
 
       <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
-        <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
+        <div
+          class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"
+        ></div>
         <p>Loading data...</p>
       </div>
 
       <div v-if="!loading && filteredData.length === 0" class="p-8 text-center text-gray-500">
-        <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        <svg
+          class="mx-auto h-12 w-12 text-gray-300"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
         </svg>
-        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
-          No data found
-        </p>
-        <p class="text-sm text-gray-500 dark:text-gray-400">
-          Try adjusting your filters.
-        </p>
+        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No data found</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Try adjusting your filters.</p>
       </div>
 
       <div v-if="error" class="p-8 text-center text-red-500 text-sm">
-        <svg class="mx-auto h-12 w-12 text-red-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z" />
+        <svg
+          class="mx-auto h-12 w-12 text-red-300 mb-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z"
+          />
         </svg>
         <p class="font-medium">Error loading data</p>
         <p class="text-xs mt-1">{{ error }}</p>
@@ -211,8 +275,8 @@
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted, computed, watch, onBeforeUnmount } from "vue"
+<script setup lang="ts">
+import { ref, onMounted, computed, watch, onBeforeUnmount } from 'vue'
 import Swal from 'sweetalert2'
 import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
@@ -220,8 +284,8 @@ import { authenticatedFetch } from '@/utils/authenticatedFetch'
 const props = defineProps({
   filters: {
     type: Object,
-    default: () => ({})
-  }
+    default: () => ({}),
+  },
 })
 
 // Emit typed events so parent can route correctly
@@ -276,7 +340,9 @@ const fetchRacks = async () => {
   loadingRacks.value = true
   try {
     // Attempt to fetch filtered racks from the API
-    const response = await authenticatedFetch(`${RACK_API_URL}?warehouseId=${selectedWarehouseId.value}`)
+    const response = await authenticatedFetch(
+      `${RACK_API_URL}?warehouseId=${selectedWarehouseId.value}`,
+    )
     if (!response.ok) throw new Error('Failed to fetch racks')
     const json = await response.json()
 
@@ -299,9 +365,8 @@ const displayRacks = computed(() => {
 
   // Apply a client-side filter to guarantee only the racks associated
   // with the selected warehouse are shown.
-  return racks.value.filter(rack => rack.warehouseId === selectedWarehouseId.value);
-});
-
+  return racks.value.filter((rack) => rack.warehouseId === selectedWarehouseId.value)
+})
 
 // Function to fetch data from the API
 const fetchData = async () => {
@@ -325,17 +390,18 @@ const fetchData = async () => {
 
     const response = await authenticatedFetch(url)
 
-    if (!response.ok) throw new Error("Failed to fetch data")
+    if (!response.ok) throw new Error('Failed to fetch data')
 
     const json = await response.json()
     // Normalize section items for the UI
-    data.value = (json || []).map(section => ({
+    data.value = (json || []).map((section) => ({
       id: section.id,
       section: section.sectionName || section.sectionCode || '-',
       inventory: section.inventory || [],
       rackId: section.rack?.id || section.rackId || null,
-      warehouseId: section.rack?.warehouse?.id || section.rack?.warehouseId || section.warehouseId || null,
-      raw: section
+      warehouseId:
+        section.rack?.warehouse?.id || section.rack?.warehouseId || section.warehouseId || null,
+      raw: section,
     }))
   } catch (e) {
     error.value = e.message
@@ -357,16 +423,12 @@ const filteredData = computed(() => {
 
   // Filter by selected warehouse (client-side backup filter)
   if (selectedWarehouseId.value !== null) {
-    filtered = filtered.filter(item =>
-      item.warehouseId === selectedWarehouseId.value
-    )
+    filtered = filtered.filter((item) => item.warehouseId === selectedWarehouseId.value)
   }
 
   // Filter by selected rack (client-side backup filter)
   if (selectedRackId.value !== null) {
-    filtered = filtered.filter(item =>
-      item.rackId === selectedRackId.value
-    )
+    filtered = filtered.filter((item) => item.rackId === selectedRackId.value)
   }
 
   // Apply other filters
@@ -377,23 +439,21 @@ const filteredData = computed(() => {
 
     if (
       filters.section &&
-      !(item.section || '')
-        .toLowerCase()
-        .includes(filters.section.toLowerCase())
+      !(item.section || '').toLowerCase().includes(filters.section.toLowerCase())
     ) {
       return false
     }
     // Added filtering for product as well (using inventory check)
     if (
-        filters.product &&
-        !item.inventory.some(i =>
+      filters.product &&
+      !item.inventory.some(
+        (i) =>
           (i.product?.name || '').toLowerCase().includes(filters.product.toLowerCase()) ||
-          (i.product?.productCode || '').toLowerCase().includes(filters.product.toLowerCase())
-        )
+          (i.product?.productCode || '').toLowerCase().includes(filters.product.toLowerCase()),
+      )
     ) {
-        return false;
+      return false
     }
-
 
     return true
   })
@@ -402,19 +462,75 @@ const filteredData = computed(() => {
 // Pagination
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
-const totalPages = computed(() =>
-  Math.ceil(filteredData.value.length / itemsPerPage.value)
-)
-const paginatedData = computed(() => {
+
+const paginatedData = computed<EPCRecord[]>(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
   return filteredData.value.slice(start, end)
 })
-const changePage = (page) => {
+
+const visibleRows = computed(() => paginatedData.value)
+
+const totalPages = computed(() => Math.ceil(filteredData.value.length / itemsPerPage.value))
+
+// Calculate page numbers to display
+const displayPages = computed(() => {
+  const total = totalPages.value
+  if (total <= 0) return [] // Return empty array if only one page
+
+  const current = currentPage.value
+  const range = []
+
+  if (total === 1) {
+    return [1]
+  }
+  // Always show first page
+  if (current > 2) {
+    range.push(1)
+    // Only show ellipsis if there's a gap
+    if (current > 3) {
+      range.push(-1)
+    }
+  }
+
+  // Show previous page if not at start
+  if (current > 1) {
+    range.push(current - 1)
+  }
+
+  // Show current page
+  range.push(current)
+
+  // Show next page if not at end
+  if (current < total) {
+    range.push(current + 1)
+  }
+
+  // Show last page with ellipsis if needed
+  if (current < total - 1) {
+    // Only show ellipsis if there's a gap
+    if (current < total - 2) {
+      range.push(-1)
+    }
+    range.push(total)
+  }
+
+  return range
+})
+
+const changePage = (page: number) => {
   if (page >= 1 && page <= totalPages.value) {
     currentPage.value = page
   }
 }
+
+watch(
+  () => props.filters,
+  () => {
+    currentPage.value = 1
+  },
+  { deep: true },
+)
 
 // Warehouse dropdown functions
 const toggleWarehouseDropdown = () => {
@@ -499,7 +615,7 @@ const deleteItem = async (item) => {
     showCancelButton: true,
     confirmButtonColor: '#d33',
     cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, delete it!'
+    confirmButtonText: 'Yes, delete it!',
   })
 
   if (!confirmResult.isConfirmed) {
@@ -524,7 +640,7 @@ const deleteItem = async (item) => {
       text: `Section ${item.section || item.sectionName || item.id} has been deleted.`,
       icon: 'success',
       timer: 2000,
-      showConfirmButton: false
+      showConfirmButton: false,
     })
 
     // Refresh local table
@@ -543,10 +659,10 @@ const deleteItem = async (item) => {
 watch(
   () => props.filters,
   (newFilters) => {
-    console.log("Filters updated:", newFilters)
+    console.log('Filters updated:', newFilters)
     currentPage.value = 1 // reset to first page on filter change
   },
-  { deep: true }
+  { deep: true },
 )
 </script>
 

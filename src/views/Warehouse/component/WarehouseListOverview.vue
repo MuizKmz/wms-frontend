@@ -192,34 +192,42 @@
         </tbody>
       </table>
 
-      <div v-if="totalPages > 1" class="mt-6 flex justify-center">
-        <nav class="flex items-center gap-x-1">
+      <div class="mt-6 flex justify-center">
+        <nav class="flex items-center gap-x-2">
+          <!-- Previous Button -->
           <button
             type="button"
-            class="btn btn-text dark:text-gray-300"
+            class="btn btn-sm btn-outline dark:text-gray-300"
             :disabled="currentPage === 1"
             @click="changePage(currentPage - 1)"
           >
             Previous
           </button>
 
+          <!-- Page Numbers -->
           <div class="flex items-center gap-x-1">
-            <button
-              v-for="page in totalPages"
-              :key="page"
-              type="button"
-              class="btn btn-text btn-square aria-[current='page']:text-bg-primary dark:text-gray-300"
-              :class="{ 'text-bg-primary': page === currentPage }"
-              :aria-current="page === currentPage ? 'page' : null"
-              @click="changePage(page)"
-            >
-              {{ page }}
-            </button>
+            <template v-for="page in displayPages" :key="page">
+              <span v-if="page === -1" class="px-2" aria-hidden="true">...</span>
+              <button
+                v-else
+                type="button"
+                class="btn btn-sm btn-outline min-w-[40px]"
+                :class="
+                  page === currentPage
+                    ? '!bg-blue-100 !text-blue-600 !border-blue-300 !border'
+                    : 'text-gray-700 border-gray-300 hover:bg-blue-50 hover:text-blue-600'
+                "
+                @click="changePage(page)"
+              >
+                {{ page }}
+              </button>
+            </template>
           </div>
 
+          <!-- Next Button -->
           <button
             type="button"
-            class="btn btn-text dark:text-gray-300"
+            class="btn btn-sm btn-outline dark:text-gray-300"
             :disabled="currentPage === totalPages"
             @click="changePage(currentPage + 1)"
           >
@@ -276,7 +284,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import Swal from 'sweetalert2'
 import { authenticatedFetch } from '@/utils/authenticatedFetch'
@@ -431,17 +439,74 @@ const filteredData = computed(() => {
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
 
-const totalPages = computed(() => Math.ceil(filteredData.value.length / itemsPerPage.value))
-const paginatedData = computed(() => {
+const paginatedData = computed<EPCRecord[]>(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
   return filteredData.value.slice(start, end)
 })
-const changePage = (page) => {
+
+const visibleRows = computed(() => paginatedData.value)
+
+const totalPages = computed(() => Math.ceil(filteredData.value.length / itemsPerPage.value))
+
+// Calculate page numbers to display
+const displayPages = computed(() => {
+  const total = totalPages.value
+  if (total <= 0) return [] // Return empty array if only one page
+
+  const current = currentPage.value
+  const range = []
+
+  if (total === 1) {
+    return [1]
+  }
+  // Always show first page
+  if (current > 2) {
+    range.push(1)
+    // Only show ellipsis if there's a gap
+    if (current > 3) {
+      range.push(-1)
+    }
+  }
+
+  // Show previous page if not at start
+  if (current > 1) {
+    range.push(current - 1)
+  }
+
+  // Show current page
+  range.push(current)
+
+  // Show next page if not at end
+  if (current < total) {
+    range.push(current + 1)
+  }
+
+  // Show last page with ellipsis if needed
+  if (current < total - 1) {
+    // Only show ellipsis if there's a gap
+    if (current < total - 2) {
+      range.push(-1)
+    }
+    range.push(total)
+  }
+
+  return range
+})
+
+const changePage = (page: number) => {
   if (page >= 1 && page <= totalPages.value) {
     currentPage.value = page
   }
 }
+
+watch(
+  () => props.filters,
+  () => {
+    currentPage.value = 1
+  },
+  { deep: true },
+)
 
 // Watch for filter changes and pagination changes to update 'select all' state
 watch(

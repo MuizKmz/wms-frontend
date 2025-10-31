@@ -1,9 +1,14 @@
 <template>
-  <div v-if="showToast" class="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
-    <div :class="[
-      'rounded-lg px-6 py-4 shadow-lg flex items-center transform transition-all duration-300',
-      toastType === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-    ]">
+  <div
+    v-if="showToast"
+    class="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
+  >
+    <div
+      :class="[
+        'rounded-lg px-6 py-4 shadow-lg flex items-center transform transition-all duration-300',
+        toastType === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white',
+      ]"
+    >
       <span v-if="toastType === 'success'" class="mr-2">✓</span>
       <span v-else class="mr-2">⚠</span>
       {{ toastMessage }}
@@ -20,7 +25,10 @@
       >
         <div>
           <div class="border-b border-gray-200 dark:border-gray-700 -mx-6 px-6 -mt-14">
-             <WarehouseFilters @filter-change="handleFilterChange" />
+            <WarehouseFilters
+              v-if="activeTab === 'warehouse'"
+              @filter-change="handleFilterChange"
+            />
             <div class="flex gap-1">
               <button
                 v-for="tab in inventoryTabs"
@@ -30,7 +38,7 @@
                   'px-4 py-3 font-medium text-sm transition-all relative',
                   activeTab === tab.id
                     ? 'text-brand-500 dark:text-brand-400'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200',
                 ]"
               >
                 {{ tab.label }}
@@ -46,7 +54,8 @@
             <button
               v-if="canCreate('Warehouse')"
               @click="openAddWarehouseModal"
-              class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+              class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+            >
               Add New Warehouse
             </button>
           </div>
@@ -54,13 +63,15 @@
             <button
               v-if="canCreate('Rack')"
               @click="openAddRackModal"
-              class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+              class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+            >
               Add New Rack
             </button>
             <button
               v-if="canCreate('Section')"
               @click="openAddSectionModal"
-              class="px-4 py-2 mr-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+              class="px-4 py-2 mr-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+            >
               Add New Section
             </button>
           </div>
@@ -82,11 +93,7 @@
       ref="addWarehouseModalRef"
       @item-created="handleItemCreated"
     />
-    <AddNewRack
-      v-if="canCreate('Rack')"
-      ref="addRackModalRef"
-      @item-created="handleItemCreated"
-    />
+    <AddNewRack v-if="canCreate('Rack')" ref="addRackModalRef" @item-created="handleItemCreated" />
     <AddNewSection
       v-if="canCreate('Section')"
       ref="addSectionModalRef"
@@ -114,87 +121,87 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick } from "vue";
-import { useAuth } from "@/composables/useAuth";
+import { ref, computed, nextTick } from 'vue'
+import { useAuth } from '@/composables/useAuth'
 
 // Assuming you have renamed/created these components
-import PageBreadcrumb from "@/components/common/PageBreadcrumb.vue";
-import AdminLayout from "@/components/layout/AdminLayout.vue";
-import ComponentCard from "@/components/common/ComponentCard.vue";
+import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
+import AdminLayout from '@/components/layout/AdminLayout.vue'
+import ComponentCard from '@/components/common/ComponentCard.vue'
 // Tab Components
-import WarehouseListOverview from "./component/WarehouseListOverview.vue"; // Table/List for Warehouse
-import RackListOverview from "./component/RackListOverview.vue";         // Table/List for Rack
-import SectionListOverview from "./component/SectionListOverview.vue";   // Table/List for Section
+import WarehouseListOverview from './component/WarehouseListOverview.vue' // Table/List for Warehouse
+import RackListOverview from './component/RackListOverview.vue' // Table/List for Rack
+import SectionListOverview from './component/SectionListOverview.vue' // Table/List for Section
 // Modal Component
-import AddNewWarehouse from "./component/AddNewWarehouse.vue";
-import AddNewRack from "./component/AddNewRack.vue";
-import AddNewSection from "./component/AddNewSection.vue";
-import WarehouseFilters from "./component/WarehouseFilters.vue";
-import EditWarehouse from "./component/EditWarehouse.vue";
-import EditRack from "./component/EditRack.vue";
-import EditSection from "./component/EditSection.vue";
+import AddNewWarehouse from './component/AddNewWarehouse.vue'
+import AddNewRack from './component/AddNewRack.vue'
+import AddNewSection from './component/AddNewSection.vue'
+import WarehouseFilters from './component/WarehouseFilters.vue'
+import EditWarehouse from './component/EditWarehouse.vue'
+import EditRack from './component/EditRack.vue'
+import EditSection from './component/EditSection.vue'
 
 // Get permission checking functions
-const { canCreate, canUpdate, canDelete, canExport } = useAuth();
+const { canCreate, canUpdate, canDelete, canExport } = useAuth()
 
 // Interfaces (simplified for the new domain)
 interface Result {
-  success: boolean;
-  error?: string;
+  success: boolean
+  error?: string
   data?: {
-    itemName: string;
-  };
+    itemName: string
+  }
 }
 
 interface Filters {
-  [key: string]: string | number | boolean | undefined;
+  [key: string]: string | number | boolean | undefined
 }
 
-const currentPageTitle = ref("Warehouse");
-const activeFilters = ref<Filters>({});
-const addWarehouseModalRef = ref<InstanceType<typeof AddNewWarehouse> | null>(null);
-const addRackModalRef = ref<InstanceType<typeof AddNewRack> | null>(null);
-const addSectionModalRef = ref<InstanceType<typeof AddNewSection> | null>(null);
-const editWarehouseModalRef = ref<InstanceType<typeof EditWarehouse> | null>(null);
-const editRackModalRef = ref<InstanceType<typeof EditRack> | null>(null);
-const editSectionModalRef = ref<InstanceType<typeof EditSection> | null>(null);
+const currentPageTitle = ref('Warehouse')
+const activeFilters = ref<Filters>({})
+const addWarehouseModalRef = ref<InstanceType<typeof AddNewWarehouse> | null>(null)
+const addRackModalRef = ref<InstanceType<typeof AddNewRack> | null>(null)
+const addSectionModalRef = ref<InstanceType<typeof AddNewSection> | null>(null)
+const editWarehouseModalRef = ref<InstanceType<typeof EditWarehouse> | null>(null)
+const editRackModalRef = ref<InstanceType<typeof EditRack> | null>(null)
+const editSectionModalRef = ref<InstanceType<typeof EditSection> | null>(null)
 // Reactive holder for the rack being edited so we can pass it as a prop to EditRack
 const editingRack = ref<any>({})
 // Reactive holder for the section being edited
 const editingSection = ref<any>({})
 // Generic ref for the currently active component (Table/Overview)
-const activeComponentRef = ref<any | null>(null);
-const activeTab = ref('warehouse'); // Default to warehouse
+const activeComponentRef = ref<any | null>(null)
+const activeTab = ref('warehouse') // Default to warehouse
 
 // Toast state
-const showToast = ref(false);
-const toastMessage = ref('');
-const toastType = ref<'success' | 'error'>('success');
+const showToast = ref(false)
+const toastMessage = ref('')
+const toastType = ref<'success' | 'error'>('success')
 
 // Function to show toast
 const showToastMessage = (message: string, type: 'success' | 'error' = 'success') => {
-  toastMessage.value = message;
-  toastType.value = type;
-  showToast.value = true;
+  toastMessage.value = message
+  toastType.value = type
+  showToast.value = true
 
   // Hide toast after 2 seconds
   setTimeout(() => {
-    showToast.value = false;
-  }, 2000);
-};
+    showToast.value = false
+  }, 2000)
+}
 
 // Handle item creation response (e.g., Warehouse created) - TOAST REMAINS HERE
 const handleItemCreated = async (result: Result) => {
   if (result.success) {
-    showToastMessage('Item has been successfully added', 'success');
+    showToastMessage('Item has been successfully added', 'success')
     // Refresh the data on the active component
     if (activeComponentRef.value && activeComponentRef.value.refreshData) {
-      await activeComponentRef.value.refreshData();
+      await activeComponentRef.value.refreshData()
     }
   } else {
-    showToastMessage(result.error || 'Failed to create item', 'error');
+    showToastMessage(result.error || 'Failed to create item', 'error')
   }
-};
+}
 
 // Handle item deletion response - TOAST IS REMOVED HERE
 const handleDeleteItem = async (result: Result) => {
@@ -202,13 +209,13 @@ const handleDeleteItem = async (result: Result) => {
   if (result.success) {
     // Only refresh table on successful deletion
     if (activeComponentRef.value && activeComponentRef.value.refreshData) {
-      await activeComponentRef.value.refreshData();
+      await activeComponentRef.value.refreshData()
     }
   } else {
     // Only log error on failure. No toast shown.
-    console.error('Failed to delete item:', result.error);
+    console.error('Failed to delete item:', result.error)
   }
-};
+}
 
 // Handle edit action coming from child list component
 // Handle edit action coming from child list components
@@ -274,13 +281,13 @@ const handleItemUpdated = async (result: Result) => {
 
 // FIXED: Handle opening Add Rack modal from Section modal
 const handleOpenAddRack = ({ warehouseId }: { warehouseId: number }) => {
-  console.log('Opening Add Rack modal with warehouseId:', warehouseId);
+  console.log('Opening Add Rack modal with warehouseId:', warehouseId)
 
   if (addRackModalRef.value && addRackModalRef.value.openModal) {
     // Pass the warehouseId to pre-select the warehouse in the rack modal
-    addRackModalRef.value.openModal(warehouseId);
+    addRackModalRef.value.openModal(warehouseId)
   } else {
-    console.warn('AddRack modal ref not available');
+    console.warn('AddRack modal ref not available')
   }
 }
 
@@ -289,55 +296,55 @@ const inventoryTabs = [
   {
     id: 'warehouse',
     label: 'Warehouse List Overview',
-    component: WarehouseListOverview
+    component: WarehouseListOverview,
   },
   {
     id: 'rack',
     label: 'Rack List Overview',
-    component: RackListOverview
+    component: RackListOverview,
   },
   {
     id: 'section',
     label: 'Section List Overview',
-    component: SectionListOverview
-  }
-];
+    component: SectionListOverview,
+  },
+]
 
 // Computed property to determine which component to render
 const currentComponent = computed(() => {
-  return inventoryTabs.find(tab => tab.id === activeTab.value)?.component;
-});
+  return inventoryTabs.find((tab) => tab.id === activeTab.value)?.component
+})
 
 const handleFilterChange = (filters: Filters) => {
-  activeFilters.value = filters;
-  console.log('Filters applied:', filters);
-};
+  activeFilters.value = filters
+  console.log('Filters applied:', filters)
+}
 
 const handleTabChange = (tabId: string) => {
-  activeTab.value = tabId;
-};
+  activeTab.value = tabId
+}
 
 // Function specific to the "Add New Warehouse" button
 const openAddWarehouseModal = () => {
   if (addWarehouseModalRef.value) {
-    addWarehouseModalRef.value.openModal();
+    addWarehouseModalRef.value.openModal()
   }
-};
+}
 
 const openAddRackModal = () => {
   if (addRackModalRef.value) {
-    addRackModalRef.value.openModal();
+    addRackModalRef.value.openModal()
   }
-};
+}
 
 const openAddSectionModal = () => {
   if (addSectionModalRef.value) {
-    addSectionModalRef.value.openModal();
+    addSectionModalRef.value.openModal()
   }
-};
+}
 
 const handleBulkDelete = () => {
-  console.log(`Bulk delete clicked for ${activeTab.value}`);
+  console.log(`Bulk delete clicked for ${activeTab.value}`)
   // Implement bulk delete functionality specific to the active tab's component
-};
+}
 </script>
