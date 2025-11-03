@@ -3,10 +3,7 @@
     <PageBreadcrumb pageTitle="Settings" />
 
     <div class="space-y-5 sm:space-y-6">
-      <ComponentCard
-        title="System Settings"
-        desc="Manage roles, permissions, and user access"
-      >
+      <ComponentCard title="System Settings" desc="Manage roles, permissions, and user access">
         <!-- Tab Navigation -->
         <div class="border-b border-gray-200 dark:border-gray-700 -mx-6 px-6 -mt-14">
           <div class="flex gap-1">
@@ -18,7 +15,7 @@
                 'px-4 py-3 font-medium text-sm transition-all relative',
                 activeTab === tab.id
                   ? 'text-brand-500 dark:text-brand-400'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
               ]"
             >
               {{ tab.label }}

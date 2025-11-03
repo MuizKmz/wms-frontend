@@ -1,6 +1,5 @@
 <template>
   <div class="overflow-hidden">
-
     <div class="mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
         Showing {{ filteredData.length }} EPC records
@@ -12,81 +11,112 @@
         <thead>
           <tr class="border-b border-gray-200 dark:border-gray-700">
             <th class="px-6 py-3 text-left w-12">
-              <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select all"
-                :checked="selectAll" @change="toggleSelectAll" />
+              <input
+                type="checkbox"
+                class="checkbox checkbox-primary checkbox-sm"
+                aria-label="select all"
+                :checked="selectAll"
+                @change="toggleSelectAll"
+              />
             </th>
 
             <th class="px-6 py-3 text-left min-w-[200px]">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 EPC Code
               </p>
             </th>
 
             <th class="px-6 py-3 text-left min-w-[100px]">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Corp Code
               </p>
             </th>
 
             <th class="px-6 py-3 text-left min-w-[120px]">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 SKU Code
               </p>
             </th>
 
             <th class="px-6 py-3 text-left min-w-[140px]">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Product Code
               </p>
             </th>
 
             <th class="px-6 py-3 text-left min-w-[180px]">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Product Name
               </p>
             </th>
 
             <th class="px-6 py-3 text-left min-w-[120px]">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Serial Number
               </p>
             </th>
 
             <th class="px-6 py-3 text-left min-w-[100px]">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Batch No.
               </p>
             </th>
 
             <th class="px-6 py-3 text-left min-w-[150px]">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Batch Name
               </p>
             </th>
 
             <th class="px-6 py-3 text-left min-w-[100px]">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Status
               </p>
             </th>
 
             <th class="px-6 py-3 text-left min-w-[150px]">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Created Time
               </p>
             </th>
-
           </tr>
         </thead>
 
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-          <tr v-for="epc in visibleRows" :key="epc.id"
+          <tr
+            v-for="epc in visibleRows"
+            :key="epc.id"
             class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
-            @click="viewEPC(epc)">
-
+            @click="viewEPC(epc)"
+          >
             <td class="px-6 py-4" @click.stop>
-              <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" aria-label="select item"
-                :checked="isSelected(epc.uniqueId)" @change="toggleItemSelection(epc.uniqueId)" />
+              <input
+                type="checkbox"
+                class="checkbox checkbox-primary checkbox-sm"
+                aria-label="select item"
+                :checked="isSelected(epc.uniqueId)"
+                @change="toggleItemSelection(epc.uniqueId)"
+              />
             </td>
 
             <td class="px-6 py-4">
@@ -103,7 +133,11 @@
             <td class="px-6 py-4">
               <span class="font-mono text-sm text-gray-900 dark:text-white">
                 {{ epc.corpCode?.code || parseEPCCode(epc.epcCode).corpCode || '-' }}
-                <span v-if="epc.corpCode?.label" class="block text-[11px] text-gray-500 dark:text-gray-400">{{ epc.corpCode.label }}</span>
+                <span
+                  v-if="epc.corpCode?.label"
+                  class="block text-[11px] text-gray-500 dark:text-gray-400"
+                  >{{ epc.corpCode.label }}</span
+                >
               </span>
             </td>
 
@@ -144,8 +178,10 @@
             </td>
 
             <td class="px-6 py-4">
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                :class="getStatusClass(epc.status)">
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                :class="getStatusClass(epc.status)"
+              >
                 {{ epc.status || 'GENERATED' }}
               </span>
             </td>
@@ -155,56 +191,92 @@
                 {{ formatDateTime(epc.createdAt) || '-' }}
               </span>
             </td>
-
           </tr>
         </tbody>
       </table>
 
-      <div v-if="totalPages > 1" class="mt-6 flex justify-center">
-        <nav class="flex items-center gap-x-1">
-          <button type="button" class="btn btn-text dark:text-gray-300" :disabled="currentPage === 1"
-            @click="changePage(currentPage - 1)">
+      <div class="mt-6 flex justify-center">
+        <nav class="flex items-center gap-x-2">
+          <button
+            type="button"
+            class="btn btn-sm btn-outline dark:text-gray-300"
+            :disabled="currentPage === 1"
+            @click="changePage(currentPage - 1)"
+          >
             Previous
           </button>
 
           <div class="flex items-center gap-x-1">
-            <button v-for="page in visiblePages" :key="page" type="button"
-              class="btn btn-text btn-square aria-[current='page']:text-bg-primary dark:text-gray-300"
-              :class="{ 'text-bg-primary': page === currentPage }" :aria-current="page === currentPage ? 'page' : undefined"
-              @click="changePage(page)">
-              {{ page }}
-            </button>
+            <!-- Page numbers and ellipsis -->
+            <template v-for="page in displayPages" :key="page">
+              <span v-if="page === -1" class="px-2" aria-hidden="true">...</span>
+              <button
+                v-else
+                type="button"
+                class="btn btn-sm btn-outline min-w-[40px]"
+                :class="
+                  page === currentPage
+                    ? '!bg-blue-100 !text-blue-600 !border-blue-300 !border'
+                    : 'text-gray-700 border-gray-300 hover:bg-blue-50 hover:text-blue-600'
+                "
+                @click="changePage(page)"
+              >
+                {{ page }}
+              </button>
+            </template>
           </div>
 
-          <button type="button" class="btn btn-text dark:text-gray-300" :disabled="currentPage === totalPages"
-            @click="changePage(currentPage + 1)">
+          <button
+            type="button"
+            class="btn btn-sm btn-outline dark:text-gray-300"
+            :disabled="currentPage === totalPages"
+            @click="changePage(currentPage + 1)"
+          >
             Next
           </button>
         </nav>
       </div>
 
       <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
-        <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
+        <div
+          class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"
+        ></div>
         <p>Loading EPC records...</p>
       </div>
 
       <div v-if="!loading && filteredData.length === 0" class="p-8 text-center text-gray-500">
-        <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        <svg
+          class="mx-auto h-12 w-12 text-gray-300"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
         </svg>
-        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
-          No EPC records found
-        </p>
+        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No EPC records found</p>
         <p class="text-sm text-gray-500 dark:text-gray-400">
           Try adjusting your filters or generate a new EPC batch.
         </p>
       </div>
 
       <div v-if="error" class="p-8 text-center text-red-500 text-sm">
-        <svg class="mx-auto h-12 w-12 text-red-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z" />
+        <svg
+          class="mx-auto h-12 w-12 text-red-300 mb-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z"
+          />
         </svg>
         <p class="font-medium">Error loading EPC records</p>
         <p class="text-xs mt-1">{{ error }}</p>
@@ -214,7 +286,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from "vue"
+import { ref, onMounted, computed, watch } from 'vue'
 import Swal from 'sweetalert2'
 import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
@@ -282,7 +354,7 @@ const fetchEPCs = async () => {
   try {
     const response = await authenticatedFetch(API_URL)
 
-    if (!response.ok) throw new Error("Failed to fetch EPC records")
+    if (!response.ok) throw new Error('Failed to fetch EPC records')
 
     const json: EPCRecord[] = await response.json()
     data.value = (json || []).map((epc) => ({
@@ -290,7 +362,7 @@ const fetchEPCs = async () => {
       uniqueId: `E-${epc.id || Math.random()}`,
     }))
   } catch (e) {
-  error.value = (e as Error).message
+    error.value = (e as Error).message
     console.error('Error fetching EPCs:', e)
   } finally {
     loading.value = false
@@ -316,15 +388,15 @@ const parseEPCCode = (epcCode: string | null | undefined) => {
       corpCode: null,
       skuCode: null,
       date: null,
-      serialNumber: null
+      serialNumber: null,
     }
   }
 
   return {
-    corpCode: epcCode.substring(0, 4),           // Characters 0-3
-    skuCode: epcCode.substring(4, 12),          // Characters 4-11
-    date: epcCode.substring(12, 18),            // Characters 12-17
-    serialNumber: epcCode.substring(18, 24)     // Characters 18-23 (last 6 digits)
+    corpCode: epcCode.substring(0, 4), // Characters 0-3
+    skuCode: epcCode.substring(4, 12), // Characters 4-11
+    date: epcCode.substring(12, 18), // Characters 12-17
+    serialNumber: epcCode.substring(18, 24), // Characters 18-23 (last 6 digits)
   }
 }
 
@@ -336,7 +408,10 @@ const getStatusClass = (status: string) => {
     DELIVERED: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
     INBOUND: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
   }
-  return (statusMap as Record<string, string>)[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+  return (
+    (statusMap as Record<string, string>)[status] ||
+    'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+  )
 }
 
 // --- Filtering & Pagination Logic ---
@@ -347,8 +422,10 @@ const filteredData = computed<EPCRecord[]>(() => {
     // --- Corp Code filter ---
     if (
       props.filters.corpCode &&
-      !(parsed.corpCode?.toLowerCase().includes(props.filters.corpCode.toLowerCase()) ||
-        item.corpCode?.code?.toLowerCase().includes(props.filters.corpCode.toLowerCase()))
+      !(
+        parsed.corpCode?.toLowerCase().includes(props.filters.corpCode.toLowerCase()) ||
+        item.corpCode?.code?.toLowerCase().includes(props.filters.corpCode.toLowerCase())
+      )
     ) {
       return false
     }
@@ -356,8 +433,10 @@ const filteredData = computed<EPCRecord[]>(() => {
     // --- SKU Code filter ---
     if (
       props.filters.skuCode &&
-      !(parsed.skuCode?.toLowerCase().includes(props.filters.skuCode.toLowerCase()) ||
-        item.product?.skuCode?.toLowerCase().includes(props.filters.skuCode.toLowerCase()))
+      !(
+        parsed.skuCode?.toLowerCase().includes(props.filters.skuCode.toLowerCase()) ||
+        item.product?.skuCode?.toLowerCase().includes(props.filters.skuCode.toLowerCase())
+      )
     ) {
       return false
     }
@@ -386,21 +465,52 @@ const paginatedData = computed<EPCRecord[]>(() => {
 
 const visibleRows = computed(() => paginatedData.value)
 
-const totalPages = computed(() =>
-  Math.ceil(filteredData.value.length / itemsPerPage.value)
-)
+const totalPages = computed(() => Math.ceil(filteredData.value.length / itemsPerPage.value))
 
-const visiblePages = computed(() => {
-  const maxPages = 5;
-  const pages = [];
-  const startPage = Math.max(1, currentPage.value - Math.floor(maxPages / 2));
-  const endPage = Math.min(totalPages.value, startPage + maxPages - 1);
+// Calculate page numbers to display
+const displayPages = computed(() => {
+  const total = totalPages.value
+  if (total <= 0) return [] // Return empty array if only one page
 
-  for (let i = startPage; i <= endPage; i++) {
-    pages.push(i);
+  const current = currentPage.value
+  const range = []
+
+  if (total === 1) {
+    return [1]
   }
-  return pages;
-});
+  // Always show first page
+  if (current > 2) {
+    range.push(1)
+    // Only show ellipsis if there's a gap
+    if (current > 3) {
+      range.push(-1)
+    }
+  }
+
+  // Show previous page if not at start
+  if (current > 1) {
+    range.push(current - 1)
+  }
+
+  // Show current page
+  range.push(current)
+
+  // Show next page if not at end
+  if (current < total) {
+    range.push(current + 1)
+  }
+
+  // Show last page with ellipsis if needed
+  if (current < total - 1) {
+    // Only show ellipsis if there's a gap
+    if (current < total - 2) {
+      range.push(-1)
+    }
+    range.push(total)
+  }
+
+  return range
+})
 
 const changePage = (page: number) => {
   if (page >= 1 && page <= totalPages.value) {
@@ -408,9 +518,13 @@ const changePage = (page: number) => {
   }
 }
 
-watch(() => props.filters, () => {
-  currentPage.value = 1
-}, { deep: true })
+watch(
+  () => props.filters,
+  () => {
+    currentPage.value = 1
+  },
+  { deep: true },
+)
 
 // --- Checkbox/Selection Logic ---
 const allVisibleItemIds = computed<string[]>(() => {
@@ -420,10 +534,10 @@ const allVisibleItemIds = computed<string[]>(() => {
 const toggleSelectAll = () => {
   const visibleIds = allVisibleItemIds.value
   if (selectAll.value) {
-    selectedItems.value = selectedItems.value.filter(id => !visibleIds.includes(id))
+    selectedItems.value = selectedItems.value.filter((id) => !visibleIds.includes(id))
     selectAll.value = false
   } else {
-    visibleIds.forEach(id => {
+    visibleIds.forEach((id) => {
       if (!selectedItems.value.includes(id)) {
         selectedItems.value.push(id)
       }
@@ -452,7 +566,7 @@ const updateSelectAllState = () => {
     selectAll.value = false
     return
   }
-  selectAll.value = visibleIds.every(id => selectedItems.value.includes(id))
+  selectAll.value = visibleIds.every((id) => selectedItems.value.includes(id))
 }
 
 watch(paginatedData, updateSelectAllState, { deep: true, immediate: true })
@@ -462,7 +576,7 @@ const formatDateTime = (dateString: string | null | undefined) => {
   if (!dateString) return '-'
   try {
     const date = new Date(dateString)
-  const pad = (num: number) => String(num).padStart(2, '0')
+    const pad = (num: number) => String(num).padStart(2, '0')
 
     const year = date.getFullYear()
     const month = pad(date.getMonth() + 1)
@@ -472,7 +586,7 @@ const formatDateTime = (dateString: string | null | undefined) => {
 
     return `${day}/${month}/${year} ${hour}:${minute}`
   } catch {
-    return dateString;
+    return dateString
   }
 }
 
@@ -494,7 +608,7 @@ const bulkDelete = async () => {
     showCancelButton: true,
     confirmButtonColor: '#d33',
     cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, proceed with bulk delete'
+    confirmButtonText: 'Yes, proceed with bulk delete',
   })
 
   if (!confirmResult.isConfirmed) {
@@ -503,13 +617,13 @@ const bulkDelete = async () => {
 
   try {
     const epcIds = selectedItems.value
-      .filter(id => id.startsWith('E-'))
-      .map(id => parseInt(id.replace('E-', '')))
+      .filter((id) => id.startsWith('E-'))
+      .map((id) => parseInt(id.replace('E-', '')))
 
     const response = await authenticatedFetch(`${API_URL}/bulk-delete`, {
-      method: "POST",
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ids: epcIds }) // Changed from 'epcIds' to 'ids'
+      body: JSON.stringify({ ids: epcIds }), // Changed from 'epcIds' to 'ids'
     })
 
     if (!response.ok) {
@@ -525,7 +639,6 @@ const bulkDelete = async () => {
     adjustPageAfterDeletion()
 
     return { success: true, data: result }
-
   } catch (err) {
     console.error('Error bulk deleting EPCs:', err)
     return { success: false, error: (err as Error).message, data: { deletedCount: 0 } }

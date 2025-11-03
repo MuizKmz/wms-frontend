@@ -1,79 +1,73 @@
 <template>
   <div class="p-6">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      <!-- Tracking Code -->
       <div>
         <input
-          v-model="filters.trackingCode"
+          v-model="filters.receivingCode"
           type="text"
-          placeholder="Filter by Tracking Code"
+          placeholder="Filter by Receiving Code"
+          class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+        />
+      </div>
+      <div>
+        <input
+          v-model="filters.doNumber"
+          type="text"
+          placeholder="Filter by DO Number"
           class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
         />
       </div>
 
-      <!-- Shipping Carrier -->
       <div>
         <input
-          v-model="filters.carrier"
+          v-model="filters.name"
           type="text"
-          placeholder="Filter by Shipping Carrier"
+          placeholder="Filter by Product Name"
           class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
         />
       </div>
-
-      <!-- Destination -->
-      <div>
-        <input
-          v-model="filters.destination"
-          type="text"
-          placeholder="Filter by Destination"
-          class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-        />
-      </div>
-
-      <!-- Status Dropdown -->
+      <!-- Receiving Purpose Dropdown -->
       <div class="dropdown relative inline-flex w-full">
         <button
-          ref="statusDropdownRef"
+          ref="purposeDropdownRef"
           type="button"
           class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400"
           aria-haspopup="menu"
-          :aria-expanded="openDropdowns.status"
-          aria-label="Filter by Status"
-          @click="toggleDropdown('status')"
-          :disabled="loadingStatuses"
+          :aria-expanded="openDropdowns.purpose"
+          aria-label="Filter by Receiving Purpose"
+          @click="toggleDropdown('purpose')"
         >
-          {{ statuses.find((opt) => opt.value === filters.status)?.label || 'Filter by Status' }}
+          {{
+            purposes.find((opt) => opt.value === filters.purpose)?.label ||
+            'Filter by Receiving Purpose'
+          }}
           <span
             class="icon-[tabler--chevron-down] size-4 transition-transform"
-            :class="{ 'rotate-180': openDropdowns.status }"
+            :class="{ 'rotate-180': openDropdowns.purpose }"
           ></span>
         </button>
         <ul
           class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
           :class="{
-            'opacity-100': openDropdowns.status,
-            'opacity-0 pointer-events-none': !openDropdowns.status,
+            'opacity-100': openDropdowns.purpose,
+            'opacity-0 pointer-events-none': !openDropdowns.purpose,
           }"
           role="menu"
           aria-orientation="vertical"
         >
-          <li v-if="loadingStatuses" class="px-4 py-2 text-sm text-gray-500">
-            Loading statuses...
-          </li>
           <li>
             <a
               class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg"
-              @click="selectOption('status', '')"
-              >All Statuses</a
+              @click="selectOption('purpose', '')"
+              >All Purposes</a
             >
           </li>
-          <li v-for="st in statuses" :key="st.value">
+          <li v-for="purpose in purposes" :key="purpose.value">
             <a
               class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg"
-              @click="selectOption('status', st.value)"
+              @click="selectOption('purpose', purpose.value)"
             >
-              {{ st.label }}
+              {{ purpose.label }}
             </a>
           </li>
         </ul>
@@ -83,7 +77,7 @@
         <input
           ref="datePickerRef"
           type="text"
-          placeholder="Filter by Shipping Date"
+          placeholder="Filter by Date Received"
           class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
         />
       </div>
@@ -104,7 +98,7 @@
 
           <button
             @click="applyFilters"
-            class="btn bg-brand-500 hover:bg-brand-600 border-none flex items-center gap-2"
+            class="btn bg-brand-500 hover:bg-brand-600 flex items-center gap-2"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -124,56 +118,34 @@
 
 <script setup>
 import { ref, reactive, defineEmits, onMounted, onUnmounted } from 'vue'
-import flatpickr from 'flatpickr'
-import authenticatedFetch from '@/utils/authenticatedFetch'
+import flatpickr from 'flatpickr' // 💡 Flatpickr import is essential!
 
 const emit = defineEmits(['filter-change'])
 
 // --- State Definitions ---
 
 const filters = ref({
-  trackingCode: '',
-  carrier: '',
-  destination: '',
-  status: '',
-  date: '', // Selected date YYYY-MM-DD
+  receivingCode: '',
+  doNumber: '',
+  productName: '',
+  purpose: '',
+  date: '', // Stores the selected date string
 })
 
-const statuses = ref([])
-const loadingStatuses = ref(false)
-
-const openDropdowns = reactive({
-  status: false,
+const purposes = ref([
+  { label: 'Raw Material', value: 'Raw Material' },
+  { label: 'Finished Good', value: 'Finished Good' },
+  { label: 'Packaging', value: 'Packaging' },
+  { label: 'Consumables', value: 'Consumables' },
+  { label: 'Equipment', value: 'Equipment' },
+  { label: 'Returns', value: 'Returns' },
+])
+const openDropdowns = ref({
+  purpose: false,
 })
-
-const statusDropdownRef = ref(null)
+const purposeDropdownRef = ref(null)
 const datePickerRef = ref(null)
 let flatpickrInstance = null
-
-// --- Data Fetching ---
-
-const fetchStatuses = async () => {
-  loadingStatuses.value = true
-  try {
-    const statusList = [
-      'Pending',
-      'Preparing',
-      'Ready for Dispatch',
-      'In Transit',
-      'Out for Delivery',
-      'Delivered',
-      'Failed Delivery',
-      'Returned',
-      'Cancelled',
-    ]
-    statuses.value = statusList.map((status) => ({
-      label: status,
-      value: status,
-    }))
-  } finally {
-    loadingStatuses.value = false
-  }
-}
 
 // --- Filter Logic ---
 
@@ -190,11 +162,11 @@ const applyFilters = () => {
 
 const clearFilters = () => {
   filters.value = {
-    trackingCode: '',
-    carrier: '',
-    destination: '',
-    status: '',
-    date: '',
+    receivingCode: '',
+    doNumber: '',
+    productName: '',
+    purpose: '',
+    date: '', // Clear the internal date state
   }
 
   // Clear the flatpickr input visually and internally
@@ -206,32 +178,33 @@ const clearFilters = () => {
 }
 
 // --- Dropdown Helpers ---
-
 const toggleDropdown = (dropdownName) => {
   // Close all other dropdowns
-  Object.keys(openDropdowns).forEach((key) => {
+  Object.keys(openDropdowns.value).forEach((key) => {
     if (key !== dropdownName) {
       openDropdowns[key] = false
     }
   })
+  console.log('Toggling dropdown:', dropdownName, openDropdowns.value[dropdownName])
   openDropdowns[dropdownName] = !openDropdowns[dropdownName]
+  console.log('Toggling dropdown:', dropdownName, openDropdowns.value[dropdownName])
 }
 
 const selectOption = (key, value) => {
   filters.value[key] = value
-  openDropdowns[key] = false
-  // Automatically apply filters when an option is selected
-  applyFilters()
+  openDropdowns.value[key] = false
+  // Apply filters automatically after selection if preferred, or rely on the Apply button
+  // applyFilters()
 }
 
 const closeAllDropdowns = () => {
   Object.keys(openDropdowns).forEach((key) => {
-    openDropdowns[key] = false
+    openDropdowns.value[key] = false
   })
 }
 
 const handleClickOutside = (event) => {
-  const dropdownRefs = [statusDropdownRef.value]
+  const dropdownRefs = [purposeDropdownRef.value]
 
   // Check if click is inside any dropdown, ignoring flatpickr's own elements
   const isClickInsideDropdown = dropdownRefs.some(
@@ -245,12 +218,8 @@ const handleClickOutside = (event) => {
 }
 
 // --- Lifecycle Hooks ---
-
 onMounted(() => {
-  // 1. Fetch shipment statuses
-  fetchStatuses()
-
-  // 2. Initialize flatpickr
+  // 1. Initialize flatpickr
   if (datePickerRef.value) {
     flatpickrInstance = flatpickr(datePickerRef.value, {
       dateFormat: 'Y-m-d',

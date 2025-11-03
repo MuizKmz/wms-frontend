@@ -144,6 +144,7 @@ import WarehouseUtilizationChart from "./component/WarehouseUtilizationChart.vue
 import ProductCategoryDistribution from "./component/ProductCategoryDistribution.vue";
 import ReceivingActivityChart from "./component/ReceivingActivityChart.vue";
 import CustomerMetricsCard from "./component/CustomerMetricsCard.vue";
+import TotalActiveOrder from "./component/TotalActiveOrder.vue";
 import DraggableResizableCard from '@/components/common/DraggableResizableCard.vue';
 import ChartSelectorPanel from './component/ChartSelectorPanel.vue';
 import ChartCard from './component/ChartCard.vue';
@@ -238,6 +239,13 @@ const availableCharts = ref([
     description: 'Metric cards showing customer and order statistics',
     icon: TableIcon,
     component: 'CustomerMetricsCard'
+  },
+  {
+    id: 'total-active-order',
+    title: 'Total Active Orders',
+    description: 'Display total number of active orders with date filter',
+    icon: BoxIcon,
+    component: 'TotalActiveOrder'
   }
 ]);
 
@@ -348,7 +356,8 @@ const componentMap = {
   WarehouseUtilizationChart: markRaw(WarehouseUtilizationChart),
   ProductCategoryDistribution: markRaw(ProductCategoryDistribution),
   ReceivingActivityChart: markRaw(ReceivingActivityChart),
-  CustomerMetricsCard: markRaw(CustomerMetricsCard)
+  CustomerMetricsCard: markRaw(CustomerMetricsCard),
+  TotalActiveOrder: markRaw(TotalActiveOrder)
 };
 
 function getChartComponent(componentName) {

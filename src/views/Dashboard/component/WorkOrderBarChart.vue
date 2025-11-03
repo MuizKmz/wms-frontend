@@ -1,31 +1,36 @@
 <template>
-  <div class="w-full h-full relative flex flex-col">
+  <div class="w-full h-full relative flex flex-col overflow-visible" ref="cardContainer">
     <!-- Date Range Filter -->
     <div class="flex justify-end mb-3 flex-shrink-0">
       <div class="dropdown relative inline-flex">
         <button
           ref="rangeDropdownRef"
           type="button"
-          class="dropdown-toggle btn btn-outline btn-sm justify-between dark:bg-gray-700 dark:text-gray-400 min-w-[140px]"
+          class="dropdown-toggle btn btn-outline btn-sm dark:bg-gray-700 dark:text-gray-400 flex items-center"
+          :class="isCardSmall ? 'w-[50px] justify-center px-2' : 'min-w-[140px] justify-between'"
           aria-haspopup="menu"
           :aria-expanded="isDropdownOpen"
           aria-label="Select Date Range"
           @click="toggleDropdown"
         >
-          {{ rangeOptions.find(opt => opt.value === selectedRange)?.label || 'Select Range' }}
-          <span class="icon-[tabler--chevron-down] size-4 transition-transform ml-2" :class="{ 'rotate-180': isDropdownOpen }"></span>
+          <span v-if="!isCardSmall" class="flex-1 text-left">
+            {{ rangeOptions.find(opt => opt.value === selectedRange)?.label || 'Select Range' }}
+          </span>
+          <span v-else class="text-center font-bold">...</span>
+          <span v-if="!isCardSmall" class="icon-[tabler--chevron-down] size-4 transition-transform ml-2" :class="{ 'rotate-180': isDropdownOpen }"></span>
         </button>
         <ul
-          class="dropdown-menu min-w-full transition-opacity duration-200 absolute top-full left-0 mt-1
+          class="dropdown-menu w-[160px] transition-opacity duration-200 absolute top-full right-0 mt-1
                  bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
-                 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white"
-          :class="{ 'opacity-100': isDropdownOpen, 'opacity-0 pointer-events-none': !isDropdownOpen }"
+                 rounded-lg shadow-lg text-gray-900 dark:text-white"
+          :class="{ 'opacity-100 visible z-[9999]': isDropdownOpen, 'opacity-0 invisible': !isDropdownOpen }"
+          style="position: fixed;"
           role="menu"
           aria-orientation="vertical"
         >
           <li v-for="option in rangeOptions" :key="option.value">
             <a 
-              class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg" 
+              class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg whitespace-nowrap" 
               @click="selectRange(option.value)"
             >
               {{ option.label }}
@@ -99,6 +104,8 @@ const error = ref(null)
 const selectedRange = ref('7')
 const isDropdownOpen = ref(false)
 const rangeDropdownRef = ref(null)
+const cardContainer = ref(null)
+const isCardSmall = ref(false)
 
 const API_URL = '/api/order'
 
@@ -112,6 +119,15 @@ const rangeOptions = [
 // Dropdown functions
 const toggleDropdown = () => {
   isDropdownOpen.value = !isDropdownOpen.value
+  if (isDropdownOpen.value && rangeDropdownRef.value) {
+    // Calculate dropdown position relative to viewport
+    const rect = rangeDropdownRef.value.getBoundingClientRect()
+    const dropdownMenu = rangeDropdownRef.value.nextElementSibling
+    if (dropdownMenu) {
+      dropdownMenu.style.top = `${rect.bottom + 4}px`
+      dropdownMenu.style.left = `${rect.right - 160}px` // Align right edge
+    }
+  }
 }
 
 const selectRange = (value) => {
@@ -343,8 +359,17 @@ const createChart = (data) => {
   }
 }
 
+// Check card width to determine if dropdown should be compact
+function checkCardWidth() {
+  if (cardContainer.value) {
+    const width = cardContainer.value.offsetWidth
+    isCardSmall.value = width < 400 // If card is less than 400px wide, show "..."
+  }
+}
+
 // Observer for theme changes
 let themeObserver = null
+let resizeObserver = null
 
 onMounted(async () => {
   console.log('WorkOrderBarChart: Component mounted')
@@ -359,6 +384,15 @@ onMounted(async () => {
   
   // Setup click outside handler for dropdown
   document.addEventListener('click', handleClickOutside)
+  
+  // Watch for card resize
+  if (cardContainer.value) {
+    checkCardWidth()
+    resizeObserver = new ResizeObserver(() => {
+      checkCardWidth()
+    })
+    resizeObserver.observe(cardContainer.value)
+  }
   
   // Watch for theme changes
   themeObserver = new MutationObserver((mutations) => {
@@ -383,6 +417,10 @@ onUnmounted(() => {
   if (chartInstance.value) chartInstance.value.destroy()
   document.removeEventListener('click', handleClickOutside)
   if (themeObserver) themeObserver.disconnect()
+  if (resizeObserver && cardContainer.value) {
+    resizeObserver.unobserve(cardContainer.value)
+    resizeObserver.disconnect()
+  }
 })
 
 // Expose refresh method to parent

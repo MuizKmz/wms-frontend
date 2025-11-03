@@ -265,25 +265,26 @@
                     <div class="dropdown relative inline-flex w-full" ref="purposeDropdownRef">
                       <button
                         type="button"
-                        :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.purpose }]"
-                        :aria-expanded="openDropdowns.purpose"
-                        @click.stop="toggleDropdown('purpose')"
+                        :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.receivingPurpose }]"
+                        :aria-expanded="openDropdowns.receivingPurpose"
+                        @click.stop="toggleDropdown('receivingPurpose')"
                       >
-                        {{ form.purpose || 'Select Receiving Purpose' }}
+                        {{ form.receivingPurpose || 'Select Receiving Purpose' }} <!-- sini -->
                         <span
                           class="icon-[tabler--chevron-down] size-4 transition-transform"
-                          :class="{ 'rotate-180': openDropdowns.purpose }"
+                          :class="{ 'rotate-180': openDropdowns.receivingPurpose }"
                         ></span>
                       </button>
 
                       <ul
                         class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
-                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.purpose, 'opacity-0 pointer-events-none': !openDropdowns.purpose }"
+                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.receivingPurpose, 'opacity-0 pointer-events-none': !openDropdowns.receivingPurpose }"
                         role="menu"
                       >
-                        <li v-for="purpose in purposeOptions" :key="purpose">
-                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg" @click="selectPurpose(purpose)">
-                            {{ purpose }}
+                        <li v-for="receivingPurpose in purposeOptions" :key="receivingPurpose">
+                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg" @click="selectPurpose(receivingPurpose)">
+                            {{ receivingPurpose }}
+                            <!-- sini -->
                           </a>
                         </li>
                       </ul>
@@ -517,7 +518,7 @@ const form = reactive({
   sectionId: null,
   supplierId: null,
   source: '',
-  purpose: '',
+  receivingPurpose: '', //sini
   receivedBy: '',
   receivingDate: new Date().toISOString().split('T')[0],
   remarks: '',
@@ -534,7 +535,7 @@ const errors = reactive({
   sectionId: '',
   supplierId: '',
   source: '',
-  purpose: '',
+  receivingPurpose: '',
   receivedBy: '',
   receivingDate: '',
   remarks: '',
@@ -683,6 +684,7 @@ const toggleDropdown = async (name) => {
   // Close other dropdowns
   Object.keys(openDropdowns).forEach(k => { if (k !== name) openDropdowns[k] = false })
   openDropdowns[name] = !openDropdowns[name]
+  console.log(`[toggleDropdown] ${name} toggled to`, openDropdowns[name])
 
   // If opening a product dropdown, compute its fixed-position style so it overlays instead of pushing modal height
   if (openDropdowns[name] && name.startsWith('product')) {
@@ -840,9 +842,12 @@ const selectSupplier = (id) => {
   openDropdowns.supplier = false
 }
 
-const selectPurpose = (purpose) => {
-  form.purpose = purpose
-  openDropdowns.purpose = false
+const selectPurpose = (receivingPurpose) => {
+  form.receivingPurpose = receivingPurpose
+  openDropdowns.receivingPurpose = false
+  console.log(`[selectPurpose] selected:`, receivingPurpose)
+  console.log(`[selectPurpose] form.receivingPurpose:`, form.receivingPurpose)
+  console.log(`[selectPurpose] openDropdowns.receivingPurpose:`, openDropdowns.receivingPurpose)
 }
 
 const selectProduct = (index, productId) => {
@@ -927,8 +932,8 @@ const validateForm = () => {
   }
 
   // Purpose validation
-  if (!form.purpose) {
-    errors.purpose = 'Receiving Purpose is required'
+  if (!form.receivingPurpose) {
+    errors.receivingPurpose = 'Receiving Purpose is required'
     isValid = false
   }
 
@@ -957,7 +962,7 @@ const validateForm = () => {
 watch(() => form.receivingCode, () => { if (errors.receivingCode) errors.receivingCode = '' })
 watch(() => form.supplierId, () => { if (errors.supplierId) errors.supplierId = '' })
 watch(() => form.source, () => { if (errors.source) errors.source = '' })
-watch(() => form.purpose, () => { if (errors.purpose) errors.purpose = '' })
+watch(() => form.receivingPurpose, () => { if (errors.receivingPurpose) errors.receivingPurpose = '' })
 watch(() => form.receivedBy, () => { if (errors.receivedBy) errors.receivedBy = '' })
 
 /* close dropdowns when clicking outside */
@@ -1004,7 +1009,7 @@ const openModal = async () => {
   form.sectionId = null
   form.supplierId = null
   form.source = ''
-  form.purpose = ''
+  form.receivingPurpose = ''
   form.receivedBy = ''
   form.receivingDate = new Date().toISOString().split('T')[0]
   form.remarks = ''
@@ -1055,7 +1060,7 @@ const closeModal = async () => {
   form.sectionId = null
   form.supplierId = null
   form.source = ''
-  form.purpose = ''
+  form.receivingPurpose = ''
   form.receivedBy = ''
   form.receivingDate = new Date().toISOString().split('T')[0]
   form.remarks = ''
@@ -1087,6 +1092,8 @@ const submitForm = async () => {
       sectionId: form.sectionId || null,
       source: form.source || null,
       supplierId: form.supplierId,
+      // Ensure receivingPurpose is sent to backend (null when empty)
+      receivingPurpose: form.receivingPurpose || null,
       receivingDate: form.receivingDate,
       receivedBy: form.receivedBy,
       remarks: form.remarks || null,
