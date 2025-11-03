@@ -321,6 +321,7 @@
 </template>
 
 <script setup>
+import authenticatedFetch from '@/utils/authenticatedFetch'
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 
 const emit = defineEmits(['supplier-updated'])
@@ -582,7 +583,7 @@ const openModal = async (supplierData) => {
   if (supplierId.value && supplierData && Object.keys(supplierData).length === 1) {
     // If only id was passed, fetch full supplier details from backend
     try {
-      const resp = await fetch(`api/supplier/${supplierId.value}`)
+      const resp = await authenticatedFetch(`api/supplier/${supplierId.value}`)
       if (resp.ok) {
         dataToUse = await resp.json()
       } else {
@@ -644,7 +645,7 @@ const submitForm = async () => {
     }
 
     // Call update endpoint
-    const response = await fetch(`api/supplier/${supplierId.value}`, {
+    const response = await authenticatedFetch(`api/supplier/${supplierId.value}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',

@@ -255,6 +255,7 @@
 </template>
 
 <script setup lang="ts">
+import authenticatedFetch from '@/utils/authenticatedFetch'
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 
 interface Category {
@@ -303,7 +304,7 @@ const openDropdowns = reactive({ status: false, parentCategory: false })
 /* Fetch parent categories - exclude current category and its descendants */
 const filteredParentCategories = computed(() => {
   if (!currentCategoryId.value) return parentCategories.value
-  
+
   // Filter out the current category being edited to prevent circular reference
   return parentCategories.value.filter(cat => cat.id !== currentCategoryId.value)
 })
@@ -311,7 +312,7 @@ const filteredParentCategories = computed(() => {
 const fetchParentCategories = async () => {
   loadingCategories.value = true
   try {
-    const response = await fetch('/api/category')
+    const response = await authenticatedFetch('/api/category')
     if (!response.ok) throw new Error('Failed to fetch categories')
     const data = await response.json()
     parentCategories.value = data
@@ -511,7 +512,7 @@ const submitForm = async () => {
     }
 
     // Make the API call to update the category
-    const response = await fetch(`/api/category/${currentCategoryId.value}`, {
+    const response = await authenticatedFetch(`/api/category/${currentCategoryId.value}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
