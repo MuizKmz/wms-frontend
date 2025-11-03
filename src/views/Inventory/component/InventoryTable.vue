@@ -85,32 +85,6 @@
                 Supplier Code
               </p>
             </th>
-            <!-- <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Supplier Name
-              </p>
-            </th> -->
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Warehouse Code
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Rack Code
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Section Code
-              </p>
-            </th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -183,30 +157,6 @@
             <td class="px-6 py-4">
               <span class="font-mono text-sm text-gray-900 dark:text-white">
                 {{ item.product?.supplier?.supplierCode || '-' }}
-              </span>
-            </td>
-
-            <!-- <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.supplierName || '-' }}
-              </p>
-            </td> -->
-
-            <td class="px-6 py-4">
-              <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ item.warehouse?.warehouseCode || '-' }}
-              </span>
-            </td>
-
-            <td class="px-6 py-4">
-              <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ item.rack?.rackCode || '-' }}
-              </span>
-            </td>
-
-            <td class="px-6 py-4">
-              <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ item.section?.sectionCode || '-' }}
               </span>
             </td>
           </tr>
