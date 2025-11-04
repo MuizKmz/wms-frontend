@@ -134,13 +134,13 @@
                     Order Code
                   </th>
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Warehouse Code
+                    Warehouse
                   </th>
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Rack Code
+                    Rack
                   </th>
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Section Code
+                    Section
                   </th>
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Status
@@ -181,13 +181,13 @@
                     {{ epc.orderCode || '--' }}
                   </td>
                   <td class="px-4 py-4 text-sm font-mono text-gray-900 dark:text-white">
-                    {{ inventoryData?.warehouse?.warehouseCode || '--' }}
+                    {{ epc.warehouse?.warehouseCode || '--' }}
                   </td>
                   <td class="px-4 py-4 text-sm font-mono text-gray-900 dark:text-white">
-                    {{ inventoryData?.rack?.rackCode || '--' }}
+                    {{ epc.rack?.rackCode || '--' }}
                   </td>
                   <td class="px-4 py-4 text-sm font-mono text-gray-900 dark:text-white">
-                    {{ inventoryData?.section?.sectionCode || '--' }}
+                    {{ epc.section?.sectionCode || '--' }}
                   </td>
                   <td class="px-4 py-4">
                     <span :class="[
