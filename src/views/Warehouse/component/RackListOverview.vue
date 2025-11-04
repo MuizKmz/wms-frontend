@@ -165,6 +165,51 @@
         </tbody>
       </table>
 
+      <!-- FlyonUI Pagination -->
+      <div class="mt-6 flex justify-center">
+        <nav class="flex items-center gap-x-2">
+          <!-- Previous Button -->
+          <button
+            type="button"
+            class="btn btn-sm btn-outline dark:text-gray-300"
+            :disabled="currentPage === 1"
+            @click="changePage(currentPage - 1)"
+          >
+            Previous
+          </button>
+
+          <!-- Page Numbers -->
+          <div class="flex items-center gap-x-1">
+            <template v-for="page in displayPages" :key="page">
+              <span v-if="page === -1" class="px-2" aria-hidden="true">...</span>
+              <button
+                v-else
+                type="button"
+                class="btn btn-sm btn-outline min-w-[40px]"
+                :class="
+                  page === currentPage
+                    ? '!bg-blue-100 !text-blue-600 !border-blue-300 !border'
+                    : 'text-gray-700 border-gray-300 hover:bg-blue-50 hover:text-blue-600'
+                "
+                @click="changePage(page)"
+              >
+                {{ page }}
+              </button>
+            </template>
+          </div>
+
+          <!-- Next Button -->
+          <button
+            type="button"
+            class="btn btn-sm btn-outline dark:text-gray-300"
+            :disabled="currentPage === totalPages"
+            @click="changePage(currentPage + 1)"
+          >
+            Next
+          </button>
+        </nav>
+      </div>
+
       <!-- Loading -->
       <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
         <div
@@ -209,50 +254,6 @@
         </svg>
         <p class="font-medium">Error loading data</p>
         <p class="text-xs mt-1">{{ error }}</p>
-      </div>
-      <!-- FlyonUI Pagination -->
-      <div class="mt-6 flex justify-center">
-        <nav class="flex items-center gap-x-2">
-          <!-- Previous Button -->
-          <button
-            type="button"
-            class="btn btn-sm btn-outline dark:text-gray-300"
-            :disabled="currentPage === 1"
-            @click="changePage(currentPage - 1)"
-          >
-            Previous
-          </button>
-
-          <!-- Page Numbers -->
-          <div class="flex items-center gap-x-1">
-            <template v-for="page in displayPages" :key="page">
-              <span v-if="page === -1" class="px-2" aria-hidden="true">...</span>
-              <button
-                v-else
-                type="button"
-                class="btn btn-sm btn-outline min-w-[40px]"
-                :class="
-                  page === currentPage
-                    ? '!bg-blue-100 !text-blue-600 !border-blue-300 !border'
-                    : 'text-gray-700 border-gray-300 hover:bg-blue-50 hover:text-blue-600'
-                "
-                @click="changePage(page)"
-              >
-                {{ page }}
-              </button>
-            </template>
-          </div>
-
-          <!-- Next Button -->
-          <button
-            type="button"
-            class="btn btn-sm btn-outline dark:text-gray-300"
-            :disabled="currentPage === totalPages"
-            @click="changePage(currentPage + 1)"
-          >
-            Next
-          </button>
-        </nav>
       </div>
     </div>
   </div>
