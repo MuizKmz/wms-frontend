@@ -182,11 +182,11 @@ const toggleDropdown = (dropdownName) => {
   // Close all other dropdowns
   Object.keys(openDropdowns.value).forEach((key) => {
     if (key !== dropdownName) {
-      openDropdowns[key] = false
+      openDropdowns.value[key] = false
     }
   })
   console.log('Toggling dropdown:', dropdownName, openDropdowns.value[dropdownName])
-  openDropdowns[dropdownName] = !openDropdowns[dropdownName]
+  openDropdowns.value[dropdownName] = !openDropdowns.value[dropdownName]
   console.log('Toggling dropdown:', dropdownName, openDropdowns.value[dropdownName])
 }
 

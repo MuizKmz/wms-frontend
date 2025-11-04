@@ -1,15 +1,27 @@
 <template>
   <div class="overflow-hidden">
-    <div class="mb-4">
+    <!-- Header with button and count -->
+    <div class="flex justify-between items-center mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
         Showing {{ filteredData.length }} warehouse items
       </p>
+
+      <!-- Select Columns Button -->
+      <div class="relative z-50">
+        <SelectTable
+          :apiUrl="API_URL"
+          :storageKey="`warehouse-columns`"
+          :excludeColumns="excludedColumns"
+          @update:selected="handleColumnsUpdate"
+        />
+      </div>
     </div>
 
     <div class="max-w-full overflow-x-auto custom-scrollbar">
       <table class="min-w-full">
         <thead>
           <tr class="border-b border-gray-200 dark:border-gray-700">
+            <!-- Checkbox Column (Always Visible) -->
             <th class="px-6 py-3 text-left w-12">
               <input
                 type="checkbox"
@@ -19,62 +31,17 @@
                 @change="toggleSelectAll"
               />
             </th>
-            <th class="px-6 py-3 text-left">
+
+            <!-- Dynamic Columns -->
+            <th v-for="col in selectedColumns" :key="col" class="px-6 py-3 text-left">
               <p
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
               >
-                Warehouse Code
+                {{ formatColumnName(col) }}
               </p>
             </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Warehouse Name
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Address
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Manager Name
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Contact Phone
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Email
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Status
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Remark
-              </p>
-            </th>
+
+            <!-- Action Column (Always Visible) -->
             <th class="px-6 py-3 text-left">
               <p
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
@@ -90,6 +57,7 @@
             :key="item.id"
             class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
           >
+            <!-- Checkbox -->
             <td class="px-6 py-4">
               <input
                 type="checkbox"
@@ -100,44 +68,11 @@
               />
             </td>
 
-            <td class="px-6 py-4">
-              <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ item.warehouseCode }}
-              </span>
-            </td>
-
-            <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.name }}
-              </p>
-            </td>
-
-            <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.address || item.location }}
-              </p>
-            </td>
-
-            <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.managerName || item.manager }}
-              </p>
-            </td>
-
-            <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.contactPhone || item.contact }}
-              </p>
-            </td>
-
-            <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.email || item.managerEmail }}
-              </p>
-            </td>
-
-            <td class="px-6 py-4">
+            <!-- Dynamic Data Columns -->
+            <td v-for="col in selectedColumns" :key="col" class="px-6 py-4">
+              <!-- Status Column with Badge -->
               <span
+                v-if="col === 'status'"
                 :class="{
                   'px-3 py-1 text-xs rounded-full font-medium': true,
                   'bg-green-100 text-green-600': item.status === 'Active',
@@ -145,15 +80,24 @@
                   'bg-yellow-100 text-yellow-600': item.status === 'Pending',
                 }"
               >
-                {{ item.status }}
+                {{ item[col] }}
               </span>
-            </td>
 
-            <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.remark || item.remarks || '-' }}
+              <!-- Warehouse Code with Monospace Font -->
+              <span
+                v-else-if="col === 'warehouseCode'"
+                class="font-mono text-sm text-gray-900 dark:text-white"
+              >
+                {{ item[col] }}
+              </span>
+
+              <!-- Regular Columns -->
+              <p v-else class="text-sm text-gray-900 dark:text-white">
+                {{ getCellValue(item, col) }}
               </p>
             </td>
+
+            <!-- Action Buttons -->
             <td class="px-6 py-4">
               <div class="flex items-center gap-2">
                 <button
@@ -192,6 +136,55 @@
         </tbody>
       </table>
 
+      <!-- Loading State -->
+      <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
+        <div
+          class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"
+        ></div>
+        <p>Loading warehouses...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div v-if="!loading && filteredData.length === 0" class="p-8 text-center text-gray-500">
+        <svg
+          class="mx-auto h-12 w-12 text-gray-300"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No warehouses found</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Try adjusting your filters or create a new warehouse.
+        </p>
+      </div>
+
+      <!-- Error State -->
+      <div v-if="error" class="p-8 text-center text-red-500 text-sm">
+        <svg
+          class="mx-auto h-12 w-12 text-red-300 mb-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z"
+          />
+        </svg>
+        <p class="font-medium">Error loading warehouses</p>
+        <p class="text-xs mt-1">{{ error }}</p>
+      </div>
+
+      <!-- Pagination -->
       <div class="mt-6 flex justify-center">
         <nav class="flex items-center gap-x-2">
           <!-- Previous Button -->
@@ -235,51 +228,6 @@
           </button>
         </nav>
       </div>
-
-      <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
-        <div
-          class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"
-        ></div>
-        <p>Loading warehouses...</p>
-      </div>
-
-      <div v-if="!loading && filteredData.length === 0" class="p-8 text-center text-gray-500">
-        <svg
-          class="mx-auto h-12 w-12 text-gray-300"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="1"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No warehouses found</p>
-        <p class="text-sm text-gray-500 dark:text-gray-400">
-          Try adjusting your filters or create a new warehouse.
-        </p>
-      </div>
-
-      <div v-if="error" class="p-8 text-center text-red-500 text-sm">
-        <svg
-          class="mx-auto h-12 w-12 text-red-300 mb-2"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="1"
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z"
-          />
-        </svg>
-        <p class="font-medium">Error loading warehouses</p>
-        <p class="text-xs mt-1">{{ error }}</p>
-      </div>
     </div>
   </div>
 </template>
@@ -288,6 +236,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import Swal from 'sweetalert2'
 import { authenticatedFetch } from '@/utils/authenticatedFetch'
+import SelectTable from '@/components/common/SelectTable.vue'
 
 // Props for receiving filters
 const props = defineProps({
@@ -298,7 +247,6 @@ const props = defineProps({
 })
 
 // Emits for parent component
-// Renamed emits to be generic (item) instead of (supplier)
 const emit = defineEmits(['edit-item', 'delete-item'])
 
 // State for data and UI
@@ -306,10 +254,40 @@ const data = ref([])
 const loading = ref(false)
 const error = ref(null)
 const selectedItems = ref([])
-const selectAll = ref(false) // State for the select all checkbox
+const selectAll = ref(false)
+const selectedColumns = ref([])
 
-// API endpoint for Warehouses (Changed from /api/supplier to /api/warehouse)
+// API endpoint for Warehouses
 const API_URL = '/api/warehouse'
+
+// Columns to exclude
+const excludedColumns = ['id', 'createdAt', 'updatedAt', 'racks', 'sections', 'receivings']
+
+// Format column name for display (camelCase -> Title Case)
+const formatColumnName = (name) => {
+  return name
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (str) => str.toUpperCase())
+    .trim()
+}
+
+// Get cell value with fallback for alternate field names
+const getCellValue = (item, col) => {
+  // Handle alternate field names based on your backend
+  if (col === 'address') return item.address || item.location || '-'
+  if (col === 'managerName') return item.managerName || item.manager || '-'
+  if (col === 'contactPhone') return item.contactPhone || item.contact || '-'
+  if (col === 'email') return item.email || item.managerEmail || '-'
+  if (col === 'remark') return item.remark || item.remarks || '-'
+
+  return item[col] ?? '-'
+}
+
+// Handle column selection update from SelectTable component
+const handleColumnsUpdate = (columns) => {
+  selectedColumns.value = columns
+  console.log('Selected columns updated:', columns)
+}
 
 // Function to fetch warehouses from the API
 const fetchItems = async () => {
@@ -322,6 +300,15 @@ const fetchItems = async () => {
 
     const json = await response.json()
     data.value = json || []
+
+    // Auto-initialize columns from API data if not already set
+    if (selectedColumns.value.length === 0 && json && json.length > 0) {
+      const allColumns = Object.keys(json[0]).filter(
+        (col) => !excludedColumns.map((c) => c.toLowerCase()).includes(col.toLowerCase()),
+      )
+      selectedColumns.value = allColumns
+      console.log('Auto-loaded columns from API:', allColumns)
+    }
   } catch (e) {
     error.value = e.message
     console.error('Error fetching warehouses:', e)
@@ -389,7 +376,7 @@ const toggleSelectAll = () => {
 
 // --- Data and Filtering ---
 
-// Computed property for filtered data (Updated field names)
+// Computed property for filtered data
 const filteredData = computed(() => {
   if (!props.filters) return data.value
 
@@ -403,11 +390,11 @@ const filteredData = computed(() => {
     ) {
       return false
     }
-    // Warehouse Name filter (backend uses `name`)
+    // Warehouse Name filter
     if (filters.name && !item.name?.toLowerCase().includes(filters.name.toLowerCase())) {
       return false
     }
-    // Manager Name filter (Assuming filter field is managerName or picName)
+    // Manager Name filter
     const managerName = item.managerName || item.manager || ''
     if (
       filters.managerName &&
@@ -415,7 +402,7 @@ const filteredData = computed(() => {
     ) {
       return false
     }
-    // Email filter (Assuming filter field is email)
+    // Email filter
     const email = item.email || item.managerEmail || ''
     if (filters.email && !email.toLowerCase().includes(filters.email.toLowerCase())) {
       return false
@@ -424,7 +411,6 @@ const filteredData = computed(() => {
     if (filters.status && item.status !== filters.status) {
       return false
     }
-
     // Address filter
     const itemAddress = item.address || item.location || ''
     if (filters.address && !itemAddress.toLowerCase().includes(filters.address.toLowerCase())) {
@@ -439,20 +425,18 @@ const filteredData = computed(() => {
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
 
-const paginatedData = computed<EPCRecord[]>(() => {
+const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
   return filteredData.value.slice(start, end)
 })
-
-const visibleRows = computed(() => paginatedData.value)
 
 const totalPages = computed(() => Math.ceil(filteredData.value.length / itemsPerPage.value))
 
 // Calculate page numbers to display
 const displayPages = computed(() => {
   const total = totalPages.value
-  if (total <= 0) return [] // Return empty array if only one page
+  if (total <= 0) return []
 
   const current = currentPage.value
   const range = []
@@ -460,6 +444,7 @@ const displayPages = computed(() => {
   if (total === 1) {
     return [1]
   }
+
   // Always show first page
   if (current > 2) {
     range.push(1)
@@ -530,25 +515,22 @@ const deleteItem = async (item) => {
     text: `You are about to delete warehouse: ${item.name}. This action cannot be undone.`,
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonColor: '#d33', // Red color for delete
+    confirmButtonColor: '#d33',
     cancelButtonColor: '#3085d6',
     confirmButtonText: 'Yes, delete it!',
   })
 
   if (!result.isConfirmed) {
-    return // User cancelled the operation
+    return
   }
 
-  // --- Deletion Logic (only runs if confirmed) ---
   try {
-    // Use warehouseCode as fallback ID
     const itemId = item.id || item.warehouseCode
     if (!itemId) {
       throw new Error('Warehouse identifier not found.')
     }
 
     const response = await authenticatedFetch(`${API_URL}/${itemId}`, {
-      // Changed endpoint to use API_URL
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -559,7 +541,6 @@ const deleteItem = async (item) => {
       throw new Error('Failed to delete warehouse')
     }
 
-    // Show success notification
     Swal.fire({
       title: 'Deleted!',
       text: `Warehouse ${item.name} has been deleted.`,
@@ -568,21 +549,17 @@ const deleteItem = async (item) => {
       showConfirmButton: false,
     })
 
-    // Emit event to parent for toast notification
-    emit('delete-item', { success: true, data: { itemName: item.name, id: item.id } }) // Changed 'supplierName' to 'itemName'
+    emit('delete-item', { success: true, data: { itemName: item.name, id: item.id } })
 
-    // Remove deleted item from selectedItems if present
     const index = selectedItems.value.indexOf(item.id)
     if (index > -1) {
       selectedItems.value.splice(index, 1)
     }
 
-    // Refresh the table
-    await fetchItems() // Changed to fetchItems
+    await fetchItems()
   } catch (error) {
     console.error('Error deleting warehouse:', error)
-    emit('delete-item', { success: false, error: error.message }) // Changed emit
-    // Show error notification
+    emit('delete-item', { success: false, error: error.message })
     Swal.fire(
       'Error',
       `Failed to delete warehouse: This warehouse has racks or sections or products`,
@@ -598,13 +575,12 @@ const bulkDelete = async () => {
     return { success: false, error: 'No items selected' }
   }
 
-  // SweetAlert2 Confirmation for bulk delete
   const confirmResult = await Swal.fire({
     title: 'Confirm Bulk Deletion',
     text: `Are you sure you want to delete ${selectedItems.value.length} selected warehouse(s)? This cannot be undone.`,
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonColor: '#d33', // Red color for delete
+    confirmButtonColor: '#d33',
     cancelButtonColor: '#3085d6',
     confirmButtonText: 'Yes, proceed with bulk delete',
   })
@@ -613,10 +589,8 @@ const bulkDelete = async () => {
     return { success: false, error: 'Cancelled by user' }
   }
 
-  // --- Bulk Deletion Logic (only runs if confirmed) ---
   try {
     const response = await authenticatedFetch(`${API_URL}/bulk-delete`, {
-      // Changed endpoint to use API_URL
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ids: selectedItems.value }),
@@ -629,17 +603,15 @@ const bulkDelete = async () => {
 
     const result = await response.json()
 
-    // Clear selection and refresh
     const deletedCount = Array.isArray(result.deletedIds) ? result.deletedIds.length : 0
     const blocked = result.blocked || []
 
     selectedItems.value = []
     selectAll.value = false
-    await fetchItems() // Changed to fetchItems
+    await fetchItems()
 
-    // Handle success/partial success/failure with SweetAlert2
     if (deletedCount > 0 && blocked.length === 0) {
-      emit('delete-item', { success: true, data: { count: deletedCount, itemName: 'Warehouse' } }) // Changed emit data
+      emit('delete-item', { success: true, data: { count: deletedCount, itemName: 'Warehouse' } })
       Swal.fire('Success', `${deletedCount} warehouses deleted successfully.`, 'success')
       return { success: true, data: result }
     } else if (deletedCount > 0 && blocked.length > 0) {
@@ -658,35 +630,23 @@ const bulkDelete = async () => {
     }
   } catch (error) {
     console.error('Error bulk deleting warehouses:', error)
-    emit('delete-item', { success: false, error: error.message }) // Changed emit
+    emit('delete-item', { success: false, error: error.message })
     Swal.fire('Error', `Failed to bulk delete warehouses: ${error.message}`, 'error')
     return { success: false, error: error.message }
   }
 }
 
-// Expose methods/state for parent component (e.g., for Bulk Delete)
+// Expose methods/state for parent component
 const refreshData = () => {
-  fetchItems() // Changed to fetchItems
-  selectedItems.value = [] // Clear selection on refresh
+  fetchItems()
+  selectedItems.value = []
   selectAll.value = false
 }
 
-// Renamed expose to match the previous component's functionality (bulkDelete)
 defineExpose({ refreshData, selectedItems, bulkDelete })
-
-// Watch for filter changes
-watch(
-  () => props.filters,
-  (newFilters) => {
-    console.log('Filters updated:', newFilters)
-    currentPage.value = 1 // reset to first page on filter change
-  },
-  { deep: true },
-)
 </script>
 
 <style scoped>
-/* Scoped styles kept from original */
 .custom-scrollbar::-webkit-scrollbar {
   height: 6px;
 }

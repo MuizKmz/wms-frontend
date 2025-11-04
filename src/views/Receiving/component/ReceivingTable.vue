@@ -1,15 +1,27 @@
 <template>
   <div class="overflow-hidden">
-    <div class="mb-4">
+    <!-- Header with Select Columns Button -->
+    <div class="flex justify-between items-center mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
         Showing {{ filteredData.length }} receiving records
       </p>
+
+      <!-- Select Columns Button -->
+      <div class="relative z-50">
+        <SelectTable
+          :apiUrl="API_URL"
+          :storageKey="`receiving-columns`"
+          :availableColumns="allowedColumns"
+          @update:selected="handleColumnsUpdate"
+        />
+      </div>
     </div>
 
     <div class="max-w-full overflow-x-auto custom-scrollbar">
       <table class="min-w-full">
         <thead>
           <tr class="border-b border-gray-200 dark:border-gray-700">
+            <!-- Checkbox Column (Always Visible) -->
             <th class="px-6 py-3 text-left w-12">
               <input
                 type="checkbox"
@@ -19,76 +31,17 @@
                 @change="toggleSelectAll"
               />
             </th>
-            <th class="px-6 py-3 text-left">
+
+            <!-- Dynamic Columns -->
+            <th v-for="col in selectedColumns" :key="col" class="px-6 py-3 text-left">
               <p
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
               >
-                Receiving Code
+                {{ formatColumnName(col) }}
               </p>
             </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                DO Number
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Product Name
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Expected Quantity
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Received Quantity
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Receiving Source
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Receiving Purpose
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Received By
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Date Received
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Remarks
-              </p>
-            </th>
+
+            <!-- Action Column (Always Visible) -->
             <th class="px-6 py-3 text-left">
               <p
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
@@ -108,6 +61,7 @@
               'bg-gray-25 dark:bg-gray-900/30': row.depth > 0,
             }"
           >
+            <!-- Checkbox -->
             <td class="px-6 py-4">
               <input
                 type="checkbox"
@@ -118,101 +72,47 @@
               />
             </td>
 
-            <!-- Receiving ID with expand/collapse -->
-            <td class="px-6 py-4">
+            <!-- Dynamic Data Columns -->
+            <td v-for="col in selectedColumns" :key="col" class="px-6 py-4">
+              <!-- Receiving Code with expand/collapse -->
               <div
-                class="flex items-center gap-2"
+                v-if="col === 'receivingCode'"
                 :style="{ 'padding-left': row.depth * 2 + 'rem' }"
               >
-                <div class="w-4 h-4"></div>
-
-                <button
-                  @click="viewReceiving(row)"
-                  class="text-left font-bold text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                >
-                  {{ row.receivingCode || '-' }}
-                </button>
+                <div class="flex items-center gap-2">
+                  <div class="w-4 h-4"></div>
+                  <button
+                    @click="viewReceiving(row)"
+                    class="text-left font-bold text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    {{ getCellValue(row, col) }}
+                  </button>
+                </div>
               </div>
-            </td>
 
-            <!-- DO Number -->
-            <td class="px-6 py-4">
-              <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ row.doNumber || '-' }}
-              </span>
-            </td>
-
-            <!-- Product Name -->
-            <td class="px-6 py-4">
+              <!-- DO Number with monospace -->
               <span
-                class="text-sm text-gray-900 dark:text-white"
-                :title="
-                  row.isReceiving && row.aggregatedProducts ? row.aggregatedProducts.full : ''
-                "
+                v-else-if="col === 'doNumber'"
+                class="font-mono text-sm text-gray-900 dark:text-white"
               >
-                {{
-                  row.isReceiving
-                    ? row.aggregatedProducts?.display || '-'
-                    : row.product?.name || '-'
-                }}
+                {{ getCellValue(row, col) }}
               </span>
-            </td>
 
-            <!-- Expected Quantity -->
-            <td class="px-6 py-4">
-              <span class="text-sm text-gray-900 dark:text-white">
-                {{
-                  row.isReceiving ? row.totalExpectedQuantity || '-' : row.expectedQuantity || '-'
-                }}
-              </span>
-            </td>
-
-            <!-- Received Quantity -->
-            <td class="px-6 py-4">
-              <span class="text-sm text-gray-900 dark:text-white">
-                {{ row.isReceiving ? row.totalReceivedQuantity || '-' : row.quantity || '-' }}
-              </span>
-            </td>
-
-            <!-- Receiving Source -->
-            <td class="px-6 py-4">
+              <!-- Date fields -->
               <span
+                v-else-if="col === 'dateReceived'"
                 class="text-sm text-gray-900 dark:text-white"
-                :title="row.isReceiving && row.aggregatedSources ? row.aggregatedSources.full : ''"
               >
-                {{ row.isReceiving ? row.aggregatedSources?.display || '-' : '-' }}
+                {{ formatDate(getCellValue(row, col)) }}
+              </span>
+
+              <!-- Default display -->
+              <span v-else class="text-sm text-gray-900 dark:text-white">
+                {{ getCellValue(row, col) }}
               </span>
             </td>
 
-            <!-- Receiving Purpose -->
-            <td class="px-6 py-4">
-              <span class="text-sm text-gray-900 dark:text-white" :title="row.isReceiving && row.aggregatedPurposes ? row.aggregatedPurposes.full : ''">
-                {{ row.isReceiving ? (row.aggregatedPurposes?.display || '-') : (row.receivingPurpose || '') }}
-              </span>
-            </td>
-
-            <!-- Received By -->
-            <td class="px-6 py-4">
-              <span class="text-sm text-gray-900 dark:text-white">
-                {{ row.isReceiving ? row.receivedBy || '-' : '-' }}
-              </span>
-            </td>
-
-            <!-- Date Received -->
-            <td class="px-6 py-4">
-              <span class="text-sm text-gray-900 dark:text-white">
-                {{ row.isReceiving ? formatDate(row.receivingDate) : '-' }}
-              </span>
-            </td>
-
-            <!-- Remarks -->
-            <td class="px-6 py-4">
-              <span class="text-sm text-gray-900 dark:text-white">
-                {{ row.isReceiving ? row.remarks || '-' : '-' }}
-              </span>
-            </td>
-
-            <!-- Action -->
+            <!-- Action Buttons (Always Visible) -->
             <td class="px-6 py-4">
               <div class="flex items-center gap-2">
                 <button
@@ -250,51 +150,6 @@
           </tr>
         </tbody>
       </table>
-
-      <!-- Pagination -->
-      <div class="mt-6 flex justify-center">
-        <nav class="flex items-center gap-x-2">
-          <!-- Previous Button -->
-          <button
-            type="button"
-            class="btn btn-sm btn-outline dark:text-gray-300"
-            :disabled="currentPage === 1"
-            @click="changePage(currentPage - 1)"
-          >
-            Previous
-          </button>
-
-          <!-- Page Numbers -->
-          <div class="flex items-center gap-x-1">
-            <template v-for="page in displayPages" :key="page">
-              <span v-if="page === -1" class="px-2" aria-hidden="true">...</span>
-              <button
-                v-else
-                type="button"
-                class="btn btn-sm btn-outline min-w-[40px]"
-                :class="
-                  page === currentPage
-                    ? '!bg-blue-100 !text-blue-600 !border-blue-300 !border'
-                    : 'text-gray-700 border-gray-300 hover:bg-blue-50 hover:text-blue-600'
-                "
-                @click="changePage(page)"
-              >
-                {{ page }}
-              </button>
-            </template>
-          </div>
-
-          <!-- Next Button -->
-          <button
-            type="button"
-            class="btn btn-sm btn-outline dark:text-gray-300"
-            :disabled="currentPage === totalPages"
-            @click="changePage(currentPage + 1)"
-          >
-            Next
-          </button>
-        </nav>
-      </div>
 
       <!-- Loading State -->
       <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
@@ -345,6 +200,51 @@
         <p class="font-medium">Error loading receiving records</p>
         <p class="text-xs mt-1">{{ error }}</p>
       </div>
+
+      <!-- Pagination -->
+      <div class="mt-6 flex justify-center">
+        <nav class="flex items-center gap-x-2">
+          <!-- Previous Button -->
+          <button
+            type="button"
+            class="btn btn-sm btn-outline dark:text-gray-300"
+            :disabled="currentPage === 1"
+            @click="changePage(currentPage - 1)"
+          >
+            Previous
+          </button>
+
+          <!-- Page Numbers -->
+          <div class="flex items-center gap-x-1">
+            <template v-for="page in displayPages" :key="page">
+              <span v-if="page === -1" class="px-2" aria-hidden="true">...</span>
+              <button
+                v-else
+                type="button"
+                class="btn btn-sm btn-outline min-w-[40px]"
+                :class="
+                  page === currentPage
+                    ? '!bg-blue-100 !text-blue-600 !border-blue-300 !border'
+                    : 'text-gray-700 border-gray-300 hover:bg-blue-50 hover:text-blue-600'
+                "
+                @click="changePage(page)"
+              >
+                {{ page }}
+              </button>
+            </template>
+          </div>
+
+          <!-- Next Button -->
+          <button
+            type="button"
+            class="btn btn-sm btn-outline dark:text-gray-300"
+            :disabled="currentPage === totalPages"
+            @click="changePage(currentPage + 1)"
+          >
+            Next
+          </button>
+        </nav>
+      </div>
     </div>
   </div>
 </template>
@@ -353,6 +253,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import Swal from 'sweetalert2'
 import { authenticatedFetch } from '@/utils/authenticatedFetch'
+import SelectTable from '@/components/common/SelectTable.vue'
 
 // Props for receiving filters
 const props = defineProps({
@@ -371,9 +272,118 @@ const error = ref(null)
 const expandedRows = ref([])
 const selectedItems = ref([])
 const selectAll = ref(false)
+const selectedColumns = ref([])
 
 // API endpoint for receivings
 const API_URL = '/api/receiving'
+
+const allowedColumns = [
+  'receivingCode',
+  'doNumber',
+  'productName',
+  'expectedQuantity',
+  'receivedQuantity',
+  'receivingSource',
+  'receivingPurpose',
+  'receivedBy',
+  'dateReceived',
+  'remarks',
+]
+
+const fieldAliases = {
+  receivingCode: ['receivingCode', 'code'],
+  doNumber: ['doNumber', 'deliveryOrderNumber'],
+  productName: ['productName'],
+  expectedQuantity: ['expectedQuantity'],
+  receivedQuantity: ['receivedQuantity'],
+  receivingSource: ['receivingSource', 'source'],
+  receivingPurpose: ['receivingPurpose', 'purpose'],
+  receivedBy: ['receivedBy', 'receiver'],
+  dateReceived: ['dateReceived', 'receivingDate'],
+  remarks: ['remarks', 'note', 'notes'],
+}
+
+// Format column name for display
+const formatColumnName = (name) => {
+  const nameMap = {
+    receivingCode: 'Receiving Code',
+    doNumber: 'DO Number',
+    productName: 'Product Name',
+    expectedQuantity: 'Expected Quantity',
+    receivedQuantity: 'Received Quantity',
+    receivingSource: 'Receiving Source',
+    receivingPurpose: 'Receiving Purpose',
+    receivedBy: 'Received By',
+    dateReceived: 'Date Received',
+    remarks: 'Remarks',
+  }
+
+  return (
+    nameMap[name] ||
+    name
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, (str) => str.toUpperCase())
+      .trim()
+  )
+}
+
+// Get cell value with fallback for alternate field names
+const getCellValue = (row, col) => {
+  const aliases = fieldAliases[col]
+  if (aliases) {
+    for (const alias of aliases) {
+      if (row[alias] != null && row[alias] !== '') {
+        return row[alias]
+      }
+    }
+  }
+
+  if (col === 'productName') {
+    if (row.isReceiving) {
+      return row.aggregatedProducts?.display || '-'
+    } else {
+      return row.product?.name || '-'
+    }
+  } else if (col === 'expectedQuantity') {
+    if (row.isReceiving) {
+      return row.totalExpectedQuantity || '-'
+    } else {
+      return row.expectedQuantity || '-'
+    }
+  } else if (col === 'receivedQuantity') {
+    if (row.isReceiving) {
+      return row.totalReceivedQuantity || '-'
+    } else {
+      return row.quantity || '-'
+    }
+  } else if (col === 'receivingSource') {
+    if (row.isReceiving) {
+      return row.aggregatedSources?.display || '-'
+    } else {
+      return row.source || '-'
+    }
+  } else if (col === 'receivingPurpose') {
+    if (row.isReceiving) {
+      return row.aggregatedPurposes?.display || '-'
+    } else {
+      return row.receivingPurpose || '-'
+    }
+  } else if (col === 'receivedBy') {
+    return row.isReceiving ? row.receivedBy || '-' : '-'
+  } else if (col === 'dateReceived') {
+    return row.isReceiving ? formatDate(row.receivingDate) : '-'
+  } else if (col === 'remarks') {
+    return row.isReceiving ? row.remarks || '-' : '-'
+  }
+  return row[col] != null ? row[col] : '-'
+}
+
+// Handle column selection update from SelectTable component
+const handleColumnsUpdate = (columns) => {
+  console.log('Parent: handleColumnsUpdate called with:', columns)
+  selectedColumns.value = columns
+  console.log('Selected columns updated:', columns)
+}
 
 // Function to fetch receivings from the API
 const fetchReceivings = async () => {
@@ -386,6 +396,11 @@ const fetchReceivings = async () => {
 
     const json = await response.json()
     data.value = json || []
+
+    if (selectedColumns.value.length === 0) {
+      selectedColumns.value = [...allowedColumns]
+      console.log('Set default columns (all):', selectedColumns.value)
+    }
   } catch (e) {
     error.value = e.message
     console.error('Error fetching receivings:', e)
@@ -468,14 +483,9 @@ const aggregatePurposes = (receiving) => {
   }
 
   // Prefer item-level purposes when present
-  const itemPurposes = receiving.receivingItems
-    .map(item => item.purpose)
-    .filter(Boolean)
+  const itemPurposes = receiving.receivingItems.map((item) => item.purpose).filter(Boolean)
 
-  const purposesList = itemPurposes.length > 0
-    ? itemPurposes
-    : [receiving.receivingPurpose || '']
-
+  const purposesList = itemPurposes.length > 0 ? itemPurposes : [receiving.receivingPurpose || '']
   const uniquePurposes = [...new Set(purposesList)]
   const maxDisplay = 2
   const displayPurposes = uniquePurposes.slice(0, maxDisplay)
