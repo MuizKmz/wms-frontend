@@ -1,27 +1,15 @@
 <template>
   <div class="overflow-hidden">
-    <!-- Header with Select Columns Button -->
-    <div class="flex justify-between items-center mb-4">
+    <div class="mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
         Showing {{ filteredData.length }} order records
       </p>
-
-      <!-- Select Columns Button -->
-      <div class="relative z-50">
-        <SelectTable
-          :apiUrl="API_URL"
-          :storageKey="`order-columns`"
-          :availableColumns="allowedColumns"
-          @update:selected="handleColumnsUpdate"
-        />
-      </div>
     </div>
 
     <div class="max-w-full overflow-x-auto custom-scrollbar">
       <table class="min-w-full">
         <thead>
           <tr class="border-b border-gray-200 dark:border-gray-700">
-            <!-- Checkbox Column (Always Visible) -->
             <th class="px-6 py-3 text-left w-12">
               <input
                 type="checkbox"
@@ -31,17 +19,69 @@
                 @change="toggleSelectAll"
               />
             </th>
-
-            <!-- Dynamic Columns -->
-            <th v-for="col in selectedColumns" :key="col" class="px-6 py-3 text-left">
+            <th class="px-6 py-3 text-left">
               <p
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
               >
-                {{ formatColumnName(col) }}
+                Order Number
               </p>
             </th>
-
-            <!-- Action Column (Always Visible) -->
+            <th class="px-6 py-3 text-left">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
+                Customer ID
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
+                PIC
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
+                Product Name
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
+                Expected Quantity
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
+                Stock Out Quantity
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
+                Status
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
+                Remarks
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
+                Estimated Delivery
+              </p>
+            </th>
             <th class="px-6 py-3 text-left">
               <p
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
@@ -61,7 +101,6 @@
               'bg-gray-25 dark:bg-gray-900/30': row.depth > 0,
             }"
           >
-            <!-- Checkbox -->
             <td class="px-6 py-4">
               <input
                 type="checkbox"
@@ -72,79 +111,94 @@
               />
             </td>
 
-            <!-- Dynamic Data Columns -->
-            <td v-for="col in selectedColumns" :key="col" class="px-6 py-4">
-              <!-- Order Number with clickable button -->
-              <div v-if="col === 'orderNumber'" :style="{ 'padding-left': row.depth * 2 + 'rem' }">
-                <div class="flex items-center gap-2">
-                  <div class="w-4 h-4"></div>
-                  <button
-                    @click="viewOrder(row)"
-                    class="text-left font-bold text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    {{ getCellValue(row, col) }}
-                  </button>
-                </div>
+            <!-- Order Number with expand/collapse -->
+            <td class="px-6 py-4">
+              <div
+                class="flex items-center gap-2"
+                :style="{ 'padding-left': row.depth * 2 + 'rem' }"
+              >
+                <div class="w-4 h-4"></div>
+
+                <button
+                  @click="viewOrder(row)"
+                  class="text-left font-bold text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  {{ row.orderNo || '-' }}
+                </button>
               </div>
+            </td>
 
-              <!-- Customer ID with monospace -->
-              <span
-                v-else-if="col === 'customerId'"
-                class="font-mono text-sm text-gray-900 dark:text-white"
-              >
-                {{ getCellValue(row, col) }}
-              </span>
-
-              <!-- Status with badge styling -->
-              <span
-                v-else-if="col === 'status'"
-                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-wide"
-                :class="statusClass(row.status)"
-              >
-                {{ getCellValue(row, col) }}
-              </span>
-
-              <!-- Product Name with tooltip -->
-              <span
-                v-else-if="col === 'productName'"
-                class="text-sm text-gray-900 dark:text-white"
-                :title="row.isOrder && row.aggregatedProducts ? row.aggregatedProducts.full : ''"
-              >
-                {{ getCellValue(row, col) }}
-              </span>
-
-              <!-- Date fields -->
-              <span
-                v-else-if="col === 'estimatedDelivery'"
-                class="text-sm text-gray-900 dark:text-white"
-              >
-                {{ formatDate(getCellValue(row, col)) }}
-              </span>
-
-              <!-- Default display -->
-              <span v-else class="text-sm text-gray-900 dark:text-white">
-                {{ getCellValue(row, col) }}
+            <!-- Customer ID -->
+            <td class="px-6 py-4">
+              <span class="font-mono text-sm text-gray-900 dark:text-white">
+                {{
+                  row.isOrder
+                    ? row.customer?.customerCode || row.supplier?.supplierCode || '-'
+                    : '-'
+                }}
               </span>
             </td>
 
-            <!-- Action Buttons (Always Visible) -->
+            <!-- PIC -->
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-900 dark:text-white">
+                {{ row.isOrder ? row.picName || '-' : '-' }}
+              </span>
+            </td>
+
+            <!-- Product Name -->
+            <td class="px-6 py-4">
+              <span
+                class="text-sm text-gray-900 dark:text-white"
+                :title="row.isOrder && row.aggregatedProducts ? row.aggregatedProducts.full : ''"
+              >
+                {{
+                  row.isOrder ? row.aggregatedProducts?.display || '-' : row.product?.name || '-'
+                }}
+              </span>
+            </td>
+
+            <!-- Expected Quantity -->
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-900 dark:text-white">
+                {{ row.isOrder ? row.totalExpectedQuantity || '-' : row.quantity || '-' }}
+              </span>
+            </td>
+
+            <!-- Stock Out Quantity -->
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-900 dark:text-white">
+                {{ row.isOrder ? row.totalStockOutQuantity || '0' : '-' }}
+              </span>
+            </td>
+
+            <!-- Status -->
+            <td class="px-6 py-4">
+              <span
+                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-wide"
+                :class="statusClass(row.status)"
+              >
+                {{ row.status || '-' }}
+              </span>
+            </td>
+
+            <!-- Remarks -->
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-900 dark:text-white">
+                {{ row.isOrder ? row.remarks || '-' : '-' }}
+              </span>
+            </td>
+
+            <!-- Estimated Delivery -->
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-900 dark:text-white">
+                {{ row.isOrder ? formatDate(row.estimatedDeliveryTime) : '-' }}
+              </span>
+            </td>
+
+            <!-- Action -->
             <td class="px-6 py-4">
               <div class="flex items-center gap-2">
-                <button
-                  @click="showQRCode(row)"
-                  class="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                  aria-label="QR Code"
-                  title="Show QR Code"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
-                    />
-                  </svg>
-                </button>
                 <button
                   @click="editOrder(row)"
                   class="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
@@ -180,6 +234,51 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- Pagination -->
+      <div class="mt-6 flex justify-center">
+        <nav class="flex items-center gap-x-2">
+          <!-- Previous Button -->
+          <button
+            type="button"
+            class="btn btn-sm btn-outline dark:text-gray-300"
+            :disabled="currentPage === 1"
+            @click="changePage(currentPage - 1)"
+          >
+            Previous
+          </button>
+
+          <!-- Page Numbers -->
+          <div class="flex items-center gap-x-1">
+            <template v-for="page in displayPages" :key="page">
+              <span v-if="page === -1" class="px-2" aria-hidden="true">...</span>
+              <button
+                v-else
+                type="button"
+                class="btn btn-sm btn-outline min-w-[40px]"
+                :class="
+                  page === currentPage
+                    ? '!bg-blue-100 !text-blue-600 !border-blue-300 !border'
+                    : 'text-gray-700 border-gray-300 hover:bg-blue-50 hover:text-blue-600'
+                "
+                @click="changePage(page)"
+              >
+                {{ page }}
+              </button>
+            </template>
+          </div>
+
+          <!-- Next Button -->
+          <button
+            type="button"
+            class="btn btn-sm btn-outline dark:text-gray-300"
+            :disabled="currentPage === totalPages"
+            @click="changePage(currentPage + 1)"
+          >
+            Next
+          </button>
+        </nav>
+      </div>
 
       <!-- Loading State -->
       <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
@@ -228,51 +327,6 @@
         <p class="font-medium">Error loading order records</p>
         <p class="text-xs mt-1">{{ error }}</p>
       </div>
-
-      <!-- Pagination -->
-      <div class="mt-6 flex justify-center">
-        <nav class="flex items-center gap-x-2">
-          <!-- Previous Button -->
-          <button
-            type="button"
-            class="btn btn-sm btn-outline dark:text-gray-300"
-            :disabled="currentPage === 1"
-            @click="changePage(currentPage - 1)"
-          >
-            Previous
-          </button>
-
-          <!-- Page Numbers -->
-          <div class="flex items-center gap-x-1">
-            <template v-for="page in displayPages" :key="page">
-              <span v-if="page === -1" class="px-2" aria-hidden="true">...</span>
-              <button
-                v-else
-                type="button"
-                class="btn btn-sm btn-outline min-w-[40px]"
-                :class="
-                  page === currentPage
-                    ? '!bg-blue-100 !text-blue-600 !border-blue-300 !border'
-                    : 'text-gray-700 border-gray-300 hover:bg-blue-50 hover:text-blue-600'
-                "
-                @click="changePage(page)"
-              >
-                {{ page }}
-              </button>
-            </template>
-          </div>
-
-          <!-- Next Button -->
-          <button
-            type="button"
-            class="btn btn-sm btn-outline dark:text-gray-300"
-            :disabled="currentPage === totalPages"
-            @click="changePage(currentPage + 1)"
-          >
-            Next
-          </button>
-        </nav>
-      </div>
     </div>
 
     <OrderView ref="orderViewRef" />
@@ -287,7 +341,6 @@ import OrderQRModal from './OrderQRModal.vue'
 import QRCodeIcon from '@/icons/QRCodeIcon.vue'
 import Swal from 'sweetalert2'
 import authenticatedFetch from '@/utils/authenticatedFetch'
-import SelectTable from '@/components/common/SelectTable.vue'
 
 // Props for order filters
 const props = defineProps({
@@ -306,97 +359,6 @@ const error = ref(null)
 const expandedRows = ref([])
 const selectedItems = ref([])
 const selectAll = ref(false)
-const selectedColumns = ref([])
-
-const allowedColumns = [
-  'orderNumber',
-  'customerId',
-  'pic',
-  'productName',
-  'expectedQuantity',
-  'stockOutQuantity',
-  'status',
-  'remarks',
-  'estimatedDelivery',
-]
-
-const fieldAliases = {
-  orderNumber: ['orderNumber', 'orderNo'],
-  customerId: ['customerId', 'customerCode', 'supplierCode'],
-  pic: ['pic', 'picName'],
-  productName: ['productName', 'products'],
-  expectedQuantity: ['expectedQuantity', 'quantity'],
-  stockOutQuantity: ['stockOutQuantity'],
-  status: ['status'],
-  remarks: ['remarks', 'remark'],
-  estimatedDelivery: ['estimatedDelivery', 'estimatedDeliveryTime'],
-}
-
-// Format column name for display
-const formatColumnName = (name) => {
-  const nameMap = {
-    orderNumber: 'Order Number',
-    customerId: 'Customer ID',
-    pic: 'PIC',
-    productName: 'Product Name',
-    expectedQuantity: 'Expected Quantity',
-    stockOutQuantity: 'Stock Out Quantity',
-    status: 'Status',
-    remarks: 'Remarks',
-    estimatedDelivery: 'Estimated Delivery',
-  }
-
-  return (
-    nameMap[name] ||
-    name
-      .replace(/([A-Z])/g, ' $1')
-      .replace(/^./, (str) => str.toUpperCase())
-      .trim()
-  )
-}
-
-// Get cell value with fallback for alternate field names
-const getCellValue = (row, col) => {
-  const aliases = fieldAliases[col]
-  if (aliases) {
-    for (const alias of aliases) {
-      if (row[alias] != null && row[alias] !== '') {
-        return row[alias]
-      }
-    }
-  }
-
-  // Handle special cases
-  if (col === 'orderNumber') {
-    return row.orderNo || '-'
-  } else if (col === 'customerId') {
-    if (row.isOrder) {
-      return row.customer?.customerCode || row.supplier?.supplierCode || '-'
-    }
-    return '-'
-  } else if (col === 'pic') {
-    return row.isOrder ? row.picName || '-' : '-'
-  } else if (col === 'productName') {
-    return row.isOrder ? row.aggregatedProducts?.display || '-' : row.product?.name || '-'
-  } else if (col === 'expectedQuantity') {
-    return row.isOrder ? row.totalExpectedQuantity || '-' : row.quantity || '-'
-  } else if (col === 'stockOutQuantity') {
-    return row.isOrder ? row.totalStockOutQuantity || '0' : '-'
-  } else if (col === 'status') {
-    return row.status || '-'
-  } else if (col === 'remarks') {
-    return row.isOrder ? row.remarks || '-' : '-'
-  } else if (col === 'estimatedDelivery') {
-    return row.isOrder ? row.estimatedDeliveryTime || '-' : '-'
-  }
-
-  return row[col] != null ? row[col] : '-'
-}
-
-// Handle columns update from SelectTable component
-const handleColumnsUpdate = (columns) => {
-  selectedColumns.value = columns
-}
 
 // Map order statuses to badge color classes
 const statusClass = (status) => {

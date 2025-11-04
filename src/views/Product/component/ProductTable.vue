@@ -1,27 +1,16 @@
 <template>
   <div class="overflow-hidden">
-    <!-- Header with Select Columns Button -->
-    <div class="flex justify-between items-center mb-4">
+    <!-- Results count -->
+    <div class="mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
         Showing {{ filteredData.length }} product items
       </p>
-
-      <!-- Select Columns Button -->
-      <div class="relative z-50">
-        <SelectTable
-          :apiUrl="API_URL"
-          :storageKey="`product-columns`"
-          :availableColumns="allowedColumns"
-          @update:selected="handleColumnsUpdate"
-        />
-      </div>
     </div>
 
     <div class="max-w-full overflow-x-auto custom-scrollbar">
       <table class="min-w-full">
         <thead>
           <tr class="border-b border-gray-200 dark:border-gray-700">
-            <!-- Checkbox Column (Always Visible) -->
             <th class="px-6 py-3 text-left w-12">
               <input
                 type="checkbox"
@@ -31,17 +20,62 @@
                 @change="toggleSelectAll"
               />
             </th>
-
-            <!-- Dynamic Columns -->
-            <th v-for="col in selectedColumns" :key="col" class="px-6 py-3 text-left">
+            <th class="px-6 py-3 text-left">
               <p
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
               >
-                {{ formatColumnName(col) }}
+                Product Name
               </p>
             </th>
-
-            <!-- Action Column (Always Visible) -->
+            <th class="px-6 py-3 text-left">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
+                SKU Code
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
+                Category
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
+                Supplier Name
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
+                Quantity
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
+                Status
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
+                Remark
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
+                Created Time
+              </p>
+            </th>
             <th class="px-6 py-3 text-left">
               <p
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
@@ -51,14 +85,12 @@
             </th>
           </tr>
         </thead>
-
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
           <tr
             v-for="item in paginatedData"
             :key="item.id"
             class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
           >
-            <!-- Checkbox -->
             <td class="px-6 py-4">
               <input
                 type="checkbox"
@@ -69,29 +101,66 @@
               />
             </td>
 
-            <!-- Dynamic Data Columns -->
-            <td v-for="col in selectedColumns" :key="col" class="px-6 py-4">
-              <!-- SKU Code with monospace -->
+            <!-- Product Name -->
+            <td class="px-6 py-4">
+              <span class="text-sm font-medium text-gray-900 dark:text-white">
+                {{ item.productName || '-' }}
+              </span>
+            </td>
+
+            <!-- SKU Code -->
+            <td class="px-6 py-4">
+              <span class="font-mono text-sm text-gray-900 dark:text-white">
+                {{ item.skuCode || '-' }}
+              </span>
+            </td>
+
+            <!-- Category -->
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-900 dark:text-white">
+                {{ item.category || '-' }}
+              </span>
+            </td>
+
+            <!-- Supplier Name -->
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-900 dark:text-white">
+                {{ item.supplierName || '-' }}
+              </span>
+            </td>
+
+            <!-- Quantity -->
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-900 dark:text-white">
+                {{ item.quantity || 0 }}
+              </span>
+            </td>
+
+            <!-- Status -->
+            <td class="px-6 py-4">
               <span
-                v-if="col === 'skuCode'"
-                class="font-mono text-sm text-gray-900 dark:text-white"
+                :class="{
+                  'px-3 py-1 text-xs rounded-full font-medium': true,
+                  'bg-green-100 text-green-600': item.status === 'Active',
+                  'bg-blue-100 text-blue-600': item.status === 'Inactive',
+                  'bg-yellow-100 text-yellow-600': item.status === 'Pending',
+                }"
               >
-                {{ getCellValue(item, col) }}
+                {{ item.status || 'Unknown' }}
               </span>
+            </td>
 
-              <!-- Created Time with date formatting -->
-              <span v-else-if="col === 'createdTime'" class="text-sm text-gray-900 dark:text-white">
-                {{ formatDate(getCellValue(item, col)) }}
+            <!-- Remark -->
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-900 dark:text-white">
+                {{ item.remark || '-' }}
               </span>
+            </td>
 
-              <!-- Status with badge styling -->
-              <span v-else-if="col === 'status'" :class="statusBadgeClass(getCellValue(item, col))">
-                {{ getCellValue(item, col) || 'Unknown' }}
-              </span>
-
-              <!-- Default display -->
-              <span v-else class="text-sm text-gray-900 dark:text-white">
-                {{ getCellValue(item, col) }}
+            <!-- Created Time -->
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-900 dark:text-white">
+                {{ formatDate(item.createdTime) }}
               </span>
             </td>
 
@@ -150,6 +219,51 @@
         </tbody>
       </table>
 
+      <!-- Pagination -->
+      <div class="mt-6 flex justify-center">
+        <nav class="flex items-center gap-x-2">
+          <!-- Previous Button -->
+          <button
+            type="button"
+            class="btn btn-sm btn-outline dark:text-gray-300"
+            :disabled="currentPage === 1"
+            @click="changePage(currentPage - 1)"
+          >
+            Previous
+          </button>
+
+          <!-- Page Numbers -->
+          <div class="flex items-center gap-x-1">
+            <template v-for="page in displayPages" :key="page">
+              <span v-if="page === -1" class="px-2" aria-hidden="true">...</span>
+              <button
+                v-else
+                type="button"
+                class="btn btn-sm btn-outline min-w-[40px]"
+                :class="
+                  page === currentPage
+                    ? '!bg-blue-100 !text-blue-600 !border-blue-300 !border'
+                    : 'text-gray-700 border-gray-300 hover:bg-blue-50 hover:text-blue-600'
+                "
+                @click="changePage(page)"
+              >
+                {{ page }}
+              </button>
+            </template>
+          </div>
+
+          <!-- Next Button -->
+          <button
+            type="button"
+            class="btn btn-sm btn-outline dark:text-gray-300"
+            :disabled="currentPage === totalPages"
+            @click="changePage(currentPage + 1)"
+          >
+            Next
+          </button>
+        </nav>
+      </div>
+
       <!-- Loading -->
       <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
         <div
@@ -197,51 +311,6 @@
         <p class="font-medium">Error loading products</p>
         <p class="text-xs mt-1">{{ error }}</p>
       </div>
-
-      <!-- Pagination -->
-      <div class="mt-6 flex justify-center">
-        <nav class="flex items-center gap-x-2">
-          <!-- Previous Button -->
-          <button
-            type="button"
-            class="btn btn-sm btn-outline dark:text-gray-300"
-            :disabled="currentPage === 1"
-            @click="changePage(currentPage - 1)"
-          >
-            Previous
-          </button>
-
-          <!-- Page Numbers -->
-          <div class="flex items-center gap-x-1">
-            <template v-for="page in displayPages" :key="page">
-              <span v-if="page === -1" class="px-2" aria-hidden="true">...</span>
-              <button
-                v-else
-                type="button"
-                class="btn btn-sm btn-outline min-w-[40px]"
-                :class="
-                  page === currentPage
-                    ? '!bg-blue-100 !text-blue-600 !border-blue-300 !border'
-                    : 'text-gray-700 border-gray-300 hover:bg-blue-50 hover:text-blue-600'
-                "
-                @click="changePage(page)"
-              >
-                {{ page }}
-              </button>
-            </template>
-          </div>
-
-          <!-- Next Button -->
-          <button
-            type="button"
-            class="btn btn-sm btn-outline dark:text-gray-300"
-            :disabled="currentPage === totalPages"
-            @click="changePage(currentPage + 1)"
-          >
-            Next
-          </button>
-        </nav>
-      </div>
     </div>
   </div>
 </template>
@@ -251,7 +320,6 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import authenticatedFetch from '@/utils/authenticatedFetch'
 import Swal from 'sweetalert2'
-import SelectTable from '@/components/common/SelectTable.vue'
 
 // Get permission checking functions
 const { canUpdate, canDelete } = useAuth()
@@ -272,89 +340,9 @@ const loading = ref(false)
 const error = ref(null)
 const selectedItems = ref([])
 const selectAll = ref(false)
-const selectedColumns = ref([])
 
 // API endpoint for products
 const API_URL = '/api/product'
-
-const allowedColumns = [
-  'productName',
-  'skuCode',
-  'category',
-  'supplierName',
-  'quantity',
-  'status',
-  'remark',
-  'createdTime',
-]
-
-const fieldAliases = {
-  productName: ['productName', 'name'],
-  skuCode: ['skuCode', 'sku'],
-  category: ['category'],
-  supplierName: ['supplierName'],
-  quantity: ['quantity'],
-  status: ['status'],
-  remark: ['remark', 'remarks'],
-  createdTime: ['createdTime', 'createdAt'],
-}
-
-//Format column name for display
-const formatColumnName = (name) => {
-  const nameMap = {
-    productName: 'Product Name',
-    skuCode: 'SKU Code',
-    category: 'Category',
-    supplierName: 'Supplier Name',
-    quantity: 'Quantity',
-    status: 'Status',
-    remark: 'Remark',
-    createdTime: 'Created Time',
-  }
-
-  return (
-    nameMap[name] ||
-    name
-      .replace(/([A-Z])/g, ' $1')
-      .replace(/^./, (str) => str.toUpperCase())
-      .trim()
-  )
-}
-
-//Get cell value with proper fallbacks and field aliases
-const getCellValue = (item, col) => {
-  const aliases = fieldAliases[col]
-  if (aliases) {
-    for (const alias of aliases) {
-      if (item[alias] != null && item[alias] !== '') {
-        return item[alias]
-      }
-    }
-  }
-
-  return item[col] != null ? item[col] : '-'
-}
-
-// Get status badge class
-const statusBadgeClass = (status) => {
-  const baseClasses = 'px-3 py-1 text-xs rounded-full font-medium'
-  switch (status) {
-    case 'Active':
-      return `${baseClasses} bg-green-100 text-green-600`
-    case 'Inactive':
-      return `${baseClasses} bg-blue-100 text-blue-600`
-    case 'Pending':
-      return `${baseClasses} bg-yellow-100 text-yellow-600`
-    default:
-      return `${baseClasses} bg-gray-100 text-gray-600`
-  }
-}
-
-//Handle column selection update from SelectTable component
-const handleColumnsUpdate = (columns) => {
-  selectedColumns.value = columns
-  console.log('Selected columns updated:', columns)
-}
 
 // Function to fetch products from the API
 const fetchProducts = async () => {
@@ -389,10 +377,6 @@ const fetchProducts = async () => {
         raw: p,
       }
     })
-    if (selectedColumns.value.length === 0) {
-      selectedColumns.value = [...allowedColumns]
-      console.log('Set default columns (all):', selectedColumns.value)
-    }
   } catch (e) {
     error.value = e.message
     console.error('Error fetching products:', e)
