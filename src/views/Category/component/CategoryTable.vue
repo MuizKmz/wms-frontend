@@ -1,15 +1,27 @@
 <template>
   <div class="overflow-hidden">
-    <div class="mb-4">
+    <!-- Header with button and count -->
+    <div class="flex justify-between items-center mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
         Showing {{ filteredData.length }} top-level categories
       </p>
+
+      <!-- Select Columns Button -->
+      <div class="relative z-50">
+        <SelectTable
+          :apiUrl="API_URL"
+          :storageKey="`category-columns`"
+          :excludeColumns="excludedColumns"
+          @update:selected="handleColumnsUpdate"
+        />
+      </div>
     </div>
 
     <div class="max-w-full overflow-x-auto custom-scrollbar">
       <table class="min-w-full">
         <thead>
           <tr class="border-b border-gray-200 dark:border-gray-700">
+            <!-- Checkbox Column (Always Visible) -->
             <th class="px-6 py-3 text-left w-12">
               <input
                 type="checkbox"
@@ -19,34 +31,17 @@
                 @change="toggleSelectAll"
               />
             </th>
-            <th class="px-6 py-3 text-left">
+
+            <!-- Dynamic Columns -->
+            <th v-for="col in selectedColumns" :key="col" class="px-6 py-3 text-left">
               <p
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
               >
-                Category Name
+                {{ formatColumnName(col) }}
               </p>
             </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Category Code
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Status
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Storage Requirements
-              </p>
-            </th>
+
+            <!-- Action Column (Always Visible) -->
             <th class="px-6 py-3 text-left">
               <p
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
@@ -63,10 +58,10 @@
             :key="row.id"
             :class="{
               'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors': true,
-              // Apply background/style based on depth
               'bg-gray-25 dark:bg-gray-900/30': row.depth > 0,
             }"
           >
+            <!-- Checkbox -->
             <td class="px-6 py-4">
               <input
                 type="checkbox"
@@ -77,8 +72,11 @@
               />
             </td>
 
-            <td class="px-6 py-4">
+            <!-- Dynamic Data Columns -->
+            <td v-for="col in selectedColumns" :key="col" class="px-6 py-4">
+              <!-- Category Name with expand/collapse button -->
               <div
+                v-if="col === 'name'"
                 class="flex items-center gap-2"
                 :style="{ 'padding-left': row.depth * 2 + 'rem' }"
               >
@@ -107,10 +105,8 @@
                 <span
                   class="text-sm"
                   :class="{
-                    // Text color based on depth
                     'text-gray-900 dark:text-white': row.depth === 0,
                     'text-gray-700 dark:text-gray-300': row.depth > 0,
-                    // BOLD ONLY PARENT CATEGORIES
                     'font-medium': row.depth === 0,
                     'font-normal': row.depth > 0,
                   }"
@@ -118,16 +114,10 @@
                   {{ row.name }}
                 </span>
               </div>
-            </td>
 
-            <td class="px-6 py-4">
-              <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ row.categoryCode }}
-              </span>
-            </td>
-
-            <td class="px-6 py-4">
+              <!-- Status Column with Badge -->
               <span
+                v-else-if="col === 'status'"
                 :class="{
                   'px-3 py-1 text-xs rounded-full font-medium': true,
                   'bg-green-100 text-green-600': row.status === 'Active',
@@ -135,16 +125,24 @@
                   'bg-yellow-100 text-yellow-600': row.status === 'Pending',
                 }"
               >
-                {{ row.status }}
+                {{ row[col] }}
               </span>
-            </td>
 
-            <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ row.storageRequirements || '-' }}
+              <!-- Category Code with Monospace Font -->
+              <span
+                v-else-if="col === 'categoryCode'"
+                class="font-mono text-sm text-gray-900 dark:text-white"
+              >
+                {{ row[col] }}
+              </span>
+
+              <!-- Regular Columns -->
+              <p v-else class="text-sm text-gray-900 dark:text-white">
+                {{ getCellValue(row, col) }}
               </p>
             </td>
 
+            <!-- Action Buttons -->
             <td class="px-6 py-4">
               <div class="flex items-center gap-2">
                 <button
@@ -183,6 +181,55 @@
         </tbody>
       </table>
 
+      <!-- Loading State -->
+      <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
+        <div
+          class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"
+        ></div>
+        <p>Loading categories...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div v-if="!loading && filteredData.length === 0" class="p-8 text-center text-gray-500">
+        <svg
+          class="mx-auto h-12 w-12 text-gray-300"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No categories found</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Try adjusting your filters or create a new category.
+        </p>
+      </div>
+
+      <!-- Error State -->
+      <div v-if="error" class="p-8 text-center text-red-500 text-sm">
+        <svg
+          class="mx-auto h-12 w-12 text-red-300 mb-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z"
+          />
+        </svg>
+        <p class="font-medium">Error loading categories</p>
+        <p class="text-xs mt-1">{{ error }}</p>
+      </div>
+
+      <!-- Pagination -->
       <div class="mt-6 flex justify-center">
         <nav class="flex items-center gap-x-2">
           <!-- Previous Button -->
@@ -226,51 +273,6 @@
           </button>
         </nav>
       </div>
-
-      <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
-        <div
-          class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"
-        ></div>
-        <p>Loading categories...</p>
-      </div>
-
-      <div v-if="!loading && filteredData.length === 0" class="p-8 text-center text-gray-500">
-        <svg
-          class="mx-auto h-12 w-12 text-gray-300"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="1"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No categories found</p>
-        <p class="text-sm text-gray-500 dark:text-gray-400">
-          Try adjusting your filters or create a new category.
-        </p>
-      </div>
-
-      <div v-if="error" class="p-8 text-center text-red-500 text-sm">
-        <svg
-          class="mx-auto h-12 w-12 text-red-300 mb-2"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="1"
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z"
-          />
-        </svg>
-        <p class="font-medium">Error loading categories</p>
-        <p class="text-xs mt-1">{{ error }}</p>
-      </div>
     </div>
   </div>
 </template>
@@ -279,6 +281,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import Swal from 'sweetalert2'
 import { authenticatedFetch } from '@/utils/authenticatedFetch'
+import SelectTable from '@/components/common/SelectTable.vue'
 
 // Props for receiving filters
 const props = defineProps({
@@ -297,10 +300,33 @@ const error = ref(null)
 const expandedCategories = ref([])
 const selectedItems = ref([])
 const selectAll = ref(false)
+const selectedColumns = ref([])
 
 // API endpoint for categories
 const API_URL = '/api/category'
 
+// Columns to exclude
+const excludedColumns = ['id', 'createdAt', 'updatedAt', 'parentCategoryId', 'products', 'level']
+
+// Format column name
+const formatColumnName = (name) => {
+  return name
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (str) => str.toUpperCase())
+    .trim()
+}
+
+// Get cell value with fallback
+const getCellValue = (item, col) => {
+  if (col === 'storageRequirements') return item.storageRequirements || '-'
+  return item[col] ?? '-'
+}
+
+// Handle column selection update
+const handleColumnsUpdate = (columns) => {
+  selectedColumns.value = columns
+  console.log('Selected columns updated:', columns)
+}
 // Function to fetch categories from the API
 const fetchCategories = async () => {
   loading.value = true
@@ -312,6 +338,15 @@ const fetchCategories = async () => {
 
     const json = await response.json()
     data.value = json || []
+
+    // Auto-initialize columns from API data if not already set
+    if (selectedColumns.value.length === 0 && json && json.length > 0) {
+      const allColumns = Object.keys(json[0]).filter(
+        (col) => !excludedColumns.map((c) => c.toLowerCase()).includes(col.toLowerCase()),
+      )
+      selectedColumns.value = allColumns
+      console.log('Auto-loaded columns from API:', allColumns)
+    }
   } catch (e) {
     error.value = e.message
     console.error('Error fetching categories:', e)

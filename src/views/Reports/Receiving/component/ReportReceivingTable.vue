@@ -217,51 +217,6 @@
         </tbody>
       </table>
 
-      <!-- Pagination -->
-      <div class="mt-6 flex justify-center">
-        <nav class="flex items-center gap-x-2">
-          <!-- Previous Button -->
-          <button
-            type="button"
-            class="btn btn-sm btn-outline dark:text-gray-300"
-            :disabled="currentPage === 1"
-            @click="changePage(currentPage - 1)"
-          >
-            Previous
-          </button>
-
-          <!-- Page Numbers -->
-          <div class="flex items-center gap-x-1">
-            <template v-for="page in displayPages" :key="page">
-              <span v-if="page === -1" class="px-2" aria-hidden="true">...</span>
-              <button
-                v-else
-                type="button"
-                class="btn btn-sm btn-outline min-w-[40px]"
-                :class="
-                  page === currentPage
-                    ? '!bg-blue-100 !text-blue-600 !border-blue-300 !border'
-                    : 'text-gray-700 border-gray-300 hover:bg-blue-50 hover:text-blue-600'
-                "
-                @click="changePage(page)"
-              >
-                {{ page }}
-              </button>
-            </template>
-          </div>
-
-          <!-- Next Button -->
-          <button
-            type="button"
-            class="btn btn-sm btn-outline dark:text-gray-300"
-            :disabled="currentPage === totalPages"
-            @click="changePage(currentPage + 1)"
-          >
-            Next
-          </button>
-        </nav>
-      </div>
-
       <!-- Loading State -->
       <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
         <div
@@ -311,6 +266,50 @@
         <p class="font-medium">Error loading receiving records</p>
         <p class="text-xs mt-1">{{ error }}</p>
       </div>
+      <!-- Pagination -->
+      <div class="mt-6 flex justify-center">
+        <nav class="flex items-center gap-x-2">
+          <!-- Previous Button -->
+          <button
+            type="button"
+            class="btn btn-sm btn-outline dark:text-gray-300"
+            :disabled="currentPage === 1"
+            @click="changePage(currentPage - 1)"
+          >
+            Previous
+          </button>
+
+          <!-- Page Numbers -->
+          <div class="flex items-center gap-x-1">
+            <template v-for="page in displayPages" :key="page">
+              <span v-if="page === -1" class="px-2" aria-hidden="true">...</span>
+              <button
+                v-else
+                type="button"
+                class="btn btn-sm btn-outline min-w-[40px]"
+                :class="
+                  page === currentPage
+                    ? '!bg-blue-100 !text-blue-600 !border-blue-300 !border'
+                    : 'text-gray-700 border-gray-300 hover:bg-blue-50 hover:text-blue-600'
+                "
+                @click="changePage(page)"
+              >
+                {{ page }}
+              </button>
+            </template>
+          </div>
+
+          <!-- Next Button -->
+          <button
+            type="button"
+            class="btn btn-sm btn-outline dark:text-gray-300"
+            :disabled="currentPage === totalPages"
+            @click="changePage(currentPage + 1)"
+          >
+            Next
+          </button>
+        </nav>
+      </div>
     </div>
   </div>
 </template>
@@ -337,19 +336,6 @@ const error = ref(null)
 const expandedRows = ref([])
 const selectedItems = ref([])
 const selectAll = ref(false)
-
-const purposeClass = (purpose) => {
-  if (!purpose) return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
-  const map = {
-    'Raw Material': 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
-    'Finished Goods': 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
-    Packaging: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
-    Consumables: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200',
-    Equipment: 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200',
-    Returns: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200',
-  }
-  return map[purpose] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
-}
 
 // API endpoint for receivings
 const API_URL = '/api/receiving'
@@ -438,14 +424,20 @@ const aggregateSources = (receiving) => {
   }
 }
 
-// Function to aggregate purposes from receiving items
+// Function to aggregate purposes from receiving items or fall back to the receiving's purpose
 const aggregatePurposes = (receiving) => {
+  // If no items, fall back to parent receiving purpose (or Raw Material)
   if (!receiving.receivingItems || receiving.receivingItems.length === 0) {
-    return { display: '-', full: '' }
+    const fallback = receiving.receivingPurpose || ''
+    return { display: fallback, full: fallback }
   }
 
-  const purposes = receiving.receivingItems.map((item) => item.purpose || 'Raw Material')
-  const uniquePurposes = [...new Set(purposes)]
+  // Prefer item-level purposes when present
+  const itemPurposes = receiving.receivingItems.map((item) => item.purpose).filter(Boolean)
+
+  const purposesList = itemPurposes.length > 0 ? itemPurposes : [receiving.receivingPurpose || '']
+
+  const uniquePurposes = [...new Set(purposesList)]
   const maxDisplay = 2
   const displayPurposes = uniquePurposes.slice(0, maxDisplay)
   const remaining = uniquePurposes.length - maxDisplay
@@ -517,6 +509,12 @@ const filteredData = computed(() => {
         return false
       }
     }
+    if (
+      filters.doNumber &&
+      !item.doNumber?.toLowerCase().includes(filters.doNumber.toLowerCase())
+    ) {
+      return false
+    }
 
     // Date filter
     if (filters.date && item.receivingDate) {
@@ -532,6 +530,14 @@ const filteredData = computed(() => {
       if (!hasMatchingPurpose) {
         return false
       }
+    }
+    if (filters.purpose) {
+      const purpose = filters.purpose.toLowerCase()
+      const hasPurpose =
+        item.aggregatedPurposes?.display?.toLowerCase() === purpose ||
+        item.receivingItems?.some((ri) => ri.purpose?.toLowerCase() === purpose)
+
+      if (!hasPurpose) return false
     }
 
     return true
