@@ -506,15 +506,34 @@ const aggregatePurposes = (receiving) => {
 
 // Function to calculate total expected quantity
 const calculateTotalExpectedQuantity = (receiving) => {
-  if (!receiving.receivingItems || receiving.receivingItems.length === 0) {
-    return '-'
+  // Try receivingItems.expectedQuantity first if present
+  if (receiving.receivingItems && receiving.receivingItems.length > 0) {
+    const itemHasExpected = receiving.receivingItems.some((it) => it.expectedQuantity !== undefined && it.expectedQuantity !== null)
+    if (itemHasExpected) {
+      const total = receiving.receivingItems.reduce((sum, item) => {
+        return sum + (item.expectedQuantity || 0)
+      }, 0)
+      return total > 0 ? total : '-'
+    }
   }
 
-  const total = receiving.receivingItems.reduce((sum, item) => {
-    return sum + (item.expectedQuantity || 0)
-  }, 0)
+  // Fallback: if this receiving is linked to an order, sum matching orderItems quantities
+  if (receiving.order && Array.isArray(receiving.order.orderItems) && receiving.order.orderItems.length > 0) {
+    // Sum quantities from order items that correspond to products in receivingItems
+    const productIdsInReceiving = (receiving.receivingItems || []).map((it) => it.productId)
+    if (productIdsInReceiving.length === 0) return '-'
 
-  return total > 0 ? total : '-'
+    const total = receiving.order.orderItems.reduce((sum, oi) => {
+      if (productIdsInReceiving.includes(oi.productId)) {
+        return sum + (oi.quantity || 0)
+      }
+      return sum
+    }, 0)
+
+    return total > 0 ? total : '-'
+  }
+
+  return '-'
 }
 
 // Function to calculate total received quantity
@@ -790,10 +809,11 @@ const deleteReceiving = async (item) => {
     return
   }
 
-  try {
+    try {
     const endpoint = item.isReceiving ? `${API_URL}/${item.id}` : `${API_URL}/items/${item.id}`
 
-    const response = await fetch(endpoint, {
+    // Use authenticatedFetch so the auth token is attached and backend authorizes the request
+    const response = await authenticatedFetch(endpoint, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
     })

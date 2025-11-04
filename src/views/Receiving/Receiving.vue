@@ -249,7 +249,7 @@ const handleBulkDelete = async () => {
   }
 
   // The actual bulk delete logic will be handled in the table component
-  await receivingTableRef.value.handleBulkDelete()
+  await receivingTableRef.value.bulkDelete()
 }
 
 // Handle import receiving
