@@ -7,7 +7,7 @@
           to="/"
           class="flex items-center cursor-pointer hover:opacity-80 transition transform hover:scale-105 duration-200"
         >
-          <h2 class="text-4xl font-bold text-gray-900">WMS</h2>
+          <h2 class="text-xl font-bold text-gray-900">WMS</h2>
         </router-link>
         
         <router-link
