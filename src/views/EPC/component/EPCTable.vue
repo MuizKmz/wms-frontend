@@ -1,15 +1,27 @@
 <template>
   <div class="overflow-hidden">
-    <div class="mb-4">
+    <!-- Header with Select Columns Button -->
+    <div class="flex justify-between items-center mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
         Showing {{ filteredData.length }} EPC records
       </p>
+
+      <!-- Select Columns Button -->
+      <div class="relative z-50">
+        <SelectTable
+          :apiUrl="API_URL"
+          :storageKey="`epc-columns`"
+          :availableColumns="allowedColumns"
+          @update:selected="handleColumnsUpdate"
+        />
+      </div>
     </div>
 
     <div class="max-w-full overflow-x-auto custom-scrollbar">
       <table class="min-w-full table-auto">
         <thead>
           <tr class="border-b border-gray-200 dark:border-gray-700">
+            <!-- Checkbox Column (Always Visible) -->
             <th class="px-6 py-3 text-left w-12">
               <input
                 type="checkbox"
@@ -20,83 +32,17 @@
               />
             </th>
 
-            <th class="px-6 py-3 text-left min-w-[200px]">
+            <!-- Dynamic Columns -->
+            <th
+              v-for="col in selectedColumns"
+              :key="col"
+              class="px-6 py-3 text-left"
+              :class="getColumnWidthClass(col)"
+            >
               <p
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
               >
-                EPC Code
-              </p>
-            </th>
-
-            <th class="px-6 py-3 text-left min-w-[100px]">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Corp Code
-              </p>
-            </th>
-
-            <th class="px-6 py-3 text-left min-w-[120px]">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                SKU Code
-              </p>
-            </th>
-
-            <th class="px-6 py-3 text-left min-w-[140px]">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Product Code
-              </p>
-            </th>
-
-            <th class="px-6 py-3 text-left min-w-[180px]">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Product Name
-              </p>
-            </th>
-
-            <th class="px-6 py-3 text-left min-w-[120px]">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Serial Number
-              </p>
-            </th>
-
-            <th class="px-6 py-3 text-left min-w-[100px]">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Batch No.
-              </p>
-            </th>
-
-            <th class="px-6 py-3 text-left min-w-[150px]">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Batch Name
-              </p>
-            </th>
-
-            <th class="px-6 py-3 text-left min-w-[100px]">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Status
-              </p>
-            </th>
-
-            <th class="px-6 py-3 text-left min-w-[150px]">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Created Time
+                {{ formatColumnName(col) }}
               </p>
             </th>
           </tr>
@@ -109,6 +55,7 @@
             class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
             @click="viewEPC(epc)"
           >
+            <!-- Checkbox -->
             <td class="px-6 py-4" @click.stop>
               <input
                 type="checkbox"
@@ -119,82 +66,130 @@
               />
             </td>
 
-            <td class="px-6 py-4">
-              <button
-                type="button"
-                class="text-left font-bold text-sm text-blue-600 dark:text-blue-400 hover:underline break-all focus:outline-none"
-                @click.stop="viewEPC(epc)"
-                :title="`View code images for ${epc.epcCode}`"
-              >
-                {{ epc.epcCode || '-' }}
-              </button>
-            </td>
+            <!-- Dynamic Data Columns -->
+            <td v-for="col in selectedColumns" :key="col" class="px-6 py-4">
+              <!-- EPC Code with clickable button -->
+              <span v-if="col === 'epcCode'">
+                <button
+                  type="button"
+                  class="text-left font-bold text-sm text-blue-600 dark:text-blue-400 hover:underline break-all focus:outline-none"
+                  @click.stop="viewEPC(epc)"
+                  :title="`View code images for ${getCellValue(epc, col)}`"
+                >
+                  {{ getCellValue(epc, col) }}
+                </button>
+              </span>
 
-            <td class="px-6 py-4">
-              <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ epc.corpCode?.code || parseEPCCode(epc.epcCode).corpCode || '-' }}
+              <!-- Corp Code with monospace and label -->
+              <span
+                v-else-if="col === 'corpCode'"
+                class="font-mono text-sm text-gray-900 dark:text-white"
+              >
+                {{ getCellValue(epc, col) }}
                 <span
                   v-if="epc.corpCode?.label"
                   class="block text-[11px] text-gray-500 dark:text-gray-400"
-                  >{{ epc.corpCode.label }}</span
                 >
+                  {{ epc.corpCode.label }}
+                </span>
               </span>
-            </td>
 
-            <td class="px-6 py-4">
-              <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ epc.product?.skuCode || parseEPCCode(epc.epcCode).skuCode || '-' }}
-              </span>
-            </td>
-
-            <td class="px-6 py-4">
-              <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ epc.product?.productCode || '-' }}
-              </span>
-            </td>
-
-            <td class="px-6 py-4">
-              <span class="text-sm text-gray-900 dark:text-white line-clamp-2">
-                {{ epc.product?.name || '-' }}
-              </span>
-            </td>
-
-            <td class="px-6 py-4">
-              <span class="font-mono text-sm font-semibold text-green-600 dark:text-green-400">
-                {{ parseEPCCode(epc.epcCode).serialNumber || '-' }}
-              </span>
-            </td>
-
-            <td class="px-6 py-4">
-              <span class="text-sm text-gray-900 dark:text-white">
-                {{ epc.batchNumber || '-' }}
-              </span>
-            </td>
-
-            <td class="px-6 py-4">
-              <span class="text-sm text-gray-900 dark:text-white">
-                {{ epc.batchName || '-' }}
-              </span>
-            </td>
-
-            <td class="px-6 py-4">
+              <!-- SKU Code with monospace -->
               <span
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                :class="getStatusClass(epc.status)"
+                v-else-if="col === 'skuCode'"
+                class="font-mono text-sm text-gray-900 dark:text-white"
               >
-                {{ epc.status || 'GENERATED' }}
+                {{ getCellValue(epc, col) }}
               </span>
-            </td>
 
-            <td class="px-6 py-4">
-              <span class="text-sm text-gray-900 dark:text-white">
-                {{ formatDateTime(epc.createdAt) || '-' }}
+              <!-- Product Code with monospace -->
+              <span
+                v-else-if="col === 'productCode'"
+                class="font-mono text-sm text-gray-900 dark:text-white"
+              >
+                {{ getCellValue(epc, col) }}
+              </span>
+
+              <!-- Serial Number with special styling -->
+              <span
+                v-else-if="col === 'serialNumber'"
+                class="font-mono text-sm font-semibold text-green-600 dark:text-green-400"
+              >
+                {{ getCellValue(epc, col) }}
+              </span>
+
+              <!-- Status with badge -->
+              <span
+                v-else-if="col === 'status'"
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                :class="getStatusClass(getCellValue(epc, col))"
+              >
+                {{ getCellValue(epc, col) || 'GENERATED' }}
+              </span>
+
+              <!-- Created Time with date formatting -->
+              <span v-else-if="col === 'createdTime'" class="text-sm text-gray-900 dark:text-white">
+                {{ formatDateTime(getCellValue(epc, col)) }}
+              </span>
+
+              <!-- Default display -->
+              <span v-else class="text-sm text-gray-900 dark:text-white">
+                {{ getCellValue(epc, col) }}
               </span>
             </td>
           </tr>
         </tbody>
       </table>
 
+      <!-- Loading State -->
+      <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
+        <div
+          class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"
+        ></div>
+        <p>Loading EPC records...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div v-if="!loading && filteredData.length === 0" class="p-8 text-center text-gray-500">
+        <svg
+          class="mx-auto h-12 w-12 text-gray-300"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No EPC records found</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Try adjusting your filters or generate a new EPC batch.
+        </p>
+      </div>
+
+      <!-- Error State -->
+      <div v-if="error" class="p-8 text-center text-red-500 text-sm">
+        <svg
+          class="mx-auto h-12 w-12 text-red-300 mb-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z"
+          />
+        </svg>
+        <p class="font-medium">Error loading EPC records</p>
+        <p class="text-xs mt-1">{{ error }}</p>
+      </div>
+
+      <!-- Pagination -->
       <div class="mt-6 flex justify-center">
         <nav class="flex items-center gap-x-2">
           <button
@@ -236,51 +231,6 @@
           </button>
         </nav>
       </div>
-
-      <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
-        <div
-          class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"
-        ></div>
-        <p>Loading EPC records...</p>
-      </div>
-
-      <div v-if="!loading && filteredData.length === 0" class="p-8 text-center text-gray-500">
-        <svg
-          class="mx-auto h-12 w-12 text-gray-300"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="1"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No EPC records found</p>
-        <p class="text-sm text-gray-500 dark:text-gray-400">
-          Try adjusting your filters or generate a new EPC batch.
-        </p>
-      </div>
-
-      <div v-if="error" class="p-8 text-center text-red-500 text-sm">
-        <svg
-          class="mx-auto h-12 w-12 text-red-300 mb-2"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="1"
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z"
-          />
-        </svg>
-        <p class="font-medium">Error loading EPC records</p>
-        <p class="text-xs mt-1">{{ error }}</p>
-      </div>
     </div>
   </div>
 </template>
@@ -289,6 +239,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import Swal from 'sweetalert2'
 import { authenticatedFetch } from '@/utils/authenticatedFetch'
+import SelectTable from '@/components/common/SelectTable.vue'
 
 // --- Type Definitions ---
 interface Product {
@@ -344,8 +295,127 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 const selectedItems = ref<string[]>([])
 const selectAll = ref(false)
+const selectedColumns = ref<string[]>([])
 
 const API_URL = '/api/epc'
+
+const allowedColumns = [
+  'epcCode',
+  'corpCode',
+  'skuCode',
+  'productCode',
+  'productName',
+  'serialNumber',
+  'batchNumber',
+  'batchName',
+  'status',
+  'createdTime',
+]
+
+const fieldAliases = {
+  epcCode: ['epcCode'],
+  corpCode: ['code'],
+  skuCode: ['skuCode'],
+  productCode: ['productCode'],
+  productName: ['productName'],
+  serialNumber: ['serialNumber'],
+  batchNumber: ['batchNumber', 'batchNo'],
+  batchName: ['batchName'],
+  status: ['status'],
+  createdTime: ['createdTime', 'createdAt'],
+}
+
+//Format column name for display
+const formatColumnName = (name: string) => {
+  const nameMap: Record<string, string> = {
+    epcCode: 'EPC Code',
+    corpCode: 'Corp Code',
+    skuCode: 'SKU Code',
+    productCode: 'Product Code',
+    productName: 'Product Name',
+    serialNumber: 'Serial Number',
+    batchNumber: 'Batch No.',
+    batchName: 'Batch Name',
+    status: 'Status',
+    createdTime: 'Created Time',
+  }
+
+  return (
+    nameMap[name] ||
+    name
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, (str) => str.toUpperCase())
+      .trim()
+  )
+}
+
+// Get column width class based on column name
+const getColumnWidthClass = (col: string) => {
+  const widthMap: Record<string, string> = {
+    epcCode: 'min-w-[200px]',
+    corpCode: 'min-w-[100px]',
+    skuCode: 'min-w-[120px]',
+    productCode: 'min-w-[140px]',
+    productName: 'min-w-[180px]',
+    serialNumber: 'min-w-[120px]',
+    batchNumber: 'min-w-[100px]',
+    batchName: 'min-w-[150px]',
+    status: 'min-w-[100px]',
+    createdTime: 'min-w-[150px]',
+  }
+
+  return widthMap[col] || ''
+}
+
+// Get cell value with proper fallbacks and field aliases
+const getCellValue = (epc: EPCRecord, col: string): string => {
+  const aliases = fieldAliases[col as keyof typeof fieldAliases]
+  if (aliases) {
+    for (const alias of aliases) {
+      if (epc[alias as keyof EPCRecord] != null && epc[alias as keyof EPCRecord] !== '') {
+        return String(epc[alias as keyof EPCRecord])
+      }
+    }
+  }
+
+  switch (col) {
+    case 'corpCode':
+      return epc.corpCode?.code || parseEPCCode(epc.epcCode).code || '-'
+
+    case 'skuCode':
+      return epc.product?.skuCode || parseEPCCode(epc.epcCode).skuCode || '-'
+
+    case 'productCode':
+      return epc.product?.productCode || '-'
+
+    case 'productName':
+      return epc.product?.name || '-'
+
+    case 'serialNumber':
+      return parseEPCCode(epc.epcCode).serialNumber || '-'
+
+    case 'batchNumber':
+      return epc.batchNumber ? String(epc.batchNumber) : '-'
+
+    case 'batchName':
+      return epc.batchName || '-'
+
+    case 'status':
+      return epc.status || 'GENERATED'
+
+    case 'createdTime':
+      return epc.createdAt || '-'
+
+    default:
+      return epc[col as keyof EPCRecord] != null ? String(epc[col as keyof EPCRecord]) : '-'
+  }
+}
+
+// Handle column selection update from SelectTable component
+const handleColumnsUpdate = (columns: string[]) => {
+  selectedColumns.value = columns
+  console.log('Selected columns updated:', columns)
+}
 
 // --- Data Fetching ---
 const fetchEPCs = async () => {

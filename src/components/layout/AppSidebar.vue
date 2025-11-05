@@ -313,7 +313,7 @@ const allMenuGroups = [
       {
         icon: HomeIcon,
         name: "Dashboard",
-        path: "/Dashboard",
+        path: "/",
         module: "Dashboard"
       },
     ]
