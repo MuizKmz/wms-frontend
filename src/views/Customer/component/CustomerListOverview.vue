@@ -1,15 +1,26 @@
 <template>
   <div class="overflow-hidden">
-    <div class="mb-4">
+    <!-- Header with Select Columns Button -->
+    <div class="flex justify-between items-center mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
         Showing {{ filteredData.length }} customers
       </p>
-    </div>
 
+      <!-- Select Columns Button -->
+      <div class="relative z-50">
+        <SelectTable
+          :apiUrl="API_URL"
+          :storageKey="`customers-columns`"
+          :availableColumns="allowedColumns"
+          @update:selected="handleColumnsUpdate"
+        />
+      </div>
+    </div>
     <div class="max-w-full overflow-x-auto custom-scrollbar">
       <table class="min-w-full">
         <thead>
           <tr class="border-b border-gray-200 dark:border-gray-700">
+            <!-- Checkbox Column (Always Visible) -->
             <th class="px-6 py-3 text-left w-12">
               <input
                 type="checkbox"
@@ -19,55 +30,17 @@
                 @change="toggleSelectAll"
               />
             </th>
-            <th class="px-6 py-3 text-left">
+
+            <!-- Dynamic Columns -->
+            <th v-for="col in selectedColumns" :key="col" class="px-6 py-3 text-left">
               <p
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
               >
-                Customer ID
+                {{ formatColumnName(col) }}
               </p>
             </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Customer Name
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Contact Person
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Email Address
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Address
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                City
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Status
-              </p>
-            </th>
+
+            <!-- Action Column (Always Visible) -->
             <th class="px-6 py-3 text-left">
               <p
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
@@ -77,12 +50,14 @@
             </th>
           </tr>
         </thead>
+
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
           <tr
             v-for="item in paginatedData"
             :key="item.id"
             class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
           >
+            <!-- Checkbox -->
             <td class="px-6 py-4">
               <input
                 type="checkbox"
@@ -93,44 +68,19 @@
               />
             </td>
 
-            <td class="px-6 py-4">
-              <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ item.customerId || item.customerCode }}
-              </span>
-            </td>
-
-            <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.customerName || item.name }}
-              </p>
-            </td>
-
-            <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.contactPerson || item.contact }}
-              </p>
-            </td>
-
-            <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.emailAddress || item.email }}
-              </p>
-            </td>
-
-            <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.address || '-' }}
-              </p>
-            </td>
-
-            <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.city || '-' }}
-              </p>
-            </td>
-
-            <td class="px-6 py-4">
+            <!-- Dynamic Data Columns -->
+            <td v-for="col in selectedColumns" :key="col" class="px-6 py-4">
+              <!-- Customer ID with monospace -->
               <span
+                v-if="col === 'customerId'"
+                class="font-mono text-sm text-gray-900 dark:text-white"
+              >
+                {{ getCellValue(item, col) }}
+              </span>
+
+              <!-- Status with badge styling -->
+              <span
+                v-else-if="col === 'status'"
                 :class="{
                   'px-3 py-1 text-xs rounded-full font-medium': true,
                   'bg-green-100 text-green-600': item.status === 'Active',
@@ -138,10 +88,16 @@
                   'bg-yellow-100 text-yellow-600': item.status === 'Pending',
                 }"
               >
-                {{ item.status }}
+                {{ getCellValue(item, col) }}
+              </span>
+
+              <!-- Default display -->
+              <span v-else class="text-sm text-gray-900 dark:text-white">
+                {{ getCellValue(item, col) }}
               </span>
             </td>
 
+            <!-- Action Buttons (Always Visible) -->
             <td class="px-6 py-4">
               <div class="flex items-center gap-2">
                 <button
@@ -180,6 +136,55 @@
         </tbody>
       </table>
 
+      <!-- Loading State -->
+      <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
+        <div
+          class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"
+        ></div>
+        <p>Loading customers...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div v-if="!loading && filteredData.length === 0" class="p-8 text-center text-gray-500">
+        <svg
+          class="mx-auto h-12 w-12 text-gray-300"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No customers found</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Try adjusting your filters or create a new customer.
+        </p>
+      </div>
+
+      <!-- Error State -->
+      <div v-if="error" class="p-8 text-center text-red-500 text-sm">
+        <svg
+          class="mx-auto h-12 w-12 text-red-300 mb-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z"
+          />
+        </svg>
+        <p class="font-medium">Error loading customers</p>
+        <p class="text-xs mt-1">{{ error }}</p>
+      </div>
+
+      <!-- Pagination -->
       <div class="mt-6 flex justify-center">
         <nav class="flex items-center gap-x-2">
           <!-- Previous Button -->
@@ -223,51 +228,6 @@
           </button>
         </nav>
       </div>
-
-      <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
-        <div
-          class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"
-        ></div>
-        <p>Loading customers...</p>
-      </div>
-
-      <div v-if="!loading && filteredData.length === 0" class="p-8 text-center text-gray-500">
-        <svg
-          class="mx-auto h-12 w-12 text-gray-300"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="1"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No customers found</p>
-        <p class="text-sm text-gray-500 dark:text-gray-400">
-          Try adjusting your filters or create a new customer.
-        </p>
-      </div>
-
-      <div v-if="error" class="p-8 text-center text-red-500 text-sm">
-        <svg
-          class="mx-auto h-12 w-12 text-red-300 mb-2"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="1"
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z"
-          />
-        </svg>
-        <p class="font-medium">Error loading customers</p>
-        <p class="text-xs mt-1">{{ error }}</p>
-      </div>
     </div>
   </div>
 </template>
@@ -276,6 +236,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import Swal from 'sweetalert2'
 import { authenticatedFetch } from '@/utils/authenticatedFetch'
+import SelectTable from '@/components/common/SelectTable.vue'
 
 // Props for receiving filters
 const props = defineProps({
@@ -294,9 +255,75 @@ const loading = ref(false)
 const error = ref(null)
 const selectedItems = ref([])
 const selectAll = ref(false)
+const selectedColumns = ref([])
 
 // API endpoint for Customers
 const API_URL = '/api/customer'
+
+const allowedColumns = [
+  'customerId',
+  'customerName',
+  'contactPerson',
+  'emailAddress',
+  'address',
+  'city',
+  'status',
+]
+
+const fieldAliases = {
+  customerId: ['customerId', 'customerCode', 'id'],
+  customerName: ['customerName', 'name'],
+  contactPerson: ['contactPerson', 'contact'],
+  emailAddress: ['emailAddress', 'email'],
+  address: ['address'],
+  city: ['city'],
+  status: ['status'],
+}
+
+// Format column name for display
+const formatColumnName = (name) => {
+  const nameMap = {
+    customerId: 'Customer ID',
+    customerName: 'Customer Name',
+    contactPerson: 'Contact Person',
+    emailAddress: 'Email Address',
+    address: 'Address',
+    city: 'City',
+    status: 'Status',
+  }
+
+  return (
+    nameMap[name] ||
+    name
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, (str) => str.toUpperCase())
+      .trim()
+  )
+}
+
+// Get cell value with fallback for alternate field names
+const getCellValue = (item, col) => {
+  const aliases = fieldAliases[col]
+  if (aliases) {
+    for (const alias of aliases) {
+      if (item[alias] != null && item[alias] !== '') {
+        return item[alias]
+      }
+    }
+  }
+
+  // Handle special cases
+  if (col === 'status') {
+    return item.status || 'Unknown'
+  }
+
+  return item[col] != null ? item[col] : '-'
+}
+
+// Handle columns update from SelectTable component
+const handleColumnsUpdate = (columns) => {
+  selectedColumns.value = columns
+}
 
 // Function to fetch customers from the API
 const fetchItems = async () => {
@@ -309,6 +336,11 @@ const fetchItems = async () => {
 
     const json = await response.json()
     data.value = json || []
+
+    if (selectedColumns.value.length === 0) {
+      selectedColumns.value = [...allowedColumns]
+      console.log('Set default columns (all):', selectedColumns.value)
+    }
   } catch (e) {
     error.value = e.message
     console.error('Error fetching customers:', e)

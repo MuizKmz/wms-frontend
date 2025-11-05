@@ -95,9 +95,15 @@ interface Filters {
 interface InventoryItem {
   id: number
   productId: number
+  warehouseId: number
+  rackId: number
+  sectionId: number
   quantity: number
   lastUpdatedAt: string
   product: any
+  warehouse: any
+  rack: any
+  section: any
 }
 
 // State and Refs

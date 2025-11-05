@@ -7,15 +7,6 @@ const router = createRouter({
   },
   routes: [
     {
-      path: '/',
-      name: 'Home',
-      component: () => import('../views/Home_page/home.vue'),
-      meta: {
-        title: 'Home-WMS',
-      },
-    },
-
-    {
       path: '/signin',
       name: 'Sign In',
       component: () => import('../views/Auth/Signin.vue'),
@@ -23,18 +14,8 @@ const router = createRouter({
         title: 'Sign In',
       },
     },
-
     {
-      path: '/reset-password',
-      name: 'ResetPassword',
-      component: () => import('../views/Auth/ResetPass.vue'),
-      meta: {
-        title: 'Reset Password',
-      },
-    },
-
-    {
-      path: '/dashboard',
+      path: '/',
       name: 'Dashboard',
       component: () => import('../views/Dashboard/Dashboard.vue'),
       meta: {
@@ -164,8 +145,6 @@ const router = createRouter({
   ],
 })
 
-
-
 export default router
 
 router.beforeEach((to, from, next) => {
@@ -174,23 +153,20 @@ router.beforeEach((to, from, next) => {
   // Check if user is logged in
   const userStr = localStorage.getItem('user')
   const isAuthenticated = !!userStr
-  
-  // Public routes that don't require authentication (UPDATED: added /reset-password)
-  const publicRoutes = ['/', '/signin', '/reset-password']
-  
-  // If trying to access a public route
-  if (publicRoutes.includes(to.path)) {
-    // If on signin page and already logged in, redirect to dashboard
-    if (to.path === '/signin' && isAuthenticated) {
-      next('/dashboard')
+
+  // If trying to access signin page
+  if (to.path === '/signin') {
+    // If already logged in, redirect to dashboard
+    if (isAuthenticated) {
+      next('/')
     } else {
       next()
     }
   } else {
-    // For all protected routes, require authentication
+    // For all other routes, require authentication
     if (!isAuthenticated) {
-      // Redirect to home page if not authenticated
-      next('/')
+      // Redirect to signin page
+      next('/signin')
     } else {
       next()
     }

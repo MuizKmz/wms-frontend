@@ -1,9 +1,20 @@
 <template>
   <div class="overflow-hidden">
-    <div class="mb-4">
+    <!-- Header with button and count -->
+    <div class="flex justify-between items-center mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
         Showing {{ filteredData.length }} supplier items
       </p>
+
+      <!-- Select Columns Button -->
+      <div class="relative z-50">
+        <SelectTable
+          :apiUrl="API_URL"
+          :storageKey="`supplier-columns`"
+          :excludeColumns="excludedColumns"
+          @update:selected="handleColumnsUpdate"
+        />
+      </div>
     </div>
 
     <div class="max-w-full overflow-x-auto custom-scrollbar">
@@ -19,55 +30,17 @@
                 @change="toggleSelectAll"
               />
             </th>
-            <th class="px-6 py-3 text-left">
+
+            <!-- Dynamic Columns -->
+            <th v-for="col in selectedColumns" :key="col" class="px-6 py-3 text-left">
               <p
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
               >
-                Supplier Code
+                {{ formatColumnName(col) }}
               </p>
             </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Supplier Name
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                PIC's Name
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Contact Number
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Email
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Status
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p
-                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
-              >
-                Remark
-              </p>
-            </th>
+
+            <!-- Action Column (Always Visible) -->
             <th class="px-6 py-3 text-left">
               <p
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
@@ -83,6 +56,7 @@
             :key="item.id"
             class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
           >
+            <!-- Checkbox -->
             <td class="px-6 py-4">
               <input
                 type="checkbox"
@@ -93,54 +67,35 @@
               />
             </td>
 
-            <td class="px-6 py-4">
-              <span class="font-mono text-sm text-gray-900 dark:text-white">
-                {{ item.supplierCode }}
-              </span>
-            </td>
-
-            <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.supplierName }}
-              </p>
-            </td>
-
-            <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.manager }}
-              </p>
-            </td>
-
-            <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.contactPhone || item.contact }}
-              </p>
-            </td>
-
-            <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.email || item.emailAddress }}
-              </p>
-            </td>
-
-            <td class="px-6 py-4">
+            <!-- Dynamic Data Columns -->
+            <td v-for="col in selectedColumns" :key="col" class="px-6 py-4">
+              <!-- Status Column with Badge -->
               <span
+                v-if="col === 'status'"
                 :class="{
                   'px-3 py-1 text-xs rounded-full font-medium': true,
                   'bg-green-100 text-green-600': item.status === 'Active',
                   'bg-blue-100 text-blue-600': item.status === 'Inactive',
                 }"
               >
-                {{ item.status }}
+                {{ item[col] }}
               </span>
-            </td>
 
-            <td class="px-6 py-4">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ item.remark || item.remarks || '-' }}
+              <!-- Supplier Code with Monospace Font -->
+              <span
+                v-else-if="col === 'supplierCode'"
+                class="font-mono text-sm text-gray-900 dark:text-white"
+              >
+                {{ item[col] }}
+              </span>
+
+              <!-- Regular Columns -->
+              <p v-else class="text-sm text-gray-900 dark:text-white">
+                {{ getCellValue(item, col) }}
               </p>
             </td>
 
+            <!-- Action Buttons -->
             <td class="px-6 py-4">
               <div class="flex items-center gap-2">
                 <button
@@ -179,6 +134,55 @@
         </tbody>
       </table>
 
+      <!-- Loading State -->
+      <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
+        <div
+          class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"
+        ></div>
+        <p>Loading suppliers...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div v-if="!loading && filteredData.length === 0" class="p-8 text-center text-gray-500">
+        <svg
+          class="mx-auto h-12 w-12 text-gray-300"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No suppliers found</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Try adjusting your filters or create a new supplier.
+        </p>
+      </div>
+
+      <!-- Error State -->
+      <div v-if="error" class="p-8 text-center text-red-500 text-sm">
+        <svg
+          class="mx-auto h-12 w-12 text-red-300 mb-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z"
+          />
+        </svg>
+        <p class="font-medium">Error loading suppliers</p>
+        <p class="text-xs mt-1">{{ error }}</p>
+      </div>
+
+      <!-- Pagination -->
       <div class="mt-6 flex justify-center">
         <nav class="flex items-center gap-x-2">
           <!-- Previous Button -->
@@ -222,51 +226,6 @@
           </button>
         </nav>
       </div>
-
-      <div v-if="loading" class="p-8 text-center text-gray-500 text-sm">
-        <div
-          class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"
-        ></div>
-        <p>Loading suppliers...</p>
-      </div>
-
-      <div v-if="!loading && filteredData.length === 0" class="p-8 text-center text-gray-500">
-        <svg
-          class="mx-auto h-12 w-12 text-gray-300"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="1"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No suppliers found</p>
-        <p class="text-sm text-gray-500 dark:text-gray-400">
-          Try adjusting your filters or create a new supplier.
-        </p>
-      </div>
-
-      <div v-if="error" class="p-8 text-center text-red-500 text-sm">
-        <svg
-          class="mx-auto h-12 w-12 text-red-300 mb-2"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="1"
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.08 16.5c-.77.833.192 2.5 1.732 2.5z"
-          />
-        </svg>
-        <p class="font-medium">Error loading suppliers</p>
-        <p class="text-xs mt-1">{{ error }}</p>
-      </div>
     </div>
   </div>
 </template>
@@ -275,6 +234,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import Swal from 'sweetalert2'
 import { authenticatedFetch } from '@/utils/authenticatedFetch'
+import SelectTable from '@/components/common/SelectTable.vue'
 
 // Props for receiving filters
 const props = defineProps({
@@ -293,9 +253,37 @@ const loading = ref(false)
 const error = ref(null)
 const selectedItems = ref([])
 const selectAll = ref(false)
+const selectedColumns = ref([])
 
 // API endpoint for suppliers
 const API_URL = '/api/supplier'
+
+// Columns to exclude
+const excludedColumns = ['id', 'createdAt', 'updatedAt', 'racks', 'sections', 'receivings']
+
+// Format column name for display (camelCase -> Title Case)
+const formatColumnName = (name) => {
+  return name
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (str) => str.toUpperCase())
+    .trim()
+}
+
+const getCellValue = (item, col) => {
+  // Handle alternate field names based on your backend
+  if (col === 'manager') return item.manager || item.picName || '-'
+  if (col === 'contactPhone') return item.contactPhone || item.contact || '-'
+  if (col === 'email') return item.email || item.emailAddress || '-'
+  if (col === 'remark') return item.remark || item.remarks || '-'
+  if (col === 'supplierName') return item.supplierName || item.name || '-'
+
+  return item[col] ?? '-'
+}
+
+const handleColumnsUpdate = (columns) => {
+  selectedColumns.value = columns
+  console.log('Selected columns updated:', columns)
+}
 
 // Function to fetch suppliers from the API
 const fetchSuppliers = async () => {
@@ -308,6 +296,14 @@ const fetchSuppliers = async () => {
 
     const json = await response.json()
     data.value = json || []
+
+    if (selectedColumns.value.length === 0 && json && json.length > 0) {
+      const allColumns = Object.keys(json[0]).filter(
+        (col) => !excludedColumns.map((c) => c.toLowerCase()).includes(col.toLowerCase()),
+      )
+      selectedColumns.value = allColumns
+      console.log('Auto-loaded columns from API:', allColumns)
+    }
   } catch (e) {
     error.value = e.message
     console.error('Error fetching suppliers:', e)
