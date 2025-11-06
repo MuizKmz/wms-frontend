@@ -222,7 +222,26 @@ const { isMobileOpen, toggleMobileSidebar } = useSidebar();
 const { hasModuleAccess, loadUserPermissions, userPermissions, loading } = useAuth();
 
 const openSubmenu = ref(null);
-const openGroups = ref(new Set(['STOCK', 'REPORTS'])); // Track which groups are open (default open)
+
+// Persist openGroups in localStorage
+const GROUPS_KEY = 'sidebarOpenGroups';
+function loadOpenGroups() {
+  const saved = localStorage.getItem(GROUPS_KEY);
+  if (saved) {
+    try {
+      return new Set(JSON.parse(saved));
+    } catch {
+      return new Set(['STOCK', 'REPORTS']);
+    }
+  }
+  return new Set(['STOCK', 'REPORTS']);
+}
+const openGroups = ref(loadOpenGroups());
+
+function saveOpenGroups() {
+  localStorage.setItem(GROUPS_KEY, JSON.stringify(Array.from(openGroups.value)));
+}
+
 const logoUrl = ref('')
 const companyName = ref('WMS Console')
 const brandingLoaded = ref(false)
@@ -291,6 +310,9 @@ onMounted(async () => {
   await loadUserPermissions();
   console.log('✅ [AppSidebar] Permissions loaded, count:', userPermissions.value.length);
 
+  // Restore openGroups from localStorage
+  openGroups.value = loadOpenGroups();
+
   // Update branding
   setTimeout(() => updateBranding(), 100)
 
@@ -305,6 +327,7 @@ const toggleGroup = (groupTitle) => {
   } else {
     openGroups.value.add(groupTitle);
   }
+  saveOpenGroups();
 };
 
 const isGroupOpen = (groupTitle) => {
@@ -318,7 +341,7 @@ const allMenuGroups = [
       {
         icon: HomeIcon,
         name: "Dashboard",
-        path: "/Dashboard",
+        path: "/dashboard",
         module: "Dashboard"
       },
     ]
@@ -393,26 +416,20 @@ const allMenuGroups = [
     items: [
       {
         icon: BoxIcon,
-        name: "Receiving",
-        path: "/receivingreport",
-        module: "Reports"
-      },
-      {
-        icon: LabelIcon,
-        name: "Label Generation",
-        path: "/labelreport",
+        name: "Incoming Reports",
+        path: "/incomingreport",
         module: "Reports"
       },
       {
         icon: InventoryIcon,
-        name: "Inventory",
+        name: "Inventory Reports",
         path: "/inventoryreport",
         module: "Reports"
       },
       {
-        icon: FolderIcon,
-        name: "Order",
-        path: "/orderreport",
+        icon: InventoryIcon,
+        name: "Outgoing Reports",
+        path: "/outgoingreport",
         module: "Reports"
       },
     ],
@@ -447,7 +464,21 @@ const menuGroups = computed(() => {
   })).filter(group => group.items.length > 0); // Remove empty groups
 });
 
-const isActive = (path) => route.path === path;
+const isActive = (path) => {
+  // For Inventory report, also match sub-routes
+  if (path === '/inventoryreport' && (route.path === '/inventoryreport' || route.path.startsWith('/reports/inventory/'))) {
+    return true;
+  }
+  // For Incoming report, also match sub-routes
+  if (path === '/incomingreport' && (route.path === '/incomingreport' || route.path.startsWith('/reports/incoming/'))) {
+    return true;
+  }
+  if (path === '/outgoingreport' && (route.path === '/outgoingreport' || route.path.startsWith('/reports/outgoing/'))) {
+    return true;
+  }
+  return route.path === path;
+};
+
 
 const isSubmenuActive = (item) => {
   if (!item.subItems) return false;

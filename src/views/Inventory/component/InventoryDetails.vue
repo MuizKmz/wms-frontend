@@ -162,8 +162,17 @@
                       aria-label="Select EPC"
                     />
                   </td>
-                  <td class="px-4 py-4 text-sm font-mono text-gray-900 dark:text-white">
-                    {{ epc.epcCode || '--' }}
+                  <td class="px-4 py-4">
+                    <button
+                      v-if="epc.epcCode"
+                      type="button"
+                      class="text-left font-bold text-sm font-mono text-blue-600 dark:text-blue-400 hover:underline break-all focus:outline-none"
+                      @click.stop="handleViewEPC(epc)"
+                      :title="`View code images for ${epc.epcCode}`"
+                    >
+                      {{ epc.epcCode }}
+                    </button>
+                    <span v-else class="text-sm font-mono text-gray-900 dark:text-white">--</span>
                   </td>
                   <td class="px-4 py-4 text-sm text-gray-900 dark:text-white">
                     EPC
@@ -229,12 +238,21 @@
         @click="closeModal"
       ></div>
     </transition>
+
+    <!-- ViewEPC Modal -->
+    <ViewEPC
+      ref="viewEPCModalRef"
+      :show="showViewEPCModal"
+      :initial-epc-code="selectedEpcCode"
+      @close="closeViewEPCModal"
+    />
   </teleport>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
 import { authenticatedFetch } from '@/utils/authenticatedFetch'
+import ViewEPC from '@/views/EPC/component/ViewEPC.vue'
 
 const emit = defineEmits(['close'])
 
@@ -244,6 +262,9 @@ const inventoryData = ref(null)
 const selectedEpcs = ref([])
 const bulkStatus = ref('')
 const loadingBulk = ref(false)
+const viewEPCModalRef = ref(null)
+const showViewEPCModal = ref(false)
+const selectedEpcCode = ref(null)
 
 /* Computed */
 const epcList = computed(() => {
@@ -369,6 +390,25 @@ const applyBulkStatus = async () => {
   } finally {
     loadingBulk.value = false
   }
+}
+
+const handleViewEPC = (epc) => {
+  const epcCode = epc.epcCode || null
+  console.log('Opening ViewEPC modal for:', epcCode)
+
+  if (viewEPCModalRef.value && epcCode) {
+    viewEPCModalRef.value.openModal(epcCode)
+  } else {
+    selectedEpcCode.value = epcCode
+    showViewEPCModal.value = true
+  }
+}
+
+const closeViewEPCModal = () => {
+  showViewEPCModal.value = false
+  setTimeout(() => {
+    selectedEpcCode.value = null
+  }, 300)
 }
 
 /* Expose to parent */

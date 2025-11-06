@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" @click.self="$emit('close')">
+  <div class="fixed inset-0 lg:left-64 z-50 bg-black/50 flex items-center justify-center p-4" @click.self="$emit('close')">
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
       <!-- Header -->
       <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
@@ -137,7 +137,7 @@
               ref="canvas"
               @drop="handleDrop"
               @dragover.prevent
-              class="bg-white border-2 border-gray-300 dark:border-gray-600 rounded-lg overflow-auto relative"
+              class="bg-white dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-600 rounded-lg overflow-auto relative p-8"
               style="width: 210mm; height: 297mm; margin: 0 auto;"
             >
               <!-- Actual Report Preview -->
@@ -162,11 +162,12 @@
                     position: 'absolute',
                     left: item.x + 'px',
                     top: item.y + 'px',
-                    width: item.width + 'px'
+                    width: item.width + 'px',
+                    height: item.height ? item.height + 'px' : 'auto'
                   }"
                   class="group pointer-events-auto"
                 >
-                  <div class="relative p-3 bg-white/95 dark:bg-gray-800/95 border-2 border-blue-500 rounded-lg backdrop-blur-sm">
+                  <div class="relative p-3 bg-white/95 dark:bg-gray-800/95 border-2 border-blue-500 rounded-lg backdrop-blur-sm h-full">
                     <!-- Component Actions -->
                     <div class="absolute -top-8 right-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
@@ -188,19 +189,26 @@
                         </svg>
                       </button>
                     </div>
+                    
+                    <!-- Resize Handle -->
+                    <div
+                      @mousedown.stop="startResize($event, index)"
+                      class="absolute -bottom-2 -right-2 w-4 h-4 bg-blue-600 border-2 border-white rounded-full cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      title="Resize"
+                    ></div>
 
                     <!-- Signature Component -->
-                    <div v-if="item.type === 'signature'" class="text-center">
+                    <div v-if="item.type === 'signature'" class="text-center h-full flex flex-col justify-center">
                       <p class="text-xs text-gray-600 mb-2">{{ item.data.label }}</p>
-                      <img v-if="item.data.image" :src="item.data.image" alt="Signature" class="max-w-full h-16 mx-auto" />
+                      <img v-if="item.data.image" :src="item.data.image" alt="Signature" class="max-w-full max-h-full mx-auto object-contain" />
                       <div v-else class="border-b-2 border-gray-800 h-8"></div>
                       <p class="text-xs text-gray-500 mt-1">Signature</p>
                     </div>
 
                     <!-- Stamp Component -->
-                    <div v-else-if="item.type === 'stamp'" class="flex justify-center">
-                      <img v-if="item.data.image" :src="item.data.image" alt="Stamp" class="w-20 h-20 object-contain" />
-                      <div v-else class="border-2 border-gray-600 rounded-full w-20 h-20 flex items-center justify-center">
+                    <div v-else-if="item.type === 'stamp'" class="flex justify-center items-center h-full">
+                      <img v-if="item.data.image" :src="item.data.image" alt="Stamp" class="max-w-full max-h-full object-contain" />
+                      <div v-else class="border-2 border-gray-600 rounded-full aspect-square max-w-full max-h-full flex items-center justify-center p-2">
                         <p class="text-xs text-gray-700 text-center font-semibold">{{ item.data.label }}</p>
                       </div>
                     </div>
@@ -244,6 +252,7 @@ interface DesignComponent {
   x?: number
   y?: number
   width?: number
+  height?: number
 }
 
 const props = defineProps({
@@ -327,7 +336,8 @@ const handleDrop = (event: DragEvent) => {
       ...draggedComponent.value,
       x,
       y,
-      width: componentWidth
+      width: componentWidth,
+      height: componentHeight
     })
   }
 
@@ -347,7 +357,7 @@ const startDrag = (event: MouseEvent, index: number) => {
   const canvasWidth = canvas?.offsetWidth || 793
   const canvasHeight = canvas?.offsetHeight || 1122
   const componentWidth = component.width || 400
-  const componentHeight = 150 // Estimated height
+  const componentHeight = component.height || 150
 
   const onMouseMove = (e: MouseEvent) => {
     const dx = e.clientX - startX
@@ -369,6 +379,39 @@ const startDrag = (event: MouseEvent, index: number) => {
     document.removeEventListener('mousemove', onMouseMove)
     document.removeEventListener('mouseup', onMouseUp)
     draggedIndex.value = null
+  }
+
+  document.addEventListener('mousemove', onMouseMove)
+  document.addEventListener('mouseup', onMouseUp)
+}
+
+const startResize = (event: MouseEvent, index: number) => {
+  event.preventDefault()
+  const startX = event.clientX
+  const startY = event.clientY
+  const component = designComponents.value[index]
+  const initialWidth = component.width || 400
+  const initialHeight = component.height || 150
+
+  const onMouseMove = (e: MouseEvent) => {
+    const dx = e.clientX - startX
+    const dy = e.clientY - startY
+    
+    // Calculate new dimensions with minimum size
+    let newWidth = initialWidth + dx
+    let newHeight = initialHeight + dy
+    
+    // Set minimum and maximum sizes
+    newWidth = Math.max(100, Math.min(newWidth, 600))
+    newHeight = Math.max(50, Math.min(newHeight, 400))
+    
+    component.width = newWidth
+    component.height = newHeight
+  }
+
+  const onMouseUp = () => {
+    document.removeEventListener('mousemove', onMouseMove)
+    document.removeEventListener('mouseup', onMouseUp)
   }
 
   document.addEventListener('mousemove', onMouseMove)
