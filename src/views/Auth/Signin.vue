@@ -199,14 +199,14 @@
         >
           <div class="flex items-center justify-center z-1">
             <common-grid-shape />
-            
+
             <!-- Skeleton Loader -->
             <div v-if="!logoLoaded" class="flex flex-col items-center max-w-xs animate-pulse">
               <div class="mb-4 bg-white/10 rounded-lg h-16 w-48"></div>
               <div class="h-6 bg-white/10 rounded w-64 mb-2"></div>
               <div class="h-4 bg-white/10 rounded w-56"></div>
             </div>
-            
+
             <!-- Actual Logo -->
             <div v-else class="flex flex-col items-center max-w-xs">
               <div v-if="customLogoUrl" class="mb-4">
@@ -311,7 +311,7 @@ const handleSubmit = async () => {
     // IMPORTANT: Only clear authentication data, keep theme and dashboard settings
     const preservedKeys = ['themeCustomization', 'dashboard-charts-layout', 'theme']
     const preservedData: Record<string, string> = {}
-    
+
     // Save data to preserve
     preservedKeys.forEach(key => {
       const value = localStorage.getItem(key)
@@ -319,11 +319,11 @@ const handleSubmit = async () => {
         preservedData[key] = value
       }
     })
-    
+
     // Clear all localStorage
     localStorage.clear()
     console.log('🧹 [Signin] Cleared old authentication data')
-    
+
     // Restore preserved data
     Object.keys(preservedData).forEach(key => {
       localStorage.setItem(key, preservedData[key])

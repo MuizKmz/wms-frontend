@@ -49,12 +49,12 @@
             >
               Import Update Status
             </button>
-            <button
+            <!-- <button
               @click="handleImportUpdateInventory"
               class="px-4 py-2 btn btn-secondary text-white text-sm font-medium rounded-lg transition-colors duration-200"
             >
               Import Update Inventory
-            </button>
+            </button> -->
           </div>
 
           <component
@@ -69,9 +69,13 @@
     </div>
   </AdminLayout>
 
-  <ImportUpdateInventory ref="inventoryModalRef" @file-uploaded="handleFileUploaded" />
+  <!-- <ImportUpdateInventory ref="inventoryModalRef" @file-uploaded="handleFileUploaded" /> -->
 
-  <ImportUpdateStatus ref="statusModalRef" @file-uploaded="handleStatusFileUploaded" />
+  <ImportEpcStatus
+    ref="epcStatusModalRef"
+    @close="() => {}"
+    @file-uploaded="handleStatusFileUploaded"
+  />
 
   <InventoryDetails ref="inventoryDetailsModalRef" @close="handleCloseInventoryDetails" />
 </template>
@@ -84,7 +88,7 @@ import ComponentCard from '@/components/common/ComponentCard.vue'
 import InventoryTable from './component/InventoryTable.vue'
 import InventoryFilters from './component/InventoryFilters.vue'
 import ImportUpdateInventory from './component/ImportUpdateInventory.vue'
-import ImportUpdateStatus from './component/ImportUpdateStatus.vue'
+import ImportEpcStatus from './component/ImportEpcStatus.vue'
 import InventoryDetails from './component/InventoryDetails.vue'
 
 // Interface definitions
@@ -114,7 +118,7 @@ const activeTab = ref('table')
 
 // Refs for the modal components
 const inventoryModalRef = ref<InstanceType<typeof ImportUpdateInventory> | null>(null)
-const statusModalRef = ref<InstanceType<typeof ImportUpdateStatus> | null>(null)
+const epcStatusModalRef = ref<InstanceType<typeof ImportEpcStatus> | null>(null)
 const inventoryDetailsModalRef = ref<InstanceType<typeof InventoryDetails> | null>(null)
 
 // --- Tab Logic ---
@@ -165,11 +169,11 @@ const handleFilterChange = (filters: Filters) => {
 
 /**
  * Handler for 'Import Update Status' button click
- * Opens the ImportUpdateStatus modal
+ * Opens the ImportEpcStatus modal
  */
 const handleImportUpdateStatus = () => {
-  if (statusModalRef.value) {
-    statusModalRef.value.openModal()
+  if (epcStatusModalRef.value) {
+    epcStatusModalRef.value.openModal()
   }
 }
 
@@ -200,17 +204,29 @@ const handleFileUploaded = (event: { success: boolean; data?: any; error?: strin
   }
 }
 
+interface UploadResult {
+  success: boolean
+  successCount: number
+  errorCount?: number
+  inventoryUpdates?: Array<{ productName: string; oldQuantity: number; newQuantity: number }>
+  message?: string
+}
+
 /**
- * Handler for the @file-uploaded event from the ImportUpdateStatus modal
+ * Handler for the @file-uploaded event from the ImportEpcStatus modal
  */
-const handleStatusFileUploaded = (event: { success: boolean; data?: any; error?: string }) => {
-  if (event.success) {
-    showToastMessage('Inventory status updated successfully!', 'success')
+const handleStatusFileUploaded = (result: UploadResult) => {
+  if (result.success) {
+    const inventoryCount = result.inventoryUpdates?.length || 0
+    showToastMessage(
+      `Successfully updated ${result.successCount} EPCs${inventoryCount > 0 ? ` and ${inventoryCount} product inventories` : ''}!`,
+      'success',
+    )
     // Refresh the inventory table data
     inventoryTableRef.value?.refreshData()
   } else {
     showToastMessage(
-      event.error || 'Inventory status upload failed. Please check the file.',
+      result.message || 'EPC status update failed. Please check the file.',
       'error',
       3500,
     )

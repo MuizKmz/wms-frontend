@@ -73,8 +73,8 @@
                   @dragleave.prevent="isDragging = false"
                   :class="[
                     'border-2 border-dashed rounded-lg p-12 text-center transition-colors',
-                    isDragging 
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                    isDragging
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                       : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50',
                     errors.file ? 'border-red-500' : ''
                   ]"
@@ -93,8 +93,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                       <span class="text-sm font-medium text-gray-900 dark:text-white">{{ selectedFile.name }}</span>
-                      <button 
-                        @click.stop="removeFile" 
+                      <button
+                        @click.stop="removeFile"
                         class="text-gray-500 hover:text-red-600 dark:hover:text-red-400"
                         :disabled="isUploading"
                       >
@@ -109,7 +109,7 @@
                   <p class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
                     {{ selectedFile ? 'File selected' : 'Drop files here' }}
                   </p>
-                  
+
                   <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
                     Supported format: .xls, .xlsx
                   </p>
@@ -159,24 +159,24 @@
 
               <!-- footer -->
               <div class="flex items-center justify-between p-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button 
-                  @click="downloadTemplate" 
+                <button
+                  @click="downloadTemplate"
                   class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm transition-colors"
                   :disabled="isUploading"
                 >
                   Download Template
                 </button>
-                
+
                 <div class="flex gap-2">
-                  <button 
-                    @click="closeModal" 
+                  <button
+                    @click="closeModal"
                     class="btn btn-outline"
                     :disabled="isUploading"
                   >
                     Cancel
                   </button>
-                  <button 
-                    @click="uploadFile" 
+                  <button
+                    @click="uploadFile"
                     class="btn btn-primary"
                     :disabled="!selectedFile || isUploading"
                   >
@@ -247,7 +247,7 @@ const unlockScroll = () => {
 /* File validation */
 const validateFile = (file) => {
   errors.file = ''
-  
+
   if (!file) {
     errors.file = 'Please select a file'
     return false
@@ -255,7 +255,7 @@ const validateFile = (file) => {
 
   const validExtensions = ['.xls', '.xlsx']
   const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase()
-  
+
   if (!validExtensions.includes(fileExtension)) {
     errors.file = 'Invalid file format. Please upload .xls or .xlsx file'
     return false
@@ -275,7 +275,7 @@ const validateFile = (file) => {
 const handleDrop = (event) => {
   isDragging.value = false
   const files = event.dataTransfer.files
-  
+
   if (files.length > 0) {
     const file = files[0]
     if (validateFile(file)) {
@@ -307,10 +307,32 @@ const removeFile = () => {
 }
 
 /* Download template */
-const downloadTemplate = () => {
-  console.log('Download template clicked - implementation needed')
-  // Implement template download logic here
-  // Example: window.open('/path/to/template.xlsx', '_blank')
+const downloadTemplate = async () => {
+  try {
+    const response = await fetch('/api/customer/download-template', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to download template')
+    }
+
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'customer_import_template.xlsx'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('Error downloading template:', error)
+    errors.submit = 'Failed to download template. Please try again.'
+  }
 }
 
 /* Upload file */
@@ -327,9 +349,15 @@ const uploadFile = async () => {
     const formData = new FormData()
     formData.append('file', selectedFile.value)
 
+    // Get auth token
+    const token = localStorage.getItem('token')
+
     // Make the API call
-    const response = await authenticatedFetch('/api/inventory/import', {
+    const response = await fetch('/api/customer/bulk-import', {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
       body: formData
     })
 
@@ -341,14 +369,36 @@ const uploadFile = async () => {
     const data = await response.json()
     console.log('Upload response:', data)
 
-    uploadSuccess.value = 'File uploaded successfully!'
+    // Show detailed results
+    if (data.success) {
+      uploadSuccess.value = `Successfully imported ${data.successCount} customer(s)!`
+    } else {
+      const errorMessage = []
+      if (data.errorCount > 0) {
+        errorMessage.push(`${data.errorCount} error(s)`)
+      }
+      if (data.skipped && data.skipped.length > 0) {
+        errorMessage.push(`${data.skipped.length} skipped (duplicates)`)
+      }
+
+      if (data.successCount > 0) {
+        uploadSuccess.value = `Partially completed: ${data.successCount} created, ${errorMessage.join(', ')}`
+      } else {
+        throw new Error(`Import failed: ${errorMessage.join(', ')}. Check console for details.`)
+      }
+    }
+
+    // Log detailed errors for debugging
+    if (data.errors && data.errors.length > 0) {
+      console.error('Import errors:', data.errors)
+    }
 
     // Wait a moment to show success message
     setTimeout(async () => {
       await closeModal()
       // Emit event to parent component with success status
       emit('file-uploaded', { success: true, data })
-    }, 1500)
+    }, 2000)
 
   } catch (error) {
     console.error('Error uploading file:', error)
