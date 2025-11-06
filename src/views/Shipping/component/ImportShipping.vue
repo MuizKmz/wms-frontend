@@ -41,7 +41,7 @@
               <!-- header -->
               <div class="flex items-center justify-between p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">
-                  Import Supplier
+                  Import Shipment
                 </h2>
                 <button
                   type="button"
@@ -202,9 +202,9 @@ const emit = defineEmits(['file-uploaded'])
 const isOpen = ref(false)
 const isUploading = ref(false)
 const isDragging = ref(false)
-const selectedFile = ref(null)
-const fileInputRef = ref(null)
-const panelRef = ref(null)
+const selectedFile = ref<File | null>(null)
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const panelRef = ref<HTMLDivElement | null>(null)
 const uploadSuccess = ref('')
 
 const errors = reactive({
@@ -224,77 +224,99 @@ const lockScroll = () => {
   scrollY = window.scrollY
   scrollbarWidth = getScrollbarWidth()
 
-  document.body.style.paddingRight = `${scrollbarWidth}px`
   document.body.style.position = 'fixed'
   document.body.style.top = `-${scrollY}px`
-  document.body.style.width = '100%'
+  document.body.style.left = '0'
+  document.body.style.right = '0'
+  document.body.style.paddingRight = `${scrollbarWidth}px`
   document.body.style.overflow = 'hidden'
 }
 
 const unlockScroll = () => {
-  document.body.style.paddingRight = ''
   document.body.style.position = ''
   document.body.style.top = ''
-  document.body.style.width = ''
+  document.body.style.left = ''
+  document.body.style.right = ''
+  document.body.style.paddingRight = ''
   document.body.style.overflow = ''
 
-  requestAnimationFrame(() => {
-    window.scrollTo(0, scrollY)
-  })
+  window.scrollTo(0, scrollY)
 }
 
-/* File validation */
-const validateFile = (file) => {
-  errors.file = ''
+/* Modal methods */
+const openModal = async () => {
+  isOpen.value = true
+  lockScroll()
 
+  await nextTick()
+
+  if (panelRef.value) {
+    panelRef.value.focus()
+  }
+}
+
+const closeModal = async () => {
+  if (isUploading.value) return
+
+  isOpen.value = false
+
+  await nextTick()
+
+  selectedFile.value = null
+  errors.file = ''
+  errors.submit = ''
+  uploadSuccess.value = ''
+
+  if (fileInputRef.value) {
+    fileInputRef.value.value = ''
+  }
+}
+
+/* File handling */
+const triggerFileInput = () => {
+  if (fileInputRef.value) {
+    fileInputRef.value.click()
+  }
+}
+
+const validateFile = (file: File | null): boolean => {
   if (!file) {
     errors.file = 'Please select a file'
     return false
   }
 
-  const validExtensions = ['.xls', '.xlsx']
-  const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase()
+  const validExtensions = ['xls', 'xlsx']
+  const fileExtension = file.name.split('.').pop()?.toLowerCase()
 
-  if (!validExtensions.includes(fileExtension)) {
-    errors.file = 'Invalid file format. Please upload .xls or .xlsx file'
+  if (!fileExtension || !validExtensions.includes(fileExtension)) {
+    errors.file = 'Invalid file type. Please upload .xls or .xlsx file'
     return false
   }
 
-  // Check file size (max 10MB)
   const maxSize = 10 * 1024 * 1024
   if (file.size > maxSize) {
     errors.file = 'File size exceeds 10MB limit'
     return false
   }
 
+  errors.file = ''
   return true
 }
 
-/* File handling */
-const handleDrop = (event) => {
+const handleFileSelect = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (file && validateFile(file)) {
+    selectedFile.value = file
+  }
+}
+
+const handleDrop = (event: DragEvent) => {
   isDragging.value = false
-  const files = event.dataTransfer.files
-
-  if (files.length > 0) {
-    const file = files[0]
-    if (validateFile(file)) {
-      selectedFile.value = file
-    }
+  const file = event.dataTransfer?.files?.[0]
+  if (file && validateFile(file)) {
+    selectedFile.value = file
   }
-}
-
-const handleFileSelect = (event) => {
-  const files = event.target.files
-  if (files.length > 0) {
-    const file = files[0]
-    if (validateFile(file)) {
-      selectedFile.value = file
-    }
-  }
-}
-
-const triggerFileInput = () => {
-  fileInputRef.value?.click()
 }
 
 const removeFile = () => {
@@ -308,10 +330,10 @@ const removeFile = () => {
 /* Download template */
 const downloadTemplate = async () => {
   try {
-    const response = await fetch('/api/supplier/download-template', {
+    const response = await fetch('/api/shipping/download-template', {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}` // Add auth if needed
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
     })
 
@@ -323,7 +345,7 @@ const downloadTemplate = async () => {
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = 'supplier_import_template.xlsx'
+    link.download = 'shipment_import_template.xlsx'
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -336,7 +358,7 @@ const downloadTemplate = async () => {
 
 /* Upload file */
 const uploadFile = async () => {
-  if (!validateFile(selectedFile.value)) {
+  if (!selectedFile.value || !validateFile(selectedFile.value)) {
     return
   }
 
@@ -352,7 +374,7 @@ const uploadFile = async () => {
     const token = localStorage.getItem('token')
 
     // Make the API call
-    const response = await fetch('/api/supplier/bulk-import', {
+    const response = await fetch('/api/shipping/bulk-import', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -370,7 +392,7 @@ const uploadFile = async () => {
 
     // Show detailed results
     if (data.success) {
-      uploadSuccess.value = `Successfully imported ${data.successCount} supplier(s)!`
+      uploadSuccess.value = `Successfully imported ${data.successCount} shipment(s)!`
     } else {
       const errorMessage = []
       if (data.errorCount > 0) {
@@ -401,63 +423,33 @@ const uploadFile = async () => {
 
   } catch (error) {
     console.error('Error uploading file:', error)
-    errors.submit = error.message || 'Failed to upload file. Please try again.'
+    const errorMessage = error instanceof Error ? error.message : 'Failed to upload file. Please try again.'
+    errors.submit = errorMessage
     // Emit event to parent component with error status
-    emit('file-uploaded', { success: false, error: error.message || 'Failed to upload file' })
+    emit('file-uploaded', { success: false, error: errorMessage })
   } finally {
     isUploading.value = false
   }
 }
 
-/* open/close modal */
-const openModal = async () => {
-  selectedFile.value = null
-  errors.file = ''
-  errors.submit = ''
-  uploadSuccess.value = ''
-  isDragging.value = false
-
-  if (fileInputRef.value) {
-    fileInputRef.value.value = ''
-  }
-
-  isOpen.value = true
-  lockScroll()
-  await nextTick()
-}
-
-const closeModal = async () => {
-  isOpen.value = false
-
-  await nextTick()
-  selectedFile.value = null
-  errors.file = ''
-  errors.submit = ''
-  uploadSuccess.value = ''
-  isDragging.value = false
-
-  if (fileInputRef.value) {
-    fileInputRef.value.value = ''
+/* Keyboard handling */
+const handleEscape = (event: KeyboardEvent) => {
+  if (event.key === 'Escape' && isOpen.value && !isUploading.value) {
+    closeModal()
   }
 }
 
-/* lifecycle */
 onMounted(() => {
-  // Add any necessary event listeners here
+  document.addEventListener('keydown', handleEscape)
 })
 
 onBeforeUnmount(() => {
-  if (isOpen.value) {
-    unlockScroll()
-  }
+  document.removeEventListener('keydown', handleEscape)
+  unlockScroll()
 })
 
-/* expose to parent */
-defineExpose({ openModal, closeModal })
+defineExpose({
+  openModal,
+  closeModal
+})
 </script>
-
-<style scoped>
-[role="dialog"] > .bg-white {
-  transform-origin: center;
-}
-</style>

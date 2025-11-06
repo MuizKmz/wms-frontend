@@ -90,6 +90,12 @@
       ref="editProductModalRef"
       @product-updated="handleProductUpdated"
     />
+
+    <ImportProduct
+      v-if="canCreate('Product')"
+      ref="importProductModalRef"
+      @file-uploaded="handleFileUploaded"
+    />
   </AdminLayout>
 </template>
 
@@ -103,6 +109,7 @@ import ProductTable from './component/ProductTable.vue'
 import AddNewProduct from './component/AddNewProduct.vue'
 import EditProduct from './component/EditProduct.vue'
 import ProductListFilters from './component/ProductListFilters.vue'
+import ImportProduct from './component/ImportProduct.vue'
 
 // Get permission checking functions
 const { canCreate, canUpdate, canDelete, canExport } = useAuth()
@@ -132,6 +139,7 @@ const currentPageTitle = ref('Product Management')
 const activeFilters = ref<Filters>({})
 const addProductModalRef = ref<InstanceType<typeof AddNewProduct> | null>(null)
 const editProductModalRef = ref<InstanceType<typeof EditProduct> | null>(null)
+const importProductModalRef = ref<InstanceType<typeof ImportProduct> | null>(null)
 const productTableRef = ref<InstanceType<typeof ProductTable> | null>(null)
 const activeTab = ref('table')
 
@@ -226,8 +234,25 @@ const handleBulkDelete = async () => {
 }
 
 const handleImportProduct = () => {
-  console.log('Import Product clicked - implementation needed')
-  showToastMessage('Product import feature is not yet implemented', 'error')
+  if (importProductModalRef.value) {
+    importProductModalRef.value.openModal()
+  }
+}
+
+// Handle file upload response from ImportProduct component
+const handleFileUploaded = async (result: Result) => {
+  if (result.success) {
+    showToastMessage(
+      `Successfully imported ${result.data?.count || 0} product(s)`,
+      'success'
+    )
+    // Refresh the product list
+    if (productTableRef.value) {
+      await productTableRef.value.refreshData()
+    }
+  } else {
+    showToastMessage(result.error || 'Failed to import products', 'error')
+  }
 }
 
 // Handle opening the edit modal

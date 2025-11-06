@@ -90,6 +90,12 @@
       ref="editShipmentModalRef"
       @shipment-updated="handleShipmentUpdated"
     />
+
+    <ImportShipping
+      v-if="canCreate('Shipping')"
+      ref="importShipmentModalRef"
+      @file-uploaded="handleFileUploaded"
+    />
   </AdminLayout>
 </template>
 
@@ -103,6 +109,7 @@ import ShipmentTable from './component/ShipmentTable.vue'
 import AddNewShipment from './component/AddNewShipment.vue'
 import EditShipment from './component/EditShipment.vue'
 import ShipmentListFilter from './component/ShipmentListFilter.vue'
+import ImportShipping from './component/ImportShipping.vue'
 
 // Get permission checking functions
 const { canCreate, canUpdate, canDelete } = useAuth()
@@ -132,6 +139,7 @@ const currentPageTitle = ref('Shipment Management')
 const activeFilters = ref<Filters>({})
 const addShipmentModalRef = ref<InstanceType<typeof AddNewShipment> | null>(null)
 const editShipmentModalRef = ref<InstanceType<typeof EditShipment> | null>(null)
+const importShipmentModalRef = ref<InstanceType<typeof ImportShipping> | null>(null)
 const shipmentTableRef = ref<InstanceType<typeof ShipmentTable> | null>(null)
 const activeTab = ref('table')
 
@@ -226,8 +234,25 @@ const handleBulkDelete = async () => {
 }
 
 const handleImportShipment = () => {
-  console.log('Import Shipment clicked - implementation needed')
-  showToastMessage('Shipment import feature is not yet implemented', 'error')
+  if (importShipmentModalRef.value) {
+    importShipmentModalRef.value.openModal()
+  }
+}
+
+// Handle file upload response from ImportShipping component
+const handleFileUploaded = async (result: Result) => {
+  if (result.success) {
+    showToastMessage(
+      `Successfully imported ${result.data?.count || 0} shipment(s)`,
+      'success'
+    )
+    // Refresh the shipment list
+    if (shipmentTableRef.value) {
+      await shipmentTableRef.value.refreshData()
+    }
+  } else {
+    showToastMessage(result.error || 'Failed to import shipments', 'error')
+  }
 }
 
 // Handle opening the edit modal
