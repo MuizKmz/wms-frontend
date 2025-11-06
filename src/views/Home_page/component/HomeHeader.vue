@@ -1,10 +1,10 @@
 <template>
-  <header 
+  <header
     ref="headerRef"
     class="fixed top-0 left-0 w-full z-50 transition-all duration-300"
     :class="[
-      scrollPosition > 50 
-        ? 'bg-white/90 backdrop-blur-sm shadow-lg py-2' 
+      scrollPosition > 50
+        ? 'bg-white/90 backdrop-blur-sm shadow-lg py-2'
         : 'bg-white py-4'
     ]"
   >

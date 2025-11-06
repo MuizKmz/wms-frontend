@@ -3,7 +3,7 @@
     <h2 class="text-4xl font-bold text-center text-gray-900 mb-12">
       Contact Us
     </h2>
-    
+
     <div class="grid md:grid-cols-2 gap-20 max-w-6xl mx-auto">
       <!-- Left Side - Map and Address -->
       <div class="space-y-6">
@@ -19,7 +19,7 @@
             referrerpolicy="no-referrer-when-downgrade"
           ></iframe>
         </div>
-        
+
         <!-- Address -->
         <div class="bg-white p-6 rounded-xl shadow-lg">
           <h3 class="text-xl font-bold text-gray-900 mb-4">Malaysia Head Office:</h3>
@@ -58,7 +58,7 @@
         <p class="text-gray-600 mb-6">
           Please feel free to contact us to discuss what innovative labels printing solutions we can offer to you.
         </p>
-        
+
         <form @submit.prevent="handleSubmit" class="space-y-4">
           <div>
             <input
@@ -120,12 +120,12 @@
 <script setup>
 import { reactive } from 'vue'
 
-const formData = reactive({ 
-  companyName: '', 
-  name: '', 
-  email: '', 
-  phone: '', 
-  message: '' 
+const formData = reactive({
+  companyName: '',
+  name: '',
+  email: '',
+  phone: '',
+  message: ''
 })
 
 const handleSubmit = () => {

@@ -1,15 +1,15 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
     <!-- Header Component -->
-    <HomeHeader 
+    <HomeHeader
       ref="headerComponentRef"
-      :scroll-position="scrollPosition" 
+      :scroll-position="scrollPosition"
     />
 
     <!-- Main Content -->
-    <main 
-      class="container mx-auto px-6 py-20" 
-      id="home" 
+    <main
+      class="container mx-auto px-6 py-20"
+      id="home"
       :style="{ paddingTop: scrollPosition > 50 ? '5.5rem' : '6.5rem' }"
     >
       <!-- Hero Section -->

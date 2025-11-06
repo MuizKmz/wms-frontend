@@ -1,3 +1,4 @@
+
 <template>
   <div class="text-center max-w-4xl mx-auto">
     <h1 class="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
