@@ -36,10 +36,10 @@
         </div>
 
         <!-- Actual Logo -->
-        <router-link 
-          v-else 
-          :to="{ name: 'Dashboard' }" 
-          class="block cursor-pointer hover:opacity-80 transition-opacity duration-200" 
+        <router-link
+          v-else
+          :to="{ name: 'Dashboard' }"
+          class="block cursor-pointer hover:opacity-80 transition-opacity duration-200"
           @click="closeMobileSidebar"
         >
           <div v-if="logoUrl" class="bg-white rounded-lg p-3 mb-3 w-fit">
