@@ -127,6 +127,14 @@ const router = createRouter({
       },
     },
     {
+      path: '/reports/inventory/stock-level',
+      name: 'Stock Level Report',
+      component: () => import('../views/Reports/Inventory/StockLevelReport.vue'),
+      meta: {
+        title: 'Stock Level Report',
+      },
+    },
+    {
       path: '/orderreport',
       name: 'Order Report',
       component: () => import('../views/Reports/Order/OrderReport.vue'),
