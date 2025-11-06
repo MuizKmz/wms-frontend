@@ -442,7 +442,13 @@ const menuGroups = computed(() => {
   })).filter(group => group.items.length > 0); // Remove empty groups
 });
 
-const isActive = (path) => route.path === path;
+const isActive = (path) => {
+  // For Inventory report, also match sub-routes
+  if (path === '/inventoryreport' && route.path.startsWith('/reports/inventory/')) {
+    return true;
+  }
+  return route.path === path;
+};
 
 const isSubmenuActive = (item) => {
   if (!item.subItems) return false;
