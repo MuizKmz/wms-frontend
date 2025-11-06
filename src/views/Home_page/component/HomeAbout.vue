@@ -6,8 +6,8 @@
         <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
           WE ARE BEYOND
         </h2>
-        <a 
-          href="https://clbgroups.com/" 
+        <a
+          href="https://clbgroups.com/"
           target="_blank"
           rel="noopener noreferrer"
           class="inline-block border-2 border-gray-800 px-5 py-1.5 rounded-lg bg-white hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 cursor-pointer"
@@ -20,22 +20,22 @@
       <div class="flex flex-col md:flex-row gap-6 items-start mb-8 max-w-6xl mx-auto">
         <!-- Logo (Outside, Left Side) -->
         <div class="flex-shrink-0 mx-auto md:mx-0">
-          <a 
-            href="https://clbgroups.com/" 
+          <a
+            href="https://clbgroups.com/"
             target="_blank"
             rel="noopener noreferrer"
             class="block transform hover:scale-110 transition-all duration-200"
           >
             <div class="w-32 h-32 bg-blue-900 rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-shadow overflow-hidden">
-              <img 
-                src="/images/logo/logo-clb.png" 
-                alt="CLB Group Logo" 
+              <img
+                src="/images/logo/logo-clb.png"
+                alt="CLB Group Logo"
                 class="w-full h-full object-contain p-2"
               />
             </div>
           </a>
         </div>
-        
+
         <!-- Content Box (Right Side) -->
         <div class="bg-white rounded-2xl p-6 md:p-8 shadow-lg flex-1">
           <p class="text-gray-800 text-base leading-relaxed">

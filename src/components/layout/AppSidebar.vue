@@ -36,7 +36,12 @@
         </div>
 
         <!-- Actual Logo -->
-        <router-link v-else to="/" class="block" @click="closeMobileSidebar">
+        <router-link 
+          v-else 
+          :to="{ name: 'Dashboard' }" 
+          class="block cursor-pointer hover:opacity-80 transition-opacity duration-200" 
+          @click="closeMobileSidebar"
+        >
           <div v-if="logoUrl" class="bg-white rounded-lg p-3 mb-3 w-fit">
             <img :src="logoUrl" alt="Logo" class="w-8 h-8 object-contain" />
           </div>
@@ -313,7 +318,7 @@ const allMenuGroups = [
       {
         icon: HomeIcon,
         name: "Dashboard",
-        path: "/",
+        path: "/Dashboard",
         module: "Dashboard"
       },
     ]
@@ -442,13 +447,7 @@ const menuGroups = computed(() => {
   })).filter(group => group.items.length > 0); // Remove empty groups
 });
 
-const isActive = (path) => {
-  // For Inventory report, also match sub-routes
-  if (path === '/inventoryreport' && route.path.startsWith('/reports/inventory/')) {
-    return true;
-  }
-  return route.path === path;
-};
+const isActive = (path) => route.path === path;
 
 const isSubmenuActive = (item) => {
   if (!item.subItems) return false;

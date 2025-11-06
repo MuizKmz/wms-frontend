@@ -4,8 +4,8 @@
       {{ features.title }}
     </h2>
     <div class="grid md:grid-cols-3 gap-8">
-      <div 
-        v-for="(feature, index) in features.items" 
+      <div
+        v-for="(feature, index) in features.items"
         :key="index"
         class="bg-white p-8 rounded-3xl shadow-md hover:shadow-xl transition"
       >
