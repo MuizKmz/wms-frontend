@@ -637,7 +637,7 @@ const handleLogoUpload = async () => {
 }
 </script>
 
-<style>
+<!-- <style>
 /* CRITICAL: Force all colors to hex/rgb for html2canvas compatibility */
 #printable-report,
 #printable-report * {
@@ -680,4 +680,4 @@ const handleLogoUpload = async () => {
   background-color: rgb(255, 255, 255) !important;
 }
 
-</style>
+</style> -->

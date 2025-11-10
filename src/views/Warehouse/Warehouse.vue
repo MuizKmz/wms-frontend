@@ -59,20 +59,26 @@
               Add New Warehouse
             </button>
           </div>
-          <div v-if="activeTab === 'rack'" class="flex gap-2 my-6">
+          <div v-if="activeTab === 'location'" class="flex gap-2 my-6">
             <button
-              v-if="canCreate('Rack')"
-              @click="openAddRackModal"
+              v-if="canCreate('Location')"
+              @click="openAddLocationModal"
               class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
             >
-              Add New Rack
+              Add New Location
             </button>
             <button
-              v-if="canCreate('Section')"
-              @click="openAddSectionModal"
-              class="px-4 py-2 mr-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+              @click="openAddLocationModal"
+              class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
             >
-              Add New Section
+              Add New Location
+            </button>
+            <button
+              v-if="canDelete('Location')"
+              @click="handleBulkDelete"
+              class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+            >
+              Delete Selected
             </button>
           </div>
 
@@ -93,6 +99,15 @@
       ref="addWarehouseModalRef"
       @item-created="handleItemCreated"
     />
+    <AddNewLocation
+      v-if="canCreate('Location')"
+      ref="addLocationModalRef"
+      @item-created="handleItemCreated"
+    />
+    <AddNewLocation
+      ref="addLocationModalRef"
+      @item-created="handleItemCreated"
+    />
     <AddNewRack v-if="canCreate('Rack')" ref="addRackModalRef" @item-created="handleItemCreated" />
     <AddNewSection
       v-if="canCreate('Section')"
@@ -103,6 +118,21 @@
     <EditWarehouse
       v-if="canUpdate('Warehouse')"
       ref="editWarehouseModalRef"
+      @item-updated="handleItemUpdated"
+    />
+    <EditWarehouse
+      ref="editWarehouseModalRef"
+      @item-updated="handleItemUpdated"
+    />
+    <EditLocation
+      v-if="canUpdate('Location')"
+      ref="editLocationModalRef"
+      :locationId="editingLocation.id"
+      @item-updated="handleItemUpdated"
+    />
+    <EditLocation
+      ref="editLocationModalRef"
+      :locationId="editingLocation.id"
       @item-updated="handleItemUpdated"
     />
     <EditRack
@@ -130,14 +160,17 @@ import AdminLayout from '@/components/layout/AdminLayout.vue'
 import ComponentCard from '@/components/common/ComponentCard.vue'
 // Tab Components
 import WarehouseListOverview from './component/WarehouseListOverview.vue' // Table/List for Warehouse
+import LocationListOverview from './component/LocationListOverview.vue' // Table/List for Location
 import RackListOverview from './component/RackListOverview.vue' // Table/List for Rack
 import SectionListOverview from './component/SectionListOverview.vue' // Table/List for Section
 // Modal Component
 import AddNewWarehouse from './component/AddNewWarehouse.vue'
+import AddNewLocation from './component/AddNewLocation.vue'
 import AddNewRack from './component/AddNewRack.vue'
 import AddNewSection from './component/AddNewSection.vue'
 import WarehouseFilters from './component/WarehouseFilters.vue'
 import EditWarehouse from './component/EditWarehouse.vue'
+import EditLocation from './component/EditLocation.vue'
 import EditRack from './component/EditRack.vue'
 import EditSection from './component/EditSection.vue'
 
@@ -160,15 +193,19 @@ interface Filters {
 const currentPageTitle = ref('Warehouse')
 const activeFilters = ref<Filters>({})
 const addWarehouseModalRef = ref<InstanceType<typeof AddNewWarehouse> | null>(null)
+const addLocationModalRef = ref<InstanceType<typeof AddNewLocation> | null>(null)
 const addRackModalRef = ref<InstanceType<typeof AddNewRack> | null>(null)
 const addSectionModalRef = ref<InstanceType<typeof AddNewSection> | null>(null)
 const editWarehouseModalRef = ref<InstanceType<typeof EditWarehouse> | null>(null)
+const editLocationModalRef = ref<InstanceType<typeof EditLocation> | null>(null)
 const editRackModalRef = ref<InstanceType<typeof EditRack> | null>(null)
 const editSectionModalRef = ref<InstanceType<typeof EditSection> | null>(null)
 // Reactive holder for the rack being edited so we can pass it as a prop to EditRack
 const editingRack = ref<any>({})
 // Reactive holder for the section being edited
 const editingSection = ref<any>({})
+// Reactive holder for the location being edited
+const editingLocation = ref<any>({})
 // Generic ref for the currently active component (Table/Overview)
 const activeComponentRef = ref<any | null>(null)
 const activeTab = ref('warehouse') // Default to warehouse
@@ -219,7 +256,7 @@ const handleDeleteItem = async (result: Result) => {
 
 // Handle edit action coming from child list component
 // Handle edit action coming from child list components
-// The child components emit a typed payload: { type: 'warehouse'|'rack'|'section', item }
+// The child components emit a typed payload: { type: 'warehouse'|'rack'|'section'|'location', item }
 const handleEditItem = async (payload: any) => {
   if (!payload) return
 
@@ -232,6 +269,17 @@ const handleEditItem = async (payload: any) => {
       editWarehouseModalRef.value.openModal(item)
     } else {
       console.warn('EditWarehouse modal ref not available')
+    }
+    return
+  }
+
+  if (type === 'location') {
+    editingLocation.value = item
+    await nextTick()
+    if (editLocationModalRef.value && editLocationModalRef.value.openModal) {
+      editLocationModalRef.value.openModal()
+    } else {
+      console.warn('EditLocation modal ref not available - check if canUpdate("Location") permission is granted')
     }
     return
   }
@@ -291,7 +339,7 @@ const handleOpenAddRack = ({ warehouseId }: { warehouseId: number }) => {
   }
 }
 
-// Define tabs with components based on the image
+// Define tabs with components
 const inventoryTabs = [
   {
     id: 'warehouse',
@@ -299,14 +347,9 @@ const inventoryTabs = [
     component: WarehouseListOverview,
   },
   {
-    id: 'rack',
-    label: 'Rack List Overview',
-    component: RackListOverview,
-  },
-  {
-    id: 'section',
-    label: 'Section List Overview',
-    component: SectionListOverview,
+    id: 'location',
+    label: 'Location Overview',
+    component: LocationListOverview,
   },
 ]
 
@@ -328,6 +371,12 @@ const handleTabChange = (tabId: string) => {
 const openAddWarehouseModal = () => {
   if (addWarehouseModalRef.value) {
     addWarehouseModalRef.value.openModal()
+  }
+}
+
+const openAddLocationModal = () => {
+  if (addLocationModalRef.value) {
+    addLocationModalRef.value.openModal()
   }
 }
 
