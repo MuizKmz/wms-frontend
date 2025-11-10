@@ -52,6 +52,13 @@
               Add New Shipment
             </button>
             <button
+              v-if="canCreate('Shipping')"
+              @click="openShippingWizardModal"
+              class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+            >
+              Shipping Wizard
+            </button>
+            <button
               v-if="canDelete('Shipping')"
               @click="handleBulkDelete"
               class="px-4 py-2 btn btn-error text-white text-sm font-medium rounded-lg transition-colors duration-200"
@@ -85,6 +92,12 @@
       @shipment-created="handleShipmentCreated"
     />
 
+    <ShippingWizard
+      v-if="canCreate('Shipping')"
+      ref="shippingWizardModalRef"
+      @shipment-created="handleShipmentCreated"
+    />
+
     <EditShipment
       v-if="canUpdate('Shipping')"
       ref="editShipmentModalRef"
@@ -107,6 +120,7 @@ import AdminLayout from '@/components/layout/AdminLayout.vue'
 import ComponentCard from '@/components/common/ComponentCard.vue'
 import ShipmentTable from './component/ShipmentTable.vue'
 import AddNewShipment from './component/AddNewShipment.vue'
+import ShippingWizard from './component/ShippingWizard.vue'
 import EditShipment from './component/EditShipment.vue'
 import ShipmentListFilter from './component/ShipmentListFilter.vue'
 import ImportShipping from './component/ImportShipping.vue'
@@ -138,6 +152,7 @@ interface Filters {
 const currentPageTitle = ref('Shipment Management')
 const activeFilters = ref<Filters>({})
 const addShipmentModalRef = ref<InstanceType<typeof AddNewShipment> | null>(null)
+const shippingWizardModalRef = ref<InstanceType<typeof ShippingWizard> | null>(null)
 const editShipmentModalRef = ref<InstanceType<typeof EditShipment> | null>(null)
 const importShipmentModalRef = ref<InstanceType<typeof ImportShipping> | null>(null)
 const shipmentTableRef = ref<InstanceType<typeof ShipmentTable> | null>(null)
@@ -206,6 +221,12 @@ const handleTabChange = (tabId: string) => {
 const openAddShipmentModal = () => {
   if (addShipmentModalRef.value) {
     addShipmentModalRef.value.openModal()
+  }
+}
+
+const openShippingWizardModal = () => {
+  if (shippingWizardModalRef.value) {
+    shippingWizardModalRef.value.openModal()
   }
 }
 

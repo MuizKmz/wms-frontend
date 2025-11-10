@@ -52,6 +52,13 @@
               Add New Order
             </button>
             <button
+              v-if="canCreate('Order')"
+              @click="openOrderWizardModal"
+              class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+            >
+              Order Wizard
+            </button>
+            <button
               v-if="canDelete('Order')"
               @click="handleBulkDelete"
               class="px-4 py-2 btn btn-error text-white text-sm font-medium rounded-lg transition-colors duration-200"
@@ -85,6 +92,12 @@
       @order-created="handleOrderCreated"
     />
 
+    <OrderWizard
+      v-if="canCreate('Order')"
+      ref="orderWizardModalRef"
+      @order-created="handleOrderCreated"
+    />
+
     <EditOrder
       v-if="canUpdate('Order')"
       ref="editOrderModalRef"
@@ -101,6 +114,7 @@ import AdminLayout from '@/components/layout/AdminLayout.vue'
 import ComponentCard from '@/components/common/ComponentCard.vue'
 import OrderTable from './component/OrderTable.vue'
 import AddNewOrder from './component/AddNewOrder.vue'
+import OrderWizard from './component/OrderWizard.vue'
 import EditOrder from './component/EditOrder.vue'
 import OrderListFilter from './component/OrderListFilter.vue'
 
@@ -131,6 +145,7 @@ interface Filters {
 const currentPageTitle = ref('Order Management')
 const activeFilters = ref<Filters>({})
 const addOrderModalRef = ref<InstanceType<typeof AddNewOrder> | null>(null)
+const orderWizardModalRef = ref<InstanceType<typeof OrderWizard> | null>(null)
 const editOrderModalRef = ref<InstanceType<typeof EditOrder> | null>(null)
 const orderTableRef = ref<InstanceType<typeof OrderTable> | null>(null)
 const activeTab = ref('table')
@@ -198,6 +213,12 @@ const handleTabChange = (tabId: string) => {
 const openAddOrderModal = () => {
   if (addOrderModalRef.value) {
     addOrderModalRef.value.openModal()
+  }
+}
+
+const openOrderWizardModal = () => {
+  if (orderWizardModalRef.value) {
+    orderWizardModalRef.value.openModal()
   }
 }
 

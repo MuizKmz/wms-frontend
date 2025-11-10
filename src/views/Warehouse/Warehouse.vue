@@ -68,12 +68,6 @@
               Add New Location
             </button>
             <button
-              @click="openAddLocationModal"
-              class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
-            >
-              Add New Location
-            </button>
-            <button
               v-if="canDelete('Location')"
               @click="handleBulkDelete"
               class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
@@ -101,10 +95,6 @@
     />
     <AddNewLocation
       v-if="canCreate('Location')"
-      ref="addLocationModalRef"
-      @item-created="handleItemCreated"
-    />
-    <AddNewLocation
       ref="addLocationModalRef"
       @item-created="handleItemCreated"
     />
