@@ -1,11 +1,11 @@
 <template>
   <div
     v-if="showToast"
-    class="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
+    class="fixed inset-0 flex items-center justify-center z-[9999] pointer-events-none"
   >
     <div
       :class="[
-        'rounded-lg px-6 py-4 shadow-lg flex items-center transform transition-all duration-300',
+        'rounded-lg px-6 py-4 shadow-lg flex items-center transform transition-all duration-300 pointer-events-auto',
         toastType === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white',
       ]"
     >
@@ -259,12 +259,17 @@ const handleBulkDelete = async () => {
   const selectedItems = receivingTableRef.value.selectedItems || []
 
   if (selectedItems.length === 0) {
-    showToastMessage('Please select items to delete', 'error')
+    // SweetAlert will show the "No Selection" message from bulkDelete function
+    await receivingTableRef.value.bulkDelete()
     return
   }
 
-  // The actual bulk delete logic will be handled in the table component
-  await receivingTableRef.value.handleBulkDelete()
+  // Call the bulkDelete method exposed by the ReceivingTable component
+  const result = await receivingTableRef.value.bulkDelete()
+
+  // SweetAlert already handles all notifications in the table component
+  // No need for additional toast here
+  console.log('Bulk delete result:', result)
 }
 
 // Handle import receiving
