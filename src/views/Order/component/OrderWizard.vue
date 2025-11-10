@@ -638,16 +638,16 @@ const handleClickOutside = (event: MouseEvent) => {
   let clickedOutside = true
 
   dropdownRefs.forEach(key => {
-    const refName = key === 'customer' ? 'customerDropdownRef' : 
+    const refName = key === 'customer' ? 'customerDropdownRef' :
                     key === 'orderType' ? 'orderTypeDropdownRef' :
                     key === 'orderStatus' ? 'orderStatusDropdownRef' :
                     key === 'itemStatus' ? 'itemStatusDropdownRef' :
                     key.startsWith('product') ? `productDropdown${key.replace('product', '')}` : null
-    
+
     // Since we can't access refs directly in this context, we'll close all dropdowns on outside click
     // This is a simplified approach
   })
-  
+
   // Close all dropdowns when clicking outside
   Object.keys(openDropdowns).forEach(k => openDropdowns[k] = false)
 }
