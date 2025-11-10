@@ -366,7 +366,7 @@ const WAREHOUSE_API_URL = '/api/warehouse'
 // Mock data for when API fails - Comprehensive test data
 const getMockData = () => [
   // ========== WAREHOUSE 1 (WH-001) - Main Warehouse ==========
-  
+
   // Level 0 - Main Storage A1 (has 2 Level 1 children)
   {
     id: 1,
@@ -591,7 +591,7 @@ const getMockData = () => [
   },
 
   // ========== WAREHOUSE 2 (WH-002) - North Warehouse ==========
-  
+
   // Level 0 - Cold Storage B1 (has 2 Level 1 children)
   {
     id: 12,
@@ -712,8 +712,8 @@ const fetchData = async () => {
       warehouseName: location.warehouse?.name || location.warehouseName || '-',
       warehouseCode: location.warehouse?.warehouseCode || location.warehouseCode || '-',
       type: location.type || location.locationType || 'Other',
-      capacity: location.locationCapacity 
-        ? `${location.locationCapacity} ${location.unit || ''}` 
+      capacity: location.locationCapacity
+        ? `${location.locationCapacity} ${location.unit || ''}`
         : location.capacity || '-',
       status: location.status || 'Active',
       hierarchy: location.hierarchy || 'Level 0',
@@ -798,21 +798,33 @@ const buildHierarchy = (locations, parentId = null, depth = 0) => {
   const result = []
   const children = locations.filter(loc => {
     if (depth === 0) {
+      // Level 0: Top level locations with no parent
       return loc.hierarchy === 'Level 0' && loc.parentLocationId === null
     } else if (depth === 1) {
+      // Level 1: Locations where parentLocationId matches the Level 0 parent
       return loc.hierarchy === 'Level 1' && loc.parentLocationId === parentId
     } else if (depth === 2) {
-      return loc.hierarchy === 'Level 2' && loc.child1LocationId && loc.parentLocationId === parentId
+      // Level 2: Locations where child1LocationId matches the Level 1 parent
+      return loc.hierarchy === 'Level 2' && loc.child1LocationId === parentId
     }
     return false
   })
 
   children.forEach(location => {
-    const hasChildren = locations.some(loc => 
-      (loc.hierarchy === 'Level 1' && loc.parentLocationId === location.id) ||
-      (loc.hierarchy === 'Level 2' && loc.child1LocationId === location.id)
-    )
-    
+    // Check if this location has children
+    let hasChildren = false
+    if (location.hierarchy === 'Level 0') {
+      // Level 0 has children if any Level 1 locations have it as parent
+      hasChildren = locations.some(loc =>
+        loc.hierarchy === 'Level 1' && loc.parentLocationId === location.id
+      )
+    } else if (location.hierarchy === 'Level 1') {
+      // Level 1 has children if any Level 2 locations have it as child1Location
+      hasChildren = locations.some(loc =>
+        loc.hierarchy === 'Level 2' && loc.child1LocationId === location.id
+      )
+    }
+
     result.push({
       ...location,
       depth,
