@@ -44,9 +44,16 @@
           </div>
 
           <div class="flex gap-2 my-6">
-            <button
+            <!-- <button
               v-if="canCreate('Receiving')"
               @click="openAddReceivingModal"
+              class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+            >
+              Add New Receiving old
+            </button> -->
+            <button
+              v-if="canCreate('Receiving')"
+              @click="openAddFlowsModal"
               class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
             >
               Add New Receiving
@@ -64,13 +71,6 @@
               class="px-4 py-2 btn btn-secondary text-white text-sm font-medium rounded-lg transition-colors duration-200"
             >
               Import from PO
-            </button>
-            <button
-              v-if="canCreate('Receiving')"
-              @click="openAddFlowsModal"
-              class="px-4 py-2 btn btn-secondary text-white text-sm font-medium rounded-lg transition-colors duration-200"
-            >
-              Add Flows
             </button>
           </div>
 
