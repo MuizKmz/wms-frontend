@@ -33,19 +33,10 @@
                 </div>
               </div>
 
-              <div class="grid grid-cols-3 gap-4">
+              <div class="grid grid-cols-2 gap-4">
                 <div>
                   <p class="text-xs text-gray-500">PIC</p>
                   <p class="font-medium text-gray-900 dark:text-white">{{ order.picName || '-' }}</p>
-                </div>
-                <div>
-                  <p class="text-xs text-gray-500">Status</p>
-                  <span
-                    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium"
-                    :class="statusClass(order.status)"
-                  >
-                    {{ order.status || '-' }}
-                  </span>
                 </div>
                 <div>
                   <p class="text-xs text-gray-500">Estimated Delivery</p>
@@ -67,9 +58,8 @@
                         <th class="px-3 py-2">#</th>
                         <th class="px-3 py-2">Product</th>
                         <th class="px-3 py-2">Quantity</th>
-                        <th class="px-3 py-2">Stock Out Qty</th>
                         <th class="px-3 py-2">Unit</th>
-                        <th class="px-3 py-2">Item Status</th>
+                        <th class="px-3 py-2">Location Code</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -77,16 +67,8 @@
                         <td class="px-3 py-2 align-top">{{ idx + 1 }}</td>
                         <td class="px-3 py-2 align-top">{{ item.product?.name || item.productName || item.productId || '-' }}</td>
                         <td class="px-3 py-2 align-top">{{ item.quantity ?? '-' }}</td>
-                        <td class="px-3 py-2 align-top">{{ item.stockOutQuantity ?? '-' }}</td>
                         <td class="px-3 py-2 align-top">{{ item.unit || 'pcs' }}</td>
-                        <td class="px-3 py-2 align-top">
-                          <span
-                            class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
-                            :class="statusClass(item.status)"
-                          >
-                            {{ item.status || '-' }}
-                          </span>
-                        </td>
+                        <td class="px-3 py-2 align-top">{{ item.locationCode ?? '-' }}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -95,7 +77,8 @@
               </div>
             </div>
 
-            <div class="flex justify-end p-4 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex justify-end gap-2 p-4 border-t border-gray-200 dark:border-gray-700">
+              <button class="btn btn-outline" @click="handlePrint">Print</button>
               <button class="btn btn-outline" @click="closeModal">Close</button>
             </div>
           </div>
@@ -193,6 +176,10 @@ const formatDate = (dateString: string) => {
   } catch {
     return dateString
   }
+}
+
+const handlePrint = () => {
+  window.print()
 }
 
 const showQRCode = () => {

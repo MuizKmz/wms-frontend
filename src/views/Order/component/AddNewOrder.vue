@@ -465,7 +465,7 @@ const errors = reactive({
   orderStatus: ''
 })
 
-const orderTypes = ['PO', 'SO', 'RMA']
+const orderTypes = ['PO', 'SO',]
 // Expanded, realistic order lifecycle for procurement / warehouse
 const orderStatuses = ['Created', 'Processing', 'Confirmed', 'Shipped', 'Completed', 'Cancelled']
 // Unified item lifecycle (applies to all order items together in this form)
