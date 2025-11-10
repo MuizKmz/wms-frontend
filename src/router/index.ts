@@ -121,22 +121,6 @@ const router = createRouter({
       },
     },
     {
-      path: '/receivingreport',
-      name: 'Receiving Report',
-      component: () => import('../views/Reports/Receiving/ReportReceiving.vue'),
-      meta: {
-        title: 'Receiving Report',
-      },
-    },
-    {
-      path: '/labelreport',
-      name: 'Label Generation Report',
-      component: () => import('../views/Reports/Label/LabelReport.vue'),
-      meta: {
-        title: 'Label Generation Report',
-      },
-    },
-    {
       path: '/inventoryreport',
       name: 'Inventory Report',
       component: () => import('../views/Reports/Inventory/InventoryReport.vue'),
@@ -153,11 +137,35 @@ const router = createRouter({
       },
     },
     {
-      path: '/orderreport',
-      name: 'Order Report',
-      component: () => import('../views/Reports/Order/OrderReport.vue'),
+      path: '/incomingreport',
+      name: 'Incoming Report',
+      component: () => import('../views/Reports/Incoming/IncomingReport.vue'),
       meta: {
-        title: 'Order Report',
+        title: 'Incoming Report',
+      },
+    },
+    {
+      path: '/reports/incoming/stock-received',
+      name: 'Stock Received Summary Report',
+      component: () => import('../views/Reports/Incoming/StockReceivedReport.vue'),
+      meta: {
+        title: 'Stock Received Summary Report',
+      },
+    },
+    {
+      path: '/outgoingreport',
+      name: 'Outgoing Report',
+      component: () => import('../views/Reports/Outgoing/OutgoingReport.vue'),
+      meta: {
+        title: 'Outgoing Report',
+      },
+    },
+    {
+      path: '/reports/outgoing/sales-order-summary',
+      name: 'Sales Order Summary Report',
+      component: () => import('../views/Reports/Outgoing/SalesOrderReport.vue'),
+      meta: {
+        title: 'Sales Order Summary Report',
       },
     },
     {

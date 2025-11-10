@@ -211,8 +211,18 @@ const toggleSidebar = () => {
 }
 
 const goBack = () => {
-  router.push('/inventoryreport')
-}
+  const path = router.currentRoute.value.path;
+  if (path.startsWith('/reports/inventory/')) {
+    router.push('/inventoryreport');
+  } else if (path.startsWith('/reports/incoming/')) {
+    router.push('/incomingreport');
+  } else if (path.startsWith('/reports/outgoing/')) {
+    router.push('/outgoingreport');
+  } else {
+    // Default: go to dashboard or home
+    router.push('/dashboard');
+  }
+};
 
 const handleGenerate = () => {
   emit('generate')

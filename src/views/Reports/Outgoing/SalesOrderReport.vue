@@ -1,7 +1,7 @@
 <template>
   <AdminLayout>
     <ReportLayout
-      title="Stock Level Report"
+      title="Sales Order Summary Report"
       description="View current stock levels across all warehouses"
       :reportGenerated="reportGenerated"
       :generating="generating"
