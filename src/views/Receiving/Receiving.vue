@@ -65,6 +65,13 @@
             >
               Import from PO
             </button>
+            <button
+              v-if="canCreate('Receiving')"
+              @click="openAddFlowsModal"
+              class="px-4 py-2 btn btn-secondary text-white text-sm font-medium rounded-lg transition-colors duration-200"
+            >
+              Add Flows
+            </button>
           </div>
 
           <component
@@ -98,6 +105,12 @@
       ref="importFromPoModalRef"
       @file-uploaded="handleImportResult"
     />
+
+    <AddFlowsReceiving
+      v-if="canCreate('Receiving')"
+      ref="addFlowsModalRef"
+      @flow-created="handleFlowCreated"
+    />
   </AdminLayout>
 </template>
 
@@ -115,6 +128,7 @@ import AddNewReceiving from './component/AddNewReceiving.vue'
 import EditReceiving from './component/EditReceiving.vue'
 import ReceivingView from './component/ReceivingView.vue'
 import ImportfromPO from './component/ImportfromPO.vue'
+import AddFlowsReceiving from './component/AddFlowsReceiving.vue'
 import ReceivingListFilters from './component/ReceivingListFilters.vue'
 
 // Interface definitions
@@ -144,6 +158,7 @@ const addReceivingModalRef = ref<InstanceType<typeof AddNewReceiving> | null>(nu
 const editReceivingModalRef = ref<InstanceType<typeof EditReceiving> | null>(null)
 const receivingViewModalRef = ref<InstanceType<typeof ReceivingView> | null>(null)
 const importFromPoModalRef = ref<InstanceType<typeof ImportfromPO> | null>(null)
+const addFlowsModalRef = ref<InstanceType<typeof AddFlowsReceiving> | null>(null)
 const receivingTableRef = ref<InstanceType<typeof ReceivingTable> | null>(null)
 const activeTab = ref('table')
 
@@ -259,7 +274,7 @@ const handleImportReceiving = () => {
   }
 }
 
-const handleImportResult = async (result: any) => {
+const handleImportResult = async (result: Result) => {
   if (result && result.success) {
     showToastMessage('Import completed successfully', 'success')
     if (receivingTableRef.value) {
@@ -267,6 +282,24 @@ const handleImportResult = async (result: any) => {
     }
   } else {
     showToastMessage(result?.error || 'Import failed', 'error')
+  }
+}
+
+// Handle add flows
+const openAddFlowsModal = () => {
+  if (addFlowsModalRef.value) {
+    addFlowsModalRef.value.openModal()
+  }
+}
+
+const handleFlowCreated = async (result: Result) => {
+  if (result.success) {
+    showToastMessage('Flow created successfully', 'success')
+    if (receivingTableRef.value) {
+      await receivingTableRef.value.refreshData()
+    }
+  } else {
+    showToastMessage(result.error || 'Failed to create flow', 'error')
   }
 }
 </script>
