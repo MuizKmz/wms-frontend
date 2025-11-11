@@ -63,9 +63,18 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="(item, idx) in order.orderItems" :key="item.id || idx" class="border-t border-gray-100">
+                      <tr v-for="(item, idx) in order.orderItems" :key="item.id || idx" class="border-t border-gray-100 dark:border-gray-700">
                         <td class="px-3 py-2 align-top">{{ idx + 1 }}</td>
-                        <td class="px-3 py-2 align-top">{{ item.product?.name || item.productName || item.productId || '-' }}</td>
+                        <td class="px-3 py-2 align-top">
+                          <button
+                            v-if="order.orderType === 'SO' && item.allocatedEpcs && item.allocatedEpcs.length > 0"
+                            @click="showProductEPC(item)"
+                            class="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer text-left"
+                          >
+                            {{ item.product?.name || item.productName || item.productId || '-' }}
+                          </button>
+                          <span v-else>{{ item.product?.name || item.productName || item.productId || '-' }}</span>
+                        </td>
                         <td class="px-3 py-2 align-top">{{ item.quantity ?? '-' }}</td>
                         <td class="px-3 py-2 align-top">{{ item.unit || 'pcs' }}</td>
                         <td class="px-3 py-2 align-top">{{ item.locationCode ?? '-' }}</td>
@@ -89,17 +98,22 @@
 
   <!-- QR Code Modal -->
   <OrderQRModal ref="qrModalRef" :show="false" :initialOrderNo="null" @close="closeQRModal" />
+  
+  <!-- Product EPC Modal -->
+  <OrderProductEPCModal ref="productEPCModalRef" />
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import QRCodeIcon from '@/icons/QRCodeIcon.vue'
 import OrderQRModal from './OrderQRModal.vue'
+import OrderProductEPCModal from './OrderProductEPCModal.vue'
 
 const isOpen = ref(false)
 const order = ref<any>({})
 const panelRef = ref<HTMLElement | null>(null)
 const qrModalRef = ref<InstanceType<typeof OrderQRModal> | null>(null)
+const productEPCModalRef = ref<InstanceType<typeof OrderProductEPCModal> | null>(null)
 
 // Reuse similar status color mapping as table
 const statusClass = (status: string) => {
@@ -179,12 +193,29 @@ const formatDate = (dateString: string) => {
 }
 
 const handlePrint = () => {
-  window.print()
+  // Store order data in sessionStorage
+  sessionStorage.setItem('orderPrintData', JSON.stringify(order.value))
+  
+  // Open print page in new tab
+  const printUrl = window.location.origin + '/order/print'
+  window.open(printUrl, '_blank')
 }
 
 const showQRCode = () => {
   if (qrModalRef.value && order.value.orderNo) {
     qrModalRef.value.openModal(order.value.orderNo)
+  }
+}
+
+const showProductEPC = (item: any) => {
+  if (productEPCModalRef.value) {
+    const productData = {
+      productName: item.product?.name || item.productName || item.productId || '-',
+      quantity: item.quantity,
+      allocatedEpcs: item.allocatedEpcs || [],
+      remarks: item.remarks
+    }
+    productEPCModalRef.value.openModal(order.value.orderNo, productData)
   }
 }
 
