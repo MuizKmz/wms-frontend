@@ -71,20 +71,21 @@
 
             <!-- Dynamic Data Columns -->
             <td v-for="col in selectedColumns" :key="col" class="px-6 py-4">
-              <!-- Tracking Code with bold -->
-              <span
+              <!-- Tracking Code with bold and clickable -->
+              <button
                 v-if="col === 'trackingCode'"
-                class="text-sm font-medium text-gray-900 dark:text-white"
+                @click="viewShipment(item)"
+                class="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer text-left"
               >
                 {{ getCellValue(item, col) }}
-              </span>
+              </button>
 
-              <!-- Order Number with monospace -->
+              <!-- Order Number with monospace and formatted for multiple orders -->
               <span
                 v-else-if="col === 'orderNumber'"
                 class="font-mono text-sm text-gray-900 dark:text-white"
               >
-                {{ getCellValue(item, col) }}
+                {{ formatOrderNumbers(getCellValue(item, col)) }}
               </span>
 
               <!-- Status with badge styling (if applicable) -->
@@ -270,7 +271,7 @@ const props = defineProps({
 })
 
 // Emits for parent component
-const emit = defineEmits(['generate-epc', 'edit-shipment', 'delete-shipment'])
+const emit = defineEmits(['generate-epc', 'edit-shipment', 'delete-shipment', 'view-shipment'])
 
 const data = ref([])
 const loading = ref(false)
@@ -338,6 +339,33 @@ const getCellValue = (item, col) => {
   }
 
   return item[col] != null ? item[col] : '-'
+}
+
+// Format order numbers - show first order and "..." if multiple
+const formatOrderNumbers = (orderValue) => {
+  if (!orderValue) return '-'
+  
+  // If it's already a string, check if it contains commas (multiple orders)
+  if (typeof orderValue === 'string') {
+    const orders = orderValue.split(',').map(o => o.trim()).filter(Boolean)
+    if (orders.length === 0) return '-'
+    if (orders.length === 1) return orders[0]
+    return `${orders[0]}, ...`
+  }
+  
+  // If it's an array
+  if (Array.isArray(orderValue)) {
+    if (orderValue.length === 0) return '-'
+    if (orderValue.length === 1) return orderValue[0]
+    return `${orderValue[0]}, ...`
+  }
+  
+  return orderValue
+}
+
+// View shipment details
+const viewShipment = (shipment) => {
+  emit('view-shipment', shipment)
 }
 
 // Handle columns update from SelectTable component
