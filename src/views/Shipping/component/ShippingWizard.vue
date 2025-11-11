@@ -387,25 +387,25 @@ const fetchOrders = async () => {
     const orderResponse = await authenticatedFetch('/api/order')
     if (!orderResponse.ok) throw new Error('Failed to fetch orders')
     const orderData = await orderResponse.json()
-    
+
     // Fetch existing shipments to check which orders already have shipments
     const shipmentResponse = await authenticatedFetch('/api/shipping')
     if (shipmentResponse.ok) {
       existingShipments.value = await shipmentResponse.json()
     }
-    
+
     // Get order IDs that already have shipments
     const shippedOrderIds = new Set(
       existingShipments.value
         .map(shipment => shipment.orderId || shipment.order?.id)
         .filter(Boolean)
     )
-    
+
     // Filter orders to only show those:
     // 1. Not yet shipped (status !== 'Shipped' and status !== 'Completed')
     // 2. Don't already have a shipment created
-    orders.value = orderData.filter((order: Order) => 
-      order.status !== 'Shipped' && 
+    orders.value = orderData.filter((order: Order) =>
+      order.status !== 'Shipped' &&
       order.status !== 'Completed' &&
       !shippedOrderIds.has(order.id)
     )
@@ -440,11 +440,11 @@ const resetForm = () => {
   formData.estimatedDeliveryDate = new Date().toISOString().split('T')[0]
   formData.status = ''
   formData.remark = ''
-  
+
   // Reset order menu styles
   orderMenuStyles.length = 0
   formData.orderItems.forEach(() => orderMenuStyles.push({}))
-  
+
   Object.keys(errors).forEach((key) => delete errors[key])
   Object.keys(openDropdowns).forEach((key) => delete openDropdowns[key])
 }
@@ -631,10 +631,10 @@ const submitForm = async () => {
     })
 
     const results = await Promise.all(shipmentPromises)
-    
+
     // Emit success event first so parent can show toast
     emit('shipment-created', { success: true, data: results })
-    
+
     // Small delay to let toast appear before closing modal
     await new Promise(resolve => setTimeout(resolve, 100))
 

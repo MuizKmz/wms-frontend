@@ -687,13 +687,13 @@ const selectCustomer = (customerId: number) => {
 const selectOrderType = (type: string) => {
   formData.orderType = type
   openDropdowns.orderType = false
-  
+
   // Auto-prefix order number based on type
   const currentOrderNo = formData.orderNo
-  
+
   // Remove any existing PO- or SO- prefix
   let orderNoWithoutPrefix = currentOrderNo.replace(/^(PO-|SO-)/i, '')
-  
+
   // Add new prefix
   if (type === 'PO') {
     formData.orderNo = `PO-${orderNoWithoutPrefix}`
