@@ -624,13 +624,13 @@ const submitForm = async () => {
     }
 
     const data = await response.json()
-    
+
     // Emit success event first so parent can show toast
     emit('order-created', { success: true, data })
-    
+
     // Small delay to let toast appear before closing modal
     await new Promise(resolve => setTimeout(resolve, 100))
-    
+
     // Then close modal (force=true to bypass isSubmitting check)
     await closeModal(true)
   } catch (error) {
