@@ -6,7 +6,7 @@
       @after-leave="unlockScroll"
     >
       <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center">
-        <div class="absolute inset-0 bg-black/50" @click.self="closeModal"></div>
+        <div class="absolute inset-0 bg-black/50" @click.self="() => closeModal()"></div>
         <transition
           enter-active-class="transition-all duration-300"
           enter-from-class="opacity-0 scale-95"
@@ -22,7 +22,7 @@
                   <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Step {{ currentStep }} of {{ totalSteps }}</p>
                 </div>
                 <button
-                  @click="closeModal"
+                  @click="() => closeModal()"
                   :disabled="isSubmitting"
                   class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   aria-label="Close modal"
@@ -244,7 +244,7 @@
 
                 <div class="flex gap-2">
                   <button
-                    @click="closeModal"
+                    @click="() => closeModal()"
                     :disabled="isSubmitting"
                     class="btn btn-outline"
                   >
@@ -277,7 +277,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import authenticatedFetch from '@/utils/authenticatedFetch'
 
 interface Order {
@@ -359,9 +359,11 @@ const openModal = async () => {
   lockScroll()
 }
 
-const closeModal = () => {
-  if (isSubmitting.value) return
+const closeModal = async (force = false) => {
+  if (isSubmitting.value && !force) return
   isOpen.value = false
+  unlockScroll()
+  await nextTick()
   emit('close')
 }
 
@@ -463,8 +465,15 @@ const submitForm = async () => {
     }
 
     const data = await response.json()
+    
+    // Emit success event first so parent can show toast
     emit('shipment-created', { success: true, data })
-    closeModal()
+    
+    // Small delay to let toast appear before closing modal
+    await new Promise(resolve => setTimeout(resolve, 100))
+    
+    // Then close modal (force=true to bypass isSubmitting check)
+    await closeModal(true)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to create shipment'
     emit('shipment-created', { success: false, error: message })

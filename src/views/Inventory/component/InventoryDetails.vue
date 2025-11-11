@@ -66,9 +66,9 @@
                 <label class="text-xs font-medium text-gray-600 dark:text-gray-400">Bulk Status</label>
                 <select v-model="bulkStatus" class="select select-bordered select-xs w-40">
                   <option disabled value="">Select status</option>
-                  <option value="RECEIVED">Received</option>
-                  <option value="DELIVERED">Delivered</option>
+                  <option value="GENERATED">Generated</option>
                   <option value="INBOUND">Inbound</option>
+                  <option value="OUTBOUND">Outbound</option>
                 </select>
               </div>
               <button
@@ -125,19 +125,16 @@
                     Tag Type
                   </th>
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Receiving Code
-                  </th>
-                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     SKU Code
-                  </th>
-                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Order Code
                   </th>
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Warehouse Code
                   </th>
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Location Code
+                  </th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Inbound Date
                   </th>
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Status
@@ -178,19 +175,16 @@
                     Excel
                   </td>
                   <td class="px-4 py-4 text-sm font-mono text-gray-900 dark:text-white">
-                    {{ epc.receivingCode || '--' }}
-                  </td>
-                  <td class="px-4 py-4 text-sm font-mono text-gray-900 dark:text-white">
                     {{ inventoryData?.product?.skuCode || '--' }}
                   </td>
                   <td class="px-4 py-4 text-sm font-mono text-gray-900 dark:text-white">
-                    {{ epc.orderCode || '--' }}
+                    {{ epc.warehouse?.warehouseCode || '--' }}
                   </td>
                   <td class="px-4 py-4 text-sm font-mono text-gray-900 dark:text-white">
-                    {{ inventoryData?.warehouse?.warehouseCode || '--' }}
+                    {{ epc.location?.locationCode || '--' }}
                   </td>
-                  <td class="px-4 py-4 text-sm font-mono text-gray-900 dark:text-white">
-                    {{ inventoryData?.location?.locationCode || '--' }}
+                  <td class="px-4 py-4 text-sm text-gray-900 dark:text-white">
+                    {{ formatDate(epc.inboundDate) }}
                   </td>
                   <td class="px-4 py-4">
                     <span :class="[
@@ -315,11 +309,9 @@ const toggleEpcSelection = (epcId) => {
 
 const getStatusClass = (status) => {
   const statusMap = {
-    'RECEIVED': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-    'INBOUND': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    'DELIVERED': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-    'RETURNED': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
     'GENERATED': 'bg-gray-100 text-gray-800 dark:bg-gray-700/30 dark:text-gray-300',
+    'INBOUND': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    'OUTBOUND': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
   }
   return statusMap[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
 }
@@ -328,6 +320,18 @@ const formatStatus = (status) => {
   if (!status) return '--'
   // Capitalize first letter and make rest lowercase
   return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
+}
+
+const formatDate = (dateString) => {
+  if (!dateString) return '--'
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
 
 const refreshData = () => {
