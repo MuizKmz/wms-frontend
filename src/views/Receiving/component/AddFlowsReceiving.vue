@@ -96,7 +96,7 @@
                     </button>
                   </div>
                 </div>
-                
+
                 <!-- Step 1: Supplier -->
                 <div v-if="currentStep === 1">
                   <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Supplier Information</h3>
@@ -150,7 +150,7 @@
                 <div v-if="currentStep === 2">
                   <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Receiving Details</h3>
                   <div class="space-y-4">
-                    
+
                     <!-- Receiving Mode Selection -->
                     <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -158,20 +158,20 @@
                       </label>
                       <div class="flex gap-4">
                         <label class="flex items-center cursor-pointer">
-                          <input 
-                            type="radio" 
-                            v-model="formData.receivingMode" 
-                            value="direct" 
+                          <input
+                            type="radio"
+                            v-model="formData.receivingMode"
+                            value="direct"
                             class="radio radio-primary mr-2"
                             @change="() => { formData.orderId = null; formData.products = [{ productId: null, quantity: 1, expectedQuantity: 0 }] }"
                           />
                           <span class="text-sm">Direct Receiving (No Order)</span>
                         </label>
                         <label class="flex items-center cursor-pointer">
-                          <input 
-                            type="radio" 
-                            v-model="formData.receivingMode" 
-                            value="order" 
+                          <input
+                            type="radio"
+                            v-model="formData.receivingMode"
+                            value="order"
                             class="radio radio-primary mr-2"
                             @change="fetchOrders"
                           />
@@ -221,7 +221,7 @@
                         ℹ️ Products will be auto-populated from the selected order
                       </p>
                     </div>
-                    
+
                     <!-- Row 1: Receiving Code & DO Number -->
                     <div class="grid grid-cols-2 gap-4">
                       <div>
@@ -330,14 +330,14 @@
                 <!-- Step 3: Product -->
                 <div v-if="currentStep === 3">
                   <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Product Information</h3>
-                  
+
                   <!-- Info banner for order mode -->
                   <div v-if="formData.receivingMode === 'order'" class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800 mb-4">
                     <p class="text-sm text-blue-800 dark:text-blue-200">
                       ℹ️ Products are auto-populated from the selected order. Enter actual received quantities below.
                     </p>
                   </div>
-                  
+
                   <!-- Product Rows -->
                   <div class="space-y-3 max-h-96 overflow-y-auto" style="padding-right: 8px;">
                     <div v-for="(product, index) in formData.products" :key="index" class="grid grid-cols-12 gap-4 items-start">
@@ -471,7 +471,7 @@
                 <!-- Step 4: Location -->
                 <div v-if="currentStep === 4">
                   <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Location Assignment</h3>
-                  
+
                   <!-- Skip Location Assignment Checkbox -->
                   <div class="mb-4">
                     <label class="flex items-center gap-2 cursor-pointer">
@@ -613,7 +613,7 @@
       </div>
     </transition>
   </teleport>
-  
+
   <!-- AddNewSupplier Modal -->
   <AddNewSupplier ref="addSupplierModalRef" @supplier-created="handleSupplierCreated" />
 </template>
@@ -774,7 +774,7 @@ const fetchLocations = async (warehouseId: number) => {
     locations.value = []
     return
   }
-  
+
   loadingLocations.value = true
   try {
     const response = await authenticatedFetch(`/api/location?warehouseId=${warehouseId}`)
@@ -805,7 +805,7 @@ const toggleDropdown = async (name: string) => {
     if (k !== name) openDropdowns[k] = false
   })
   openDropdowns[name] = !openDropdowns[name]
-  
+
   // If opening a product dropdown, compute its fixed-position style
   if (openDropdowns[name] && name.startsWith('product')) {
     const idx = parseInt(name.replace('product', ''), 10)
@@ -826,13 +826,13 @@ const selectReceivingType = (type: string) => {
 const selectOrder = async (orderId: number) => {
   formData.orderId = orderId
   openDropdowns.order = false
-  
+
   // Fetch order details and populate products
   try {
     const response = await authenticatedFetch(`/api/order/${orderId}`)
     if (response.ok) {
       const order = await response.json()
-      
+
       // Populate products from order items with expected quantities
       if (order.orderItems && order.orderItems.length > 0) {
         formData.products = order.orderItems.map((item: any) => ({
@@ -844,7 +844,7 @@ const selectOrder = async (orderId: number) => {
         productMenuStyles.splice(0)
         order.orderItems.forEach(() => productMenuStyles.push({}))
       }
-      
+
       // Auto-fill DO number if available
       if (order.orderNo) {
         formData.doNumber = order.orderNo
@@ -859,7 +859,7 @@ const selectWarehouse = async (id: number) => {
   formData.warehouseId = id
   formData.locationId = null // Reset location when warehouse changes
   openDropdowns.warehouse = false
-  
+
   // Fetch locations for the selected warehouse
   await fetchLocations(id)
 }
@@ -868,11 +868,11 @@ const selectLocation = (id: number) => {
   // Check if this location has children
   const location = locations.value.find(l => l.id === id)
   if (location) {
-    const hasChildren = locations.value.some(loc => 
+    const hasChildren = locations.value.some(loc =>
       (loc.hierarchy === 'Level 1' && loc.parentLocationId === id) ||
       (loc.hierarchy === 'Level 2' && loc.child1LocationId === id)
     )
-    
+
     if (hasChildren) {
       // Toggle expansion
       const index = expandedLocationIds.value.indexOf(id)
@@ -884,7 +884,7 @@ const selectLocation = (id: number) => {
       return // Don't select, just toggle expansion
     }
   }
-  
+
   // If no children, select the location
   formData.locationId = id
   openDropdowns.location = false
@@ -989,7 +989,7 @@ const buildLocationHierarchy = (locs: any[], parentId: number | null = null, dep
         loc.hierarchy === 'Level 2' && loc.child1LocationId === location.id
       )
     }
-    
+
     result.push({
       ...location,
       depth,
@@ -1106,7 +1106,7 @@ const handleSupplierCreated = async (result: any) => {
   if (result.success) {
     // Refresh supplier list
     await fetchSuppliers()
-    
+
     // Auto-select the newly created supplier
     if (result.data && result.data.id) {
       formData.supplierId = result.data.id
@@ -1121,10 +1121,10 @@ const openModal = async () => {
     fetchProducts(),
     fetchWarehouses()
   ])
-  
+
   // Reset form
   resetForm()
-  
+
   isOpen.value = true
   currentStep.value = 1
   lockScroll()
@@ -1132,21 +1132,21 @@ const openModal = async () => {
 
 const closeModal = async (force = false) => {
   if (isSubmitting.value && !force) return
-  
+
   // Close all dropdowns
   Object.keys(openDropdowns).forEach(key => openDropdowns[key] = false)
-  
+
   // Destroy Flatpickr instance
   if (flatpickrInstance) {
     flatpickrInstance.destroy()
     flatpickrInstance = null
   }
-  
+
   isOpen.value = false
   unlockScroll() // Unlock scroll when closing
-  
+
   await nextTick()
-  
+
   emit('close')
 }
 
@@ -1164,15 +1164,15 @@ const resetForm = () => {
   formData.skipLocationAssignment = false
   formData.warehouseId = null
   formData.locationId = null
-  
+
   // Reset product menu styles
   productMenuStyles.length = 0
   formData.products.forEach(() => productMenuStyles.push({}))
-  
+
   // Reset locations
   locations.value = []
   expandedLocationIds.value = []
-  
+
   Object.keys(errors).forEach((key) => delete errors[key])
 }
 
@@ -1226,7 +1226,7 @@ const nextStep = () => {
   submitError.value = '' // Clear any submission errors when navigating
   if (currentStep.value < totalSteps) {
     currentStep.value++
-    
+
     // Initialize Flatpickr when entering step 2
     if (currentStep.value === 2) {
       nextTick(() => {
@@ -1301,17 +1301,17 @@ const submitForm = async () => {
 
     // Small delay to let toast appear before closing modal
     await new Promise(resolve => setTimeout(resolve, 100))
-    
+
     // Then close modal (force=true to bypass isSubmitting check)
     await closeModal(true)
-    
+
   } catch (error) {
     console.error('Error creating receiving:', error)
     const errorMessage = error instanceof Error ? error.message : 'Failed to create receiving'
-    
+
     // Show error in banner
     submitError.value = errorMessage
-    
+
     emit('flow-created', {
       success: false,
       error: errorMessage,
@@ -1336,7 +1336,7 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
   window.removeEventListener('resize', repositionOpenProductMenus)
   window.removeEventListener('scroll', repositionOpenProductMenus, true)
-  
+
   // Clean up Flatpickr
   if (flatpickrInstance) {
     flatpickrInstance.destroy()
