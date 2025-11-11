@@ -58,12 +58,12 @@
 
                 <div class="relative">
                   <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Tracking Code
+                    Tracking Code <span class="text-xs text-gray-500">(Auto-generated if empty)</span>
                   </label>
                   <input
                     v-model="form.trackingCode"
                     type="text"
-                    placeholder="Enter Tracking Code"
+                    placeholder="Leave empty for auto-generation"
                     maxlength="50"
                     :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.trackingCode }]"
                   />
@@ -415,11 +415,7 @@ const validateForm = () => {
 
     // Flatpickr initialization moved to openModal
 
-  // Tracking Code validation
-  if (!form.trackingCode.trim()) {
-    errors.trackingCode = 'Tracking Code is required'
-    isValid = false
-  }
+  // Tracking Code validation - optional, will be auto-generated if empty
 
   // Order No validation
   if (!form.order) {
@@ -601,7 +597,7 @@ const submitForm = async () => {
 
     // Format the data to match the backend schema for Shipment
     const submissionData = {
-      trackingCode: form.trackingCode.toUpperCase(),
+      trackingCode: form.trackingCode ? form.trackingCode.toUpperCase() : '', // Empty string will trigger auto-generation
       orderId: orderId,
       carrier: form.carrier ? form.carrier.toUpperCase() : null,
       destination: form.destination || null,
