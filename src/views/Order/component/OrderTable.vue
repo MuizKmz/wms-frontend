@@ -336,7 +336,7 @@ const fieldAliases = {
 const formatColumnName = (name) => {
   const nameMap = {
     orderNumber: 'Order Number',
-    customerId: 'Customer ID',
+    customerId: 'Customer Code',
     pic: 'PIC',
     productName: 'Product Name',
     expectedQuantity: 'Expected Quantity',
