@@ -81,6 +81,7 @@
             :filters="activeFilters"
             @delete-shipment="handleDeleteShipment"
             @edit-shipment="handleEditShipment"
+            @view-shipment="handleViewShipment"
           />
         </div>
       </ComponentCard>
@@ -109,6 +110,8 @@
       ref="importShipmentModalRef"
       @file-uploaded="handleFileUploaded"
     />
+
+    <ShipmentView ref="shipmentViewRef" />
   </AdminLayout>
 </template>
 
@@ -124,6 +127,7 @@ import ShippingWizard from './component/ShippingWizard.vue'
 import EditShipment from './component/EditShipment.vue'
 import ShipmentListFilter from './component/ShipmentListFilter.vue'
 import ImportShipping from './component/ImportShipping.vue'
+import ShipmentView from './component/ShipmentView.vue'
 
 // Get permission checking functions
 const { canCreate, canUpdate, canDelete } = useAuth()
@@ -156,6 +160,7 @@ const shippingWizardModalRef = ref<InstanceType<typeof ShippingWizard> | null>(n
 const editShipmentModalRef = ref<InstanceType<typeof EditShipment> | null>(null)
 const importShipmentModalRef = ref<InstanceType<typeof ImportShipping> | null>(null)
 const shipmentTableRef = ref<InstanceType<typeof ShipmentTable> | null>(null)
+const shipmentViewRef = ref<InstanceType<typeof ShipmentView> | null>(null)
 const activeTab = ref('table')
 
 // Toast state
@@ -293,6 +298,13 @@ const handleShipmentUpdated = async (result: Result) => {
     }
   } else {
     showToastMessage(result.error || 'Failed to update shipment', 'error')
+  }
+}
+
+// Handle viewing shipment details
+const handleViewShipment = (shipment: Shipment) => {
+  if (shipmentViewRef.value) {
+    shipmentViewRef.value.openModal(shipment)
   }
 }
 </script>
