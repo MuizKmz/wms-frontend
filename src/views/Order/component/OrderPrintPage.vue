@@ -38,7 +38,7 @@
 
             <!-- Products Section for SO Orders -->
             <div v-if="orderData.orderType === 'SO'" class="p-6 space-y-6">
-                <div v-for="(item, itemIdx) in orderData.orderItems" :key="itemIdx" 
+                <div v-for="(item, itemIdx) in orderData.orderItems" :key="itemIdx"
                      class="border border-gray-200 rounded-lg overflow-hidden hover:border-gray-300 transition-colors">
                     <!-- Product Header -->
                     <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
@@ -64,24 +64,30 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                                         EPC Code
                                     </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                                        Warehouse
+                                    </th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Location Code
+                                        Location
                                     </th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                <tr v-if="item.allocatedEpcs && item.allocatedEpcs.length > 0" 
+                                <tr v-if="item.allocatedEpcs && item.allocatedEpcs.length > 0"
                                     v-for="(epc, epcIdx) in item.allocatedEpcs" :key="epcIdx"
                                     class="hover:bg-gray-50 transition-colors border-b border-gray-200">
                                     <td class="px-6 py-4 text-sm font-mono text-gray-900 border-r border-gray-200">
                                         {{ epc.epcCode || '-' }}
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 border-r border-gray-200">
+                                        {{ epc.warehouseCode || '-' }}
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-900">
                                         {{ epc.locationCode || '-' }}
                                     </td>
                                 </tr>
                                 <tr v-else>
-                                    <td colspan="2" class="px-6 py-8 text-center text-sm text-gray-500 italic">
+                                    <td colspan="3" class="px-6 py-8 text-center text-sm text-gray-500 italic">
                                         No EPC allocation data
                                     </td>
                                 </tr>
