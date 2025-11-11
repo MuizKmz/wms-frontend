@@ -6,7 +6,7 @@
       @after-leave="unlockScroll"
     >
       <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center">
-        <div class="absolute inset-0 bg-black/50" @click.self="closeModal"></div>
+        <div class="absolute inset-0 bg-black/50" @click.self="() => closeModal()"></div>
         <transition
           enter-active-class="transition-all duration-300"
           enter-from-class="opacity-0 scale-95"
@@ -22,7 +22,7 @@
                   <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Step {{ currentStep }} of {{ totalSteps }}</p>
                 </div>
                 <button
-                  @click="closeModal"
+                  @click="() => closeModal()"
                   :disabled="isSubmitting"
                   class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   aria-label="Close modal"
@@ -79,6 +79,24 @@
 
               <!-- Form Content -->
               <div class="p-6 min-h-[400px]">
+                <!-- Error Message Banner -->
+                <div v-if="submitError" class="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                  <div class="flex items-start">
+                    <svg class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                    <div class="ml-3 flex-1">
+                      <h3 class="text-sm font-medium text-red-800 dark:text-red-200">Submission Error</h3>
+                      <p class="mt-1 text-sm text-red-700 dark:text-red-300">{{ submitError }}</p>
+                    </div>
+                    <button @click="submitError = ''" class="ml-3 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200">
+                      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
                 <!-- Step 1: Supplier -->
                 <div v-if="currentStep === 1">
                   <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Supplier Information</h3>
@@ -132,29 +150,103 @@
                 <div v-if="currentStep === 2">
                   <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Receiving Details</h3>
                   <div class="space-y-4">
+
+                    <!-- Receiving Mode Selection -->
+                    <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                        Receiving Mode <span class="text-red-500">*</span>
+                      </label>
+                      <div class="flex gap-4">
+                        <label class="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            v-model="formData.receivingMode"
+                            value="direct"
+                            class="radio radio-primary mr-2"
+                            @change="() => { formData.orderId = null; formData.products = [{ productId: null, quantity: 1, expectedQuantity: 0 }] }"
+                          />
+                          <span class="text-sm">Direct Receiving (No Order)</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            v-model="formData.receivingMode"
+                            value="order"
+                            class="radio radio-primary mr-2"
+                            @change="fetchOrders"
+                          />
+                          <span class="text-sm">From Existing Order (PO/SO)</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Order Selection (only show in order mode) -->
+                    <div v-if="formData.receivingMode === 'order'" class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Select Order <span class="text-red-500">*</span>
+                      </label>
+                      <div class="relative" ref="orderDropdownRef">
+                        <button
+                          type="button"
+                          @click="toggleDropdown('order')"
+                          class="input input-bordered w-full text-left flex items-center justify-between"
+                          :disabled="loadingOrders"
+                        >
+                          <span>{{ formData.orderId ? (orders.find(o => o.id === formData.orderId)?.orderNo || 'Select Order') : 'Select Order' }}</span>
+                          <span class="icon-[tabler--chevron-down] size-4"></span>
+                        </button>
+                        <ul
+                          v-if="openDropdowns.order"
+                          class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                        >
+                          <li v-if="loadingOrders" class="px-4 py-2 text-sm text-gray-500">
+                            Loading orders...
+                          </li>
+                          <li v-else-if="orders.length === 0" class="px-4 py-2 text-sm text-gray-500">
+                            No orders found
+                          </li>
+                          <li
+                            v-else
+                            v-for="order in orders"
+                            :key="order.id"
+                            @click="selectOrder(order.id)"
+                            class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm"
+                          >
+                            <div class="font-medium">{{ order.orderNo }}</div>
+                            <div class="text-xs text-gray-500">{{ order.customer?.name || 'N/A' }} • {{ order.orderItems?.length || 0 }} items</div>
+                          </li>
+                        </ul>
+                      </div>
+                      <p class="text-xs text-gray-500 mt-2">
+                        ℹ️ Products will be auto-populated from the selected order
+                      </p>
+                    </div>
+
                     <!-- Row 1: Receiving Code & DO Number -->
                     <div class="grid grid-cols-2 gap-4">
                       <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Receiving Code <span class="text-red-500">*</span>
+                          Receiving Code <span class="text-red-500">*</span> <span class="text-xs text-gray-500">(Auto-generated)</span>
                         </label>
                         <input
                           v-model="formData.receivingCode"
                           type="text"
-                          class="input input-bordered w-full"
-                          placeholder="Enter receiving code"
+                          class="input input-bordered w-full bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
+                          placeholder="Auto-generated"
+                          readonly
                         />
                         <span v-if="errors.receivingCode" class="text-xs text-red-500 mt-1">{{ errors.receivingCode }}</span>
                       </div>
                       <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          DO Number
+                          DO Number {{ formData.receivingMode === 'order' ? '(Auto-filled)' : '' }}
                         </label>
                         <input
                           v-model="formData.doNumber"
                           type="text"
                           class="input input-bordered w-full"
                           placeholder="Enter DO number"
+                          :readonly="formData.receivingMode === 'order'"
                         />
                       </div>
                     </div>
@@ -238,12 +330,19 @@
                 <!-- Step 3: Product -->
                 <div v-if="currentStep === 3">
                   <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Product Information</h3>
-                  
+
+                  <!-- Info banner for order mode -->
+                  <div v-if="formData.receivingMode === 'order'" class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800 mb-4">
+                    <p class="text-sm text-blue-800 dark:text-blue-200">
+                      ℹ️ Products are auto-populated from the selected order. Enter actual received quantities below.
+                    </p>
+                  </div>
+
                   <!-- Product Rows -->
                   <div class="space-y-3 max-h-96 overflow-y-auto" style="padding-right: 8px;">
                     <div v-for="(product, index) in formData.products" :key="index" class="grid grid-cols-12 gap-4 items-start">
                       <!-- Product Dropdown -->
-                      <div class="col-span-7 relative">
+                      <div :class="formData.receivingMode === 'order' ? 'col-span-5' : 'col-span-7'" class="relative">
                         <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
                           <span class="text-red-500">*</span> Product {{ index + 1 }}
                         </label>
@@ -253,9 +352,11 @@
                             class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400"
                             :aria-expanded="openDropdowns[`product${index}`]"
                             @click.stop="toggleDropdown(`product${index}`)"
+                            :disabled="formData.receivingMode === 'order'"
                           >
                             {{ getProductName(product.productId) || 'Select Product' }}
                             <span
+                              v-if="formData.receivingMode === 'direct'"
                               class="icon-[tabler--chevron-down] size-4 transition-transform"
                               :class="{ 'rotate-180': openDropdowns[`product${index}`] }"
                             ></span>
@@ -277,10 +378,23 @@
                         <span v-if="errors[`product${index}`]" class="text-xs text-red-500 mt-1">{{ errors[`product${index}`] }}</span>
                       </div>
 
-                      <!-- Product Quantity -->
-                      <div class="col-span-4 relative">
+                      <!-- Expected Quantity (Order Mode Only) -->
+                      <div v-if="formData.receivingMode === 'order'" class="col-span-2 relative">
                         <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                          <span class="text-red-500">*</span> Quantity
+                          Expected
+                        </label>
+                        <input
+                          :value="product.expectedQuantity"
+                          type="number"
+                          readonly
+                          class="input input-bordered text-center bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400 cursor-not-allowed"
+                        />
+                      </div>
+
+                      <!-- Product Quantity -->
+                      <div :class="formData.receivingMode === 'order' ? 'col-span-4' : 'col-span-4'" class="relative">
+                        <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                          <span class="text-red-500">*</span> {{ formData.receivingMode === 'order' ? 'Actual Qty' : 'Quantity' }}
                         </label>
                         <div class="flex items-center gap-1">
                           <button
@@ -294,7 +408,11 @@
                             v-model.number="product.quantity"
                             type="number"
                             min="1"
-                            :class="['input input-bordered text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors[`quantity${index}`] }]"
+                            :class="[
+                              'input input-bordered text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white',
+                              { 'input-error': errors[`quantity${index}`] },
+                              { 'input-warning': formData.receivingMode === 'order' && product.quantity > product.expectedQuantity }
+                            ]"
                             style="width: 4rem"
                             @input="validateQuantity(index)"
                           />
@@ -310,11 +428,12 @@
                       </div>
 
                       <!-- Remove Button -->
-                      <div class="col-span-1 flex items-end">
+                                            <!-- Remove Button -->
+                      <div v-if="formData.receivingMode === 'direct'" class="col-span-1">
                         <button
-                          v-if="formData.products.length > 1"
                           type="button"
                           @click="removeProduct(index)"
+                          v-if="formData.products.length > 1"
                           class="btn btn-outline btn-error btn-sm w-10 h-10 p-0 flex items-center justify-center mt-6"
                           title="Remove Product"
                         >
@@ -326,8 +445,9 @@
                     </div>
                   </div>
 
-                  <!-- Add Another Product Button -->
+                  <!-- Add Another Product Button (Direct Mode Only) -->
                   <button
+                    v-if="formData.receivingMode === 'direct'"
                     type="button"
                     @click="addProduct"
                     class="btn bg-brand-500 border-none btn-sm mt-4"
@@ -337,12 +457,21 @@
                     </svg>
                     Add Another Product
                   </button>
+
+                  <!-- Warning for over-receiving -->
+                  <div v-if="formData.receivingMode === 'order'" class="mt-4">
+                    <div v-for="(product, index) in formData.products.filter(p => p.quantity > p.expectedQuantity)" :key="`warn-${index}`" class="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800 mb-2">
+                      <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                        ⚠️ {{ getProductName(product.productId) }}: Receiving {{ product.quantity }} but expected {{ product.expectedQuantity }}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Step 4: Location -->
                 <div v-if="currentStep === 4">
                   <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Location Assignment</h3>
-                  
+
                   <!-- Skip Location Assignment Checkbox -->
                   <div class="mb-4">
                     <label class="flex items-center gap-2 cursor-pointer">
@@ -454,7 +583,7 @@
 
                 <div class="flex gap-2">
                   <button
-                    @click="closeModal"
+                    @click="() => closeModal()"
                     :disabled="isSubmitting"
                     class="btn btn-outline"
                   >
@@ -484,7 +613,7 @@
       </div>
     </transition>
   </teleport>
-  
+
   <!-- AddNewSupplier Modal -->
   <AddNewSupplier ref="addSupplierModalRef" @supplier-created="handleSupplierCreated" />
 </template>
@@ -514,6 +643,8 @@ const formData = reactive({
   // Step 1: Supplier
   supplierId: null as number | null,
   // Step 2: Receiving
+  receivingMode: 'direct' as 'direct' | 'order', // NEW: receiving mode
+  orderId: null as number | null, // NEW: link to order
   receivingCode: '',
   doNumber: '',
   receivingType: '',
@@ -522,7 +653,7 @@ const formData = reactive({
   remarks: '',
   // Step 3: Product (now array)
   products: [
-    { productId: null as number | null, quantity: 1 }
+    { productId: null as number | null, quantity: 1, expectedQuantity: 0 } // expectedQuantity from order
   ],
   // Step 4: Location
   skipLocationAssignment: false,
@@ -531,15 +662,18 @@ const formData = reactive({
 })
 
 const errors = reactive<Record<string, string>>({})
+const submitError = ref<string>('') // For displaying submission errors
 
 // Supplier dropdown state
 const suppliers = ref<any[]>([])
 const products = ref<any[]>([])
+const orders = ref<any[]>([]) // NEW: orders list
 const warehouses = ref<any[]>([])
 const locations = ref<any[]>([])
 const expandedLocationIds = ref<number[]>([])
 const loadingWarehouses = ref(false)
 const loadingLocations = ref(false)
+const loadingOrders = ref(false) // NEW: loading state for orders
 const addSupplierModalRef = ref<any>(null)
 const supplierDropdownRef = ref<any>(null)
 const receivingTypeDropdownRef = ref<any>(null)
@@ -547,10 +681,12 @@ const receivingDateInput = ref(null)
 const productDropdownRefs = ref<any[]>([])
 const warehouseDropdownRef = ref<any>(null)
 const locationDropdownRef = ref<any>(null)
+const orderDropdownRef = ref<any>(null) // NEW: order dropdown ref
 let flatpickrInstance: any = null
 
 const openDropdowns = reactive<Record<string, boolean>>({
   supplier: false,
+  order: false, // NEW: order dropdown
   receivingType: false,
   warehouse: false,
   location: false,
@@ -598,6 +734,23 @@ const fetchProducts = async () => {
   }
 }
 
+/* Fetch Orders */
+const fetchOrders = async () => {
+  loadingOrders.value = true
+  try {
+    const response = await authenticatedFetch('/api/order')
+    if (response.ok) {
+      const data = await response.json()
+      orders.value = data || []
+    }
+  } catch (error) {
+    console.error('Error fetching orders:', error)
+    orders.value = []
+  } finally {
+    loadingOrders.value = false
+  }
+}
+
 /* Fetch Warehouses */
 const fetchWarehouses = async () => {
   loadingWarehouses.value = true
@@ -621,7 +774,7 @@ const fetchLocations = async (warehouseId: number) => {
     locations.value = []
     return
   }
-  
+
   loadingLocations.value = true
   try {
     const response = await authenticatedFetch(`/api/location?warehouseId=${warehouseId}`)
@@ -652,7 +805,7 @@ const toggleDropdown = async (name: string) => {
     if (k !== name) openDropdowns[k] = false
   })
   openDropdowns[name] = !openDropdowns[name]
-  
+
   // If opening a product dropdown, compute its fixed-position style
   if (openDropdowns[name] && name.startsWith('product')) {
     const idx = parseInt(name.replace('product', ''), 10)
@@ -670,11 +823,43 @@ const selectReceivingType = (type: string) => {
   openDropdowns.receivingType = false
 }
 
+const selectOrder = async (orderId: number) => {
+  formData.orderId = orderId
+  openDropdowns.order = false
+
+  // Fetch order details and populate products
+  try {
+    const response = await authenticatedFetch(`/api/order/${orderId}`)
+    if (response.ok) {
+      const order = await response.json()
+
+      // Populate products from order items with expected quantities
+      if (order.orderItems && order.orderItems.length > 0) {
+        formData.products = order.orderItems.map((item: any) => ({
+          productId: item.productId,
+          quantity: 0, // User will enter actual received quantity
+          expectedQuantity: item.quantity // Expected from order
+        }))
+        // Reset product menu styles
+        productMenuStyles.splice(0)
+        order.orderItems.forEach(() => productMenuStyles.push({}))
+      }
+
+      // Auto-fill DO number if available
+      if (order.orderNo) {
+        formData.doNumber = order.orderNo
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching order details:', error)
+  }
+}
+
 const selectWarehouse = async (id: number) => {
   formData.warehouseId = id
   formData.locationId = null // Reset location when warehouse changes
   openDropdowns.warehouse = false
-  
+
   // Fetch locations for the selected warehouse
   await fetchLocations(id)
 }
@@ -683,11 +868,11 @@ const selectLocation = (id: number) => {
   // Check if this location has children
   const location = locations.value.find(l => l.id === id)
   if (location) {
-    const hasChildren = locations.value.some(loc => 
+    const hasChildren = locations.value.some(loc =>
       (loc.hierarchy === 'Level 1' && loc.parentLocationId === id) ||
       (loc.hierarchy === 'Level 2' && loc.child1LocationId === id)
     )
-    
+
     if (hasChildren) {
       // Toggle expansion
       const index = expandedLocationIds.value.indexOf(id)
@@ -699,7 +884,7 @@ const selectLocation = (id: number) => {
       return // Don't select, just toggle expansion
     }
   }
-  
+
   // If no children, select the location
   formData.locationId = id
   openDropdowns.location = false
@@ -720,7 +905,7 @@ const selectProduct = (index: number, productId: number) => {
 
 /* Product management */
 const addProduct = () => {
-  formData.products.push({ productId: null, quantity: 1 })
+  formData.products.push({ productId: null, quantity: 1, expectedQuantity: 0 })
   // keep style slot for new product dropdown
   productMenuStyles.push({})
 }
@@ -804,7 +989,7 @@ const buildLocationHierarchy = (locs: any[], parentId: number | null = null, dep
         loc.hierarchy === 'Level 2' && loc.child1LocationId === location.id
       )
     }
-    
+
     result.push({
       ...location,
       depth,
@@ -838,6 +1023,7 @@ const availableProducts = (index: number) => {
 const handleClickOutside = (event: any) => {
   const refs = [
     supplierDropdownRef.value,
+    orderDropdownRef.value, // Added order dropdown ref
     receivingTypeDropdownRef.value,
     warehouseDropdownRef.value,
     locationDropdownRef.value,
@@ -920,7 +1106,7 @@ const handleSupplierCreated = async (result: any) => {
   if (result.success) {
     // Refresh supplier list
     await fetchSuppliers()
-    
+
     // Auto-select the newly created supplier
     if (result.data && result.data.id) {
       formData.supplierId = result.data.id
@@ -935,56 +1121,70 @@ const openModal = async () => {
     fetchProducts(),
     fetchWarehouses()
   ])
-  
+
   // Reset form
   resetForm()
-  
+
   isOpen.value = true
   currentStep.value = 1
   lockScroll()
 }
 
-const closeModal = async () => {
-  if (isSubmitting.value) return
-  
+const closeModal = async (force = false) => {
+  if (isSubmitting.value && !force) return
+
   // Close all dropdowns
   Object.keys(openDropdowns).forEach(key => openDropdowns[key] = false)
-  
+
   // Destroy Flatpickr instance
   if (flatpickrInstance) {
     flatpickrInstance.destroy()
     flatpickrInstance = null
   }
-  
+
   isOpen.value = false
-  
+  unlockScroll() // Unlock scroll when closing
+
   await nextTick()
-  
+
   emit('close')
 }
 
 const resetForm = () => {
   formData.supplierId = null
-  formData.receivingCode = ''
+  formData.receivingMode = 'direct'
+  formData.orderId = null
+  formData.receivingCode = generateReceivingCode() // Auto-generate unique code
   formData.doNumber = ''
   formData.receivingType = ''
   formData.receivedBy = ''
   formData.receivingDate = new Date().toISOString().split('T')[0]
   formData.remarks = ''
-  formData.products = [{ productId: null, quantity: 1 }]
+  formData.products = [{ productId: null, quantity: 1, expectedQuantity: 0 }]
   formData.skipLocationAssignment = false
   formData.warehouseId = null
   formData.locationId = null
-  
+
   // Reset product menu styles
   productMenuStyles.length = 0
   formData.products.forEach(() => productMenuStyles.push({}))
-  
+
   // Reset locations
   locations.value = []
   expandedLocationIds.value = []
-  
+
   Object.keys(errors).forEach((key) => delete errors[key])
+}
+
+// Generate unique receiving code
+const generateReceivingCode = () => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  const time = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0') + String(now.getSeconds()).padStart(2, '0')
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
+  return `RCV-${year}${month}${day}-${time}-${random}`
 }
 
 const validateStep = (step: number): boolean => {
@@ -993,6 +1193,10 @@ const validateStep = (step: number): boolean => {
   if (step === 1) {
     if (!formData.supplierId) errors.supplierId = 'Supplier is required'
   } else if (step === 2) {
+    // Check order mode validation
+    if (formData.receivingMode === 'order' && !formData.orderId) {
+      errors.orderId = 'Order is required in order mode'
+    }
     if (!formData.receivingCode) errors.receivingCode = 'Receiving code is required'
     if (!formData.receivingType) errors.receivingType = 'Receiving type is required'
     if (!formData.receivedBy) errors.receivedBy = 'Received by is required'
@@ -1019,9 +1223,10 @@ const validateStep = (step: number): boolean => {
 
 const nextStep = () => {
   if (!validateStep(currentStep.value)) return
+  submitError.value = '' // Clear any submission errors when navigating
   if (currentStep.value < totalSteps) {
     currentStep.value++
-    
+
     // Initialize Flatpickr when entering step 2
     if (currentStep.value === 2) {
       nextTick(() => {
@@ -1048,20 +1253,72 @@ const previousStep = () => {
 const submitForm = async () => {
   if (!validateStep(currentStep.value)) return
 
+  submitError.value = '' // Clear previous errors
   isSubmitting.value = true
 
-  // Placeholder: Call your API here
-  // Example: await api.post('/api/receiving/add-flow', formData)
+  try {
+    // Prepare submission data: ONE receiving with multiple items
+    const receivingData = {
+      receivingCode: formData.receivingCode,
+      doNumber: formData.doNumber || null,
+      orderId: formData.receivingMode === 'order' ? formData.orderId : null, // Include orderId if in order mode
+      supplierId: formData.supplierId,
+      receivedBy: formData.receivedBy,
+      receivingDate: formData.receivingDate,
+      receivingType: formData.receivingType || null,
+      warehouseId: formData.skipLocationAssignment ? null : formData.warehouseId,
+      locationId: formData.skipLocationAssignment ? null : (formData.locationId || null),
+      remarks: formData.remarks || null,
+      // Multiple items in one receiving
+      receivingItems: formData.products.map(product => ({
+        productId: product.productId,
+        quantity: product.quantity,
+        expectedQuantity: product.expectedQuantity || null, // Expected quantity from order
+        unit: 'pcs'
+      }))
+    }
 
-  setTimeout(() => {
-    isSubmitting.value = false
+    // Submit single receiving with nested items
+    const response = await authenticatedFetch('/api/receiving', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(receivingData)
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.message || 'Failed to create receiving')
+    }
+
+    const responseData = await response.json()
+
+    // Emit success event first so parent can show toast
     emit('flow-created', {
       success: true,
-      message: 'Receiving created successfully',
-      data: { ...formData },
+      message: `Successfully created receiving with ${formData.products.length} item${formData.products.length > 1 ? 's' : ''}`,
+      data: responseData,
     })
-    closeModal()
-  }, 1000)
+
+    // Small delay to let toast appear before closing modal
+    await new Promise(resolve => setTimeout(resolve, 100))
+
+    // Then close modal (force=true to bypass isSubmitting check)
+    await closeModal(true)
+
+  } catch (error) {
+    console.error('Error creating receiving:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Failed to create receiving'
+
+    // Show error in banner
+    submitError.value = errorMessage
+
+    emit('flow-created', {
+      success: false,
+      error: errorMessage,
+    })
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
 defineExpose({
@@ -1079,7 +1336,7 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
   window.removeEventListener('resize', repositionOpenProductMenus)
   window.removeEventListener('scroll', repositionOpenProductMenus, true)
-  
+
   // Clean up Flatpickr
   if (flatpickrInstance) {
     flatpickrInstance.destroy()

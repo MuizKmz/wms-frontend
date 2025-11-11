@@ -793,7 +793,7 @@ const deleteReceiving = async (item) => {
   try {
     const endpoint = item.isReceiving ? `${API_URL}/${item.id}` : `${API_URL}/items/${item.id}`
 
-    const response = await fetch(endpoint, {
+    const response = await authenticatedFetch(endpoint, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
     })
