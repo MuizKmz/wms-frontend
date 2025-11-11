@@ -423,7 +423,11 @@
                 <div v-else></div>
 
                 <div class="flex gap-2">
-                  <button @click="closeModal" :disabled="isSubmitting" class="btn btn-outline">
+                  <button
+                    @click="() => closeModal()"
+                    :disabled="isSubmitting"
+                    class="btn btn-outline"
+                  >
                     Cancel
                   </button>
                   <button v-if="currentStep < totalSteps" @click="nextStep"
@@ -575,16 +579,11 @@ const openModal = async () => {
   lockScroll()
 }
 
-const closeModal = () => {
-  if (isSubmitting.value) return
-  
-  // Destroy Flatpickr instance
-  if (flatpickrInstance) {
-    flatpickrInstance.destroy()
-    flatpickrInstance = null
-  }
-  
+const closeModal = async (force = false) => {
+  if (isSubmitting.value && !force) return
   isOpen.value = false
+  unlockScroll()
+  await nextTick()
   emit('close')
 }
 
@@ -967,8 +966,15 @@ const submitForm = async () => {
     }
 
     const data = await response.json()
+    
+    // Emit success event first so parent can show toast
     emit('order-created', { success: true, data })
-    closeModal()
+    
+    // Small delay to let toast appear before closing modal
+    await new Promise(resolve => setTimeout(resolve, 100))
+    
+    // Then close modal (force=true to bypass isSubmitting check)
+    await closeModal(true)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to create order'
     emit('order-created', { success: false, error: message })

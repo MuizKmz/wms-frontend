@@ -50,17 +50,17 @@
                 <p
                   class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400 flex-1 border-r px-2"
                 >
-                  Received
+                  Received (Today)
                 </p>
                 <p
                   class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400 flex-1 border-r px-2"
                 >
-                  Delivered
+                  Inbound
                 </p>
                 <p
-                  class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400 flex-1 whitespace-nowrap"
+                  class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400 flex-1"
                 >
-                  In Stock
+                  Outbound
                 </p>
               </div>
             </th>
@@ -125,20 +125,20 @@
             </td>
 
             <td class="px-6 py-4 text-center">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ calculateReceived(item) }}
+              <p class="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                {{ calculateReceivedToday(item) }}
               </p>
             </td>
 
             <td class="px-6 py-4 text-center">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ calculateDelivered(item) }}
+                {{ calculateInbound(item) }}
               </p>
             </td>
 
             <td class="px-6 py-4 text-center">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ calculateInStock(item) }}
+                {{ calculateOutbound(item) }}
               </p>
             </td>
 
@@ -487,28 +487,34 @@ const formatDate = (dateString) => {
   })
 }
 
-// Calculate received quantity from EPCs with RECEIVED status
-const calculateReceived = (item) => {
+// Calculate received today - EPCs inbounded today only (resets daily)
+const calculateReceivedToday = (item) => {
   if (!item.product?.epcs) return 0
-  return item.product.epcs.filter((epc) => epc.status === 'RECEIVED').length
+  const today = new Date().toISOString().split('T')[0] // Get today's date in YYYY-MM-DD
+  return item.product.epcs.filter((epc) => {
+    if (!epc.inboundDate) return false
+    const epcDate = new Date(epc.inboundDate).toISOString().split('T')[0]
+    return epcDate === today
+  }).length
 }
 
-// Calculate delivered quantity from EPCs with DELIVERED status
-const calculateDelivered = (item) => {
-  if (!item.product?.epcs) return 0
-  return item.product.epcs.filter((epc) => epc.status === 'DELIVERED').length
-}
-
-// Calculate in stock quantity from EPCs with INBOUND status
-const calculateInStock = (item) => {
+// Calculate total inbound quantity from EPCs with INBOUND status
+const calculateInbound = (item) => {
   if (!item.product?.epcs) return 0
   return item.product.epcs.filter((epc) => epc.status === 'INBOUND').length
 }
 
-// Calculate return quantity from EPCs with RETURNED status
+// Calculate outbound quantity from EPCs with OUTBOUND status
+const calculateOutbound = (item) => {
+  if (!item.product?.epcs) return 0
+  return item.product.epcs.filter((epc) => epc.status === 'OUTBOUND').length
+}
+
+// Calculate return quantity from EPCs with RETURNED status (if needed in future)
 const calculateReturn = (item) => {
   if (!item.product?.epcs) return 0
-  return item.product.epcs.filter((epc) => epc.status === 'RETURNED').length
+  // No RETURNED status in current schema, return 0
+  return 0
 }
 
 // --- Actions ---
