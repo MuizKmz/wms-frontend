@@ -105,6 +105,14 @@ const router = createRouter({
       },
     },
     {
+      path: '/order/print',
+      name: 'Order Print',
+      component: () => import('../views/Order/component/OrderPrintPage.vue'),
+      meta: {
+        title: 'Print Order',
+      },
+    },
+    {
       path: '/shipping',
       name: 'Shipping Management',
       component: () => import('../views/Shipping/Shipping.vue'),
