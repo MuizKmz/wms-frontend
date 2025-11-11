@@ -147,7 +147,7 @@
                         </label>
                         <input v-model="formData.orderNo" type="text"
                           class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                          placeholder="Enter order number" maxlength="50" />
+                          placeholder="Select order type first (PO- or SO- will be auto-added)" maxlength="50" />
                         <span v-if="errors.orderNo" class="text-xs text-red-500 mt-1">{{ errors.orderNo }}</span>
                       </div>
                     </div>
@@ -687,6 +687,19 @@ const selectCustomer = (customerId: number) => {
 const selectOrderType = (type: string) => {
   formData.orderType = type
   openDropdowns.orderType = false
+
+  // Auto-prefix order number based on type
+  const currentOrderNo = formData.orderNo
+
+  // Remove any existing PO- or SO- prefix
+  let orderNoWithoutPrefix = currentOrderNo.replace(/^(PO-|SO-)/i, '')
+
+  // Add new prefix
+  if (type === 'PO') {
+    formData.orderNo = `PO-${orderNoWithoutPrefix}`
+  } else if (type === 'SO') {
+    formData.orderNo = `SO-${orderNoWithoutPrefix}`
+  }
 }
 
 const selectOrderStatus = (status: string) => {
