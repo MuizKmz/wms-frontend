@@ -639,7 +639,7 @@ const submitForm = async () => {
     
     // Small delay to let toast appear before closing modal
     await new Promise(resolve => setTimeout(resolve, 100))
-    
+
     // Then close modal (force=true to bypass isSubmitting check)
     await closeModal(true)
   } catch (error) {

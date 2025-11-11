@@ -139,6 +139,9 @@
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Status
                   </th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Reserved
+                  </th>
                 </tr>
               </thead>
               <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -192,6 +195,14 @@
                       getStatusClass(epc.status)
                     ]">
                       {{ formatStatus(epc.status) }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-4">
+                    <span :class="[
+                      'px-2 py-1 text-xs font-medium rounded-full',
+                      epc.isReserved ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+                    ]">
+                      {{ epc.isReserved ? 'Yes' : 'No' }}
                     </span>
                   </td>
                 </tr>
@@ -325,9 +336,9 @@ const formatStatus = (status) => {
 const formatDate = (dateString) => {
   if (!dateString) return '--'
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'short', 
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit'

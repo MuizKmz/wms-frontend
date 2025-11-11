@@ -390,7 +390,7 @@
                                       {{ allocation.locationCode || '-' }}
                                     </td>
                                     <td class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-                                      {{ formatDate(allocation.lastUpdatedAt) }}
+                                      {{ formatDate(allocation.inboundDate) }}
                                     </td>
                                   </tr>
                                 </tbody>
@@ -480,7 +480,7 @@ interface OrderItem {
     epcCode: string
     warehouseCode: string
     locationCode: string
-    lastUpdatedAt: string
+    inboundDate: string
   }>
 }
 
@@ -597,14 +597,14 @@ const resetForm = () => {
   formData.orderRemarks = ''
   formData.itemStatus = 'Pending'
   formData.orderItems = [{ productId: '', quantity: 1, status: 'Pending', remarks: '', availableStock: undefined, allocatedEpcs: [] }]
-  
+
   // Reset product menu styles
   productMenuStyles.length = 0
   formData.orderItems.forEach(() => productMenuStyles.push({}))
-  
+
   // Reset loading inventory
   loadingInventory.value = {}
-  
+
   Object.keys(errors).forEach((key) => delete errors[key])
   Object.keys(openDropdowns).forEach((key) => delete openDropdowns[key])
 }
@@ -754,13 +754,14 @@ const fetchProductInventory = async (index: number) => {
 
   loadingInventory.value[index] = true
   try {
-    const response = await authenticatedFetch('/api/inventory')
+    // Use available-epcs endpoint that excludes already-allocated EPCs
+    const response = await authenticatedFetch('/api/inventory/available-epcs/list')
     if (response.ok) {
       const allInventory = await response.json()
-      
+
       // Collect all INBOUND EPCs for this product with their location info
       const allEpcs: any[] = []
-      
+
       allInventory.forEach((inv: any) => {
         const productId = inv.product?.id
         if (productId?.toString() === item.productId.toString()) {
@@ -768,29 +769,38 @@ const fetchProductInventory = async (index: number) => {
           inboundEpcs.forEach((epc: any) => {
             allEpcs.push({
               epcCode: epc.epcCode,
-              warehouseCode: inv.warehouse?.warehouseCode || '-',
-              locationCode: inv.location?.locationCode || '-',
-              lastUpdatedAt: inv.lastUpdatedAt
+              warehouseCode: epc.warehouse?.warehouseCode || '-',
+              locationCode: epc.location?.locationCode || '-',
+              inboundDate: epc.inboundDate || inv.lastUpdatedAt
             })
           })
         }
       })
 
-      // Sort by date ascending (FIFO - First In First Out)
+      // Sort by inbound date ascending (FIFO - First In First Out)
       allEpcs.sort((a, b) => {
-        return new Date(a.lastUpdatedAt).getTime() - new Date(b.lastUpdatedAt).getTime()
+        return new Date(a.inboundDate).getTime() - new Date(b.inboundDate).getTime()
       })
 
-      // Set available stock
-      item.availableStock = allEpcs.length
+      // Filter out EPCs already allocated to other order items (prevent duplicates)
+      const availableEpcs = allEpcs.filter(epc => {
+        const isAlreadyUsed = formData.orderItems.some((otherItem, idx) => {
+          if (idx === index) return false // Don't check against self
+          return otherItem.allocatedEpcs?.some(allocated => allocated.epcCode === epc.epcCode)
+        })
+        return !isAlreadyUsed
+      })
+
+      // Set available stock (after filtering duplicates)
+      item.availableStock = availableEpcs.length
 
       // Enforce quantity limit
-      if (item.quantity > allEpcs.length) {
-        item.quantity = allEpcs.length || 1
+      if (item.quantity > availableEpcs.length) {
+        item.quantity = availableEpcs.length || 1
       }
 
       // Allocate EPCs based on quantity (FIFO)
-      const allocatedEpcs = allEpcs.slice(0, item.quantity)
+      const allocatedEpcs = availableEpcs.slice(0, item.quantity)
       item.allocatedEpcs = allocatedEpcs
     }
   } catch (error) {
@@ -814,14 +824,14 @@ const formatDate = (dateString: string) => {
 
 const increaseQuantity = (index: number) => {
   const item = formData.orderItems[index]
-  
+
   // Check available stock limit for SO orders
   if (formData.orderType === 'SO' && item.availableStock !== undefined) {
     if (item.quantity >= item.availableStock) {
       return // Don't increase beyond available stock
     }
   }
-  
+
   formData.orderItems[index].quantity++
   // Re-allocate EPCs if SO order
   if (formData.orderType === 'SO' && formData.orderItems[index].productId) {
@@ -841,18 +851,18 @@ const decreaseQuantity = (index: number) => {
 
 const validateQuantity = (index: number) => {
   const item = formData.orderItems[index]
-  
+
   if (item.quantity < 1) {
     item.quantity = 1
   }
-  
+
   // Enforce available stock limit for SO orders
   if (formData.orderType === 'SO' && item.availableStock !== undefined) {
     if (item.quantity > item.availableStock) {
       item.quantity = item.availableStock || 1
     }
   }
-  
+
   // Re-allocate EPCs if SO order
   if (formData.orderType === 'SO' && formData.orderItems[index].productId) {
     fetchProductInventory(index)
@@ -966,13 +976,13 @@ const submitForm = async () => {
     }
 
     const data = await response.json()
-    
+
     // Emit success event first so parent can show toast
     emit('order-created', { success: true, data })
-    
+
     // Small delay to let toast appear before closing modal
     await new Promise(resolve => setTimeout(resolve, 100))
-    
+
     // Then close modal (force=true to bypass isSubmitting check)
     await closeModal(true)
   } catch (error) {
@@ -1019,7 +1029,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', repositionOpenProductMenus)
   window.removeEventListener('scroll', repositionOpenProductMenus, true)
   if (isOpen.value) unlockScroll()
-  
+
   // Clean up Flatpickr
   if (flatpickrInstance) {
     flatpickrInstance.destroy()
