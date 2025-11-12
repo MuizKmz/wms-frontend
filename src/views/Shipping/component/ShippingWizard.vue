@@ -6,7 +6,7 @@
       @after-leave="unlockScroll"
     >
       <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center">
-        <div class="absolute inset-0 bg-black/50" @click.self="closeModal"></div>
+        <div class="absolute inset-0 bg-black/50" @click.self="() => closeModal()"></div>
         <transition
           enter-active-class="transition-all duration-300"
           enter-from-class="opacity-0 scale-95"
@@ -22,7 +22,7 @@
                   <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Step {{ currentStep }} of {{ totalSteps }}</p>
                 </div>
                 <button
-                  @click="closeModal"
+                  @click="() => closeModal()"
                   :disabled="isSubmitting"
                   class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   aria-label="Close modal"
@@ -51,7 +51,7 @@
                         <span :class="[
                           'mt-2 text-xs font-medium text-center whitespace-nowrap',
                           currentStep === step.id
-                            ? 'text-brand-600 dark:text-brand-400'
+                            ? 'text-brand-500 dark:text-brand-400'
                             : currentStep > step.id
                             ? 'text-green-600 dark:text-green-400'
                             : 'text-gray-500 dark:text-gray-400',
@@ -82,7 +82,7 @@
                           <div class="flex items-start gap-3">
                             <div class="flex-1">
                               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Order Number <span class="text-red-500">*</span>
+                                Sales Order Number <span class="text-red-500">*</span>
                               </label>
                               <div class="relative" :ref="el => orderDropdownRefs[index] = el">
                                 <button
@@ -143,20 +143,48 @@
                             />
                             <span v-if="errors[`item${index}TrackingCode`]" class="text-xs text-red-500 mt-1">{{ errors[`item${index}TrackingCode`] }}</span>
                           </div>
+
+                          <!-- DO Number -->
+                          <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              DO Number <span class="text-red-500">*</span>
+                            </label>
+                            <input
+                              v-model="item.doNumber"
+                              type="text"
+                              class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                              :class="{ 'border-red-500': errors[`item${index}DoNumber`] }"
+                              placeholder="Enter DO Number"
+                              maxlength="50"
+                            />
+                            <span v-if="errors[`item${index}DoNumber`]" class="text-xs text-red-500 mt-1">{{ errors[`item${index}DoNumber`] }}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      @click="addOrderItem"
-                      class="btn bg-brand-500 border-none btn-sm mt-4"
-                    >
-                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                      </svg>
-                      Add Another Order
-                    </button>
+                    <div class="flex gap-2">
+                      <button
+                        type="button"
+                        @click="addOrderItem"
+                        class="btn bg-brand-500 border-none btn-sm mt-4"
+                      >
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Another Order
+                      </button>
+                      <button
+                        type="button"
+                        @click="openAddOrderModal"
+                        class="btn bg-brand-500 border-none btn-sm mt-4"
+                      >
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add New Order
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -198,9 +226,12 @@
                           Shipping Date
                         </label>
                         <input
+                          ref="shippingDateInput"
                           v-model="formData.shippingDate"
-                          type="date"
+                          type="text"
                           class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          placeholder="Select date"
+                          readonly
                         />
                       </div>
                       <div>
@@ -208,9 +239,12 @@
                           Estimated Delivery Date
                         </label>
                         <input
+                          ref="estimatedDeliveryDateInput"
                           v-model="formData.estimatedDeliveryDate"
-                          type="date"
+                          type="text"
                           class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          placeholder="Select date"
+                          readonly
                         />
                       </div>
                     </div>
@@ -231,21 +265,25 @@
                             :class="{ 'rotate-180': openDropdowns.status }"
                           ></span>
                         </button>
-
-                        <ul
-                          class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
-                          :class="{ 'opacity-100 pointer-events-auto': openDropdowns.status, 'opacity-0 pointer-events-none': !openDropdowns.status }"
-                          role="menu"
-                        >
-                          <li v-for="status in statusOptions" :key="status">
-                            <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectStatus(status)">
-                              {{ status }}
-                            </a>
-                          </li>
-                        </ul>
                       </div>
                       <span v-if="errors.status" class="text-xs text-red-500 mt-1">{{ errors.status }}</span>
                     </div>
+
+                    <!-- Status dropdown menu - rendered outside normal flow -->
+                    <teleport to="body">
+                      <ul
+                        v-if="openDropdowns.status"
+                        class="dropdown-menu transition-opacity duration-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg text-gray-900 dark:text-white opacity-100"
+                        :style="statusMenuStyle"
+                        role="menu"
+                      >
+                        <li v-for="status in statusOptions" :key="status">
+                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectStatus(status)">
+                            {{ status }}
+                          </a>
+                        </li>
+                      </ul>
+                    </teleport>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Remarks
@@ -276,7 +314,7 @@
 
                 <div class="flex gap-2">
                   <button
-                    @click="closeModal"
+                    @click="() => closeModal()"
                     :disabled="isSubmitting"
                     class="btn btn-outline"
                   >
@@ -306,11 +344,17 @@
       </div>
     </transition>
   </teleport>
+
+  <!-- OrderWizard Modal -->
+  <OrderWizard ref="orderWizardModalRef" @order-created="handleOrderCreated" />
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import authenticatedFetch from '@/utils/authenticatedFetch'
+import OrderWizard from '@/views/Order/component/OrderWizard.vue'
+import flatpickr from 'flatpickr'
+import 'flatpickr/dist/flatpickr.css'
 
 interface Order {
   id: number
@@ -321,6 +365,7 @@ interface Order {
 interface OrderItem {
   orderId: string | number
   trackingCode: string
+  doNumber: string
 }
 
 const emit = defineEmits(['shipment-created', 'close'])
@@ -337,7 +382,7 @@ const steps = [
 
 const formData = reactive({
   // Step 1: Orders
-  orderItems: [{ orderId: '', trackingCode: '' }] as OrderItem[],
+  orderItems: [{ orderId: '', trackingCode: '', doNumber: '' }] as OrderItem[],
   // Step 2: Shipping Details
   carrier: '',
   destination: '',
@@ -353,7 +398,12 @@ const loadingOrders = ref(false)
 const orders = ref<Order[]>([])
 const orderDropdownRefs = ref<any[]>([])
 const statusDropdownRef = ref<any>(null)
+const orderWizardModalRef = ref<any>(null)
 const existingShipments = ref<any[]>([]) // Store existing shipments to filter orders
+const shippingDateInput = ref<HTMLInputElement | null>(null)
+const estimatedDeliveryDateInput = ref<HTMLInputElement | null>(null)
+let flatpickrShippingDate: any = null
+let flatpickrEstimatedDate: any = null
 
 const statusOptions = [
   'Pending',
@@ -371,6 +421,7 @@ const openDropdowns = reactive<Record<string, boolean>>({})
 
 // Order dropdown overlay styles per order index (reactive array)
 const orderMenuStyles = reactive<any[]>([])
+const statusMenuStyle = ref<any>({})
 
 const lockScroll = () => {
   document.body.style.overflow = 'hidden'
@@ -402,9 +453,11 @@ const fetchOrders = async () => {
     )
 
     // Filter orders to only show those:
-    // 1. Not yet shipped (status !== 'Shipped' and status !== 'Completed')
-    // 2. Don't already have a shipment created
-    orders.value = orderData.filter((order: Order) =>
+    // 1. Order type is 'SO' (Sales Order)
+    // 2. Not yet shipped (status !== 'Shipped' and status !== 'Completed')
+    // 3. Don't already have a shipment created
+    orders.value = orderData.filter((order: any) =>
+      order.orderType === 'SO' &&
       order.status !== 'Shipped' &&
       order.status !== 'Completed' &&
       !shippedOrderIds.has(order.id)
@@ -426,6 +479,17 @@ const openModal = async () => {
 
 const closeModal = async (force = false) => {
   if (isSubmitting.value && !force) return
+  
+  // Destroy Flatpickr instances
+  if (flatpickrShippingDate) {
+    flatpickrShippingDate.destroy()
+    flatpickrShippingDate = null
+  }
+  if (flatpickrEstimatedDate) {
+    flatpickrEstimatedDate.destroy()
+    flatpickrEstimatedDate = null
+  }
+  
   isOpen.value = false
   unlockScroll()
   await nextTick()
@@ -433,7 +497,7 @@ const closeModal = async (force = false) => {
 }
 
 const resetForm = () => {
-  formData.orderItems = [{ orderId: '', trackingCode: '' }]
+  formData.orderItems = [{ orderId: '', trackingCode: '', doNumber: '' }]
   formData.carrier = ''
   formData.destination = ''
   formData.shippingDate = new Date().toISOString().split('T')[0]
@@ -457,6 +521,9 @@ const validateStep = (step: number): boolean => {
       if (!item.orderId) {
         errors[`item${idx}Order`] = 'Order is required'
       }
+      if (!item.doNumber || !item.doNumber.trim()) {
+        errors[`item${idx}DoNumber`] = 'DO Number is required'
+      }
       // Tracking code is optional - will be auto-generated by backend if empty
     })
   } else if (step === 2) {
@@ -472,12 +539,58 @@ const nextStep = () => {
   if (!validateStep(currentStep.value)) return
   if (currentStep.value < totalSteps) {
     currentStep.value++
+    
+    // Initialize Flatpickr when entering step 2
+    if (currentStep.value === 2) {
+      initializeFlatpickr()
+    }
   }
 }
 
 const previousStep = () => {
   if (currentStep.value > 1) {
     currentStep.value--
+  }
+}
+
+/* Initialize Flatpickr for date inputs */
+const initializeFlatpickr = async () => {
+  await nextTick()
+
+  // Destroy existing instances if any
+  if (flatpickrShippingDate) {
+    flatpickrShippingDate.destroy()
+    flatpickrShippingDate = null
+  }
+  if (flatpickrEstimatedDate) {
+    flatpickrEstimatedDate.destroy()
+    flatpickrEstimatedDate = null
+  }
+
+  // Initialize shipping date picker
+  if (shippingDateInput.value) {
+    flatpickrShippingDate = flatpickr(shippingDateInput.value, {
+      dateFormat: 'Y-m-d',
+      defaultDate: formData.shippingDate || new Date(),
+      onChange: (selectedDates: Date[]) => {
+        if (selectedDates && selectedDates[0]) {
+          formData.shippingDate = selectedDates[0].toISOString().split('T')[0]
+        }
+      }
+    })
+  }
+
+  // Initialize estimated delivery date picker
+  if (estimatedDeliveryDateInput.value) {
+    flatpickrEstimatedDate = flatpickr(estimatedDeliveryDateInput.value, {
+      dateFormat: 'Y-m-d',
+      defaultDate: formData.estimatedDeliveryDate || new Date(),
+      onChange: (selectedDates: Date[]) => {
+        if (selectedDates && selectedDates[0]) {
+          formData.estimatedDeliveryDate = selectedDates[0].toISOString().split('T')[0]
+        }
+      }
+    })
   }
 }
 
@@ -491,6 +604,11 @@ const toggleDropdown = async (name: string) => {
   if (openDropdowns[name] && name.startsWith('order')) {
     const idx = parseInt(name.replace('order', ''), 10)
     await positionOrderMenu(idx)
+  }
+
+  // If opening status dropdown, compute its fixed-position style
+  if (name === 'status' && openDropdowns[name]) {
+    await positionStatusMenu()
   }
 }
 
@@ -528,9 +646,36 @@ const availableOrders = (index: number) => {
 }
 
 const addOrderItem = () => {
-  formData.orderItems.push({ orderId: '', trackingCode: '' })
+  formData.orderItems.push({ orderId: '', trackingCode: '', doNumber: '' })
   // keep style slot for new order dropdown
   orderMenuStyles.push({})
+}
+
+/* Open Order Wizard Modal */
+const openAddOrderModal = () => {
+  if (orderWizardModalRef.value && orderWizardModalRef.value.openModal) {
+    orderWizardModalRef.value.openModal()
+  }
+}
+
+/* Handle Order Created */
+const handleOrderCreated = async (result: any) => {
+  if (result.success) {
+    // Refresh orders list
+    await fetchOrders()
+
+    // Auto-select the newly created order in the first empty slot
+    if (result.data && result.data.id) {
+      const emptyIndex = formData.orderItems.findIndex(item => !item.orderId)
+      if (emptyIndex !== -1) {
+        formData.orderItems[emptyIndex].orderId = result.data.id
+      } else {
+        // If no empty slot, add a new order item with the new order
+        formData.orderItems.push({ orderId: result.data.id, trackingCode: '', doNumber: '' })
+        orderMenuStyles.push({})
+      }
+    }
+  }
 }
 
 const removeOrderItem = (index: number) => {
@@ -581,11 +726,50 @@ const positionOrderMenu = async (index: number) => {
   orderMenuStyles[index] = style
 }
 
+/* Position status dropdown menu */
+const positionStatusMenu = async () => {
+  await nextTick()
+  const container = statusDropdownRef.value
+  if (!container) return
+
+  const btn = container.querySelector('button')
+  if (!btn) return
+
+  const rect = btn.getBoundingClientRect()
+  const maxMenuHeight = 300
+  const gap = 8
+  const belowSpace = window.innerHeight - rect.bottom - gap
+  const aboveSpace = rect.top - gap
+
+  const style: any = {
+    position: 'fixed',
+    left: `${rect.left}px`,
+    width: `${rect.width}px`,
+    zIndex: '9999',
+    overflowY: 'auto',
+    overflowX: 'hidden'
+  }
+
+  if (belowSpace >= 150) {
+    style.top = `${rect.bottom + gap}px`
+    style.maxHeight = `${Math.min(maxMenuHeight, belowSpace)}px`
+  } else {
+    const usedHeight = Math.min(maxMenuHeight, aboveSpace)
+    style.top = `${rect.top - usedHeight - gap}px`
+    style.maxHeight = `${usedHeight}px`
+  }
+
+  statusMenuStyle.value = style
+}
+
 const repositionOpenOrderMenus = () => {
   Object.keys(openDropdowns).forEach(key => {
     if (key.startsWith('order') && openDropdowns[key]) {
       const idx = parseInt(key.replace('order', ''), 10)
       positionOrderMenu(idx)
+    }
+    if (key === 'status' && openDropdowns[key]) {
+      positionStatusMenu()
     }
   })
 }
@@ -608,6 +792,7 @@ const submitForm = async () => {
       const submissionData = {
         trackingCode: item.trackingCode ? item.trackingCode.toUpperCase() : '', // Empty string triggers auto-generation
         orderId: orderId,
+        doNumber: item.doNumber ? item.doNumber.toUpperCase() : null,
         carrier: formData.carrier ? formData.carrier.toUpperCase() : null,
         destination: formData.destination || null,
         shippingDate: formData.shippingDate || null,
@@ -650,6 +835,13 @@ const submitForm = async () => {
 
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as Node
+  
+  // Check if click is on status dropdown menu items (teleported)
+  const statusMenu = document.querySelector('.dropdown-menu[role="menu"]')
+  if (statusMenu && statusMenu.contains(target)) {
+    return // Don't close if clicking inside the status menu
+  }
+
   const refs = [
     statusDropdownRef.value,
     ...orderDropdownRefs.value
@@ -680,6 +872,17 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
   window.removeEventListener('resize', repositionOpenOrderMenus)
   window.removeEventListener('scroll', repositionOpenOrderMenus, true)
+  
+  // Clean up Flatpickr instances
+  if (flatpickrShippingDate) {
+    flatpickrShippingDate.destroy()
+    flatpickrShippingDate = null
+  }
+  if (flatpickrEstimatedDate) {
+    flatpickrEstimatedDate.destroy()
+    flatpickrEstimatedDate = null
+  }
+  
   if (isOpen.value) unlockScroll()
 })
 

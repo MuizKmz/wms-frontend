@@ -66,7 +66,8 @@
                     type="text"
                     placeholder="Enter Order Number"
                     maxlength="50"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.orderNo }]"
+                    disabled
+                    :class="['input input-bordered w-full bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white cursor-not-allowed', { 'input-error': errors.orderNo }]"
                   />
                   <transition
                     enter-active-class="transition-all duration-200 ease-out"
@@ -89,31 +90,15 @@
                     <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
                       <span class="text-red-500">*</span> Order Type
                     </label>
-                    <div class="dropdown relative inline-flex w-full" ref="orderTypeDropdownRef">
+                    <div class="dropdown relative inline-flex w-full">
                       <button
                         type="button"
-                        :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.orderType }]"
-                        :aria-expanded="openDropdowns.orderType"
-                        @click.stop="toggleDropdown('orderType')"
+                        disabled
+                        class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-600 dark:text-gray-400 cursor-not-allowed opacity-60 bg-gray-100"
                       >
                         {{ form.orderType || 'Select Type' }}
-                        <span
-                          class="icon-[tabler--chevron-down] size-4 transition-transform"
-                          :class="{ 'rotate-180': openDropdowns.orderType }"
-                        ></span>
+                        <span class="icon-[tabler--chevron-down] size-4"></span>
                       </button>
-
-                      <ul
-                        class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white"
-                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.orderType, 'opacity-0 pointer-events-none': !openDropdowns.orderType }"
-                        role="menu"
-                      >
-                        <li v-for="type in orderTypes" :key="type">
-                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('orderType', type)">
-                            {{ type }}
-                          </a>
-                        </li>
-                      </ul>
                     </div>
                     <transition
                       enter-active-class="transition-all duration-200 ease-out"
@@ -132,38 +117,17 @@
                   <!-- Customer ID -->
                   <div class="relative">
                     <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
-                      <span class="text-red-500">*</span> Customer ID
+                      <span class="text-red-500">*</span> Customer Code
                     </label>
-                    <div class="dropdown relative inline-flex w-full" ref="customerDropdownRef">
+                    <div class="dropdown relative inline-flex w-full">
                       <button
                         type="button"
-                        :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.customerId }]"
-                        :aria-expanded="openDropdowns.customer"
-                        @click.stop="toggleDropdown('customer')"
-                        :disabled="loadingCustomers"
+                        disabled
+                        class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-600 dark:text-gray-400 cursor-not-allowed opacity-60 bg-gray-100"
                       >
                         {{ selectedCustomerLabel || 'Select Customer' }}
-                        <span
-                          class="icon-[tabler--chevron-down] size-4 transition-transform"
-                          :class="{ 'rotate-180': openDropdowns.customer }"
-                        ></span>
+                        <span class="icon-[tabler--chevron-down] size-4"></span>
                       </button>
-
-                      <ul
-                        class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
-                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.customer, 'opacity-0 pointer-events-none': !openDropdowns.customer }"
-                        role="menu"
-                      >
-                        <li v-for="customer in customers" :key="customer.id">
-                          <a
-                            class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer"
-                            @click="selectOption('customerId', customer.id.toString())"
-                            :class="{ 'bg-blue-100 dark:bg-blue-900/40': form.customerId === customer.id.toString() }"
-                          >
-                            {{ customer.customerName }}
-                          </a>
-                        </li>
-                      </ul>
                     </div>
                   </div>
                 </div>
@@ -239,33 +203,6 @@
                 <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                   <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Order Items</h3>
 
-                  <!-- Unified Item Status -->
-                  <div class="mb-4 relative">
-                    <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">Order Item Status</label>
-                    <div class="dropdown relative inline-flex w-full" ref="itemStatusDropdownRef">
-                      <button
-                        type="button"
-                        class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400"
-                        :aria-expanded="openDropdowns.itemStatus"
-                        @click.stop="toggleDropdown('itemStatus')"
-                      >
-                        {{ form.itemStatus || 'Select Item Status' }}
-                        <span class="icon-[tabler--chevron-down] size-4 transition-transform" :class="{ 'rotate-180': openDropdowns.itemStatus }"></span>
-                      </button>
-                      <ul
-                        class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white"
-                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.itemStatus, 'opacity-0 pointer-events-none': !openDropdowns.itemStatus }"
-                        role="menu"
-                      >
-                        <li v-for="st in itemStatuses" :key="st">
-                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('itemStatus', st)">
-                            {{ st }}
-                          </a>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-
                   <div v-for="(item, index) in form.orderItems" :key="index" class="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
                     <div class="flex justify-between items-center mb-2">
                       <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Product {{ index + 1 }}</span>
@@ -304,26 +241,32 @@
                           :class="{ 'opacity-100 pointer-events-auto': openDropdowns[`product${index}`], 'opacity-0 pointer-events-none': !openDropdowns[`product${index}`] }"
                           role="menu"
                         >
-                          <li v-for="product in products" :key="product.id">
+                          <li v-for="product in getAvailableProducts(index)" :key="product.id">
                             <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="updateOrderItem(index, 'productId', product.id.toString())">
                               {{ product.skuCode }} - {{ product.name }}
                             </a>
+                          </li>
+                          <li v-if="getAvailableProducts(index).length === 0" class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 text-center">
+                            All products already selected
                           </li>
                         </ul>
                       </div>
                     </div>
 
-                    <!-- Quantity Row -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Quantity and Status Row -->
+                    <div class="grid grid-cols-1 gap-3">
                       <!-- Quantity -->
                       <div class="relative">
                         <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
                           <span class="text-red-500">*</span> Quantity
+                          <span v-if="form.orderType === 'SO' && item.productId && item.availableStock !== undefined" class="text-xs text-gray-500 ml-1">
+                            (Available: {{ item.availableStock }})
+                          </span>
                         </label>
                         <div class="flex items-center gap-2">
                           <button
                             type="button"
-                            @click="updateOrderItem(index, 'quantity', Math.max(1, item.quantity - 1))"
+                            @click="decreaseQuantity(index)"
                             class="btn btn-sm btn-outline"
                           >
                             −
@@ -332,17 +275,102 @@
                             :value="item.quantity"
                             type="number"
                             min="1"
+                            :max="form.orderType === 'SO' && item.availableStock !== undefined ? item.availableStock : undefined"
                             class="input input-bordered w-full text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                            @input="updateOrderItem(index, 'quantity', parseInt(($event.target as HTMLInputElement).value) || 1)"
+                            @input="validateQuantityInput(index, ($event.target as HTMLInputElement).value)"
                           />
                           <button
                             type="button"
-                            @click="updateOrderItem(index, 'quantity', item.quantity + 1)"
-                            class="btn btn-sm btn-primary"
+                            @click="increaseQuantity(index)"
+                            :disabled="form.orderType === 'SO' && item.availableStock !== undefined && item.quantity >= item.availableStock"
+                            class="btn btn-sm bg-brand-500 border-none disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             +
                           </button>
                         </div>
+                        <span v-if="form.orderType === 'SO' && item.productId && item.availableStock !== undefined && item.quantity > item.availableStock" class="text-xs text-orange-600 dark:text-orange-400 mt-1 block">
+                          ⚠️ Quantity exceeds available stock ({{ item.availableStock }})
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Remarks -->
+                    <div class="mt-3">
+                      <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">Remarks</label>
+                      <textarea
+                        v-model="item.remarks"
+                        rows="2"
+                        placeholder="Enter product remarks (optional)"
+                        class="textarea textarea-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+                      ></textarea>
+                    </div>
+
+                    <!-- Product Allocation Table for SO Orders -->
+                    <div v-if="form.orderType === 'SO' && item.productId" class="mt-3">
+                      <div class="flex items-center justify-between mb-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Product Allocation (FIFO)
+                        </label>
+                        <button
+                          type="button"
+                          @click="fetchProductInventory(index)"
+                          class="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                          :disabled="loadingInventory[index]"
+                        >
+                          {{ loadingInventory[index] ? 'Loading...' : 'Refresh' }}
+                        </button>
+                      </div>
+                      <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                          <thead class="bg-gray-50 dark:bg-gray-900/50">
+                            <tr>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                EPC Code
+                              </th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                Warehouse
+                              </th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                Location
+                              </th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                Last Updated
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <tr v-if="loadingInventory[index]">
+                              <td colspan="4" class="px-3 py-4 text-center text-sm text-gray-500">
+                                <div class="flex items-center justify-center gap-2">
+                                  <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" />
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                  </svg>
+                                  Loading allocation...
+                                </div>
+                              </td>
+                            </tr>
+                            <tr v-else-if="!item.allocatedEpcs || item.allocatedEpcs.length === 0">
+                              <td colspan="4" class="px-3 py-4 text-center text-sm text-gray-500">
+                                {{ item.quantity > 0 ? 'Insufficient inventory - no INBOUND EPCs available' : 'Set quantity to view allocation' }}
+                              </td>
+                            </tr>
+                            <tr v-else v-for="(allocation, allocIdx) in item.allocatedEpcs" :key="allocIdx" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                              <td class="px-3 py-2 text-sm font-mono text-gray-900 dark:text-white">
+                                {{ allocation.epcCode }}
+                              </td>
+                              <td class="px-3 py-2 text-sm text-gray-900 dark:text-white">
+                                {{ allocation.warehouseCode || '-' }}
+                              </td>
+                              <td class="px-3 py-2 text-sm text-gray-900 dark:text-white">
+                                {{ allocation.locationCode || '-' }}
+                              </td>
+                              <td class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                {{ formatDate(allocation.inboundDate) }}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </div>
                   </div>
@@ -351,7 +379,7 @@
                   <button
                     type="button"
                     @click="addOrderItem"
-                    class="btn btn-primary btn-sm w-full"
+                    class="btn bg-brand-500 border-none btn-sm w-full"
                   >
                     <span class="text-lg">+</span> Add Another Product
                   </button>
@@ -389,7 +417,7 @@
                 <button @click="closeModal" class="btn btn-outline" :disabled="isSubmitting">
                   Cancel
                 </button>
-                <button @click="submitForm" class="btn btn-primary" :disabled="isSubmitting">
+                <button @click="submitForm" class="btn bg-brand-500 border-none" :disabled="isSubmitting">
                   <span v-if="isSubmitting" class="loading loading-spinner loading-sm"></span>
                   {{ isSubmitting ? 'Updating...' : 'Update' }}
                 </button>
@@ -424,6 +452,15 @@ interface OrderItem {
   productId: string | number
   quantity: number
   status: string
+  remarks: string
+  availableStock?: number
+  allocatedEpcs: Array<{
+    id?: number
+    epcCode: string
+    warehouseCode: string
+    locationCode: string
+    inboundDate: string
+  }>
 }
 
 interface OrderForm {
@@ -434,7 +471,6 @@ interface OrderForm {
   picName: string
   estimatedDeliveryTime: string
   status: string
-  itemStatus: string
   orderItems: OrderItem[]
 }
 
@@ -446,6 +482,7 @@ const isSubmitting = ref(false)
 const panelRef = ref<HTMLElement | null>(null)
 const loadingCustomers = ref(false)
 const loadingProducts = ref(false)
+const loadingInventory = ref<Record<number, boolean>>({})
 const deliveryDateInput = ref(null)
 let flatpickrInstance: any = null
 
@@ -457,8 +494,7 @@ const form = reactive<OrderForm>({
   picName: '',
   estimatedDeliveryTime: '',
   status: '',
-  itemStatus: 'Pending',
-  orderItems: [{ productId: '', quantity: 1, status: 'Pending' }]
+  orderItems: [{ productId: '', quantity: 1, status: 'Pending', remarks: '', availableStock: undefined, allocatedEpcs: [] }]
 })
 
 const errors = reactive<Record<string, string>>({
@@ -611,11 +647,6 @@ const selectOption = (key: string, value: string) => {
       form.status = value
       openDropdowns.orderStatus = false
       break
-    case 'itemStatus':
-      form.itemStatus = value
-      openDropdowns.itemStatus = false
-      form.orderItems.forEach(oi => { oi.status = value })
-      break
   }
 }
 
@@ -625,16 +656,179 @@ const getProductLabel = (productId: string | number) => {
 }
 
 const addOrderItem = () => {
-  form.orderItems.push({ productId: '', quantity: 1, status: form.itemStatus || 'Pending' })
+  form.orderItems.push({ productId: '', quantity: 1, status: 'Pending', remarks: '', availableStock: undefined, allocatedEpcs: [] })
 }
 
 const removeOrderItem = (index: number) => {
   form.orderItems.splice(index, 1)
 }
 
-const updateOrderItem = (index: number, key: string, value: any) => {
-  form.orderItems[index][key as keyof OrderItem] = value
-  openDropdowns[`product${index}`] = false
+const getAvailableProducts = (currentIndex: number) => {
+  // Get list of product IDs already selected in other rows
+  const selectedProductIds = form.orderItems
+    .map((item, idx) => idx !== currentIndex ? item.productId : null)
+    .filter(Boolean)
+  
+  // Return products that are not selected in other rows
+  return products.value.filter(product => 
+    !selectedProductIds.includes(product.id.toString()) && 
+    !selectedProductIds.includes(product.id)
+  )
+}
+
+const updateOrderItem = async (index: number, key: string, value: any) => {
+  if (key === 'productId') {
+    // Check if product is already selected in another row
+    const isAlreadySelected = form.orderItems.some((item, idx) => 
+      idx !== index && (item.productId === value || item.productId.toString() === value.toString())
+    )
+    
+    if (isAlreadySelected) {
+      console.warn('Product already selected in another row')
+      openDropdowns[`product${index}`] = false
+      return
+    }
+    
+    form.orderItems[index].productId = value
+    openDropdowns[`product${index}`] = false
+    
+    // Clear product error
+    if (errors[`item${index}Product`]) {
+      delete errors[`item${index}Product`]
+    }
+    
+    // Fetch inventory if order type is SO
+    if (form.orderType === 'SO') {
+      await fetchProductInventory(index)
+    }
+  } else if (key === 'quantity') {
+    form.orderItems[index].quantity = value
+  }
+}
+
+const increaseQuantity = (index: number) => {
+  const item = form.orderItems[index]
+
+  // Check available stock limit for SO orders
+  if (form.orderType === 'SO' && item.availableStock !== undefined) {
+    if (item.quantity >= item.availableStock) {
+      return // Don't increase beyond available stock
+    }
+  }
+
+  form.orderItems[index].quantity++
+  // Re-allocate EPCs if SO order
+  if (form.orderType === 'SO' && form.orderItems[index].productId) {
+    fetchProductInventory(index)
+  }
+}
+
+const decreaseQuantity = (index: number) => {
+  if (form.orderItems[index].quantity > 1) {
+    form.orderItems[index].quantity--
+    // Re-allocate EPCs if SO order
+    if (form.orderType === 'SO' && form.orderItems[index].productId) {
+      fetchProductInventory(index)
+    }
+  }
+}
+
+const validateQuantityInput = (index: number, value: string) => {
+  const item = form.orderItems[index]
+  let newQuantity = parseInt(value) || 1
+
+  if (newQuantity < 1) {
+    newQuantity = 1
+  }
+
+  // Enforce available stock limit for SO orders
+  if (form.orderType === 'SO' && item.availableStock !== undefined) {
+    if (newQuantity > item.availableStock) {
+      newQuantity = item.availableStock || 1
+    }
+  }
+
+  form.orderItems[index].quantity = newQuantity
+
+  // Re-allocate EPCs if SO order
+  if (form.orderType === 'SO' && form.orderItems[index].productId) {
+    fetchProductInventory(index)
+  }
+}
+
+/* Fetch product inventory for SO orders and auto-assign EPCs using FIFO */
+const fetchProductInventory = async (index: number) => {
+  const item = form.orderItems[index]
+  if (!item.productId) return
+
+  loadingInventory.value[index] = true
+  try {
+    // Use available-epcs endpoint that excludes already-allocated EPCs
+    const response = await authenticatedFetch('/api/inventory/available-epcs/list')
+    if (response.ok) {
+      const allInventory = await response.json()
+
+      // Collect all INBOUND EPCs for this product with their location info
+      const allEpcs: any[] = []
+
+      allInventory.forEach((inv: any) => {
+        const productId = inv.product?.id
+        if (productId?.toString() === item.productId.toString()) {
+          const inboundEpcs = inv.product?.epcs?.filter((epc: any) => epc.status === 'INBOUND') || []
+          inboundEpcs.forEach((epc: any) => {
+            allEpcs.push({
+              epcCode: epc.epcCode,
+              warehouseCode: epc.warehouse?.warehouseCode || '-',
+              locationCode: epc.location?.locationCode || '-',
+              inboundDate: epc.inboundDate || inv.lastUpdatedAt
+            })
+          })
+        }
+      })
+
+      // Sort by inbound date ascending (FIFO - First In First Out)
+      allEpcs.sort((a, b) => {
+        return new Date(a.inboundDate).getTime() - new Date(b.inboundDate).getTime()
+      })
+
+      // Filter out EPCs already allocated to other order items (prevent duplicates)
+      const availableEpcs = allEpcs.filter(epc => {
+        const isAlreadyUsed = form.orderItems.some((otherItem, idx) => {
+          if (idx === index) return false // Don't check against self
+          return otherItem.allocatedEpcs?.some(allocated => allocated.epcCode === epc.epcCode)
+        })
+        return !isAlreadyUsed
+      })
+
+      // Set available stock (after filtering duplicates)
+      item.availableStock = availableEpcs.length
+
+      // Enforce quantity limit
+      if (item.quantity > availableEpcs.length) {
+        item.quantity = availableEpcs.length || 1
+      }
+
+      // Allocate EPCs based on quantity (FIFO)
+      const allocatedEpcs = availableEpcs.slice(0, item.quantity)
+      item.allocatedEpcs = allocatedEpcs
+    }
+  } catch (error) {
+    console.error('Error fetching inventory:', error)
+    item.allocatedEpcs = []
+    item.availableStock = 0
+  } finally {
+    loadingInventory.value[index] = false
+  }
+}
+
+const formatDate = (dateString: string) => {
+  if (!dateString) return '-'
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
 }
 
 const handleClickOutside = (event: MouseEvent) => {
@@ -669,7 +863,7 @@ const prefillOrder = (order: any) => {
     const exists = customers.value.find(c => c.id.toString() === derivedCustomerId)
     console.log('Customer exists in list:', exists)
     if (!exists) {
-      console.warn(`Customer ID ${derivedCustomerId} not found in fetched customers list`)
+      console.warn(`Customer Code ${derivedCustomerId} not found in fetched customers list`)
     }
   } else if (order.customerId) {
     derivedCustomerId = order.customerId.toString()
@@ -703,20 +897,31 @@ const prefillOrder = (order: any) => {
   console.log('Final form.customerId:', form.customerId)
   console.log('Final prefilledCustomerName:', prefilledCustomerName.value)
 
-  // Determine unified item status (if all same)
+  // Map order items with existing data (including allocated EPCs from the order)
   if (order.orderItems && order.orderItems.length) {
-    const statuses = order.orderItems.map((i: any) => i.status || 'Pending')
-    const first = statuses[0] || 'Pending'
-    const allSame = statuses.every(s => s === first)
-    form.itemStatus = allSame ? first : first // Could extend to show mixed state later
     form.orderItems = order.orderItems.map((i: any) => ({
       productId: i.product?.id ? i.product.id.toString() : (i.productId ? i.productId.toString() : ''),
       quantity: i.quantity || 1,
-      status: i.status || form.itemStatus
+      status: i.status || 'Pending',
+      remarks: i.remarks || '',
+      availableStock: undefined,
+      allocatedEpcs: i.allocatedEpcs || [] // Use existing allocated EPCs from order
     }))
+    
+    // For SO orders, load existing allocations - don't fetch new ones unless user changes quantity
+    if (form.orderType === 'SO') {
+      form.orderItems.forEach((item, index) => {
+        if (item.productId && item.allocatedEpcs.length === 0) {
+          // Only fetch if no allocations exist
+          fetchProductInventory(index)
+        } else if (item.allocatedEpcs.length > 0) {
+          // Set available stock based on existing allocations
+          item.availableStock = item.allocatedEpcs.length
+        }
+      })
+    }
   } else {
-    form.itemStatus = 'Pending'
-    form.orderItems = [{ productId: '', quantity: 1, status: 'Pending' }]
+    form.orderItems = [{ productId: '', quantity: 1, status: 'Pending', remarks: '', availableStock: undefined, allocatedEpcs: [] }]
   }
 }
 
@@ -775,8 +980,6 @@ const submitForm = async () => {
   errors.submit = ''
 
   try {
-    form.orderItems.forEach(oi => { oi.status = form.itemStatus })
-
     const submissionData = {
       orderNo: form.orderNo,
       orderType: form.orderType,
@@ -787,7 +990,9 @@ const submitForm = async () => {
       orderItems: form.orderItems.map(item => ({
         productId: parseInt(item.productId.toString()),
         quantity: item.quantity,
-        status: item.status
+        status: item.status,
+        remarks: item.remarks || null,
+        allocatedEpcs: item.allocatedEpcs || []
       }))
     }
 

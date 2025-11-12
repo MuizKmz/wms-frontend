@@ -231,10 +231,10 @@ function loadOpenGroups() {
     try {
       return new Set(JSON.parse(saved));
     } catch {
-      return new Set(['STOCK', 'REPORTS']);
+      return new Set();
     }
   }
-  return new Set(['STOCK', 'REPORTS']);
+  return new Set();
 }
 const openGroups = ref(loadOpenGroups());
 
@@ -347,7 +347,7 @@ const allMenuGroups = [
     ]
   },
   {
-    title: "STOCK",
+    title: "MASTER DATA",
     items: [
       {
         icon: WarehouseIcon,
@@ -362,12 +362,6 @@ const allMenuGroups = [
         module: "Supplier"
       },
       {
-        icon: BoxIcon,
-        name: "Receiving",
-        path: "/receiving",
-        module: "Receiving"
-      },
-      {
         icon: CategoryIcon,
         name: "Category",
         path: "/category",
@@ -380,16 +374,33 @@ const allMenuGroups = [
         module: "Product"
       },
       {
+        icon: InventoryIcon,
+        name: "Inventory",
+        path: "/inventory",
+        module: "Inventory"
+      },
+      {
         icon: EPCIcon,
         name: "EPC",
         path: "/epc",
         module: "EPC"
       },
       {
-        icon: InventoryIcon,
-        name: "Inventory",
-        path: "/inventory",
-        module: "Inventory"
+        icon: CustomerIcon,
+        name: "Customer",
+        path: "/customer",
+        module: "Customer"
+      },
+    ],
+  },
+  {
+    title: "OPERATIONS",
+    items: [
+      {
+        icon: BoxIcon,
+        name: "Receiving",
+        path: "/receiving",
+        module: "Receiving"
       },
       {
         icon: OrderIcon,
@@ -402,12 +413,6 @@ const allMenuGroups = [
         name: "Shipping",
         path: "/shipping",
         module: "Shipping"
-      },
-      {
-        icon: CustomerIcon,
-        name: "Customer",
-        path: "/customer",
-        module: "Customer"
       },
     ],
   },

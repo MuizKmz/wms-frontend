@@ -108,7 +108,7 @@
 
                 <div class="relative">
                   <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Order Number
+                    <span class="text-red-500">*</span>Sales Order Number
                   </label>
                   <div class="dropdown relative inline-flex w-full" ref="orderDropdownRef">
                     <button
@@ -147,6 +147,31 @@
                   >
                     <div v-if="errors.order" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
                       <p class="text-xs text-red-600 dark:text-red-400">{{ errors.order }}</p>
+                    </div>
+                  </transition>
+                </div>
+
+                <div class="relative">
+                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                    <span class="text-red-500">*</span> DO Number
+                  </label>
+                  <input
+                    v-model="form.doNumber"
+                    type="text"
+                    placeholder="Enter DO Number"
+                    maxlength="50"
+                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.doNumber }]"
+                  />
+                  <transition
+                    enter-active-class="transition-all duration-200 ease-out"
+                    enter-from-class="opacity-0 -translate-y-1"
+                    enter-to-class="opacity-100 translate-y-0"
+                    leave-active-class="transition-all duration-150 ease-in"
+                    leave-from-class="opacity-100 translate-y-0"
+                    leave-to-class="opacity-0 -translate-y-1"
+                  >
+                    <div v-if="errors.doNumber" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
+                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.doNumber }}</p>
                     </div>
                   </transition>
                 </div>
@@ -221,18 +246,6 @@
                         :class="{ 'rotate-180': openDropdowns.status }"
                       ></span>
                     </button>
-
-                    <ul
-                      class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white"
-                      :class="{ 'opacity-100 pointer-events-auto': openDropdowns.status, 'opacity-0 pointer-events-none': !openDropdowns.status }"
-                      role="menu"
-                    >
-                      <li v-for="status in statusOptions" :key="status">
-                        <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('status', status)">
-                          {{ status }}
-                        </a>
-                      </li>
-                    </ul>
                   </div>
                   <transition
                     enter-active-class="transition-all duration-200 ease-out"
@@ -247,6 +260,22 @@
                     </div>
                   </transition>
                 </div>
+
+                <!-- Status dropdown menu - rendered outside normal flow -->
+                <teleport to="body">
+                  <ul
+                    v-if="openDropdowns.status"
+                    class="dropdown-menu transition-opacity duration-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg text-gray-900 dark:text-white opacity-100"
+                    :style="statusMenuStyle"
+                    role="menu"
+                  >
+                    <li v-for="status in statusOptions" :key="status">
+                      <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('status', status)">
+                        {{ status }}
+                      </a>
+                    </li>
+                  </ul>
+                </teleport>
 
                 <div class="relative">
                   <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
@@ -278,7 +307,7 @@
                 <button @click="closeModal" class="btn btn-outline" :disabled="isSubmitting">
                   Cancel
                 </button>
-                <button @click="submitForm" class="btn btn-primary" :disabled="isSubmitting">
+                <button @click="submitForm" class="btn bg-brand-500 border-none" :disabled="isSubmitting">
                   <span v-if="isSubmitting" class="loading loading-spinner loading-sm"></span>
                   {{ isSubmitting ? 'Updating...' : 'Update' }}
                 </button>
@@ -309,6 +338,7 @@ interface Shipment {
   carrier: string
   orderId: number
   orderNo?: string
+  doNumber?: string
   destination: string
   shippingDate: string
   estimatedDeliveryDate: string
@@ -332,12 +362,14 @@ let flatpickrInstance: any = null
 let flatpickrInstanceEstimated: any = null
 
 const currentShipmentId = ref<number | null>(null)
+const statusMenuStyle = ref<any>({})
 
 const form = reactive({
   trackingCode: '',
   name: '',
   carrier: '',
   order: '',
+  doNumber: '',
   destination: '',
   shippingDate: new Date().toISOString().split('T')[0],
   estimatedDeliveryDate: new Date().toISOString().split('T')[0],
@@ -350,6 +382,7 @@ const errors = reactive({
   name: '',
   carrier: '',
   order: '',
+  doNumber: '',
   destination: '',
   shippingDate: '',
   estimatedDeliveryDate: '',
@@ -440,6 +473,12 @@ const validateForm = () => {
     isValid = false
   }
 
+  // DO Number validation
+  if (!form.doNumber.trim()) {
+    errors.doNumber = 'DO Number is required'
+    isValid = false
+  }
+
   // Shipping Carrier validation
   if (!form.carrier.trim()) {
     errors.carrier = 'Shipping Carrier is required'
@@ -464,6 +503,7 @@ const validateForm = () => {
 // Clear error when user types
 watch(() => form.trackingCode, () => { if (errors.trackingCode) errors.trackingCode = '' })
 watch(() => form.order, () => { if (errors.order) errors.order = '' })
+watch(() => form.doNumber, () => { if (errors.doNumber) errors.doNumber = '' })
 watch(() => form.carrier, () => { if (errors.carrier) errors.carrier = '' })
 watch(() => form.destination, () => { if (errors.destination) errors.destination = '' })
 watch(() => form.status, () => { if (errors.status) errors.status = '' })
@@ -472,11 +512,50 @@ watch(() => form.shippingDate, () => { if (errors.shippingDate) errors.shippingD
 watch(() => form.estimatedDeliveryDate, () => { if (errors.estimatedDeliveryDate) errors.estimatedDeliveryDate = '' })
 
 /* helpers */
-const toggleDropdown = (name: 'status' | 'order' ) => {
+const positionStatusMenu = async () => {
+  await nextTick()
+  const container = statusDropdownRef.value
+  if (!container) return
+
+  const btn = container.querySelector('button')
+  if (!btn) return
+
+  const rect = btn.getBoundingClientRect()
+  const maxMenuHeight = 300
+  const gap = 8
+  const belowSpace = window.innerHeight - rect.bottom - gap
+  const aboveSpace = rect.top - gap
+
+  const style: any = {
+    position: 'fixed',
+    left: `${rect.left}px`,
+    width: `${rect.width}px`,
+    zIndex: '9999',
+    overflowY: 'auto',
+    overflowX: 'hidden'
+  }
+
+  if (belowSpace >= 150) {
+    style.top = `${rect.bottom + gap}px`
+    style.maxHeight = `${Math.min(maxMenuHeight, belowSpace)}px`
+  } else {
+    const usedHeight = Math.min(maxMenuHeight, aboveSpace)
+    style.top = `${rect.top - usedHeight - gap}px`
+    style.maxHeight = `${usedHeight}px`
+  }
+
+  statusMenuStyle.value = style
+}
+
+const toggleDropdown = async (name: 'status' | 'order' ) => {
   Object.keys(openDropdowns).forEach(k => {
     if (k !== name) openDropdowns[k as keyof typeof openDropdowns] = false
   })
   openDropdowns[name] = !openDropdowns[name]
+  
+  if (name === 'status' && openDropdowns[name]) {
+    await positionStatusMenu()
+  }
 }
 
 const selectOption = (key: keyof typeof form, value: string) => {
@@ -497,17 +576,29 @@ const selectOption = (key: keyof typeof form, value: string) => {
 
 /* close dropdowns when clicking outside */
 const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as Node
   const statusDd = statusDropdownRef.value
   const orderDd = orderDropdownRef.value
 
-  if (statusDd && !statusDd.contains(event.target as Node)) {
+  // Check if click is on status dropdown menu items
+  const statusMenu = document.querySelector('.dropdown-menu[role="menu"]')
+  if (statusMenu && statusMenu.contains(target)) {
+    return // Don't close if clicking inside the menu
+  }
+
+  if (statusDd && !statusDd.contains(target)) {
     openDropdowns.status = false
   }
 
-  if (orderDd && !orderDd.contains(event.target as Node)) {
+  if (orderDd && !orderDd.contains(target)) {
     openDropdowns.order = false
   }
+}
 
+const repositionStatusMenu = () => {
+  if (openDropdowns.status) {
+    positionStatusMenu()
+  }
 }
 
 /* Prefill form with shipment data */
@@ -520,6 +611,7 @@ const prefillForm = (shipment: Shipment) => {
   // Try several fallbacks so the order field is prefilled correctly.
   const anyShipment: any = shipment as any
   form.order = shipment.orderNo || anyShipment.order || (anyShipment.raw && (anyShipment.raw.order?.orderNo || anyShipment.raw.order?.name)) || ''
+  form.doNumber = shipment.doNumber || anyShipment.doNumber || anyShipment.do || (anyShipment.raw && anyShipment.raw.doNumber) || ''
   form.destination = shipment.destination || ''
   
   // Format dates to YYYY-MM-DD
@@ -590,6 +682,7 @@ const closeModal = async () => {
   currentShipmentId.value = null
   form.trackingCode = ''
   form.order = ''
+  form.doNumber = ''
   form.carrier = ''
   form.destination = ''
   form.shippingDate = new Date().toISOString().split('T')[0]
@@ -630,6 +723,7 @@ const submitForm = async () => {
     const submissionData = {
       trackingCode: form.trackingCode.toUpperCase(),
       orderId: orderId,
+      doNumber: form.doNumber ? form.doNumber.toUpperCase() : null,
       carrier: form.carrier ? form.carrier.toUpperCase() : null,
       destination: form.destination || null,
       shippingDate: form.shippingDate || null,
@@ -675,10 +769,14 @@ const submitForm = async () => {
 /* lifecycle */
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+  window.addEventListener('resize', repositionStatusMenu)
+  window.addEventListener('scroll', repositionStatusMenu, true)
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
+  window.removeEventListener('resize', repositionStatusMenu)
+  window.removeEventListener('scroll', repositionStatusMenu, true)
 
   // Clean up Flatpickr
   if (flatpickrInstance) {

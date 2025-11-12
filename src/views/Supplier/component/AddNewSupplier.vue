@@ -307,7 +307,7 @@
                 <button @click="closeModal" class="btn btn-outline btn-error" :disabled="isSubmitting">
                   Cancel
                 </button>
-                <button @click="submitForm" class="btn btn-primary" :disabled="isSubmitting">
+                <button @click="submitForm" class="btn bg-brand-500 border-none" :disabled="isSubmitting">
                   <span v-if="isSubmitting" class="loading loading-spinner loading-sm"></span>
                   {{ isSubmitting ? 'Saving...' : 'Save' }}
                 </button>
