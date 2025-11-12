@@ -18,19 +18,15 @@
                   <p class="font-medium text-gray-900 dark:text-white">{{ receiving.receivingCode || '-' }}</p>
                 </div>
                 <div>
-                  <p class="text-xs text-gray-500">DO Number</p>
-                  <p class="font-medium text-gray-900 dark:text-white">{{ receiving.doNumber || '-' }}</p>
+                  <p class="text-xs text-gray-500">PO Number</p>
+                  <p class="font-medium text-gray-900 dark:text-white">{{ receiving.order?.orderNo || '-' }}</p>
                 </div>
               </div>
 
-              <div class="grid grid-cols-3 gap-4">
+              <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <p class="text-xs text-gray-500">Warehouse</p>
-                  <p class="font-medium text-gray-900 dark:text-white">{{ receiving.warehouse.name || receiving.warehouseId || '-' }}</p>
-                </div>
-                <div>
-                  <p class="text-xs text-gray-500">Received By</p>
-                  <p class="font-medium text-gray-900 dark:text-white">{{ receiving.receivedBy || '-' }}</p>
+                  <p class="text-xs text-gray-500">DO Number</p>
+                  <p class="font-medium text-gray-900 dark:text-white">{{ receiving.doNumber || '-' }}</p>
                 </div>
                 <div>
                   <p class="text-xs text-gray-500">Receiving Date</p>
@@ -38,9 +34,19 @@
                 </div>
               </div>
 
-              <div>
-                <p class="text-xs text-gray-500">Supplier / Purpose</p>
-                <p class="font-medium text-gray-900 dark:text-white">{{ receiving.supplier.supplierName || '-' }} / {{ receiving.purpose || '-' }}</p>
+              <div class="grid grid-cols-3 gap-4">
+                <div>
+                  <p class="text-xs text-gray-500">Warehouse</p>
+                  <p class="font-medium text-gray-900 dark:text-white">{{ receiving.warehouse?.name || receiving.warehouseId || '-' }}</p>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500">Received By</p>
+                  <p class="font-medium text-gray-900 dark:text-white">{{ receiving.receivedBy || '-' }}</p>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500">Supplier</p>
+                  <p class="font-medium text-gray-900 dark:text-white">{{ receiving.supplier?.supplierName || '-' }}</p>
+                </div>
               </div>
 
               <div>

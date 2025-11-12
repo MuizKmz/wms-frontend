@@ -97,57 +97,8 @@
                   </div>
                 </div>
 
-                <!-- Step 1: Supplier -->
+                <!-- Step 1: Receiving Details -->
                 <div v-if="currentStep === 1">
-                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Supplier Information</h3>
-                  <div class="space-y-4">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Supplier <span class="text-red-500">*</span>
-                      </label>
-                      <div class="relative" ref="supplierDropdownRef">
-                        <button
-                          type="button"
-                          @click="toggleDropdown('supplier')"
-                          class="input input-bordered w-full text-left flex items-center justify-between"
-                        >
-                          <span>{{ getSupplierName(formData.supplierId) || 'Select Supplier' }}</span>
-                          <span class="icon-[tabler--chevron-down] size-4"></span>
-                        </button>
-                        <ul
-                          v-if="openDropdowns.supplier"
-                          class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                        >
-                          <li
-                            v-for="supplier in suppliers"
-                            :key="supplier.id"
-                            @click="selectSupplier(supplier.id)"
-                            class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm"
-                          >
-                            {{ supplier.supplierName }}
-                          </li>
-                          <li v-if="suppliers.length === 0" class="px-4 py-2 text-sm text-gray-500">
-                            No suppliers found
-                          </li>
-                        </ul>
-                      </div>
-                      <span v-if="errors.supplierId" class="text-xs text-red-500 mt-1">{{ errors.supplierId }}</span>
-
-                      <!-- Add New Supplier Button -->
-                      <button
-                        type="button"
-                        @click="openAddSupplierModal"
-                        class="mt-4 btn bg-brand-500 border-none btn-sm"
-                      >
-                        <span class="text-lg">+</span>
-                        Add New Supplier
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Step 2: Receiving -->
-                <div v-if="currentStep === 2">
                   <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Receiving Details</h3>
                   <div class="space-y-4">
 
@@ -161,21 +112,21 @@
                           <input
                             type="radio"
                             v-model="formData.receivingMode"
-                            value="direct"
+                            value="order"
                             class="radio radio-primary mr-2"
-                            @change="() => { formData.orderId = null; formData.products = [{ productId: null, quantity: 1, expectedQuantity: 0 }] }"
+                            @change="fetchOrders"
                           />
-                          <span class="text-sm">Direct Receiving (No Order)</span>
+                          <span class="text-sm">From Existing Purchase Order (PO)</span>
                         </label>
                         <label class="flex items-center cursor-pointer">
                           <input
                             type="radio"
                             v-model="formData.receivingMode"
-                            value="order"
+                            value="direct"
                             class="radio radio-primary mr-2"
-                            @change="fetchOrders"
+                            @change="() => { formData.orderId = null; formData.supplierId = null; formData.products = [{ productId: null, quantity: 1, expectedQuantity: 0 }] }"
                           />
-                          <span class="text-sm">From Existing Order (PO/SO)</span>
+                          <span class="text-sm">Direct Receiving (No Order)</span>
                         </label>
                       </div>
                     </div>
@@ -183,7 +134,7 @@
                     <!-- Order Selection (only show in order mode) -->
                     <div v-if="formData.receivingMode === 'order'" class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Select Order <span class="text-red-500">*</span>
+                        Select Purchase Order <span class="text-red-500">*</span>
                       </label>
                       <div class="relative" ref="orderDropdownRef">
                         <button
@@ -192,7 +143,7 @@
                           class="input input-bordered w-full text-left flex items-center justify-between"
                           :disabled="loadingOrders"
                         >
-                          <span>{{ formData.orderId ? (orders.find(o => o.id === formData.orderId)?.orderNo || 'Select Order') : 'Select Order' }}</span>
+                          <span>{{ formData.orderId ? (orders.find(o => o.id === formData.orderId)?.orderNo || 'Select Order') : 'Select Purchase Order' }}</span>
                           <span class="icon-[tabler--chevron-down] size-4"></span>
                         </button>
                         <ul
@@ -200,10 +151,10 @@
                           class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto"
                         >
                           <li v-if="loadingOrders" class="px-4 py-2 text-sm text-gray-500">
-                            Loading orders...
+                            Loading purchase orders...
                           </li>
                           <li v-else-if="orders.length === 0" class="px-4 py-2 text-sm text-gray-500">
-                            No orders found
+                            No purchase orders found
                           </li>
                           <li
                             v-else
@@ -213,12 +164,13 @@
                             class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm"
                           >
                             <div class="font-medium">{{ order.orderNo }}</div>
-                            <div class="text-xs text-gray-500">{{ order.customer?.name || 'N/A' }} • {{ order.orderItems?.length || 0 }} items</div>
+                            <div class="text-xs text-gray-500">{{ order.supplier?.supplierName || 'N/A' }} • {{ order.orderItems?.length || 0 }} items</div>
                           </li>
                         </ul>
                       </div>
+                      <span v-if="errors.orderId" class="text-xs text-red-500 mt-1 block">{{ errors.orderId }}</span>
                       <p class="text-xs text-gray-500 mt-2">
-                        ℹ️ Products will be auto-populated from the selected order
+                        ℹ️ Supplier and products will be auto-populated from the selected order. Only POs without existing receiving records are shown.
                       </p>
                     </div>
 
@@ -239,15 +191,15 @@
                       </div>
                       <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          DO Number {{ formData.receivingMode === 'order' ? '(Auto-filled)' : '' }}
+                          DO Number <span class="text-red-500">*</span>
                         </label>
                         <input
                           v-model="formData.doNumber"
                           type="text"
                           class="input input-bordered w-full"
                           placeholder="Enter DO number"
-                          :readonly="formData.receivingMode === 'order'"
                         />
+                        <span v-if="errors.doNumber" class="text-xs text-red-500 mt-1">{{ errors.doNumber }}</span>
                       </div>
                     </div>
 
@@ -263,7 +215,7 @@
                             @click="toggleDropdown('receivingType')"
                             class="input input-bordered w-full text-left flex items-center justify-between"
                           >
-                            <span>{{ formData.receivingType || 'Select Receiving Type' }}</span>
+                            <span>{{ receivingTypeOptions.find(t => t.value === formData.receivingPurpose)?.label || 'Select Receiving Type' }}</span>
                             <span class="icon-[tabler--chevron-down] size-4"></span>
                           </button>
                           <ul
@@ -272,11 +224,11 @@
                           >
                             <li
                               v-for="type in receivingTypeOptions"
-                              :key="type"
-                              @click="selectReceivingType(type)"
+                              :key="type.value"
+                              @click="selectReceivingType(type.value)"
                               class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm"
                             >
-                              {{ type }}
+                              {{ type.label }}
                             </li>
                           </ul>
                         </div>
@@ -323,6 +275,65 @@
                           placeholder="Enter any remarks"
                         ></textarea>
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Step 2: Supplier -->
+                <div v-if="currentStep === 2">
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Supplier Information</h3>
+                  <div class="space-y-4">
+                    <!-- Info banner for order mode -->
+                    <div v-if="formData.receivingMode === 'order'" class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <p class="text-sm text-blue-800 dark:text-blue-200">
+                        ℹ️ Supplier is auto-filled from the selected purchase order and cannot be changed.
+                      </p>
+                    </div>
+
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Supplier <span class="text-red-500">*</span>
+                      </label>
+                      <div class="relative" ref="supplierDropdownRef">
+                        <button
+                          type="button"
+                          @click="toggleDropdown('supplier')"
+                          class="input input-bordered w-full text-left flex items-center justify-between"
+                          :disabled="formData.receivingMode === 'order'"
+                          :class="{ 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed': formData.receivingMode === 'order' }"
+                        >
+                          <span>{{ getSupplierName(formData.supplierId) || 'Select Supplier' }}</span>
+                          <span v-if="formData.receivingMode === 'direct'" class="icon-[tabler--chevron-down] size-4"></span>
+                        </button>
+                        <ul
+                          v-if="openDropdowns.supplier && formData.receivingMode === 'direct'"
+                          class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                        >
+                          <li
+                            v-for="supplier in suppliers"
+                            :key="supplier.id"
+                            @click="selectSupplier(supplier.id)"
+                            class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm"
+                          >
+                            {{ supplier.supplierName }}
+                          </li>
+                          <li v-if="suppliers.length === 0" class="px-4 py-2 text-sm text-gray-500">
+                            No suppliers found
+                          </li>
+                        </ul>
+                      </div>
+                      <span v-if="errors.supplierId" class="text-xs text-red-500 mt-1 block">{{ errors.supplierId }}</span>
+
+                      <!-- Add New Supplier Button (Direct Mode Only) -->
+                      <button
+                        v-if="formData.receivingMode === 'direct'"
+                        type="button"
+                        @click="openAddSupplierModal"
+                        class="mt-4 btn bg-brand-500 border-none btn-sm"
+                      >
+                        <span class="text-lg">+</span>
+                        Add New Supplier
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -633,24 +644,24 @@ const currentStep = ref(1)
 const totalSteps = 4
 
 const steps = [
-  { id: 1, name: 'Supplier' },
-  { id: 2, name: 'Receiving' },
+  { id: 1, name: 'Receiving' },
+  { id: 2, name: 'Supplier' },
   { id: 3, name: 'Product' },
   { id: 4, name: 'Location' },
 ]
 
 const formData = reactive({
-  // Step 1: Supplier
-  supplierId: null as number | null,
-  // Step 2: Receiving
-  receivingMode: 'direct' as 'direct' | 'order', // NEW: receiving mode
-  orderId: null as number | null, // NEW: link to order
+  // Step 1: Receiving
+  receivingMode: 'order' as 'direct' | 'order', // Default to order mode
+  orderId: null as number | null,
   receivingCode: '',
-  doNumber: '',
-  receivingType: '',
+  doNumber: '', // Manual input, auto-filled if order mode
+  receivingPurpose: '', // Changed from receivingType - this is what gets saved to DB
   receivedBy: '',
   receivingDate: new Date().toISOString().split('T')[0],
   remarks: '',
+  // Step 2: Supplier (auto-filled if order mode)
+  supplierId: null as number | null,
   // Step 3: Product (now array)
   products: [
     { productId: null as number | null, quantity: 1, expectedQuantity: 0 } // expectedQuantity from order
@@ -695,8 +706,11 @@ const openDropdowns = reactive<Record<string, boolean>>({
 // Product dropdown overlay styles per product index (reactive array)
 const productMenuStyles = reactive<any[]>([])
 
-// Receiving Type options (same as purpose options in AddNewReceiving)
-const receivingTypeOptions = ['Raw Material', 'Finished Goods', 'Packaging', 'Consumables', 'Equipment', 'Returns']
+// Receiving Type options - Only Raw Material and Finished Goods
+const receivingTypeOptions = [
+  { label: 'Raw Material', value: 'RAW_MATERIAL' },
+  { label: 'Finished Goods', value: 'FINISHED_GOODS' }
+]
 
 const lockScroll = () => {
   document.body.style.overflow = 'hidden'
@@ -734,14 +748,31 @@ const fetchProducts = async () => {
   }
 }
 
-/* Fetch Orders */
+/* Fetch Orders - Only PO (Purchase Orders) without existing receiving records */
 const fetchOrders = async () => {
   loadingOrders.value = true
   try {
-    const response = await authenticatedFetch('/api/order')
-    if (response.ok) {
-      const data = await response.json()
-      orders.value = data || []
+    // Fetch both orders and receivings in parallel
+    const [ordersResponse, receivingsResponse] = await Promise.all([
+      authenticatedFetch('/api/order'),
+      authenticatedFetch('/api/receiving')
+    ])
+
+    if (ordersResponse.ok && receivingsResponse.ok) {
+      const ordersData = await ordersResponse.json()
+      const receivingsData = await receivingsResponse.json()
+
+      // Get list of order IDs that already have receiving records
+      const receivedOrderIds = new Set(
+        (receivingsData || [])
+          .map((receiving: any) => receiving.orderId)
+          .filter((id: any) => id != null)
+      )
+
+      // Filter only Purchase Orders (PO) that don't have receiving records yet
+      orders.value = (ordersData || []).filter((order: any) => 
+        order.orderType === 'PO' && !receivedOrderIds.has(order.id)
+      )
     }
   } catch (error) {
     console.error('Error fetching orders:', error)
@@ -818,8 +849,8 @@ const selectSupplier = (id: number) => {
   openDropdowns.supplier = false
 }
 
-const selectReceivingType = (type: string) => {
-  formData.receivingType = type
+const selectReceivingType = (value: string) => {
+  formData.receivingPurpose = value
   openDropdowns.receivingType = false
 }
 
@@ -827,27 +858,27 @@ const selectOrder = async (orderId: number) => {
   formData.orderId = orderId
   openDropdowns.order = false
 
-  // Fetch order details and populate products
+  // Fetch order details and populate products + supplier
   try {
     const response = await authenticatedFetch(`/api/order/${orderId}`)
     if (response.ok) {
       const order = await response.json()
 
+      // Auto-fill supplier from order
+      if (order.supplierId) {
+        formData.supplierId = order.supplierId
+      }
+
       // Populate products from order items with expected quantities
       if (order.orderItems && order.orderItems.length > 0) {
         formData.products = order.orderItems.map((item: any) => ({
-          productId: item.productId,
+          productId: item.productId || item.product?.id,
           quantity: 0, // User will enter actual received quantity
           expectedQuantity: item.quantity // Expected from order
         }))
         // Reset product menu styles
         productMenuStyles.splice(0)
         order.orderItems.forEach(() => productMenuStyles.push({}))
-      }
-
-      // Auto-fill DO number if available
-      if (order.orderNo) {
-        formData.doNumber = order.orderNo
       }
     }
   } catch (error) {
@@ -1115,10 +1146,11 @@ const handleSupplierCreated = async (result: any) => {
 }
 
 const openModal = async () => {
-  // Fetch suppliers, products, and warehouses when modal opens
+  // Fetch suppliers, products, orders, and warehouses when modal opens
   await Promise.all([
     fetchSuppliers(),
     fetchProducts(),
+    fetchOrders(), // Fetch PO orders by default
     fetchWarehouses()
   ])
 
@@ -1151,15 +1183,15 @@ const closeModal = async (force = false) => {
 }
 
 const resetForm = () => {
-  formData.supplierId = null
-  formData.receivingMode = 'direct'
+  formData.receivingMode = 'order' // Default to order mode
   formData.orderId = null
   formData.receivingCode = generateReceivingCode() // Auto-generate unique code
   formData.doNumber = ''
-  formData.receivingType = ''
+  formData.receivingPurpose = ''
   formData.receivedBy = ''
   formData.receivingDate = new Date().toISOString().split('T')[0]
   formData.remarks = ''
+  formData.supplierId = null
   formData.products = [{ productId: null, quantity: 1, expectedQuantity: 0 }]
   formData.skipLocationAssignment = false
   formData.warehouseId = null
@@ -1191,18 +1223,20 @@ const validateStep = (step: number): boolean => {
   Object.keys(errors).forEach((key) => delete errors[key])
 
   if (step === 1) {
-    if (!formData.supplierId) errors.supplierId = 'Supplier is required'
-  } else if (step === 2) {
-    // Check order mode validation
+    // Step 1: Receiving Details
     if (formData.receivingMode === 'order' && !formData.orderId) {
       errors.orderId = 'Order is required in order mode'
     }
     if (!formData.receivingCode) errors.receivingCode = 'Receiving code is required'
-    if (!formData.receivingType) errors.receivingType = 'Receiving type is required'
-    if (!formData.receivedBy) errors.receivedBy = 'Received by is required'
+    if (!formData.doNumber || !formData.doNumber.trim()) errors.doNumber = 'DO Number is required'
+    if (!formData.receivingPurpose) errors.receivingType = 'Receiving type is required'
+    if (!formData.receivedBy || !formData.receivedBy.trim()) errors.receivedBy = 'Received by is required'
     if (!formData.receivingDate) errors.receivingDate = 'Receiving date is required'
+  } else if (step === 2) {
+    // Step 2: Supplier
+    if (!formData.supplierId) errors.supplierId = 'Supplier is required'
   } else if (step === 3) {
-    // Validate products
+    // Step 3: Products
     formData.products.forEach((product, index) => {
       if (!product.productId) {
         errors[`product${index}`] = 'Product is required'
@@ -1212,6 +1246,7 @@ const validateStep = (step: number): boolean => {
       }
     })
   } else if (step === 4) {
+    // Step 4: Location
     // Only validate warehouse if location assignment is not skipped
     if (!formData.skipLocationAssignment) {
       if (!formData.warehouseId) errors.warehouseId = 'Warehouse is required'
@@ -1227,8 +1262,8 @@ const nextStep = () => {
   if (currentStep.value < totalSteps) {
     currentStep.value++
 
-    // Initialize Flatpickr when entering step 2
-    if (currentStep.value === 2) {
+    // Initialize Flatpickr when entering step 1 (Receiving Details)
+    if (currentStep.value === 1) {
       nextTick(() => {
         if (receivingDateInput.value && !flatpickrInstance) {
           flatpickrInstance = flatpickr(receivingDateInput.value, {
@@ -1265,7 +1300,7 @@ const submitForm = async () => {
       supplierId: formData.supplierId,
       receivedBy: formData.receivedBy,
       receivingDate: formData.receivingDate,
-      receivingType: formData.receivingType || null,
+      receivingPurpose: formData.receivingPurpose || null, // Changed from receivingType
       warehouseId: formData.skipLocationAssignment ? null : formData.warehouseId,
       locationId: formData.skipLocationAssignment ? null : (formData.locationId || null),
       remarks: formData.remarks || null,
