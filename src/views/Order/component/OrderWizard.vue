@@ -3,7 +3,7 @@
     <transition enter-active-class="transition-opacity duration-300"
       leave-active-class="transition-opacity duration-200" @after-leave="unlockScroll">
       <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center">
-        <div class="absolute inset-0 bg-black/50" @click.self="closeModal"></div>
+        <div class="absolute inset-0 bg-black/50" @click.self="() => closeModal()"></div>
         <transition enter-active-class="transition-all duration-300" enter-from-class="opacity-0 scale-95"
           enter-to-class="opacity-100 scale-100" appear>
           <div v-if="isOpen" class="relative z-10 w-full max-w-3xl mx-4">
@@ -15,7 +15,7 @@
                   <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Step {{ currentStep }} of {{ totalSteps }}
                   </p>
                 </div>
-                <button @click="closeModal" :disabled="isSubmitting"
+                <button @click="() => closeModal()" :disabled="isSubmitting"
                   class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" aria-label="Close modal">
                   ✕
                 </button>
@@ -60,57 +60,8 @@
 
               <!-- Form Content -->
               <div class="p-6 min-h-[400px]">
-                <!-- Step 1: Customer -->
+                <!-- Step 1: Order Details -->
                 <div v-if="currentStep === 1">
-                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Customer Information</h3>
-                  <div class="space-y-4">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Customer <span class="text-red-500">*</span>
-                      </label>
-                      <div class="relative" ref="customerDropdownRef">
-                        <button
-                          type="button"
-                          @click="toggleDropdown('customer')"
-                          class="input input-bordered w-full text-left flex items-center justify-between"
-                        >
-                          <span>{{ selectedCustomerLabel || 'Select Customer' }}</span>
-                          <span class="icon-[tabler--chevron-down] size-4"></span>
-                        </button>
-                        <ul
-                          v-if="openDropdowns.customer"
-                          class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                        >
-                          <li
-                            v-for="customer in customers"
-                            :key="customer.id"
-                            @click="selectCustomer(customer.id)"
-                            class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm"
-                          >
-                            {{ customer.customerName }}
-                          </li>
-                          <li v-if="customers.length === 0" class="px-4 py-2 text-sm text-gray-500">
-                            No customers found
-                          </li>
-                        </ul>
-                      </div>
-                      <span v-if="errors.customerId" class="text-xs text-red-500 mt-1">{{ errors.customerId }}</span>
-
-                      <!-- Add New Customer Button -->
-                      <button
-                        type="button"
-                        @click="openAddCustomerModal"
-                        class="mt-4 btn bg-brand-500 border-none btn-sm"
-                      >
-                        <span class="text-lg">+</span>
-                        Add New Customer
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Step 2: Order Details -->
-                <div v-if="currentStep === 2">
                   <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Order Details</h3>
                   <div class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
@@ -147,7 +98,8 @@
                         </label>
                         <input v-model="formData.orderNo" type="text"
                           class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                          placeholder="Select order type first (PO- or SO- will be auto-added)" maxlength="50" />
+                          placeholder="Select order type first (PO- or SO- will be auto-added)" maxlength="50"
+                          @input="() => { if (errors.orderNo) delete errors.orderNo }" />
                         <span v-if="errors.orderNo" class="text-xs text-red-500 mt-1">{{ errors.orderNo }}</span>
                       </div>
                     </div>
@@ -158,7 +110,8 @@
                         </label>
                         <input v-model="formData.picName" type="text"
                           class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                          placeholder="Enter PIC name" maxlength="100" />
+                          placeholder="Enter PIC name" maxlength="100"
+                          @input="() => { if (errors.picName) delete errors.picName }" />
                         <span v-if="errors.picName" class="text-xs text-red-500 mt-1">{{ errors.picName }}</span>
                       </div>
                       <div>
@@ -177,25 +130,14 @@
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Order Status <span class="text-red-500">*</span>
                       </label>
-                      <div class="dropdown relative inline-flex w-full" ref="orderStatusDropdownRef">
+                      <div class="dropdown relative inline-flex w-full">
                         <button type="button"
-                          :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.status }]"
-                          :aria-expanded="openDropdowns.orderStatus" @click.stop="toggleDropdown('orderStatus')">
-                          {{ formData.status || 'Select Status' }}
-                          <span class="icon-[tabler--chevron-down] size-4 transition-transform"
-                            :class="{ 'rotate-180': openDropdowns.orderStatus }"></span>
+                          class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed opacity-60"
+                          disabled
+                        >
+                          {{ formData.status || 'Created' }}
+                          <span class="icon-[tabler--chevron-down] size-4"></span>
                         </button>
-                        <ul
-                          class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white"
-                          :class="{ 'opacity-100 pointer-events-auto': openDropdowns.orderStatus, 'opacity-0 pointer-events-none': !openDropdowns.orderStatus }"
-                          role="menu">
-                          <li v-for="stat in orderStatuses" :key="stat">
-                            <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer"
-                              @click="selectOrderStatus(stat)">
-                              {{ stat }}
-                            </a>
-                          </li>
-                        </ul>
                       </div>
                       <span v-if="errors.status" class="text-xs text-red-500 mt-1">{{ errors.status }}</span>
                     </div>
@@ -206,6 +148,116 @@
                       <textarea v-model="formData.orderRemarks" rows="3"
                         class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         placeholder="Enter any order remarks"></textarea>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Step 2: Customer/Supplier -->
+                <div v-if="currentStep === 2">
+                  <!-- Sales Order - Show Customer -->
+                  <div v-if="formData.orderType === 'SO'">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Customer Information</h3>
+                    <div class="space-y-4">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Customer <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative" ref="customerDropdownRef">
+                          <button
+                            type="button"
+                            @click="toggleDropdown('customer')"
+                            class="input input-bordered w-full text-left flex items-center justify-between"
+                          >
+                            <span>{{ selectedCustomerLabel || 'Select Customer' }}</span>
+                            <span class="icon-[tabler--chevron-down] size-4"></span>
+                          </button>
+                          <ul
+                            v-if="openDropdowns.customer"
+                            class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                          >
+                            <li
+                              v-for="customer in customers"
+                              :key="customer.id"
+                              @click="selectCustomer(customer.id)"
+                              class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm"
+                            >
+                              {{ customer.customerName }}
+                            </li>
+                            <li v-if="customers.length === 0" class="px-4 py-2 text-sm text-gray-500">
+                              No customers found
+                            </li>
+                          </ul>
+                        </div>
+                        <span v-if="errors.customerId" class="text-xs text-red-500 mt-1 block">{{ errors.customerId }}</span>
+                      </div>
+
+                      <!-- Add New Customer Button -->
+                      <button
+                        type="button"
+                        @click="openAddCustomerModal"
+                        class="btn bg-brand-500 border-none btn-sm"
+                      >
+                        <span class="text-lg">+</span>
+                        Add New Customer
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Purchase Order - Show Supplier -->
+                  <div v-if="formData.orderType === 'PO'">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Supplier Information</h3>
+                    <div class="space-y-4">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Supplier <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative" ref="supplierDropdownRef">
+                          <button
+                            type="button"
+                            @click="toggleDropdown('supplier')"
+                            class="input input-bordered w-full text-left flex items-center justify-between"
+                          >
+                            <span>{{ selectedSupplierLabel || 'Select Supplier' }}</span>
+                            <span class="icon-[tabler--chevron-down] size-4"></span>
+                          </button>
+                          <ul
+                            v-if="openDropdowns.supplier"
+                            class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                          >
+                            <li
+                              v-for="supplier in suppliers"
+                              :key="supplier.id"
+                              @click="selectSupplier(supplier.id)"
+                              class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm"
+                            >
+                              {{ supplier.supplierName }}
+                            </li>
+                            <li v-if="suppliers.length === 0" class="px-4 py-2 text-sm text-gray-500">
+                              No suppliers found
+                            </li>
+                          </ul>
+                        </div>
+                        <span v-if="errors.supplierId" class="text-xs text-red-500 mt-1 block">{{ errors.supplierId }}</span>
+                      </div>
+
+                      <!-- Add New Supplier Button -->
+                      <button
+                        type="button"
+                        @click="openAddSupplierModal"
+                        class="btn bg-brand-500 border-none btn-sm"
+                      >
+                        <span class="text-lg">+</span>
+                        Add New Supplier
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- No Order Type Selected -->
+                  <div v-if="!formData.orderType">
+                    <div class="flex items-center justify-center h-64">
+                      <p class="text-gray-500 dark:text-gray-400">
+                        Please select an order type in the previous step
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -450,12 +502,16 @@
 
   <!-- AddNewCustomer Modal -->
   <AddNewCustomer ref="addCustomerModalRef" @customer-created="handleCustomerCreated" />
+
+  <!-- AddNewSupplier Modal -->
+  <AddNewSupplier ref="addSupplierModalRef" @supplier-created="handleSupplierCreated" />
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import authenticatedFetch from '@/utils/authenticatedFetch'
 import AddNewCustomer from '@/views/Customer/component/AddNewCustomer.vue'
+import AddNewSupplier from '@/views/Supplier/component/AddNewSupplier.vue'
 import flatpickr from 'flatpickr'
 import 'flatpickr/dist/flatpickr.css'
 
@@ -464,10 +520,19 @@ interface Customer {
   customerName: string
 }
 
+interface Supplier {
+  id: number
+  supplierName: string
+}
+
 interface Product {
   id: number
   skuCode: string
   name: string
+  supplier?: {
+    id: number
+    supplierName: string
+  }
 }
 
 interface OrderItem {
@@ -492,21 +557,22 @@ const currentStep = ref(1)
 const totalSteps = 3
 
 const steps = [
-  { id: 1, name: 'Customer' },
-  { id: 2, name: 'Order' },
+  { id: 1, name: 'Order' },
+  { id: 2, name: 'Customer/Supplier' },
   { id: 3, name: 'Products' },
 ]
 
 const formData = reactive({
-  // Step 1: Customer
-  customerId: null as number | null,
-  picName: '',
-  // Step 2: Order
+  // Step 1: Order
   orderNo: '',
   orderType: '',
   status: '',
   estimatedDeliveryTime: '',
   orderRemarks: '',
+  picName: '',
+  // Step 2: Customer/Supplier
+  customerId: null as number | null,
+  supplierId: null as number | null,
   // Step 3: Products
   itemStatus: 'Pending',
   orderItems: [{ productId: '', quantity: 1, status: 'Pending', remarks: '', availableStock: undefined, allocatedEpcs: [] }] as OrderItem[]
@@ -515,15 +581,18 @@ const formData = reactive({
 const errors = reactive<Record<string, string>>({})
 
 const loadingCustomers = ref(false)
+const loadingSuppliers = ref(false)
 const loadingProducts = ref(false)
 const loadingInventory = ref<Record<number, boolean>>({})
 const customers = ref<Customer[]>([])
+const suppliers = ref<Supplier[]>([])
 const products = ref<Product[]>([])
 const addCustomerModalRef = ref<any>(null)
+const addSupplierModalRef = ref<any>(null)
 const productDropdownRefs = ref<any[]>([])
 const customerDropdownRef = ref<any>(null)
+const supplierDropdownRef = ref<any>(null)
 const orderTypeDropdownRef = ref<any>(null)
-const orderStatusDropdownRef = ref<any>(null)
 const itemStatusDropdownRef = ref<any>(null)
 
 const orderTypes = ['PO', 'SO']
@@ -544,6 +613,12 @@ const selectedCustomerLabel = computed(() => {
   return customer ? customer.customerName : null
 })
 
+const selectedSupplierLabel = computed(() => {
+  if (!formData.supplierId) return null
+  const supplier = suppliers.value.find(s => s.id === formData.supplierId)
+  return supplier ? supplier.supplierName : null
+})
+
 const lockScroll = () => {
   document.body.style.overflow = 'hidden'
 }
@@ -554,19 +629,23 @@ const unlockScroll = () => {
 
 const fetchData = async () => {
   loadingCustomers.value = true
+  loadingSuppliers.value = true
   loadingProducts.value = true
   try {
-    const [customersRes, productsRes] = await Promise.all([
+    const [customersRes, suppliersRes, productsRes] = await Promise.all([
       authenticatedFetch('/api/customer'),
+      authenticatedFetch('/api/supplier'),
       authenticatedFetch('/api/product')
     ])
 
     if (customersRes.ok) customers.value = await customersRes.json()
+    if (suppliersRes.ok) suppliers.value = await suppliersRes.json()
     if (productsRes.ok) products.value = await productsRes.json()
   } catch (error) {
     console.error('Error fetching data:', error)
   } finally {
     loadingCustomers.value = false
+    loadingSuppliers.value = false
     loadingProducts.value = false
   }
 }
@@ -577,6 +656,10 @@ const openModal = async () => {
   currentStep.value = 1
   resetForm()
   lockScroll()
+  
+  // Initialize Flatpickr for Step 1
+  await nextTick()
+  initializeFlatpickr()
 }
 
 const closeModal = async (force = false) => {
@@ -588,13 +671,14 @@ const closeModal = async (force = false) => {
 }
 
 const resetForm = () => {
-  formData.customerId = null
-  formData.picName = ''
   formData.orderNo = ''
   formData.orderType = ''
-  formData.status = ''
+  formData.status = 'Created'
   formData.estimatedDeliveryTime = ''
   formData.orderRemarks = ''
+  formData.picName = ''
+  formData.customerId = null
+  formData.supplierId = null
   formData.itemStatus = 'Pending'
   formData.orderItems = [{ productId: '', quantity: 1, status: 'Pending', remarks: '', availableStock: undefined, allocatedEpcs: [] }]
 
@@ -613,13 +697,16 @@ const validateStep = (step: number): boolean => {
   Object.keys(errors).forEach((key) => delete errors[key])
 
   if (step === 1) {
-    if (!formData.customerId) errors.customerId = 'Customer is required'
-  } else if (step === 2) {
     if (!formData.orderNo || !formData.orderNo.trim()) errors.orderNo = 'Order number is required'
     if (!formData.orderType) errors.orderType = 'Order type is required'
     if (!formData.picName || !formData.picName.trim()) errors.picName = 'PIC name is required'
-    if (!formData.status) errors.status = 'Order status is required'
     if (!formData.estimatedDeliveryTime) errors.estimatedDeliveryTime = 'Estimated delivery time is required'
+  } else if (step === 2) {
+    if (formData.orderType === 'SO') {
+      if (!formData.customerId) errors.customerId = 'Customer is required for Sales Order'
+    } else if (formData.orderType === 'PO') {
+      if (!formData.supplierId) errors.supplierId = 'Supplier is required for Purchase Order'
+    }
   } else if (step === 3) {
     formData.orderItems.forEach((item, idx) => {
       if (!item.productId) {
@@ -638,24 +725,39 @@ const validateStep = (step: number): boolean => {
   return Object.keys(errors).length === 0
 }
 
+const initializeFlatpickr = () => {
+  // Destroy existing instance if any
+  if (flatpickrInstance) {
+    flatpickrInstance.destroy()
+    flatpickrInstance = null
+  }
+
+  // Initialize new instance
+  nextTick(() => {
+    if (estimatedDeliveryTimeInput.value) {
+      flatpickrInstance = flatpickr(estimatedDeliveryTimeInput.value, {
+        dateFormat: 'Y-m-d',
+        defaultDate: formData.estimatedDeliveryTime || new Date(),
+        onChange: (selectedDates: Date[], dateStr: string) => {
+          formData.estimatedDeliveryTime = dateStr
+          // Clear error when date is selected
+          if (errors.estimatedDeliveryTime) {
+            delete errors.estimatedDeliveryTime
+          }
+        }
+      })
+    }
+  })
+}
+
 const nextStep = () => {
   if (!validateStep(currentStep.value)) return
   if (currentStep.value < totalSteps) {
     currentStep.value++
 
-    // Initialize Flatpickr when entering step 2
-    if (currentStep.value === 2) {
-      nextTick(() => {
-        if (estimatedDeliveryTimeInput.value && !flatpickrInstance) {
-          flatpickrInstance = flatpickr(estimatedDeliveryTimeInput.value, {
-            dateFormat: 'Y-m-d',
-            defaultDate: new Date(),
-            onChange: (selectedDates: Date[], dateStr: string) => {
-              formData.estimatedDeliveryTime = dateStr
-            }
-          })
-        }
-      })
+    // Initialize Flatpickr when entering step 1 (Order Details)
+    if (currentStep.value === 1) {
+      initializeFlatpickr()
     }
   }
 }
@@ -682,11 +784,29 @@ const toggleDropdown = async (name: string) => {
 const selectCustomer = (customerId: number) => {
   formData.customerId = customerId
   openDropdowns.customer = false
+  // Clear error when customer is selected
+  if (errors.customerId) {
+    delete errors.customerId
+  }
+}
+
+const selectSupplier = (supplierId: number) => {
+  formData.supplierId = supplierId
+  openDropdowns.supplier = false
+  // Clear error when supplier is selected
+  if (errors.supplierId) {
+    delete errors.supplierId
+  }
 }
 
 const selectOrderType = (type: string) => {
   formData.orderType = type
   openDropdowns.orderType = false
+
+  // Clear error when order type is selected
+  if (errors.orderType) {
+    delete errors.orderType
+  }
 
   // Auto-prefix order number based on type
   const currentOrderNo = formData.orderNo
@@ -700,11 +820,6 @@ const selectOrderType = (type: string) => {
   } else if (type === 'SO') {
     formData.orderNo = `SO-${orderNoWithoutPrefix}`
   }
-}
-
-const selectOrderStatus = (status: string) => {
-  formData.status = status
-  openDropdowns.orderStatus = false
 }
 
 const selectItemStatus = (status: string) => {
@@ -725,6 +840,11 @@ const selectProduct = async (index: number, productId: number) => {
   formData.orderItems[index].productId = productId
   openDropdowns[`product${index}`] = false
 
+  // Clear error when product is selected
+  if (errors[`item${index}Product`]) {
+    delete errors[`item${index}Product`]
+  }
+
   // Fetch inventory if order type is SO
   if (formData.orderType === 'SO') {
     await fetchProductInventory(index)
@@ -743,7 +863,14 @@ const availableProducts = (index: number) => {
     .map((p, i) => i !== index ? p.productId : null)
     .filter(Boolean)
 
-  return products.value.filter(p => !takenIds.includes(p.id))
+  let filteredProducts = products.value.filter(p => !takenIds.includes(p.id))
+
+  // For PO orders, filter products by selected supplier
+  if (formData.orderType === 'PO' && formData.supplierId) {
+    filteredProducts = filteredProducts.filter(p => p.supplier?.id === formData.supplierId)
+  }
+
+  return filteredProducts
 }
 
 const addOrderItem = () => {
@@ -876,6 +1003,13 @@ const validateQuantity = (index: number) => {
     }
   }
 
+  // Clear quantity error when valid quantity is entered
+  if (item.quantity >= 1) {
+    if (errors[`item${index}Quantity`]) {
+      delete errors[`item${index}Quantity`]
+    }
+  }
+
   // Re-allocate EPCs if SO order
   if (formData.orderType === 'SO' && formData.orderItems[index].productId) {
     fetchProductInventory(index)
@@ -938,6 +1072,13 @@ const openAddCustomerModal = () => {
   }
 }
 
+/* Open Add Supplier Modal */
+const openAddSupplierModal = () => {
+  if (addSupplierModalRef.value && addSupplierModalRef.value.openModal) {
+    addSupplierModalRef.value.openModal()
+  }
+}
+
 /* Handle Customer Created */
 const handleCustomerCreated = async (result: any) => {
   if (result.success) {
@@ -947,6 +1088,19 @@ const handleCustomerCreated = async (result: any) => {
     // Auto-select the newly created customer
     if (result.data && result.data.id) {
       formData.customerId = result.data.id
+    }
+  }
+}
+
+/* Handle Supplier Created */
+const handleSupplierCreated = async (result: any) => {
+  if (result.success) {
+    // Refresh supplier list
+    await fetchData()
+
+    // Auto-select the newly created supplier
+    if (result.data && result.data.id) {
+      formData.supplierId = result.data.id
     }
   }
 }
@@ -963,7 +1117,8 @@ const submitForm = async () => {
     const submissionData = {
       orderNo: formData.orderNo,
       orderType: formData.orderType,
-      customerId: formData.customerId,
+      customerId: formData.orderType === 'SO' ? formData.customerId : null,
+      supplierId: formData.orderType === 'PO' ? formData.supplierId : null,
       picName: formData.picName,
       status: formData.status,
       estimatedDeliveryTime: formData.estimatedDeliveryTime,
@@ -1010,8 +1165,8 @@ const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as Node
   const refs = [
     customerDropdownRef.value,
+    supplierDropdownRef.value,
     orderTypeDropdownRef.value,
-    orderStatusDropdownRef.value,
     itemStatusDropdownRef.value,
     ...productDropdownRefs.value
   ]

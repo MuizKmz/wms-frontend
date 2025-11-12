@@ -286,17 +286,19 @@ const API_URL = '/api/shipping'
 const allowedColumns = [
   'trackingCode',
   'orderNumber',
+  'doNumber',
   'shippingCarrier',
   'destination',
   'status',
   'shippingDate',
   'estimatedDeliveryDate',
-  'remark',
+  'remarks',
 ]
 
 const fieldAliases = {
   trackingCode: ['trackingCode', 'tracking'],
   orderNumber: ['orderNumber', 'order', 'orderNo'],
+  doNumber: ['doNumber', 'do'],
   shippingCarrier: ['shippingCarrier', 'carrier'],
   destination: ['destination', 'dest'],
   status: ['status', 'state'],
@@ -309,13 +311,14 @@ const fieldAliases = {
 const formatColumnName = (name) => {
   const nameMap = {
     trackingCode: 'Tracking Code',
-    orderNumber: 'Order Number',
+    orderNumber: 'Sales Order Number',
+    doNumber: 'DO Number',
     shippingCarrier: 'Shipping Carrier',
     destination: 'Destination',
     status: 'Status',
     shippingDate: 'Shipping Date',
     estimatedDeliveryDate: 'Estimated Delivery Date',
-    remark: 'Remark',
+    remark: 'Remarks',
   }
 
   return (
@@ -392,12 +395,13 @@ const fetchShipments = async () => {
         id: p.id,
         trackingCode: p.code || p.trackingCode || '',
         order: p.order ? p.order.name || p.order.orderNo : p.order || '',
+        doNumber: p.doNumber || p.do || '-',
         carrier: p.carrier || p.carrier || '',
         destination: p.destination || p.destination || '',
         state: p.state || p.state || '',
         shippingDate: p.shippingDate || p.shippingDate || '',
         estimatedDeliveryDate: p.estimatedDeliveryDate || p.estimatedDeliveryDate || '',
-        remark: p.remarks || p.remark || p.remark || '',
+        remark: p.remarks || p.remark || p.remark || '-',
         raw: p,
       }
       if (selectedColumns.value.length === 0) {

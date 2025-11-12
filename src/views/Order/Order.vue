@@ -44,19 +44,19 @@
           </div>
 
           <div class="flex gap-2 my-6">
-            <button
+            <!-- <button
               v-if="canCreate('Order')"
               @click="openAddOrderModal"
               class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
             >
               Add New Order
-            </button>
+            </button> -->
             <button
               v-if="canCreate('Order')"
               @click="openOrderWizardModal"
-              class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+              class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
             >
-              Order Wizard
+              Add New Order
             </button>
             <button
               v-if="canDelete('Order')"

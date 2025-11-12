@@ -46,8 +46,13 @@
               </div>
 
               <div>
-                <p class="text-xs text-gray-500">Order Number</p>
+                <p class="text-xs text-gray-500">Sales Order Number</p>
                 <p class="font-medium text-gray-900 dark:text-white">{{ getOrderNumber() }}</p>
+              </div>
+
+              <div>
+                <p class="text-xs text-gray-500">DO Number</p>
+                <p class="font-medium text-gray-900 dark:text-white">{{ shipment.doNumber || shipment.do || '-' }}</p>
               </div>
 
               <div>

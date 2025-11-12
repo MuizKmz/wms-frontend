@@ -28,7 +28,7 @@
                   </div>
                 </div>
                 <div>
-                  <p class="text-xs text-gray-500">Customer / Supplier</p>
+                  <p class="text-xs text-gray-500">{{ order.orderType === 'PO' ? 'Supplier' : 'Customer' }}</p>
                   <p class="font-medium text-gray-900 dark:text-white">{{ order.customer?.customerName || order.supplier?.supplierName || '-' }}</p>
                 </div>
               </div>

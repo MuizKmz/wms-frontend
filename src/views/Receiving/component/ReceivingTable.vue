@@ -279,11 +279,11 @@ const API_URL = '/api/receiving'
 
 const allowedColumns = [
   'receivingCode',
+  'poNumber',
   'doNumber',
   'productName',
   'expectedQuantity',
   'receivedQuantity',
-  'receivingSource',
   'receivingPurpose',
   'receivedBy',
   'dateReceived',
@@ -292,11 +292,11 @@ const allowedColumns = [
 
 const fieldAliases = {
   receivingCode: ['receivingCode', 'code'],
+  poNumber: ['poNumber', 'orderNumber', 'purchaseOrderNumber'],
   doNumber: ['doNumber', 'deliveryOrderNumber'],
   productName: ['productName'],
   expectedQuantity: ['expectedQuantity'],
   receivedQuantity: ['receivedQuantity'],
-  receivingSource: ['receivingSource', 'source'],
   receivingPurpose: ['receivingPurpose', 'purpose'],
   receivedBy: ['receivedBy', 'receiver'],
   dateReceived: ['dateReceived', 'receivingDate'],
@@ -307,11 +307,11 @@ const fieldAliases = {
 const formatColumnName = (name) => {
   const nameMap = {
     receivingCode: 'Receiving Code',
+    poNumber: 'PO Number',
     doNumber: 'DO Number',
     productName: 'Product Name',
     expectedQuantity: 'Expected Quantity',
     receivedQuantity: 'Received Quantity',
-    receivingSource: 'Receiving Source',
     receivingPurpose: 'Receiving Purpose',
     receivedBy: 'Received By',
     dateReceived: 'Date Received',
@@ -344,6 +344,8 @@ const getCellValue = (row, col) => {
     } else {
       return row.product?.name || '-'
     }
+  } else if (col === 'poNumber') {
+    return row.isReceiving ? (row.order?.orderNo || '-') : '-'
   } else if (col === 'expectedQuantity') {
     if (row.isReceiving) {
       return row.totalExpectedQuantity || '-'
@@ -356,17 +358,14 @@ const getCellValue = (row, col) => {
     } else {
       return row.quantity || '-'
     }
-  } else if (col === 'receivingSource') {
-    if (row.isReceiving) {
-      return row.aggregatedSources?.display || '-'
-    } else {
-      return row.source || '-'
-    }
   } else if (col === 'receivingPurpose') {
     if (row.isReceiving) {
-      return row.aggregatedPurposes?.display || '-'
+      // Already formatted in aggregatePurposes
+      const displayValue = row.aggregatedPurposes?.display || '-'
+      console.log('getCellValue - receivingPurpose display:', displayValue)
+      return displayValue
     } else {
-      return row.receivingPurpose || '-'
+      return formatSinglePurpose(row.receivingPurpose || '-')
     }
   } else if (col === 'receivedBy') {
     return row.isReceiving ? row.receivedBy || '-' : '-'
@@ -417,6 +416,16 @@ onMounted(() => {
 // ------------------------------------------------
 // --- Helper Functions for Aggregation ---
 // ------------------------------------------------
+
+// Format a single purpose value
+const formatSinglePurpose = (value: string) => {
+  const purposeMap: { [key: string]: string } = {
+    'RAW_MATERIAL': 'Raw Material',
+    'FINISHED_GOODS': 'Finished Goods'
+  }
+  
+  return purposeMap[value] || value
+}
 
 // Function to aggregate products from receiving items
 const aggregateProducts = (receiving) => {
@@ -479,7 +488,10 @@ const aggregatePurposes = (receiving) => {
   // If no items, fall back to parent receiving purpose (or Raw Material)
   if (!receiving.receivingItems || receiving.receivingItems.length === 0) {
     const fallback = receiving.receivingPurpose || ''
-    return { display: fallback, full: fallback }
+    console.log('aggregatePurposes - fallback raw:', fallback)
+    const formattedFallback = formatSinglePurpose(fallback)
+    console.log('aggregatePurposes - fallback formatted:', formattedFallback)
+    return { display: formattedFallback, full: formattedFallback }
   }
 
   // Prefer item-level purposes when present
@@ -487,14 +499,16 @@ const aggregatePurposes = (receiving) => {
 
   const purposesList = itemPurposes.length > 0 ? itemPurposes : [receiving.receivingPurpose || '']
   const uniquePurposes = [...new Set(purposesList)]
+  console.log('aggregatePurposes - uniquePurposes:', uniquePurposes)
   const maxDisplay = 2
-  const displayPurposes = uniquePurposes.slice(0, maxDisplay)
+  const displayPurposes = uniquePurposes.slice(0, maxDisplay).map(p => formatSinglePurpose(p))
+  console.log('aggregatePurposes - displayPurposes formatted:', displayPurposes)
   const remaining = uniquePurposes.length - maxDisplay
 
   if (remaining > 0) {
     return {
       display: displayPurposes.join(', ') + `, +${remaining} more`,
-      full: uniquePurposes.join(', '),
+      full: uniquePurposes.map(p => formatSinglePurpose(p)).join(', '),
     }
   }
 
@@ -761,6 +775,26 @@ const formatDate = (dateString) => {
     month: '2-digit',
     year: 'numeric',
   })
+}
+
+// Format purpose value for display
+const formatPurposeValue = (value: string) => {
+  if (!value || value === '-') return '-'
+  
+  // Handle multiple values separated by comma (for aggregated purposes)
+  if (value.includes(',')) {
+    const parts = value.split(',').map(part => {
+      const trimmed = part.trim()
+      // Check if it ends with "more" (e.g., "+2 more")
+      if (trimmed.startsWith('+') && trimmed.includes('more')) {
+        return trimmed
+      }
+      return formatSinglePurpose(trimmed)
+    })
+    return parts.join(', ')
+  }
+  
+  return formatSinglePurpose(value)
 }
 
 // ------------------------------------------------

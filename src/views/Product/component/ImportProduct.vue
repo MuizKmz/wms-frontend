@@ -177,7 +177,7 @@
                   </button>
                   <button
                     @click="uploadFile"
-                    class="btn btn-primary"
+                    class="btn bg-brand-500 border-none"
                     :disabled="!selectedFile || isUploading"
                   >
                     <span v-if="isUploading" class="loading loading-spinner loading-sm"></span>
