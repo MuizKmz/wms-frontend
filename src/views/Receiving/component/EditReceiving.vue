@@ -61,9 +61,9 @@
                   <span>{{ errors.submit }}</span>
                 </div>
 
-                <!-- Row 1: Receiving Code & DO Number -->
+                <!-- Row 1: Receiving Code & PO Number (Both Disabled) -->
                 <div class="grid grid-cols-2 gap-4">
-                  <!-- Receiving Code -->
+                  <!-- Receiving Code (Disabled) -->
                   <div class="relative">
                     <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
                       <span class="text-red-500">*</span> Receiving Code
@@ -73,25 +73,32 @@
                       type="text"
                       placeholder="Enter Receiving Code"
                       maxlength="50"
-                      :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.receivingCode }]"
-                      :readonly="isViewMode"
-                      :disabled="isViewMode"
+                      class="input input-bordered w-full bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white cursor-not-allowed"
+                      disabled
+                      readonly
                     />
-                    <transition
-                      enter-active-class="transition-all duration-200 ease-out"
-                      enter-from-class="opacity-0 -translate-y-1"
-                      enter-to-class="opacity-100 translate-y-0"
-                      leave-active-class="transition-all duration-150 ease-in"
-                      leave-from-class="opacity-100 translate-y-0"
-                      leave-to-class="opacity-0 -translate-y-1"
-                    >
-                      <div v-if="errors.receivingCode" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                        <p class="text-xs text-red-600 dark:text-red-400">{{ errors.receivingCode }}</p>
-                      </div>
-                    </transition>
                   </div>
 
-                  <!-- DO Number -->
+                  <!-- PO Number (Disabled) -->
+                  <div class="relative">
+                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                      PO Number
+                    </label>
+                    <input
+                      v-model="form.poNumber"
+                      type="text"
+                      placeholder="PO Number"
+                      maxlength="50"
+                      class="input input-bordered w-full bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white cursor-not-allowed"
+                      disabled
+                      readonly
+                    />
+                  </div>
+                </div>
+
+                <!-- Row 2: DO Number & Supplier (DO editable, Supplier disabled) -->
+                <div class="grid grid-cols-2 gap-4">
+                  <!-- DO Number (Editable) -->
                   <div class="relative">
                     <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
                       DO Number
@@ -106,204 +113,138 @@
                       :disabled="isViewMode"
                     />
                   </div>
-                </div>
 
-                <!-- Row 2: Warehouse, Rack, Section -->
-                <div class="grid grid-cols-3 gap-4">
-                  <!-- Warehouse -->
+                  <!-- Supplier (Disabled) -->
                   <div class="relative">
                     <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                      Warehouse
-                    </label>
-                    <div class="dropdown relative inline-flex w-full" ref="warehouseDropdownRef">
-                      <button
-                        type="button"
-                        :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.warehouseId }]"
-                          :aria-expanded="openDropdowns.warehouse"
-                          @click.stop="!isViewMode && toggleDropdown('warehouse')"
-                          :disabled="isViewMode"
-                      >
-                        {{ getWarehouseName(form.warehouseId) || 'Select Warehouse' }}
-                        <span
-                          class="icon-[tabler--chevron-down] size-4 transition-transform"
-                          :class="{ 'rotate-180': openDropdowns.warehouse }"
-                        ></span>
-                      </button>
-
-                      <ul
-                        class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
-                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.warehouse, 'opacity-0 pointer-events-none': !openDropdowns.warehouse }"
-                        role="menu"
-                      >
-                        <li v-for="warehouse in warehouses" :key="warehouse.id">
-                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer  rounded-lg" @click="selectWarehouse(warehouse.id)">
-                            {{ warehouse.name }}
-                          </a>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <!-- Rack -->
-                  <div class="relative">
-                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                      Rack
-                    </label>
-                    <div class="dropdown relative inline-flex w-full" ref="rackDropdownRef">
-                      <button
-                        type="button"
-                        :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.rackId }]"
-                          :aria-expanded="openDropdowns.rack"
-                          @click.stop="!isViewMode && toggleDropdown('rack')"
-                          :disabled="isViewMode || !form.warehouseId"
-                      >
-                        {{ getRackName(form.rackId) || 'Select Rack' }}
-                        <span
-                          class="icon-[tabler--chevron-down] size-4 transition-transform"
-                          :class="{ 'rotate-180': openDropdowns.rack }"
-                        ></span>
-                      </button>
-
-                      <ul
-                        class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
-                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.rack, 'opacity-0 pointer-events-none': !openDropdowns.rack }"
-                        role="menu"
-                      >
-                        <li v-for="rack in racks" :key="rack.id">
-                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg" @click="selectRack(rack.id)">
-                            {{ rack.rackCode }}
-                          </a>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <!-- Section -->
-                  <div class="relative">
-                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                      Section
-                    </label>
-                    <div class="dropdown relative inline-flex w-full" ref="sectionDropdownRef">
-                      <button
-                        type="button"
-                        :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.sectionId }]"
-                          :aria-expanded="openDropdowns.section"
-                          @click.stop="!isViewMode && toggleDropdown('section')"
-                          :disabled="isViewMode || !form.rackId"
-                      >
-                        {{ getSectionName(form.sectionId) || 'Select Section' }}
-                        <span
-                          class="icon-[tabler--chevron-down] size-4 transition-transform"
-                          :class="{ 'rotate-180': openDropdowns.section }"
-                        ></span>
-                      </button>
-
-                      <ul
-                        class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
-                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.section, 'opacity-0 pointer-events-none': !openDropdowns.section }"
-                        role="menu"
-                      >
-                        <li v-for="section in sections" :key="section.id">
-                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer  rounded-lg" @click="selectSection(section.id)">
-                            {{ section.sectionCode }}
-                          </a>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Row 3: Supplier Name, Receiving Source, Receiving Purpose -->
-                <div class="grid grid-cols-3 gap-4">
-                  <!-- Supplier Name -->
-                  <div class="relative">
-                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                      <span class="text-red-500">*</span> Supplier Name
-                    </label>
-                    <div class="dropdown relative inline-flex w-full" ref="supplierDropdownRef">
-                      <button
-                        type="button"
-                        :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.supplierId }]"
-                        :aria-expanded="openDropdowns.supplier"
-                        @click.stop="toggleDropdown('supplier')"
-                      >
-                        {{ getSupplierName(form.supplierId) || 'Select Supplier' }}
-                        <span
-                          class="icon-[tabler--chevron-down] size-4 transition-transform"
-                          :class="{ 'rotate-180': openDropdowns.supplier }"
-                        ></span>
-                      </button>
-
-                      <ul
-                        class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
-                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.supplier, 'opacity-0 pointer-events-none': !openDropdowns.supplier }"
-                        role="menu"
-                      >
-                        <li v-for="supplier in suppliers" :key="supplier.id">
-                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg" @click="selectSupplier(supplier.id)">
-                            {{ supplier.supplierName }}
-                          </a>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <!-- Receiving Source -->
-                  <div class="relative">
-                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                      <span class="text-red-500">*</span> Receiving Source
+                      <span class="text-red-500">*</span> Supplier
                     </label>
                     <input
-                      v-model="form.source"
+                      :value="getSupplierName(form.supplierId)"
                       type="text"
-                      placeholder="Enter Receiving Source"
-                      maxlength="50"
-                      :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.source }]"
-                      :readonly="isViewMode"
-                      :disabled="isViewMode"
+                      placeholder="Supplier"
+                      class="input input-bordered w-full bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white cursor-not-allowed"
+                      disabled
+                      readonly
                     />
                   </div>
+                </div>
 
-                  <!-- Receiving Purpose -->
-                  <div class="relative">
-                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                      <span class="text-red-500">*</span> Receiving Purpose
+                <!-- Row 3: Warehouse & Location (Both Editable with fixed positioning) -->
+                <div class="grid grid-cols-2 gap-4">
+                  <!-- Warehouse -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Warehouse
                     </label>
-                    <div class="dropdown relative inline-flex w-full" ref="purposeDropdownRef">
+                    <div class="relative" ref="warehouseDropdownRef">
                       <button
                         type="button"
-                        :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.receivingPurpose }]"
-                          :aria-expanded="openDropdowns.receivingPurpose"
-                          @click.stop="!isViewMode && toggleDropdown('receivingPurpose')"
-                          :disabled="isViewMode"
+                        @click="!isViewMode && toggleDropdown('warehouse')"
+                        class="input input-bordered w-full text-left flex items-center justify-between"
+                        :disabled="isViewMode || loadingWarehouses"
                       >
-                        {{ form.receivingPurpose || 'Select Receiving Purpose' }}
-                        <span
-                          class="icon-[tabler--chevron-down] size-4 transition-transform"
-                          :class="{ 'rotate-180': openDropdowns.receivingPurpose }"
-                        ></span>
+                        <span>{{ getWarehouseName(form.warehouseId) || 'Select Warehouse' }}</span>
+                        <span class="icon-[tabler--chevron-down] size-4"></span>
                       </button>
-
                       <ul
-                        class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
-                        :class="{ 'opacity-100 pointer-events-auto': openDropdowns.receivingPurpose, 'opacity-0 pointer-events-none': !openDropdowns.receivingPurpose }"
-                        role="menu"
+                        v-if="openDropdowns.warehouse"
+                        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-y-auto"
+                        :style="openDropdowns.warehouse ? warehouseMenuStyle : { display: 'none' }"
                       >
-                        <li v-for="receivingPurpose in purposeOptions" :key="receivingPurpose">
-                          <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg" @click="selectPurpose(receivingPurpose)">
-                            {{ receivingPurpose }}
-                          </a>
+                        <li
+                          v-for="warehouse in warehouses"
+                          :key="warehouse.id"
+                          @click="selectWarehouse(warehouse.id)"
+                          class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm"
+                        >
+                          {{ warehouse.warehouseCode }} - {{ warehouse.name }}
+                        </li>
+                        <li v-if="warehouses.length === 0" class="px-4 py-2 text-sm text-gray-500">
+                          No warehouses found
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <!-- Location Hierarchy -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Location (Optional)
+                    </label>
+                    <div class="relative" ref="locationDropdownRef">
+                      <button
+                        type="button"
+                        @click="!isViewMode && toggleDropdown('location')"
+                        class="input input-bordered w-full text-left flex items-center justify-between"
+                        :disabled="isViewMode || !form.warehouseId || loadingLocations"
+                      >
+                        <span>{{ getLocationName(form.locationId) || 'Select Location' }}</span>
+                        <span class="icon-[tabler--chevron-down] size-4"></span>
+                      </button>
+                      <ul
+                        v-if="openDropdowns.location"
+                        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-y-auto"
+                        :style="openDropdowns.location ? locationMenuStyle : { display: 'none' }"
+                      >
+                        <li
+                          v-for="location in hierarchicalLocations"
+                          :key="location.id"
+                          @click="selectLocation(location.id)"
+                          class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm"
+                          :style="{ paddingLeft: (location.depth * 1.5 + 1) + 'rem' }"
+                        >
+                          <div class="flex items-center gap-2">
+                            <span v-if="location.hasChildren" class="text-xs">{{ location.isExpanded ? '▼' : '▶' }}</span>
+                            <span v-else class="w-3"></span>
+                            <span>{{ location.locationCode }} - {{ location.locationName }}</span>
+                          </div>
+                        </li>
+                        <li v-if="hierarchicalLocations.length === 0" class="px-4 py-2 text-sm text-gray-500">
+                          {{ form.warehouseId ? 'No locations found' : 'Please select a warehouse first' }}
                         </li>
                       </ul>
                     </div>
                   </div>
                 </div>
 
-                <!-- Row 4: Received By, Receiving Date, Remarks -->
-                <div class="grid grid-cols-3 gap-4">
-                  <!-- Received By -->
+                <!-- Row 4: Receiving Purpose & Received By (Both Editable) -->
+                <div class="grid grid-cols-2 gap-4">
+                  <!-- Receiving Purpose (Editable) -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <span class="text-red-500">*</span> Receiving Purpose
+                    </label>
+                    <div class="relative" ref="purposeDropdownRef">
+                      <button
+                        type="button"
+                        @click="!isViewMode && toggleDropdown('receivingPurpose')"
+                        class="input input-bordered w-full text-left flex items-center justify-between"
+                        :class="{ 'input-error': errors.receivingPurpose }"
+                        :disabled="isViewMode"
+                      >
+                        <span>{{ formatPurposeDisplay(form.receivingPurpose) || 'Select Receiving Purpose' }}</span>
+                        <span class="icon-[tabler--chevron-down] size-4"></span>
+                      </button>
+                      <ul
+                        v-if="openDropdowns.receivingPurpose"
+                        class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                      >
+                        <li
+                          v-for="option in receivingPurposeOptions"
+                          :key="option.value"
+                          @click="selectPurpose(option.value)"
+                          class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm"
+                        >
+                          {{ option.label }}
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <!-- Received By (Editable) -->
                   <div class="relative">
-                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       <span class="text-red-500">*</span> Received By
                     </label>
                     <input
@@ -316,10 +257,13 @@
                       :disabled="isViewMode"
                     />
                   </div>
+                </div>
 
-                  <!-- Receiving Date -->
+                <!-- Row 5: Receiving Date & Remarks (Both Editable) -->
+                <div class="grid grid-cols-2 gap-4">
+                  <!-- Receiving Date (Editable) -->
                   <div class="relative">
-                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Receiving Date
                     </label>
                     <input
@@ -333,9 +277,9 @@
                     />
                   </div>
 
-                  <!-- Remarks -->
+                  <!-- Remarks (Editable) -->
                   <div class="relative">
-                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Remarks
                     </label>
                     <input
@@ -350,54 +294,39 @@
                   </div>
                 </div>
 
-                <!-- Product Rows -->
-                <div class="space-y-3 mt-6 max-h-60 overflow-y-auto" style="padding-right: 8px;">
+                <!-- Product Table (Products are disabled, only quantity is editable) -->
+                <div class="mt-6">
+                  <h4 class="text-md font-semibold text-gray-900 dark:text-white mb-3">Product Information</h4>
+
+                <!-- Product Rows (Product names disabled, only quantity editable) -->
+                <div class="space-y-3 max-h-60 overflow-y-auto" style="padding-right: 8px;">
                   <div v-for="(product, index) in form.products" :key="index" class="grid grid-cols-12 gap-4 items-start">
-                    <!-- Product Dropdown -->
-                    <div class="col-span-6 relative">
+                    <!-- Product Name (Disabled) -->
+                    <div class="col-span-7 relative">
                       <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
                         <span class="text-red-500">*</span> Product {{ index + 1 }}
                       </label>
-                      <div class="dropdown relative inline-flex w-full" :ref="el => productDropdownRefs[index] = el">
-                        <button
-                          type="button"
-                          class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400"
-                          :aria-expanded="openDropdowns[`product${index}`]"
-                          @click.stop="!isViewMode && toggleDropdown(`product${index}`)"
-                          :disabled="isViewMode"
-                        >
-                          {{ getProductName(product.productId) || 'Select Product' }}
-                          <span
-                            class="icon-[tabler--chevron-down] size-4 transition-transform"
-                            :class="{ 'rotate-180': openDropdowns[`product${index}`] }"
-                          ></span>
-                        </button>
-
-                        <ul
-                          class="dropdown-menu transition-opacity duration-200 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
-                          :style="openDropdowns[`product${index}`] ? (productMenuStyles[index] || { position: 'fixed', top: '-9999px', left: '0px', width: 'auto' }) : { display: 'none' }"
-                          :class="{ 'opacity-100 pointer-events-auto': openDropdowns[`product${index}`], 'opacity-0 pointer-events-none': !openDropdowns[`product${index}`] }"
-                          role="menu"
-                        >
-                          <li v-for="prod in availableProducts(index)" :key="prod.id">
-                            <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg" @click="selectProduct(index, prod.id)">
-                              {{ prod.name }}
-                            </a>
-                          </li>
-                        </ul>
-                      </div>
+                      <input
+                        :value="getProductName(product.productId)"
+                        type="text"
+                        placeholder="Product"
+                        class="input input-bordered w-full bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white cursor-not-allowed"
+                        disabled
+                        readonly
+                      />
                     </div>
 
-                    <!-- Product Quantity -->
-                    <div class="col-span-5 relative">
+                    <!-- Product Quantity (Editable) -->
+                    <div class="col-span-4 relative">
                       <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                        <span class="text-red-500">*</span> Product {{ index + 1 }} Quantity
+                        <span class="text-red-500">*</span> Actual Quantity
                       </label>
                       <div class="flex items-center gap-2">
                         <button
                           type="button"
-                          @click="decreaseQuantity(index)"
-                          class="btn btn-outline btn-sm w-10 h-10 p-0 flex items-center justify-center dark:bg-gray-700 dark:text-gray-400"
+                          @click="!isViewMode && decreaseQuantity(index)"
+                          class="btn btn-outline btn-sm w-10 h-10 p-0 flex items-center justify-center"
+                          :disabled="isViewMode"
                         >
                           −
                         </button>
@@ -406,37 +335,11 @@
                           type="number"
                           min="1"
                           :class="['input input-bordered text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors[`quantity${index}`] }]"
-                          style="width: 6rem"
+                          style="width: 5rem"
                           @input="!isViewMode && validateQuantity(index)"
                           :readonly="isViewMode"
                           :disabled="isViewMode"
                         />
-
-                        <!-- Unit dropdown (styled like other dropdowns) -->
-                        <div class="relative inline-block" :ref="el => unitDropdownRefs[index] = el">
-                          <button
-                            type="button"
-                            class="input input-bordered text-sm w-20 flex justify-between items-center dark:bg-gray-700 dark:text-gray-400"
-                            @click.stop="toggleUnitDropdown(index)"
-                            :aria-expanded="openDropdowns[`unit${index}`]"
-                          >
-                            {{ product.unit || 'pcs' }}
-                            <span class="icon-[tabler--chevron-down] size-4 transition-transform" :class="{ 'rotate-180': openDropdowns[`unit${index}`] }"></span>
-                          </button>
-
-                          <ul
-                            class="dropdown-menu transition-opacity duration-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg text-gray-900 dark:text-white"
-                            :style="openDropdowns[`unit${index}`] ? (unitMenuStyles[index] || { position: 'fixed', top: '-9999px', left: '0px', width: 'auto' }) : { display: 'none' }"
-                            :class="{ 'opacity-100 pointer-events-auto z-50': openDropdowns[`unit${index}`], 'opacity-0 pointer-events-none': !openDropdowns[`unit${index}`] }"
-                            role="menu"
-                          >
-                            <li v-for="unit in unitsOptions" :key="unit">
-                              <a class="block px-3 py-1 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg" @click="selectUnit(index, unit)">
-                                {{ unit }}
-                              </a>
-                            </li>
-                          </ul>
-                        </div>
                         <button
                           type="button"
                           @click="!isViewMode && increaseQuantity(index)"
@@ -448,35 +351,11 @@
                       </div>
                     </div>
 
-                    <!-- Remove Button -->
-                      <div class="col-span-1 flex items-end">
-                      <button
-                        v-if="form.products.length > 1 && !isViewMode"
-                        type="button"
-                        @click="removeProduct(index)"
-                        class="btn btn-outline btn-error btn-sm w-10 h-10 p-0 flex items-center justify-center mt-6"
-                        title="Remove Product"
-                      >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
+                    <!-- Spacer for alignment -->
+                    <div class="col-span-1"></div>
                   </div>
                 </div>
-
-                <!-- Add Another Product Button -->
-                <button
-                  v-if="!isViewMode"
-                  type="button"
-                  @click="addProduct"
-                  class="btn btn-primary btn-sm mt-4"
-                >
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                  </svg>
-                  Add Another Product
-                </button>
+              </div>
               </div>
 
               <!-- footer -->
@@ -498,7 +377,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, reactive, computed, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 import flatpickr from 'flatpickr'
 import 'flatpickr/dist/flatpickr.css'
 import { authenticatedFetch } from '@/utils/authenticatedFetch'
@@ -517,6 +396,7 @@ const isOpen = ref(false)
 const isSubmitting = ref(false)
 const panelRef = ref(null)
 const warehouseDropdownRef = ref(null)
+const locationDropdownRef = ref(null)
 const rackDropdownRef = ref(null)
 const sectionDropdownRef = ref(null)
 const supplierDropdownRef = ref(null)
@@ -528,15 +408,21 @@ let flatpickrInstance = null
 
 // API Data
 const warehouses = ref([])
+const locations = ref([])
+const expandedLocationIds = ref([])
 const racks = ref([])
 const sections = ref([])
 const suppliers = ref([])
 const products = ref([])
+const loadingWarehouses = ref(false)
+const loadingLocations = ref(false)
 
 const form = reactive({
   receivingCode: '',
+  poNumber: '',
   doNumber: '',
   warehouseId: null,
+  locationId: null,
   rackId: null,
   sectionId: null,
   supplierId: null,
@@ -565,12 +451,17 @@ const errors = reactive({
   submit: ''
 })
 
-const purposeOptions = ['Raw Material', 'Finished Goods', 'Packaging', 'Consumables', 'Equipment', 'Returns']
+const receivingPurposeOptions = [
+  { label: 'Raw Material', value: 'RAW_MATERIAL' },
+  { label: 'Finished Goods', value: 'FINISHED_GOODS' }
+]
 const openDropdowns = reactive({})
 
-// Product dropdown overlay styles per product index (reactive array)
+// Dropdown overlay styles
 const productMenuStyles = reactive([])
 const unitMenuStyles = reactive([])
+const warehouseMenuStyle = ref({})
+const locationMenuStyle = ref({})
 
 // Units dropdown options for product unit
 const unitsOptions = ['pcs',]
@@ -608,6 +499,7 @@ const unlockScroll = () => {
 
 /* Fetch API Data */
 const fetchWarehouses = async () => {
+  loadingWarehouses.value = true
   try {
     const response = await authenticatedFetch('/api/warehouse')
     if (response.ok) {
@@ -615,6 +507,38 @@ const fetchWarehouses = async () => {
     }
   } catch (error) {
     console.error('Error fetching warehouses:', error)
+  } finally {
+    loadingWarehouses.value = false
+  }
+}
+
+const fetchLocations = async (warehouseId) => {
+  if (!warehouseId) {
+    locations.value = []
+    return
+  }
+
+  loadingLocations.value = true
+  try {
+    const response = await authenticatedFetch(`/api/location?warehouseId=${warehouseId}`)
+    if (response.ok) {
+      const data = await response.json()
+      locations.value = (data || []).map((location) => ({
+        id: location.id,
+        locationCode: location.locationCode || '-',
+        locationName: location.locationName || location.name || '-',
+        warehouseId: location.warehouse?.id || location.warehouseId || null,
+        type: location.type || location.locationType || 'Other',
+        hierarchy: location.hierarchy || 'Level 0',
+        parentLocationId: location.parentLocationId || null,
+        child1LocationId: location.child1LocationId || null,
+      }))
+    }
+  } catch (error) {
+    console.error('Error fetching locations:', error)
+    locations.value = []
+  } finally {
+    loadingLocations.value = false
   }
 }
 
@@ -702,6 +626,62 @@ const getProductName = (id) => {
   return product ? product.name : ''
 }
 
+const getLocationName = (id) => {
+  if (!id) return ''
+  const location = locations.value.find(l => l.id === id)
+  return location ? `${location.locationCode} - ${location.locationName}` : ''
+}
+
+const formatPurposeDisplay = (value) => {
+  const option = receivingPurposeOptions.find(opt => opt.value === value)
+  return option ? option.label : value
+}
+
+const buildLocationHierarchy = (locs, parentId = null, depth = 0) => {
+  const result = []
+  const children = locs.filter(loc => {
+    if (depth === 0) {
+      return loc.hierarchy === 'Level 0' && loc.parentLocationId === null
+    } else if (depth === 1) {
+      return loc.hierarchy === 'Level 1' && loc.parentLocationId === parentId
+    } else if (depth === 2) {
+      return loc.hierarchy === 'Level 2' && loc.child1LocationId === parentId
+    }
+    return false
+  })
+
+  children.forEach(location => {
+    let hasChildren = false
+    if (location.hierarchy === 'Level 0') {
+      hasChildren = locs.some(loc =>
+        loc.hierarchy === 'Level 1' && loc.parentLocationId === location.id
+      )
+    } else if (location.hierarchy === 'Level 1') {
+      hasChildren = locs.some(loc =>
+        loc.hierarchy === 'Level 2' && loc.child1LocationId === location.id
+      )
+    }
+
+    result.push({
+      ...location,
+      depth,
+      hasChildren,
+      isExpanded: expandedLocationIds.value.includes(location.id)
+    })
+
+    if (expandedLocationIds.value.includes(location.id)) {
+      const childLocs = buildLocationHierarchy(locs, location.id, depth + 1)
+      result.push(...childLocs)
+    }
+  })
+
+  return result
+}
+
+const hierarchicalLocations = computed(() => {
+  return buildLocationHierarchy(locations.value)
+})
+
 /* Dropdown handlers */
 const toggleDropdown = async (name) => {
   // Close other dropdowns
@@ -713,6 +693,16 @@ const toggleDropdown = async (name) => {
     const idx = parseInt(name.replace('product', ''), 10)
     await nextTick()
     positionProductMenu(idx)
+  }
+  
+  // Position warehouse dropdown
+  if (openDropdowns[name] && name === 'warehouse') {
+    await positionWarehouseMenu()
+  }
+  
+  // Position location dropdown
+  if (openDropdowns[name] && name === 'location') {
+    await positionLocationMenu()
   }
 }
 
@@ -776,7 +766,83 @@ const repositionOpenProductMenus = () => {
       const idx = parseInt(key.replace('unit', ''), 10)
       positionUnitMenu(idx)
     }
+    if (key === 'warehouse' && openDropdowns[key]) {
+      positionWarehouseMenu()
+    }
+    if (key === 'location' && openDropdowns[key]) {
+      positionLocationMenu()
+    }
   })
+}
+
+const positionWarehouseMenu = async () => {
+  await nextTick()
+  if (!warehouseDropdownRef.value) return
+
+  const btn = warehouseDropdownRef.value.querySelector('button')
+  if (!btn) return
+
+  const rect = btn.getBoundingClientRect()
+  const maxMenuHeight = 300
+  const gap = 8
+  const belowSpace = window.innerHeight - rect.bottom - gap
+  const aboveSpace = rect.top - gap
+
+  const style = {
+    position: 'fixed',
+    left: `${rect.left}px`,
+    width: `${rect.width}px`,
+    zIndex: '9999',
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    boxSizing: 'border-box'
+  }
+
+  if (belowSpace >= 150) {
+    style.top = `${rect.bottom}px`
+    style.maxHeight = `${Math.min(maxMenuHeight, belowSpace)}px`
+  } else {
+    const usedHeight = Math.min(maxMenuHeight, aboveSpace)
+    style.top = `${rect.top - usedHeight}px`
+    style.maxHeight = `${usedHeight}px`
+  }
+
+  warehouseMenuStyle.value = style
+}
+
+const positionLocationMenu = async () => {
+  await nextTick()
+  if (!locationDropdownRef.value) return
+
+  const btn = locationDropdownRef.value.querySelector('button')
+  if (!btn) return
+
+  const rect = btn.getBoundingClientRect()
+  const maxMenuHeight = 300
+  const gap = 8
+  const belowSpace = window.innerHeight - rect.bottom - gap
+  const aboveSpace = rect.top - gap
+
+  const style = {
+    position: 'fixed',
+    left: `${rect.left}px`,
+    width: `${rect.width}px`,
+    zIndex: '9999',
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    boxSizing: 'border-box'
+  }
+
+  if (belowSpace >= 150) {
+    style.top = `${rect.bottom}px`
+    style.maxHeight = `${Math.min(maxMenuHeight, belowSpace)}px`
+  } else {
+    const usedHeight = Math.min(maxMenuHeight, aboveSpace)
+    style.top = `${rect.top - usedHeight}px`
+    style.maxHeight = `${usedHeight}px`
+  }
+
+  locationMenuStyle.value = style
 }
 
 const positionUnitMenu = (index) => {
@@ -841,10 +907,32 @@ const selectUnit = (index, unit) => {
 
 const selectWarehouse = async (id) => {
   form.warehouseId = id
-  form.rackId = null
-  form.sectionId = null
+  form.locationId = null
   openDropdowns.warehouse = false
-  await fetchRacks(id)
+  await fetchLocations(id)
+}
+
+const selectLocation = (id) => {
+  const location = locations.value.find(l => l.id === id)
+  if (location) {
+    const hasChildren = locations.value.some(loc =>
+      (loc.hierarchy === 'Level 1' && loc.parentLocationId === id) ||
+      (loc.hierarchy === 'Level 2' && loc.child1LocationId === id)
+    )
+
+    if (hasChildren) {
+      const index = expandedLocationIds.value.indexOf(id)
+      if (index > -1) {
+        expandedLocationIds.value.splice(index, 1)
+      } else {
+        expandedLocationIds.value.push(id)
+      }
+      return
+    }
+  }
+
+  form.locationId = id
+  openDropdowns.location = false
 }
 
 const selectRack = async (id) => {
@@ -923,21 +1011,15 @@ const validateForm = () => {
 
   let isValid = true
 
-  // Receiving Code validation
+  // Receiving Code validation (disabled in edit, but still validate)
   if (!form.receivingCode.trim()) {
     errors.receivingCode = 'Receiving Code is required'
     isValid = false
   }
 
-  // Supplier validation
+  // Supplier validation (disabled in edit, but still validate)
   if (!form.supplierId) {
     errors.supplierId = 'Supplier is required'
-    isValid = false
-  }
-
-  // Source validation
-  if (!form.source.trim()) {
-    errors.source = 'Receiving Source is required'
     isValid = false
   }
 
@@ -971,7 +1053,6 @@ const validateForm = () => {
 // Clear error when user types
 watch(() => form.receivingCode, () => { if (errors.receivingCode) errors.receivingCode = '' })
 watch(() => form.supplierId, () => { if (errors.supplierId) errors.supplierId = '' })
-watch(() => form.source, () => { if (errors.source) errors.source = '' })
 watch(() => form.receivingPurpose, () => { if (errors.receivingPurpose) errors.receivingPurpose = '' })
 watch(() => form.receivedBy, () => { if (errors.receivedBy) errors.receivedBy = '' })
 
@@ -979,6 +1060,7 @@ watch(() => form.receivedBy, () => { if (errors.receivedBy) errors.receivedBy = 
 const handleClickOutside = (event) => {
   const refs = [
     warehouseDropdownRef.value,
+    locationDropdownRef.value,
     rackDropdownRef.value,
     sectionDropdownRef.value,
     supplierDropdownRef.value,
@@ -1043,13 +1125,12 @@ const openModal = async (receiving = null, viewOnly = false) => {
     currentReceivingId.value = receiving.id
     // Populate basic fields
     form.receivingCode = receiving.receivingCode || ''
+    form.poNumber = receiving.order?.orderNo || ''
     form.doNumber = receiving.doNumber || ''
     form.warehouseId = receiving.warehouseId || null
-    // fetch racks/sections for selected warehouse/rack
-    if (form.warehouseId) await fetchRacks(form.warehouseId)
-    form.rackId = receiving.rackId || null
-    if (form.rackId) await fetchSections(form.rackId)
-    form.sectionId = receiving.sectionId || null
+    form.locationId = receiving.locationId || null
+    // fetch locations for selected warehouse
+    if (form.warehouseId) await fetchLocations(form.warehouseId)
     form.supplierId = receiving.supplierId || null
     form.source = receiving.source || ''
     form.receivingPurpose = receiving.receivingPurpose || ''
@@ -1111,8 +1192,10 @@ const closeModal = async () => {
   // Reset form after modal is closed
   await nextTick()
   form.receivingCode = ''
+  form.poNumber = ''
   form.doNumber = ''
   form.warehouseId = null
+  form.locationId = null
   form.rackId = null
   form.sectionId = null
   form.supplierId = null

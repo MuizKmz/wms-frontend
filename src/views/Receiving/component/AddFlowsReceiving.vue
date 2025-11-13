@@ -548,7 +548,8 @@
                         </button>
                         <ul
                           v-if="openDropdowns.location"
-                          class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                          class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-y-auto"
+                          :style="openDropdowns.location ? locationMenuStyle : { display: 'none' }"
                         >
                           <li
                             v-for="location in hierarchicalLocations"
@@ -705,6 +706,7 @@ const openDropdowns = reactive<Record<string, boolean>>({
 
 // Product dropdown overlay styles per product index (reactive array)
 const productMenuStyles = reactive<any[]>([])
+const locationMenuStyle = ref<any>({})
 
 // Receiving Type options - Only Raw Material and Finished Goods
 const receivingTypeOptions = [
@@ -841,6 +843,11 @@ const toggleDropdown = async (name: string) => {
   if (openDropdowns[name] && name.startsWith('product')) {
     const idx = parseInt(name.replace('product', ''), 10)
     await positionProductMenu(idx)
+  }
+  
+  // If opening location dropdown, position it
+  if (openDropdowns[name] && name === 'location') {
+    await positionLocationMenu()
   }
 }
 
@@ -1122,7 +1129,47 @@ const repositionOpenProductMenus = () => {
       const idx = parseInt(key.replace('product', ''), 10)
       positionProductMenu(idx)
     }
+    if (key === 'location' && openDropdowns[key]) {
+      positionLocationMenu()
+    }
   })
+}
+
+/* Position location dropdown menu */
+const positionLocationMenu = async () => {
+  await nextTick()
+  if (!locationDropdownRef.value) return
+
+  const btn = locationDropdownRef.value.querySelector('button')
+  if (!btn) return
+
+  const rect = btn.getBoundingClientRect()
+
+  const maxMenuHeight = 300
+  const gap = 8
+  const belowSpace = window.innerHeight - rect.bottom - gap
+  const aboveSpace = rect.top - gap
+
+  const style: any = {
+    position: 'fixed',
+    left: `${rect.left}px`,
+    width: `${rect.width}px`,
+    zIndex: '9999',
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    boxSizing: 'border-box'
+  }
+
+  if (belowSpace >= 150) {
+    style.top = `${rect.bottom}px`
+    style.maxHeight = `${Math.min(maxMenuHeight, belowSpace)}px`
+  } else {
+    const usedHeight = Math.min(maxMenuHeight, aboveSpace)
+    style.top = `${rect.top - usedHeight}px`
+    style.maxHeight = `${usedHeight}px`
+  }
+
+  locationMenuStyle.value = style
 }
 
 /* Open Add Supplier Modal */
