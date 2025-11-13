@@ -106,6 +106,15 @@
                 {{ formatDate(getCellValue(row, col)) }}
               </span>
 
+              <!-- Receiving Purpose - Format enum values -->
+              <span
+                v-else-if="col === 'receivingPurpose'"
+                class="text-sm text-gray-900 dark:text-white font-medium"
+                :title="'DEBUG: ' + getCellValue(row, col)"
+              >
+                 {{ getCellValue(row, col) }}
+              </span>
+
               <!-- Default display -->
               <span v-else class="text-sm text-gray-900 dark:text-white">
                 {{ getCellValue(row, col) }}
@@ -329,11 +338,14 @@ const formatColumnName = (name) => {
 
 // Get cell value with fallback for alternate field names
 const getCellValue = (row, col) => {
-  const aliases = fieldAliases[col]
-  if (aliases) {
-    for (const alias of aliases) {
-      if (row[alias] != null && row[alias] !== '') {
-        return row[alias]
+  // Skip alias check for receivingPurpose - needs special formatting
+  if (col !== 'receivingPurpose') {
+    const aliases = fieldAliases[col]
+    if (aliases) {
+      for (const alias of aliases) {
+        if (row[alias] != null && row[alias] !== '') {
+          return row[alias]
+        }
       }
     }
   }
@@ -362,10 +374,12 @@ const getCellValue = (row, col) => {
     if (row.isReceiving) {
       // Already formatted in aggregatePurposes
       const displayValue = row.aggregatedPurposes?.display || '-'
-      console.log('getCellValue - receivingPurpose display:', displayValue)
+      console.log('getCellValue - receivingPurpose (isReceiving=true) display:', displayValue)
       return displayValue
     } else {
-      return formatSinglePurpose(row.receivingPurpose || '-')
+      const formatted = formatSinglePurpose(row.receivingPurpose || '-')
+      console.log('getCellValue - receivingPurpose (isReceiving=false) formatted:', formatted)
+      return formatted
     }
   } else if (col === 'receivedBy') {
     return row.isReceiving ? row.receivedBy || '-' : '-'
@@ -423,8 +437,10 @@ const formatSinglePurpose = (value: string) => {
     'RAW_MATERIAL': 'Raw Material',
     'FINISHED_GOODS': 'Finished Goods'
   }
-  
-  return purposeMap[value] || value
+
+  const formatted = purposeMap[value] || value
+  console.log('formatSinglePurpose:', value, '->', formatted)
+  return formatted
 }
 
 // Function to aggregate products from receiving items
@@ -780,7 +796,7 @@ const formatDate = (dateString) => {
 // Format purpose value for display
 const formatPurposeValue = (value: string) => {
   if (!value || value === '-') return '-'
-  
+
   // Handle multiple values separated by comma (for aggregated purposes)
   if (value.includes(',')) {
     const parts = value.split(',').map(part => {
@@ -793,7 +809,7 @@ const formatPurposeValue = (value: string) => {
     })
     return parts.join(', ')
   }
-  
+
   return formatSinglePurpose(value)
 }
 
