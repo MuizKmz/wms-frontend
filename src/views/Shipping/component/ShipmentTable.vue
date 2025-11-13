@@ -286,7 +286,7 @@ const API_URL = '/api/shipping'
 const allowedColumns = [
   'trackingCode',
   'orderNumber',
-  'doNumber',
+  // 'doNumber',
   'shippingCarrier',
   'destination',
   'status',
@@ -347,7 +347,7 @@ const getCellValue = (item, col) => {
 // Format order numbers - show first order and "..." if multiple
 const formatOrderNumbers = (orderValue) => {
   if (!orderValue) return '-'
-  
+
   // If it's already a string, check if it contains commas (multiple orders)
   if (typeof orderValue === 'string') {
     const orders = orderValue.split(',').map(o => o.trim()).filter(Boolean)
@@ -355,14 +355,14 @@ const formatOrderNumbers = (orderValue) => {
     if (orders.length === 1) return orders[0]
     return `${orders[0]}, ...`
   }
-  
+
   // If it's an array
   if (Array.isArray(orderValue)) {
     if (orderValue.length === 0) return '-'
     if (orderValue.length === 1) return orderValue[0]
     return `${orderValue[0]}, ...`
   }
-  
+
   return orderValue
 }
 
