@@ -128,7 +128,7 @@
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Order Status <span class="text-red-500">*</span>
+                        Order Status <span class="text-xs text-gray-500 dark:text-gray-400 ml-2">(Auto-managed)</span>
                       </label>
                       <div class="dropdown relative inline-flex w-full">
                         <button type="button"
@@ -139,7 +139,9 @@
                           <span class="icon-[tabler--chevron-down] size-4"></span>
                         </button>
                       </div>
-                      <span v-if="errors.status" class="text-xs text-red-500 mt-1">{{ errors.status }}</span>
+                      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Status updates automatically based on workflow (receiving, stock-in, shipping)
+                      </p>
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -656,7 +658,7 @@ const openModal = async () => {
   currentStep.value = 1
   resetForm()
   lockScroll()
-  
+
   // Initialize Flatpickr for Step 1
   await nextTick()
   initializeFlatpickr()
