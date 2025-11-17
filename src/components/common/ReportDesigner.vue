@@ -40,7 +40,7 @@
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Report Settings</h3>
             
             <!-- Logo Upload -->
-            <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg space-y-3">
               <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Company Logo</label>
               <div v-if="currentLogoUrl" class="mb-2">
                 <img :src="currentLogoUrl" alt="Logo" class="w-16 h-16 object-contain" />
@@ -65,25 +65,19 @@
               </div>
               <div>
                 <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Company Address</label>
-                <input
+                <textarea
                   v-model="companyAddress"
-                  type="text"
-                  class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                />
+                  rows="3"
+                  placeholder="Line 1&#10;Line 2&#10;Line 3"
+                  class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none"
+                ></textarea>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Press Enter for new line</p>
               </div>
             </div>
 
             <!-- Display Options -->
             <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg space-y-2">
               <h4 class="text-xs font-bold text-gray-900 dark:text-white mb-2">Report Elements</h4>
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input
-                  v-model="showSummaryCards"
-                  type="checkbox"
-                  class="rounded border-gray-300"
-                />
-                <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Show Summary Cards</span>
-              </label>
               <label class="flex items-center gap-2 cursor-pointer">
                 <input
                   v-model="showTable"
@@ -140,19 +134,18 @@
               class="bg-white dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-600 rounded-lg overflow-auto relative p-8"
               style="width: 210mm; height: 297mm; margin: 0 auto;"
             >
-              <!-- Actual Report Preview -->
+              <!-- Report Preview (Actual HTML from parent) -->
               <div v-if="previewHtml" v-html="previewHtml" class="pointer-events-none"></div>
               
               <!-- Empty State if no preview -->
-              <div v-else class="flex items-center justify-center h-full">
-                <div class="text-center">
-                  <svg class="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <p class="mt-4 text-gray-500 dark:text-gray-400">Generate report first to see preview</p>
-                </div>
+              <div v-else class="text-center text-gray-400 mt-16 pointer-events-none">
+                <svg class="w-16 h-16 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p>Generate report first to see preview</p>
+                <p class="text-sm mt-2">Use the settings on the left to customize your report design</p>
               </div>
-
+              
               <!-- Overlay for Dropped Components -->
               <div class="absolute inset-0 pointer-events-none">
                 <div
@@ -295,9 +288,8 @@ const availableComponents = ref([
 const designComponents = ref<DesignComponent[]>([])
 const draggedComponent = ref<DesignComponent | null>(null)
 const draggedIndex = ref<number | null>(null)
-const companyName = ref('Warehouse Management System')
-const companyAddress = ref('Inventory Management Division')
-const showSummaryCards = ref(true)
+const companyName = ref('Evolve Technology Platform Sdn. Bhd.')
+const companyAddress = ref('38, Jalan Riang 21,\ntaman gembira,\n81200 Johor Bahru')
 const showTable = ref(true)
 const showHeader = ref(true)
 const showFooter = ref(true)
@@ -567,7 +559,6 @@ const saveDesign = () => {
     logoUrl: currentLogoUrl.value,
     companyName: companyName.value,
     companyAddress: companyAddress.value,
-    showSummaryCards: showSummaryCards.value,
     showTable: showTable.value,
     showHeader: showHeader.value,
     showFooter: showFooter.value,
@@ -607,7 +598,6 @@ const resetToDefault = async () => {
     // Reset settings to defaults
     companyName.value = 'Warehouse Management System'
     companyAddress.value = 'Inventory Management Division'
-    showSummaryCards.value = true
     showTable.value = true
     showHeader.value = true
     showFooter.value = true
@@ -632,7 +622,6 @@ const resetToDefault = async () => {
       logoUrl: '',
       companyName: 'Warehouse Management System',
       companyAddress: 'Inventory Management Division',
-      showSummaryCards: true,
       showTable: true,
       showHeader: true,
       showFooter: true
@@ -659,7 +648,6 @@ const loadSavedDesign = () => {
       designComponents.value = data.components || []
       companyName.value = data.companyName || ''
       companyAddress.value = data.companyAddress || ''
-      showSummaryCards.value = data.showSummaryCards ?? true
       showTable.value = data.showTable ?? true
       showHeader.value = data.showHeader ?? true
       showFooter.value = data.showFooter ?? true

@@ -74,13 +74,28 @@
 
             <!-- Dynamic Data Columns -->
             <td v-for="col in selectedColumns" :key="col" class="px-6 py-4">
-              <!-- Receiving Code with expand/collapse -->
+              <!-- PO Number with expand/collapse -->
               <div
-                v-if="col === 'receivingCode'"
+                v-if="col === 'poNumber'"
                 :style="{ 'padding-left': row.depth * 2 + 'rem' }"
               >
                 <div class="flex items-center gap-2">
-                  <div class="w-4 h-4"></div>
+                  <button
+                    v-if="row.hasItems"
+                    @click="toggleExpand(row.id)"
+                    class="w-4 h-4 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    <svg
+                      class="w-4 h-4 transition-transform"
+                      :class="{ 'rotate-90': row.isExpanded }"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                  <div v-else class="w-4 h-4"></div>
                   <button
                     @click="viewReceiving(row)"
                     class="text-left font-bold text-sm text-blue-600 dark:text-blue-400 hover:underline"
@@ -89,6 +104,14 @@
                   </button>
                 </div>
               </div>
+
+              <!-- Receiving Code -->
+              <span
+                v-else-if="col === 'receivingCode'"
+                class="text-sm text-gray-900 dark:text-white font-medium"
+              >
+                {{ getCellValue(row, col) }}
+              </span>
 
               <!-- DO Number with monospace -->
               <span
@@ -123,7 +146,9 @@
 
             <!-- Action Buttons (Always Visible) -->
             <td class="px-6 py-4">
-              <div class="flex items-center gap-2">
+              <!-- Show action buttons for: 1) Single receiving (depth 0, isReceiving true) OR 2) Child receiving items (depth > 0) -->
+              <!-- Hide for: PO group headers (depth 0, isPOGroup true with hasItems) -->
+              <div v-if="(row.depth === 0 && row.isReceiving && !row.hasItems) || row.depth > 0" class="flex items-center gap-2">
                 <button
                   @click="editReceiving(row)"
                   class="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
@@ -287,8 +312,8 @@ const selectedColumns = ref([])
 const API_URL = '/api/receiving'
 
 const allowedColumns = [
-  'receivingCode',
   'poNumber',
+  'receivingCode',
   'doNumber',
   'productName',
   'expectedQuantity',
@@ -300,8 +325,8 @@ const allowedColumns = [
 ]
 
 const fieldAliases = {
-  receivingCode: ['receivingCode', 'code'],
   poNumber: ['poNumber', 'orderNumber', 'purchaseOrderNumber'],
+  receivingCode: ['receivingCode', 'code'],
   doNumber: ['doNumber', 'deliveryOrderNumber'],
   productName: ['productName'],
   expectedQuantity: ['expectedQuantity'],
@@ -315,8 +340,8 @@ const fieldAliases = {
 // Format column name for display
 const formatColumnName = (name) => {
   const nameMap = {
-    receivingCode: 'Receiving Code',
     poNumber: 'PO Number',
+    receivingCode: 'Receiving Code',
     doNumber: 'DO Number',
     productName: 'Product Name',
     expectedQuantity: 'Expected Quantity',
@@ -350,14 +375,26 @@ const getCellValue = (row, col) => {
     }
   }
 
-  if (col === 'productName') {
+  if (col === 'poNumber') {
+    return row.isPOGroup ? (row.order?.orderNo || '-') : ''
+  } else if (col === 'receivingCode') {
+    // For PO groups, show the aggregated text
+    if (row.isPOGroup && row.hasItems && !row.isReceiving) {
+      return row.receivingCode || '-'
+    }
+    return row.receivingCode || '-'
+  } else if (col === 'doNumber') {
+    // PO groups don't have DO number
+    if (row.isPOGroup && row.hasItems && !row.isReceiving) {
+      return '-'
+    }
+    return row.doNumber || '-'
+  } else if (col === 'productName') {
     if (row.isReceiving) {
       return row.aggregatedProducts?.display || '-'
     } else {
       return row.product?.name || '-'
     }
-  } else if (col === 'poNumber') {
-    return row.isReceiving ? (row.order?.orderNo || '-') : '-'
   } else if (col === 'expectedQuantity') {
     if (row.isReceiving) {
       return row.totalExpectedQuantity || '-'
@@ -371,8 +408,11 @@ const getCellValue = (row, col) => {
       return row.quantity || '-'
     }
   } else if (col === 'receivingPurpose') {
+    // PO groups show aggregated purposes
+    if (row.isPOGroup && row.hasItems && !row.isReceiving) {
+      return row.aggregatedPurposes?.display || '-'
+    }
     if (row.isReceiving) {
-      // Already formatted in aggregatePurposes
       const displayValue = row.aggregatedPurposes?.display || '-'
       console.log('getCellValue - receivingPurpose (isReceiving=true) display:', displayValue)
       return displayValue
@@ -382,10 +422,22 @@ const getCellValue = (row, col) => {
       return formatted
     }
   } else if (col === 'receivedBy') {
+    // PO groups don't have receivedBy
+    if (row.isPOGroup && row.hasItems && !row.isReceiving) {
+      return '-'
+    }
     return row.isReceiving ? row.receivedBy || '-' : '-'
   } else if (col === 'dateReceived') {
-    return row.isReceiving ? formatDate(row.receivingDate) : '-'
+    // For PO groups, don't show date
+    if (row.isPOGroup && row.hasItems && !row.isReceiving) {
+      return '-'
+    }
+    return row.isReceiving ? row.receivingDate : '-'
   } else if (col === 'remarks') {
+    // PO groups don't have remarks
+    if (row.isPOGroup && row.hasItems && !row.isReceiving) {
+      return '-'
+    }
     return row.isReceiving ? row.remarks || '-' : '-'
   }
   return row[col] != null ? row[col] : '-'
@@ -613,30 +665,88 @@ const paginatedData = computed(() => {
   return filteredData.value.slice(start, end)
 })
 
-// Generate visible rows (parent + expanded children)
+// Generate visible rows - Group by PO, collapse shows different receiving records
 const visibleRows = computed(() => {
   const rows = []
-
+  
+  // Group receivings by PO number
+  const groupedByPO = new Map()
   paginatedData.value.forEach((receiving) => {
-    const hasItems = receiving.receivingItems && receiving.receivingItems.length > 0
-    const isExpanded = expandedRows.value.includes(receiving.id)
+    const poKey = receiving.order?.orderNo || 'NO_PO'
+    if (!groupedByPO.has(poKey)) {
+      groupedByPO.set(poKey, [])
+    }
+    groupedByPO.get(poKey).push(receiving)
+  })
 
-    // Add parent receiving row with aggregated data
-    rows.push({
-      ...receiving,
-      isReceiving: true,
-      depth: 0,
-      hasItems: hasItems,
-      isExpanded: isExpanded,
-      uniqueId: `R-${receiving.id}`,
-      aggregatedProducts: aggregateProducts(receiving),
-      aggregatedSources: aggregateSources(receiving),
-      aggregatedPurposes: aggregatePurposes(receiving),
-      totalExpectedQuantity: calculateTotalExpectedQuantity(receiving),
-      totalReceivedQuantity: calculateTotalReceivedQuantity(receiving),
-    })
+  // Build rows with PO groups and receiving children
+  groupedByPO.forEach((receivings, poNumber) => {
+    const hasMultiple = receivings.length > 1
+    const poId = `PO-${poNumber}`
+    const isExpanded = expandedRows.value.includes(poId)
 
-    // NOTE: Subitems removed — only parent receiving rows are shown in the table
+    if (hasMultiple) {
+      // Add PO group row (collapsible)
+      const allProducts = receivings.flatMap(r => r.receivingItems || []).map(item => item.product?.name || 'Unknown')
+      const uniqueProducts = [...new Set(allProducts)]
+      const totalExpected = receivings.reduce((sum, r) => sum + (calculateTotalExpectedQuantity(r) === '-' ? 0 : calculateTotalExpectedQuantity(r)), 0)
+      const totalReceived = receivings.reduce((sum, r) => sum + (calculateTotalReceivedQuantity(r) === '-' ? 0 : calculateTotalReceivedQuantity(r)), 0)
+
+      rows.push({
+        id: poId,
+        isPOGroup: true,
+        isReceiving: false,
+        depth: 0,
+        hasItems: true,
+        isExpanded: isExpanded,
+        uniqueId: poId,
+        order: receivings[0].order,
+        aggregatedProducts: {
+          display: uniqueProducts.length > 2 ? `${uniqueProducts.slice(0, 2).join(', ')}, +${uniqueProducts.length - 2} more` : uniqueProducts.join(', '),
+          full: uniqueProducts.join(', ')
+        },
+        totalExpectedQuantity: totalExpected,
+        totalReceivedQuantity: totalReceived,
+        receivingCode: `${receivings.length} receiving records`,
+      })
+
+      // Add child receiving records if expanded
+      if (isExpanded) {
+        receivings.forEach((receiving) => {
+          rows.push({
+            ...receiving,
+            isReceiving: true,
+            isPOGroup: false,
+            depth: 1,
+            hasItems: false,
+            isExpanded: false,
+            uniqueId: `R-${receiving.id}`,
+            aggregatedProducts: aggregateProducts(receiving),
+            aggregatedSources: aggregateSources(receiving),
+            aggregatedPurposes: aggregatePurposes(receiving),
+            totalExpectedQuantity: calculateTotalExpectedQuantity(receiving),
+            totalReceivedQuantity: calculateTotalReceivedQuantity(receiving),
+          })
+        })
+      }
+    } else {
+      // Single receiving - show directly without grouping
+      const receiving = receivings[0]
+      rows.push({
+        ...receiving,
+        isReceiving: true,
+        isPOGroup: true,
+        depth: 0,
+        hasItems: false,
+        isExpanded: false,
+        uniqueId: `R-${receiving.id}`,
+        aggregatedProducts: aggregateProducts(receiving),
+        aggregatedSources: aggregateSources(receiving),
+        aggregatedPurposes: aggregatePurposes(receiving),
+        totalExpectedQuantity: calculateTotalExpectedQuantity(receiving),
+        totalReceivedQuantity: calculateTotalReceivedQuantity(receiving),
+      })
+    }
   })
 
   return rows
@@ -704,13 +814,13 @@ watch(
   { deep: true },
 )
 
-// Toggle expand/collapse for receivings with items
-const toggleExpand = (receivingId) => {
-  const index = expandedRows.value.indexOf(receivingId)
+// Toggle expand/collapse for PO groups
+const toggleExpand = (id) => {
+  const index = expandedRows.value.indexOf(id)
   if (index > -1) {
     expandedRows.value.splice(index, 1)
   } else {
-    expandedRows.value.push(receivingId)
+    expandedRows.value.push(id)
   }
   setTimeout(updateSelectAllState, 0)
 }
@@ -784,8 +894,9 @@ watch([paginatedData, expandedRows], updateSelectAllState, { deep: true, immedia
 
 // Format date
 const formatDate = (dateString) => {
-  if (!dateString) return '-'
+  if (!dateString || dateString === '-') return '-'
   const date = new Date(dateString)
+  if (isNaN(date.getTime())) return '-'
   return date.toLocaleDateString('en-GB', {
     day: '2-digit',
     month: '2-digit',
@@ -822,7 +933,15 @@ const editReceiving = (row) => {
 }
 
 const viewReceiving = (row) => {
-  emit('view-receiving', row)
+  // If this is a PO group with multiple receivings, find all receivings for this PO
+  if (row.isPOGroup && row.hasItems && !row.isReceiving) {
+    const poNumber = row.order?.orderNo
+    const allReceivings = paginatedData.value.filter(r => r.order?.orderNo === poNumber)
+    emit('view-receiving', { isPOGroup: true, receivings: allReceivings, order: row.order })
+  } else {
+    // Single receiving
+    emit('view-receiving', row)
+  }
 }
 
 const deleteReceiving = async (item) => {

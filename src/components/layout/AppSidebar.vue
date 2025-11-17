@@ -210,6 +210,7 @@ import {
   ShippingIcon,
   CustomerIcon,
   LabelIcon,
+  RefreshIcon,
 } from "../../icons";
 
 const route = useRoute();
@@ -413,6 +414,12 @@ const allMenuGroups = [
         name: "Shipping",
         path: "/shipping",
         module: "Shipping"
+      },
+      {
+        icon: RefreshIcon,
+        name: "Return",
+        path: "/return",
+        // module: "Return"  // Temporarily disabled for testing
       },
     ],
   },

@@ -8,14 +8,14 @@
       <app-header class="flex-shrink-0" />
 
       <!-- Page Content -->
-      <div class="flex-1 bg-gray-50 dark:bg-gray-900 pb-12 overflow-auto">
-        <div class="p-4 mx-auto max-w-7xl md:p-6">
+      <div class="flex-1 bg-gray-50 dark:bg-gray-900 overflow-auto flex flex-col min-h-0">
+        <div class="p-4 mx-auto max-w-7xl md:p-6 w-full">
           <slot></slot>
         </div>
+        
+        <!-- Footer -->
+        <app-footer class="mt-auto" />
       </div>
-
-      <!-- Footer -->
-      <app-footer class="flex-shrink-0" />
     </div>
   </div>
 </template>
