@@ -49,16 +49,6 @@
             </th>
             <th class="px-6 py-3 text-left">
               <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Category
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
-                Last Updated
-              </p>
-            </th>
-            <th class="px-6 py-3 text-left">
-              <p class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400">
                 Action
               </p>
             </th>
@@ -81,23 +71,6 @@
             <td class="px-6 py-4 cursor-pointer" @click="handleReportClick(report)">
               <p class="text-sm text-gray-600 dark:text-gray-300">
                 {{ report.description }}
-              </p>
-            </td>
-            <td class="px-6 py-4 cursor-pointer" @click="handleReportClick(report)">
-              <span
-                :class="{
-                  'px-3 py-1 text-xs rounded-full font-medium': true,
-                  'bg-green-100 text-green-600': report.category === 'Stock',
-                  'bg-blue-100 text-blue-600': report.category === 'Movement',
-                  'bg-yellow-100 text-yellow-600': report.category === 'Quality',
-                }"
-              >
-                {{ report.category }}
-              </span>
-            </td>
-            <td class="px-6 py-4 cursor-pointer" @click="handleReportClick(report)">
-              <p class="text-sm text-gray-900 dark:text-white">
-                {{ report.lastUpdated }}
               </p>
             </td>
             <td class="px-6 py-4">
@@ -215,9 +188,7 @@ const reports = ref([
   {
     id: 1,
     name: 'Stock Received Summary Report',
-    description: 'View current stock levels across all warehouses',
-    category: 'Stock',
-    lastUpdated: 'Nov 5, 2025',
+    description: 'Summary of all items received (internal adjustment or supplier).',
     icon: BarChartIcon,
     route: '/reports/incoming/stock-received'
   },

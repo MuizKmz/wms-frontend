@@ -750,31 +750,15 @@ const fetchProducts = async () => {
   }
 }
 
-/* Fetch Orders - Only PO (Purchase Orders) without existing receiving records */
+/* Fetch Orders - Only PO (Purchase Orders) */
 const fetchOrders = async () => {
   loadingOrders.value = true
   try {
-    // Fetch both orders and receivings in parallel
-    const [ordersResponse, receivingsResponse] = await Promise.all([
-      authenticatedFetch('/api/order'),
-      authenticatedFetch('/api/receiving')
-    ])
-
-    if (ordersResponse.ok && receivingsResponse.ok) {
-      const ordersData = await ordersResponse.json()
-      const receivingsData = await receivingsResponse.json()
-
-      // Get list of order IDs that already have receiving records
-      const receivedOrderIds = new Set(
-        (receivingsData || [])
-          .map((receiving: any) => receiving.orderId)
-          .filter((id: any) => id != null)
-      )
-
-      // Filter only Purchase Orders (PO) that don't have receiving records yet
-      orders.value = (ordersData || []).filter((order: any) => 
-        order.orderType === 'PO' && !receivedOrderIds.has(order.id)
-      )
+    const response = await authenticatedFetch('/api/order')
+    if (response.ok) {
+      const ordersData = await response.json()
+      // Filter only Purchase Orders (PO)
+      orders.value = (ordersData || []).filter((order: any) => order.orderType === 'PO')
     }
   } catch (error) {
     console.error('Error fetching orders:', error)

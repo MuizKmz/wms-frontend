@@ -121,6 +121,14 @@ const router = createRouter({
       },
     },
     {
+      path: '/return',
+      name: 'Return Management',
+      component: () => import('../views/Return/Return.vue'),
+      meta: {
+        title: 'Return',
+      },
+    },
+    {
       path: '/customer',
       name: 'Customer Management',
       component: () => import('../views/Customer/Customer.vue'),

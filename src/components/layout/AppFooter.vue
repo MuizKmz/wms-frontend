@@ -1,6 +1,6 @@
 <template>
   <footer 
-    class="fixed bottom-0 left-0 right-0 border-t z-10 transition-all duration-300"
+    class="border-t transition-all duration-300"
     :style="{ 
       backgroundColor: footerBgColor, 
       borderColor: 'rgba(0, 0, 0, 0.1)',
