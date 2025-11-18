@@ -77,19 +77,65 @@
                 </div>
               </div>
 
-              <!-- Notes -->
-              <div v-if="returnData.notes">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Notes</h3>
+              <!-- Remarks -->
+              <div v-if="returnData.remarks">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Remarks</h3>
                 <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                  <p class="text-gray-900 dark:text-white whitespace-pre-line">{{ returnData.notes }}</p>
+                  <p class="text-gray-900 dark:text-white whitespace-pre-line">{{ returnData.remarks }}</p>
                 </div>
               </div>
 
-              <!-- Return Items (placeholder for future enhancement) -->
+              <!-- Return Items Table -->
               <div>
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Return Items</h3>
-                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 text-center">
-                  <p class="text-gray-500 dark:text-gray-400">Return item details will be displayed here</p>
+                <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                  <div class="overflow-x-auto">
+                    <table class="w-full">
+                      <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                          <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600">No</th>
+                          <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600">Product</th>
+                          <th class="px-4 py-3 text-center text-sm font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600">Quantity</th>
+                          <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600">Reason of return</th>
+                          <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600">EPC for Return</th>
+                        </tr>
+                      </thead>
+                      <tbody class="bg-white dark:bg-gray-800">
+                        <template v-if="returnData.items && returnData.items.length > 0">
+                          <template v-for="(item, index) in returnData.items" :key="index">
+                            <tr v-for="(reason, reasonIndex) in item.reasons" :key="`${index}-${reasonIndex}`" class="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+                              <td v-if="reasonIndex === 0" :rowspan="item.reasons.length" class="px-4 py-3 text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700 align-top">
+                                {{ index + 1 }}
+                              </td>
+                              <td v-if="reasonIndex === 0" :rowspan="item.reasons.length" class="px-4 py-3 text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700 align-top">
+                                <span class="text-blue-600 dark:text-blue-400 underline cursor-pointer hover:text-blue-700 dark:hover:text-blue-300">
+                                  {{ item.product }}
+                                </span>
+                              </td>
+                              <td class="px-4 py-3 text-sm text-center text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700">
+                                {{ reason.quantity }}
+                              </td>
+                              <td class="px-4 py-3 text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700">
+                                {{ reason.reason }}
+                              </td>
+                              <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                                <div class="space-y-1">
+                                  <div v-for="epc in reason.epcs" :key="epc" class="font-mono text-xs">
+                                    {{ epc }}
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          </template>
+                        </template>
+                        <tr v-else>
+                          <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                            No return items found
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
@@ -114,6 +160,17 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 
+interface ReturnReason {
+  quantity: number
+  reason: string
+  epcs: string[]
+}
+
+interface ReturnItem {
+  product: string
+  reasons: ReturnReason[]
+}
+
 interface ReturnData {
   id?: number
   returnNo?: string
@@ -126,7 +183,8 @@ interface ReturnData {
   totalQuantity: number
   createdBy?: string
   lastUpdated?: string
-  notes?: string
+  remarks?: string
+  items?: ReturnItem[]
 }
 
 const isOpen = ref(false)
@@ -138,7 +196,8 @@ const returnData = reactive<ReturnData>({
   from: '',
   to: '',
   skuQuantity: 0,
-  totalQuantity: 0
+  totalQuantity: 0,
+  items: []
 })
 
 const openModal = (data: ReturnData) => {
@@ -161,10 +220,10 @@ const formatDate = (dateString: string) => {
 
 const getReturnTypeClass = (type: string) => {
   const classes = {
-    'Customer Return': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-    'Supplier Return': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-    'Damage Return': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-    'Quality Return': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+    'Customer': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    'Supplier': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+    'Internal': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+    'Failed Delivery': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
   }
   return classes[type as keyof typeof classes] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
 }
