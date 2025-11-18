@@ -257,7 +257,7 @@ interface ReturnItem {
   totalQuantity: number
   createdBy: string
   lastUpdated: string
-  notes?: string
+  remarks?: string
 }
 
 // Props for return filters
@@ -367,7 +367,7 @@ const fetchReturns = async () => {
         totalQuantity: 15,
         createdBy: 'John Doe',
         lastUpdated: '2024-11-15T10:30:00',
-        notes: 'Defective items'
+        remarks: 'Defective items'
       },
       {
         id: 2,
@@ -381,7 +381,7 @@ const fetchReturns = async () => {
         totalQuantity: 8,
         createdBy: 'Jane Smith',
         lastUpdated: '2024-11-14T14:20:00',
-        notes: 'Wrong items received'
+        remarks: 'Wrong items received'
       },
     ]
   } catch (e: any) {
