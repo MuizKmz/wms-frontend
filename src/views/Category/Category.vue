@@ -109,7 +109,6 @@ import ComponentCard from '@/components/common/ComponentCard.vue'
 // Get permission checking functions
 const { canCreate, canUpdate, canDelete } = useAuth()
 import CategoryTable from './component/CategoryTable.vue'
-import CategoryListOverview from './component/CategoryListOverview.vue'
 import AddNewCategory from './component/AddNewCategory.vue'
 import EditCategory from './component/EditCategory.vue'
 import CategoryListFilters from './component/CategoryListFilters.vue'
@@ -176,23 +175,8 @@ const handleDeleteCategory = async (result: Result) => {
   }
 }
 
-// Define tabs with components
-const categoryTabs = [
-  {
-    id: 'table',
-    label: 'Category Table',
-    component: CategoryTable,
-  },
-  {
-    id: 'overview',
-    label: 'Category List Overview',
-    component: CategoryListOverview,
-  },
-]
-
-const currentComponent = computed(() => {
-  return categoryTabs.find((tab) => tab.id === activeTab.value)?.component
-})
+// Single component for this page (CategoryTable)
+const currentComponent = computed(() => CategoryTable)
 
 const handleFilterChange = (filters: Filters) => {
   activeFilters.value = filters

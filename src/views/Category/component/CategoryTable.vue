@@ -37,7 +37,7 @@
               <p
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
               >
-                {{ formatColumnName(col) }}
+                {{ col === 'name' ? 'Category Name' : col === 'categoryCode' ? 'Category Code' : col === 'rack' ? 'Location Code' : formatColumnName(col) }}
               </p>
             </th>
 
@@ -134,6 +134,11 @@
                 class="font-mono text-sm text-gray-900 dark:text-white"
               >
                 {{ row[col] }}
+              </span>
+
+              <!-- Rack => Location Code -->
+              <span v-else-if="col === 'rack'" class="font-mono text-sm text-gray-900 dark:text-white">
+                {{ row.rack || row.locationCode || '-' }}
               </span>
 
               <!-- Regular Columns -->
@@ -305,8 +310,8 @@ const selectedColumns = ref([])
 // API endpoint for categories
 const API_URL = '/api/category'
 
-// Columns to exclude
-const excludedColumns = ['id', 'createdAt', 'updatedAt', 'parentCategoryId', 'products', 'level']
+// Columns to exclude (removed quantity and status as requested)
+const excludedColumns = ['id', 'createdAt', 'updatedAt', 'parentCategoryId', 'products', 'level', 'quantity', 'status']
 
 // Format column name
 const formatColumnName = (name) => {
@@ -344,7 +349,21 @@ const fetchCategories = async () => {
       const allColumns = Object.keys(json[0]).filter(
         (col) => !excludedColumns.map((c) => c.toLowerCase()).includes(col.toLowerCase()),
       )
-      selectedColumns.value = allColumns
+      // Ensure 'name' is first and 'categoryCode' is second when present
+      const ordered = [...allColumns]
+      // move 'name' to front
+      const nameIdx = ordered.findIndex((c) => c === 'name')
+      if (nameIdx > -1) ordered.splice(0, 0, ...ordered.splice(nameIdx, 1))
+      // move 'categoryCode' to second position
+      const codeIdx = ordered.findIndex((c) => c === 'categoryCode')
+      const desiredIdx = ordered.findIndex((c) => c === 'name')
+      if (codeIdx > -1 && desiredIdx > -1) {
+        // remove current code position
+        const removed = ordered.splice(codeIdx, 1)[0]
+        // insert after 'name'
+        ordered.splice(desiredIdx + 1, 0, removed)
+      }
+      selectedColumns.value = ordered
       console.log('Auto-loaded columns from API:', allColumns)
     }
   } catch (e) {

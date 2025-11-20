@@ -177,6 +177,8 @@ import { useRouter } from 'vue-router'
 import BarChartIcon from '@/icons/BarChartIcon.vue'
 import ReportsIcon from '@/icons/ReportsIcon.vue'
 import QualityIcon from '@/icons/QualityIcon.vue'
+import RefreshIcon from '@/icons/RefreshIcon.vue'
+import CalenderIcon from '@/icons/CalenderIcon.vue'
 
 const router = useRouter()
 const searchQuery = ref('')
@@ -191,6 +193,34 @@ const reports = ref([
     description: 'Summary of all items received (internal adjustment or supplier).',
     icon: BarChartIcon,
     route: '/reports/incoming/stock-received'
+  },
+  {
+    id: 2,
+    name: 'Goods Received Summary Report',
+    description: 'All receiving from suppliers or production (raw material or finished goods).',
+    icon: ReportsIcon,
+    route: '/reports/incoming/goods-received'
+  },
+  {
+    id: 3,
+    name: 'Purchase Order Summary Report',
+    description: 'Overview of all PO issued, quantity, status.',
+    icon: QualityIcon,
+    route: '/reports/incoming/purchase-order'
+  },
+  {
+    id: 4,
+    name: 'Purchase Return Summary Report',
+    description: 'Record of all goods returned to suppliers.',
+    icon: RefreshIcon,
+    route: '/reports/incoming/purchase-return'
+  },
+  {
+    id: 5,
+    name: 'Outstanding Goods Received Report',
+    description: 'Items yet to be confirmed as received.',
+    icon: CalenderIcon,
+    route: '/reports/incoming/outstanding-goods-received'
   },
 ])
 

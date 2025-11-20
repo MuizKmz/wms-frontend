@@ -94,6 +94,13 @@
               <p
                 class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
               >
+                Remarks
+              </p>
+            </th>
+            <th class="px-6 py-3 text-left">
+              <p
+                class="font-medium text-gray-500 text-xs uppercase tracking-wider dark:text-gray-400"
+              >
                 Action
               </p>
             </th>
@@ -101,7 +108,7 @@
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
           <tr
-            v-for="(row, index) in hierarchicalData"
+            v-for="(row, index) in paginatedData"
             :key="row.id"
             class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
           >
@@ -194,6 +201,11 @@
               </span>
             </td>
 
+            <!-- Remarks -->
+            <td class="px-6 py-4">
+              <p class="text-sm text-gray-900 dark:text-white">{{ row.remarks || '-' }}</p>
+            </td>
+
             <!-- Action -->
             <td class="px-6 py-4">
               <div class="flex items-center gap-2">
@@ -242,7 +254,7 @@
       </div>
 
       <!-- Empty State -->
-      <div v-if="!loading && filteredData.length === 0" class="p-8 text-center text-gray-500">
+      <div v-if="!loading && hierarchicalData.length === 0" class="p-8 text-center text-gray-500">
         <svg
           class="mx-auto h-12 w-12 text-gray-300"
           fill="none"
@@ -316,7 +328,7 @@
           <button
             type="button"
             class="btn btn-sm btn-outline dark:text-gray-300"
-            :disabled="currentPage === totalPages"
+            :disabled="currentPage === totalPages || totalPages === 0"
             @click="changePage(currentPage + 1)"
           >
             Next
@@ -363,316 +375,7 @@ const expandedLocations = ref([])
 const API_URL = '/api/location'
 const WAREHOUSE_API_URL = '/api/warehouse'
 
-// Mock data for when API fails - Comprehensive test data
-const getMockData = () => [
-  // ========== WAREHOUSE 1 (WH-001) - Main Warehouse ==========
-
-  // Level 0 - Main Storage A1 (has 2 Level 1 children)
-  {
-    id: 1,
-    locationCode: 'LOC-A-001',
-    locationName: 'Main Storage A1',
-    warehouseId: 1,
-    warehouseName: 'Main Warehouse',
-    warehouseCode: 'WH-001',
-    type: 'Storage',
-    capacity: '1000 Pallet',
-    status: 'Active',
-    hierarchy: 'Level 0',
-    parentLocationId: null,
-    child1LocationId: null,
-    parentLocationCode: null,
-    parentLocationName: null,
-    child1LocationCode: null,
-    child1LocationName: null,
-    remarks: 'High capacity storage area',
-  },
-  // Level 1 - Aisle A1 (child of Main Storage A1, has 3 Level 2 children)
-  {
-    id: 2,
-    locationCode: 'LOC-A-001-01',
-    locationName: 'Aisle A1',
-    warehouseId: 1,
-    warehouseName: 'Main Warehouse',
-    warehouseCode: 'WH-001',
-    type: 'Picking',
-    capacity: '500 Box',
-    status: 'Active',
-    hierarchy: 'Level 1',
-    parentLocationId: 1,
-    child1LocationId: null,
-    parentLocationCode: 'LOC-A-001',
-    parentLocationName: 'Main Storage A1',
-    child1LocationCode: null,
-    child1LocationName: null,
-    remarks: 'Fast-moving items',
-  },
-  // Level 2 - Shelf A1-A (child of Aisle A1)
-  {
-    id: 3,
-    locationCode: 'LOC-A-001-01-A',
-    locationName: 'Shelf A1-A (Top)',
-    warehouseId: 1,
-    warehouseName: 'Main Warehouse',
-    warehouseCode: 'WH-001',
-    type: 'Storage',
-    capacity: '100 Box',
-    status: 'Active',
-    hierarchy: 'Level 2',
-    parentLocationId: 1,
-    child1LocationId: 2,
-    parentLocationCode: 'LOC-A-001',
-    parentLocationName: 'Main Storage A1',
-    child1LocationCode: 'LOC-A-001-01',
-    child1LocationName: 'Aisle A1',
-    remarks: 'Top shelf - fragile items',
-  },
-  // Level 2 - Shelf A1-B (child of Aisle A1)
-  {
-    id: 4,
-    locationCode: 'LOC-A-001-01-B',
-    locationName: 'Shelf A1-B (Middle)',
-    warehouseId: 1,
-    warehouseName: 'Main Warehouse',
-    warehouseCode: 'WH-001',
-    type: 'Storage',
-    capacity: '150 Box',
-    status: 'Active',
-    hierarchy: 'Level 2',
-    parentLocationId: 1,
-    child1LocationId: 2,
-    parentLocationCode: 'LOC-A-001',
-    parentLocationName: 'Main Storage A1',
-    child1LocationCode: 'LOC-A-001-01',
-    child1LocationName: 'Aisle A1',
-    remarks: 'Middle shelf - general storage',
-  },
-  // Level 2 - Shelf A1-C (child of Aisle A1)
-  {
-    id: 5,
-    locationCode: 'LOC-A-001-01-C',
-    locationName: 'Shelf A1-C (Bottom)',
-    warehouseId: 1,
-    warehouseName: 'Main Warehouse',
-    warehouseCode: 'WH-001',
-    type: 'Storage',
-    capacity: '200 Box',
-    status: 'Active',
-    hierarchy: 'Level 2',
-    parentLocationId: 1,
-    child1LocationId: 2,
-    parentLocationCode: 'LOC-A-001',
-    parentLocationName: 'Main Storage A1',
-    child1LocationCode: 'LOC-A-001-01',
-    child1LocationName: 'Aisle A1',
-    remarks: 'Bottom shelf - heavy items',
-  },
-  // Level 1 - Aisle A2 (child of Main Storage A1, has 2 Level 2 children)
-  {
-    id: 6,
-    locationCode: 'LOC-A-001-02',
-    locationName: 'Aisle A2',
-    warehouseId: 1,
-    warehouseName: 'Main Warehouse',
-    warehouseCode: 'WH-001',
-    type: 'Picking',
-    capacity: '450 Box',
-    status: 'Active',
-    hierarchy: 'Level 1',
-    parentLocationId: 1,
-    child1LocationId: null,
-    parentLocationCode: 'LOC-A-001',
-    parentLocationName: 'Main Storage A1',
-    child1LocationCode: null,
-    child1LocationName: null,
-    remarks: 'Secondary picking area',
-  },
-  // Level 2 - Shelf A2-A (child of Aisle A2)
-  {
-    id: 7,
-    locationCode: 'LOC-A-001-02-A',
-    locationName: 'Shelf A2-A',
-    warehouseId: 1,
-    warehouseName: 'Main Warehouse',
-    warehouseCode: 'WH-001',
-    type: 'Storage',
-    capacity: '120 Box',
-    status: 'Active',
-    hierarchy: 'Level 2',
-    parentLocationId: 1,
-    child1LocationId: 6,
-    parentLocationCode: 'LOC-A-001',
-    parentLocationName: 'Main Storage A1',
-    child1LocationCode: 'LOC-A-001-02',
-    child1LocationName: 'Aisle A2',
-    remarks: 'Electronics section',
-  },
-  // Level 2 - Shelf A2-B (child of Aisle A2)
-  {
-    id: 8,
-    locationCode: 'LOC-A-001-02-B',
-    locationName: 'Shelf A2-B',
-    warehouseId: 1,
-    warehouseName: 'Main Warehouse',
-    warehouseCode: 'WH-001',
-    type: 'Storage',
-    capacity: '130 Box',
-    status: 'Active',
-    hierarchy: 'Level 2',
-    parentLocationId: 1,
-    child1LocationId: 6,
-    parentLocationCode: 'LOC-A-001',
-    parentLocationName: 'Main Storage A1',
-    child1LocationCode: 'LOC-A-001-02',
-    child1LocationName: 'Aisle A2',
-    remarks: 'Tools section',
-  },
-
-  // Level 0 - Quarantine Zone C (standalone, no children)
-  {
-    id: 9,
-    locationCode: 'LOC-C-001',
-    locationName: 'Quarantine Zone C',
-    warehouseId: 1,
-    warehouseName: 'Main Warehouse',
-    warehouseCode: 'WH-001',
-    type: 'Quarantine',
-    capacity: '200 Pallet',
-    status: 'Inactive',
-    hierarchy: 'Level 0',
-    parentLocationId: null,
-    child1LocationId: null,
-    parentLocationCode: null,
-    parentLocationName: null,
-    child1LocationCode: null,
-    child1LocationName: null,
-    remarks: 'Quality control area',
-  },
-
-  // Level 0 - Shipping Dock D (has 1 Level 1 child)
-  {
-    id: 10,
-    locationCode: 'LOC-D-001',
-    locationName: 'Shipping Dock D',
-    warehouseId: 1,
-    warehouseName: 'Main Warehouse',
-    warehouseCode: 'WH-001',
-    type: 'Staging',
-    capacity: '500 Pallet',
-    status: 'Active',
-    hierarchy: 'Level 0',
-    parentLocationId: null,
-    child1LocationId: null,
-    parentLocationCode: null,
-    parentLocationName: null,
-    child1LocationCode: null,
-    child1LocationName: null,
-    remarks: 'Outbound shipping area',
-  },
-  // Level 1 - Dock D Lane 1 (child of Shipping Dock D, no Level 2 children)
-  {
-    id: 11,
-    locationCode: 'LOC-D-001-01',
-    locationName: 'Dock D Lane 1',
-    warehouseId: 1,
-    warehouseName: 'Main Warehouse',
-    warehouseCode: 'WH-001',
-    type: 'Staging',
-    capacity: '100 Pallet',
-    status: 'Active',
-    hierarchy: 'Level 1',
-    parentLocationId: 10,
-    child1LocationId: null,
-    parentLocationCode: 'LOC-D-001',
-    parentLocationName: 'Shipping Dock D',
-    child1LocationCode: null,
-    child1LocationName: null,
-    remarks: 'Express shipping lane',
-  },
-
-  // ========== WAREHOUSE 2 (WH-002) - North Warehouse ==========
-
-  // Level 0 - Cold Storage B1 (has 2 Level 1 children)
-  {
-    id: 12,
-    locationCode: 'LOC-B-001',
-    locationName: 'Cold Storage B1',
-    warehouseId: 2,
-    warehouseName: 'North Warehouse',
-    warehouseCode: 'WH-002',
-    type: 'Storage',
-    capacity: '750 Pallet',
-    status: 'Active',
-    hierarchy: 'Level 0',
-    parentLocationId: null,
-    child1LocationId: null,
-    parentLocationCode: null,
-    parentLocationName: null,
-    child1LocationCode: null,
-    child1LocationName: null,
-    remarks: 'Temperature controlled -5°C',
-  },
-  // Level 1 - Cold Aisle B1 (child of Cold Storage B1, has 1 Level 2 child)
-  {
-    id: 13,
-    locationCode: 'LOC-B-001-01',
-    locationName: 'Cold Aisle B1',
-    warehouseId: 2,
-    warehouseName: 'North Warehouse',
-    warehouseCode: 'WH-002',
-    type: 'Storage',
-    capacity: '300 Box',
-    status: 'Active',
-    hierarchy: 'Level 1',
-    parentLocationId: 12,
-    child1LocationId: null,
-    parentLocationCode: 'LOC-B-001',
-    parentLocationName: 'Cold Storage B1',
-    child1LocationCode: null,
-    child1LocationName: null,
-    remarks: 'Frozen foods section',
-  },
-  // Level 2 - Cold Shelf B1-A (child of Cold Aisle B1)
-  {
-    id: 14,
-    locationCode: 'LOC-B-001-01-A',
-    locationName: 'Cold Shelf B1-A',
-    warehouseId: 2,
-    warehouseName: 'North Warehouse',
-    warehouseCode: 'WH-002',
-    type: 'Storage',
-    capacity: '80 Box',
-    status: 'Active',
-    hierarchy: 'Level 2',
-    parentLocationId: 12,
-    child1LocationId: 13,
-    parentLocationCode: 'LOC-B-001',
-    parentLocationName: 'Cold Storage B1',
-    child1LocationCode: 'LOC-B-001-01',
-    child1LocationName: 'Cold Aisle B1',
-    remarks: 'Ice cream storage',
-  },
-  // Level 1 - Cold Aisle B2 (child of Cold Storage B1, no Level 2 children)
-  {
-    id: 15,
-    locationCode: 'LOC-B-001-02',
-    locationName: 'Cold Aisle B2',
-    warehouseId: 2,
-    warehouseName: 'North Warehouse',
-    warehouseCode: 'WH-002',
-    type: 'Staging',
-    capacity: '250 Box',
-    status: 'Active',
-    hierarchy: 'Level 1',
-    parentLocationId: 12,
-    child1LocationId: null,
-    parentLocationCode: 'LOC-B-001',
-    parentLocationName: 'Cold Storage B1',
-    child1LocationCode: null,
-    child1LocationName: null,
-    remarks: 'Cold staging area',
-  },
-]
+// Removed mock data fallback: component now relies on API; on error it will set `error` and leave `data` empty
 
 // Function to fetch warehouses
 const fetchWarehouses = async () => {
@@ -726,12 +429,11 @@ const fetchData = async () => {
       remarks: location.remarks || '-',
       raw: location,
     }))
-  } catch (e) {
-    error.value = e.message
-    console.error('Error fetching data:', e)
-    console.log('Using mock data due to API error')
-    // Use mock data when API fails
-    data.value = getMockData()
+  } catch (err: any) {
+    error.value = err?.message || String(err)
+    console.error('Error fetching data:', err)
+    // On error, leave `data` empty so UI shows empty state and display the error
+    data.value = []
   } finally {
     loading.value = false
   }
@@ -1016,6 +718,12 @@ watch(
   },
   { deep: true },
 )
+
+// Ensure current page is valid when hierarchical data changes
+watch(hierarchicalData, (list) => {
+  const pages = Math.max(1, Math.ceil(list.length / itemsPerPage.value))
+  if (currentPage.value > pages) currentPage.value = pages
+})
 </script>
 
 <style scoped>

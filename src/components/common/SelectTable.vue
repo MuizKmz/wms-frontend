@@ -62,7 +62,7 @@
               class="checkbox checkbox-sm checkbox-primary"
             />
             <span class="text-sm text-gray-700 dark:text-gray-200 flex-1">
-              {{ formatColumnName(col) }}
+              {{ col === 'name' ? 'Category Name' : col === 'categoryCode' ? 'Category Code' : col === 'rack' ? 'Location Code' : formatColumnName(col) }}
             </span>
           </label>
         </div>
@@ -200,7 +200,19 @@ const fetchColumns = async () => {
         if (saved) {
           try {
             const savedCols = JSON.parse(saved)
-            selectedColumns.value = savedCols.filter((col) => props.availableColumns.includes(col))
+              // Apply saved columns but ensure preferred ordering for name and categoryCode
+              const filtered = savedCols.filter((col) => props.availableColumns.includes(col))
+              // Reorder if necessary
+              const ordered = [...filtered]
+              const nameIdxS = ordered.findIndex((c) => c === 'name')
+              if (nameIdxS > -1) ordered.splice(0, 0, ...ordered.splice(nameIdxS, 1))
+              const codeIdxS = ordered.findIndex((c) => c === 'categoryCode')
+              const desiredIdxS = ordered.findIndex((c) => c === 'name')
+              if (codeIdxS > -1 && desiredIdxS > -1) {
+                const removedS = ordered.splice(codeIdxS, 1)[0]
+                ordered.splice(desiredIdxS + 1, 0, removedS)
+              }
+              selectedColumns.value = ordered
           } catch (e) {
             console.error('Failed to parse saved columns:', e)
           }
@@ -208,7 +220,17 @@ const fetchColumns = async () => {
       }
 
       if (selectedColumns.value.length === 0) {
-        selectedColumns.value = [...props.availableColumns]
+        // Ensure 'name' is first and 'categoryCode' second when available
+        const ordered = [...props.availableColumns]
+        const nameIdx = ordered.findIndex((c) => c === 'name')
+        if (nameIdx > -1) ordered.splice(0, 0, ...ordered.splice(nameIdx, 1))
+        const codeIdx = ordered.findIndex((c) => c === 'categoryCode')
+        const desiredIdx = ordered.findIndex((c) => c === 'name')
+        if (codeIdx > -1 && desiredIdx > -1) {
+          const removed = ordered.splice(codeIdx, 1)[0]
+          ordered.splice(desiredIdx + 1, 0, removed)
+        }
+        selectedColumns.value = ordered
       }
 
       initialSelection.value = [...selectedColumns.value]
@@ -232,7 +254,18 @@ const fetchColumns = async () => {
         if (saved) {
           try {
             const savedCols = JSON.parse(saved)
-            selectedColumns.value = savedCols.filter((col) => cols.includes(col))
+              const filtered = savedCols.filter((col) => cols.includes(col))
+              // Reorder saved selection to prefer 'name' and 'categoryCode'
+              const ordered = [...filtered]
+              const nameIdxS = ordered.findIndex((c) => c === 'name')
+              if (nameIdxS > -1) ordered.splice(0, 0, ...ordered.splice(nameIdxS, 1))
+              const codeIdxS = ordered.findIndex((c) => c === 'categoryCode')
+              const desiredIdxS = ordered.findIndex((c) => c === 'name')
+              if (codeIdxS > -1 && desiredIdxS > -1) {
+                const removedS = ordered.splice(codeIdxS, 1)[0]
+                ordered.splice(desiredIdxS + 1, 0, removedS)
+              }
+              selectedColumns.value = ordered
           } catch (e) {
             console.error('Failed to parse saved columns:', e)
           }
@@ -240,7 +273,17 @@ const fetchColumns = async () => {
       }
 
       if (selectedColumns.value.length === 0) {
-        selectedColumns.value = [...cols]
+        // Ensure 'name' is first and 'categoryCode' is second when present
+        const ordered = [...cols]
+        const nameIdx = ordered.findIndex((c) => c === 'name')
+        if (nameIdx > -1) ordered.splice(0, 0, ...ordered.splice(nameIdx, 1))
+        const codeIdx = ordered.findIndex((c) => c === 'categoryCode')
+        const desiredIdx = ordered.findIndex((c) => c === 'name')
+        if (codeIdx > -1 && desiredIdx > -1) {
+          const removed = ordered.splice(codeIdx, 1)[0]
+          ordered.splice(desiredIdx + 1, 0, removed)
+        }
+        selectedColumns.value = ordered
       }
 
       initialSelection.value = [...selectedColumns.value]

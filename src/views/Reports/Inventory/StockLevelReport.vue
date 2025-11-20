@@ -48,7 +48,7 @@
         </div>
       </div>
 
-      <A4Preview v-if="reportGenerated" v-model:activeTab="activeTab" ref="a4PreviewRef">
+      <A4Preview v-if="reportGenerated" v-model:activeTab="activeTab" v-model:orientation="a4Orientation" ref="a4PreviewRef">
         <!-- A4 Content -->
         <template #a4-content>
           <div id="printable-report">
@@ -173,6 +173,7 @@ const activeTab = ref('table')
 const showDesigner = ref(false)
 const reportDate = ref(new Date())
 const logoUrl = ref(localStorage.getItem('reportLogoUrl') || '')
+const a4Orientation = ref<'portrait' | 'landscape'>('portrait')
 
 // Load saved design settings
 const savedDesign = ref<any>(null)
@@ -277,6 +278,13 @@ const printReport = () => {
   const printContent = document.getElementById('printable-report')
   if (!printContent) return
 
+  let rawHtml = printContent.outerHTML
+  const pageWidth = a4Orientation?.value === 'landscape' ? '297mm' : '210mm'
+  const pageHeight = a4Orientation?.value === 'landscape' ? '210mm' : '297mm'
+  rawHtml = rawHtml.replace(/transform:\s*scale\([^)]*\);?/g, '')
+  rawHtml = rawHtml.replace(/width:\s*\d+mm;?/g, `width: ${pageWidth};`)
+  rawHtml = rawHtml.replace(/min-height:\s*\d+mm;?/g, `min-height: ${pageHeight};`)
+
   // Get all stylesheets from the current page
   const stylesheets = Array.from(document.styleSheets)
     .map(sheet => {
@@ -309,7 +317,7 @@ const printReport = () => {
   ${stylesheets}
   <style>
     @page {
-      size: A4;
+      size: A4 ${a4Orientation?.value || 'portrait'};
       margin: 0;
     }
     
@@ -331,6 +339,7 @@ const printReport = () => {
       }
       
       @page {
+        size: A4 ${a4Orientation?.value || 'portrait'};
         margin: 15mm 20mm;
       }
     }
@@ -371,7 +380,7 @@ const printReport = () => {
 </head>
 <body>
   <button class="print-button" onclick="window.print()">🖨️ Print</button>
-  ${printContent.outerHTML}
+  ${rawHtml}
 </body>
 </html>`
   

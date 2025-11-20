@@ -132,7 +132,7 @@
               </div>
               <div class="flex justify-end gap-2 p-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <button @click="closeModal" class="btn btn-outline btn-error" :disabled="isSubmitting">Cancel</button>
-                <button @click="submitForm" class="btn btn-primary" :disabled="isSubmitting"><span v-if="isSubmitting" class="loading loading-spinner loading-sm mr-2"></span>{{ isSubmitting ? 'Saving...' : 'Save' }}</button>
+                <button @click="submitForm" class="btn bg-brand-500" :disabled="isSubmitting"><span v-if="isSubmitting" class="loading loading-spinner loading-sm mr-2"></span>{{ isSubmitting ? 'Saving...' : 'Save' }}</button>
               </div>
             </div>
           </div>
