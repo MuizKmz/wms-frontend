@@ -169,6 +169,38 @@ const router = createRouter({
       },
     },
     {
+      path: '/reports/incoming/goods-received',
+      name: 'Goods Received Summary Report',
+      component: () => import('../views/Reports/Incoming/GoodsReceivedReport.vue'),
+      meta: {
+        title: 'Goods Received Summary Report',
+      },
+    },
+    {
+      path: '/reports/incoming/purchase-order',
+      name: 'Purchase Order Summary Report',
+      component: () => import('../views/Reports/Incoming/PurchaseOrderReport.vue'),
+      meta: {
+        title: 'Purchase Order Summary Report',
+      },
+    },
+    {
+      path: '/reports/incoming/purchase-return',
+      name: 'Purchase Return Summary Report',
+      component: () => import('../views/Reports/Incoming/PurchaseReturnReport.vue'),
+      meta: {
+        title: 'Purchase Return Summary Report',
+      },
+    },
+    {
+      path: '/reports/incoming/outstanding-goods-received',
+      name: 'Outstanding Goods Received Summary Report',
+      component: () => import('../views/Reports/Incoming/OutstandingGoodsReceivedReport.vue'),
+      meta: {
+        title: 'Outstanding Goods Received Summary Report',
+      },
+    },
+    {
       path: '/outgoingreport',
       name: 'Outgoing Report',
       component: () => import('../views/Reports/Outgoing/OutgoingReport.vue'),

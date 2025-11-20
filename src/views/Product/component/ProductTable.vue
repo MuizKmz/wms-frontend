@@ -282,7 +282,6 @@ const allowedColumns = [
   'skuCode',
   'category',
   'supplierName',
-  'quantity',
   'status',
   'remark',
   'createdTime',
@@ -293,7 +292,6 @@ const fieldAliases = {
   skuCode: ['skuCode', 'sku'],
   category: ['category'],
   supplierName: ['supplierName'],
-  quantity: ['quantity'],
   status: ['status'],
   remark: ['remark', 'remarks'],
   createdTime: ['createdTime', 'createdAt'],
@@ -306,7 +304,6 @@ const formatColumnName = (name) => {
     skuCode: 'SKU Code',
     category: 'Category',
     supplierName: 'Supplier Name',
-    quantity: 'Quantity',
     status: 'Status',
     remark: 'Remark',
     createdTime: 'Created Time',
@@ -382,7 +379,6 @@ const fetchProducts = async () => {
         supplierName: p.supplier
           ? p.supplier.supplierName || p.supplier.supplierCode || p.supplier.name
           : p.supplierName || '',
-        quantity,
         status: p.status,
         remark: p.remarks || p.remark || p.remark || '',
         createdTime: p.createdAt || p.createdTime,

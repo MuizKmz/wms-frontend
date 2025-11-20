@@ -1,8 +1,8 @@
 <template>
   <AdminLayout>
     <ReportLayout
-      title="Stock Received Summary Report"
-      description="View current stock levels across all warehouses"
+      title="Goods Received Summary Report"
+      description="All receiving from suppliers or production."
       :reportGenerated="reportGenerated"
       :generating="generating"
       :has-data="filteredData.length > 0"
@@ -239,43 +239,6 @@
                 </div>
               </template>
             </ReportTemplate>
-
-            <!-- Overlay Components from Designer -->
-            <div v-if="savedDesign?.components && savedDesign.components.length > 0" class="absolute inset-0 pointer-events-none">
-              <div
-                v-for="(component, index) in savedDesign.components"
-                :key="index"
-                :style="{
-                  position: 'absolute',
-                  left: component.x + 'px',
-                  top: component.y + 'px',
-                  width: component.width + 'px',
-                  height: component.height ? component.height + 'px' : 'auto'
-                }"
-                class="pointer-events-auto"
-              >
-                <!-- Signature Component -->
-                <div v-if="component.type === 'signature'" class="text-center bg-white p-2 h-full flex flex-col justify-center">
-                  <p class="text-xs text-gray-600 mb-2">{{ component.data.label }}</p>
-                  <img v-if="component.data.image" :src="component.data.image" alt="Signature" class="max-w-full max-h-full mx-auto object-contain" />
-                  <div v-else class="border-b-2 border-gray-800 h-8"></div>
-                  <p class="text-xs text-gray-500 mt-1">Signature</p>
-                </div>
-
-                <!-- Stamp Component -->
-                <div v-else-if="component.type === 'stamp'" class="flex justify-center items-center bg-white p-2 h-full">
-                  <img v-if="component.data.image" :src="component.data.image" alt="Stamp" class="max-w-full max-h-full object-contain" />
-                  <div v-else class="border-2 border-gray-600 rounded-full aspect-square max-w-full max-h-full flex items-center justify-center p-2">
-                    <p class="text-xs text-gray-700 text-center font-semibold">{{ component.data.label }}</p>
-                  </div>
-                </div>
-
-                <!-- Text Component -->
-                <div v-else-if="component.type === 'text'" class="bg-white p-2 h-full flex items-center">
-                  <p class="text-sm text-gray-800">{{ component.data.content }}</p>
-                </div>
-              </div>
-            </div>
           </div>
         </template>
       </A4Preview>
@@ -525,7 +488,7 @@ const getTotalReceived = () => {
 // Use pagination composable to handle page splitting
 const { totalPages, paginatedData } = useReportPagination({
   data: filteredData,
-  itemsPerPage: 15,
+  itemsPerPage: 15, // Optimized with better spacing
   headerHeight: 220,
   footerHeight: 60,
   rowHeight: 50,
@@ -544,9 +507,9 @@ const getEPCCompliance = () => {
 const getReportTitle = () => {
   let title = ''
   if (filters.value.period) {
-    title = `${filters.value.period} Stock Received Summary`
+    title = `${filters.value.period} Goods Received Summary`
   } else {
-    title = 'Stock Received Summary'
+    title = 'Goods Received Summary'
   }
   
   if (filters.value.warehouse) {
@@ -571,7 +534,7 @@ const getReportSubtitle = () => {
     return parts.join(' ')
   }
   
-  return 'Inventory Status Across All Locations'
+  return 'All receiving from suppliers or production.'
 }
 
 const getTotalQuantity = () => {
@@ -665,7 +628,7 @@ const openPrintWindow = () => {
   const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
-  <title>Stock Received Report</title>
+  <title>Goods Received Report</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   ${stylesheets}
@@ -799,12 +762,10 @@ const openPrintWindow = () => {
   </style>
   <script>
     window.onload = function() {
-      // Auto-open print dialog
       setTimeout(function() {
         window.print();
       }, 500);
       
-      // Also add click handler for manual print
       document.getElementById('printBtn').addEventListener('click', function() {
         window.print();
       });
@@ -813,7 +774,7 @@ const openPrintWindow = () => {
 </head>
 <body>
   <div class="print-instructions">
-    <strong>Print Settings:</strong> Set margins to Custom <strong>5mm</strong> on all sides • Uncheck "Headers and footers"
+    <strong>Print Preview Ready!</strong> Click the Print button below or press Ctrl+P (Cmd+P on Mac) to print.
   </div>
   <button id="printBtn" class="print-button">🖨️ Print / Save as PDF</button>
   ${rawHtml}
@@ -862,10 +823,23 @@ const exportToPDF = async () => {
 
   try {
     // Use the print approach - open in new tab with print-ready HTML
-    const printContent = document.getElementById('printable-report')
-    if (!printContent) {
+    const previewContainer = document.querySelector('.space-y-8.w-full.flex.flex-col.items-center')
+    if (!previewContainer) {
       throw new Error('Report content not found')
     }
+
+    // Clone all pages
+    const allPages = previewContainer.cloneNode(true) as HTMLElement
+    
+    // Remove transform scaling from cloned pages
+    const pages = allPages.querySelectorAll('[style*="transform"]')
+    pages.forEach(page => {
+      const element = page as HTMLElement
+      if (element.style) {
+        element.style.transform = ''
+        element.style.transformOrigin = ''
+      }
+    })
 
     // Get all stylesheets
     const stylesheets = Array.from(document.styleSheets)
@@ -893,7 +867,7 @@ const exportToPDF = async () => {
     const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
-  <title>Stock Received Report</title>
+  <title>Goods Received Report</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   ${stylesheets}
@@ -979,9 +953,9 @@ const exportToPDF = async () => {
 </head>
 <body>
   <div class="print-instructions">
-    <strong>PDF Export:</strong> Select "Save as PDF" • Set margins to <strong>5mm</strong> • Uncheck "Headers and footers"
+    <strong>PDF Export:</strong> Select "Save as PDF" • Set margins to <strong>0mm</strong> (None) • Uncheck "Headers and footers"
   </div>
-  ${printContent.outerHTML}
+  ${allPages.outerHTML}
 </body>
 </html>`
     

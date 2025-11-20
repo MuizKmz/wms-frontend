@@ -69,27 +69,44 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
+      <!-- Orientation Toggle -->
+      <div class="flex items-center gap-2">
+        <button
+          @click="$emit('update:orientation', 'portrait')"
+          :class="['px-3 py-1 rounded', orientation === 'portrait' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']"
+          title="Portrait"
+        >P</button>
+        <button
+          @click="$emit('update:orientation', 'landscape')"
+          :class="['px-3 py-1 rounded', orientation === 'landscape' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']"
+          title="Landscape"
+        >L</button>
+      </div>
     </div>
 
     <!-- A4 Preview Container -->
     <div
       v-if="activeTab === 'table' && !isFullscreen"
       ref="previewContainer"
-      class="overflow-auto max-h-[calc(100vh-300px)]"
+      class="overflow-auto max-h-[calc(100vh-300px)] bg-gray-100 dark:bg-gray-900 p-4"
     >
-      <div class="flex justify-center py-8">
-        <!-- A4 Paper: Exact dimensions 210mm x 297mm -->
-        <div
-          class="bg-white shadow-2xl mx-auto transition-transform duration-300"
-          :style="{
-            width: '210mm',
-            minHeight: '297mm',
-            transform: `scale(${zoomLevel / 100})`,
-            transformOrigin: 'top center'
-          }"
-        >
-          <div class="p-8">
-            <slot name="a4-content"></slot>
+      <div class="flex flex-col items-center">
+        <div class="space-y-4 w-full flex flex-col items-center">
+          <!-- Page indicator -->
+          <div v-if="pagesArray.length > 1" class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+            Showing {{ pagesArray.length }} page{{ pagesArray.length > 1 ? 's' : '' }}
+          </div>
+          <div
+            v-for="idx in pagesArray"
+            :key="idx"
+            class="bg-white shadow-xl transition-transform duration-300 relative"
+            :style="pageStyle"
+          >
+            <slot name="a4-content" :pageIndex="idx"></slot>
+            <!-- Page number badge - inside page at bottom -->
+            <div class="absolute bottom-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded shadow-lg z-10">
+              Page {{ idx + 1 }}/{{ pagesArray.length }}
+            </div>
           </div>
         </div>
       </div>
@@ -155,19 +172,24 @@
           </div>
 
           <!-- Fullscreen Content -->
-          <div class="flex-1 overflow-auto p-8">
-            <div class="flex justify-center">
-              <div
-                class="bg-white shadow-2xl transition-transform duration-300"
-                :style="{
-                  width: '210mm',
-                  minHeight: '297mm',
-                  transform: `scale(${zoomLevel / 100})`,
-                  transformOrigin: 'top center'
-                }"
-              >
-                <div class="p-8">
-                  <slot name="a4-content"></slot>
+          <div class="flex-1 overflow-auto p-8 bg-gray-100">
+            <div class="flex flex-col items-center">
+              <div class="space-y-4 w-full flex flex-col items-center">
+                <!-- Page indicator -->
+                <div v-if="pagesArray.length > 1" class="text-sm text-white mb-2">
+                  Showing {{ pagesArray.length }} page{{ pagesArray.length > 1 ? 's' : '' }}
+                </div>
+                <div
+                  v-for="idx in pagesArray"
+                  :key="idx"
+                  class="bg-white shadow-xl transition-transform duration-300 relative"
+                  :style="pageStyle"
+                >
+                  <slot name="a4-content" :pageIndex="idx"></slot>
+                  <!-- Page number badge - inside page at bottom -->
+                  <div class="absolute bottom-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded shadow-lg z-10">
+                    Page {{ idx + 1 }}/{{ pagesArray.length }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -194,16 +216,52 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps, defineEmits, onMounted, onUnmounted } from 'vue'
+import { ref, defineProps, defineEmits, onMounted, onUnmounted, computed } from 'vue'
 
 const props = defineProps({
   activeTab: {
     type: String,
     default: 'table'
+  },
+  pages: {
+    type: Number,
+    default: 1
+  },
+  orientation: {
+    type: String as () => 'portrait' | 'landscape',
+    default: 'portrait'
   }
 })
 
-const emit = defineEmits(['update:activeTab'])
+const emit = defineEmits(['update:activeTab', 'update:orientation'])
+
+const pageStyle = computed(() => {
+  if (props.orientation === 'landscape') {
+    return {
+      width: '297mm',
+      height: '210mm',
+      transform: `scale(${zoomLevel.value / 100})`,
+      transformOrigin: 'top center',
+      overflow: 'hidden',
+      boxSizing: 'border-box' as const
+    }
+  }
+
+  return {
+    width: '210mm',
+    height: '297mm',
+    transform: `scale(${zoomLevel.value / 100})`,
+    transformOrigin: 'top center',
+    overflow: 'hidden',
+    boxSizing: 'border-box' as const
+  }
+})
+
+const pagesArray = computed(() => {
+  const arr: number[] = []
+  for (let i = 0; i < props.pages; i++) arr.push(i)
+  return arr
+})
 
 const zoomLevel = ref(100)
 const isFullscreen = ref(false)
@@ -254,6 +312,23 @@ onUnmounted(() => {
 @media print {
   .bg-white {
     box-shadow: none !important;
+  }
+  
+  /* Hide page badges when printing */
+  .absolute.bottom-2 {
+    display: none !important;
+  }
+  
+  /* Force page breaks between pages */
+  .bg-white:not(:last-child) {
+    page-break-after: always;
+    break-after: page;
+  }
+  
+  /* Ensure each page fits properly */
+  @page {
+    size: A4;
+    margin: 0;
   }
 }
 </style>

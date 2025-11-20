@@ -132,7 +132,7 @@
               @drop="handleDrop"
               @dragover.prevent
               class="bg-white dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-600 rounded-lg overflow-auto relative p-8"
-              style="width: 210mm; height: 297mm; margin: 0 auto;"
+              style="width: 210mm; height: 297mm; margin: 0 auto; box-sizing: border-box;"
             >
               <!-- Report Preview (Actual HTML from parent) -->
               <div v-if="previewHtml" v-html="previewHtml" class="pointer-events-none"></div>

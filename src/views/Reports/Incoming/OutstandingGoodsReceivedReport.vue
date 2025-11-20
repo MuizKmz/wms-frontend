@@ -1,8 +1,8 @@
 <template>
   <AdminLayout>
     <ReportLayout
-      title="Stock Received Summary Report"
-      description="View current stock levels across all warehouses"
+      title="Outstanding Goods Received Report"
+      description="Items yet to be confirmed as received."
       :reportGenerated="reportGenerated"
       :generating="generating"
       :has-data="filteredData.length > 0"
@@ -522,7 +522,7 @@ const getTotalReceived = () => {
   return filteredData.value.reduce((total, item) => total + item.qty, 0)
 }
 
-// Use pagination composable to handle page splitting
+// Use pagination composable
 const { totalPages, paginatedData } = useReportPagination({
   data: filteredData,
   itemsPerPage: 15,
@@ -544,9 +544,9 @@ const getEPCCompliance = () => {
 const getReportTitle = () => {
   let title = ''
   if (filters.value.period) {
-    title = `${filters.value.period} Stock Received Summary`
+    title = `${filters.value.period} Outstanding Goods Received Report`
   } else {
-    title = 'Stock Received Summary'
+    title = 'Outstanding Goods Received Report'
   }
   
   if (filters.value.warehouse) {
@@ -571,7 +571,7 @@ const getReportSubtitle = () => {
     return parts.join(' ')
   }
   
-  return 'Inventory Status Across All Locations'
+  return 'Items yet to be confirmed as received.'
 }
 
 const getTotalQuantity = () => {
@@ -665,7 +665,7 @@ const openPrintWindow = () => {
   const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
-  <title>Stock Received Report</title>
+  <title>Outstanding Goods Received Report</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   ${stylesheets}
@@ -893,7 +893,7 @@ const exportToPDF = async () => {
     const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
-  <title>Stock Received Report</title>
+  <title>Outstanding Goods Received Report</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   ${stylesheets}

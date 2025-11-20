@@ -1,8 +1,8 @@
 <template>
   <AdminLayout>
     <ReportLayout
-      title="Stock Received Summary Report"
-      description="View current stock levels across all warehouses"
+      title="Purchase Order Summary Report"
+      description="Overview of all PO issued, quantity, status."
       :reportGenerated="reportGenerated"
       :generating="generating"
       :has-data="filteredData.length > 0"
@@ -194,11 +194,10 @@
                 <thead>
                   <tr>
                     <th>No</th>
-                    <th>Receiving Type</th>
+                    <th>PO Number</th>
                     <th>Supplier Name</th>
                     <th>SKU Code</th>
-                    <th>Product Name</th>
-                    <th>EPC Tags</th>
+                    <th>Product Name(s)</th>
                     <th>Qty</th>
                     <th>UOM</th>
                     <th>Timestamp</th>
@@ -207,34 +206,46 @@
                 <tbody>
                   <tr v-for="(item, index) in paginatedData[pageIndex]?.data || []" :key="item.id">
                     <td class="text-center">{{ (paginatedData[pageIndex]?.startRow || 0) + index }}</td>
-                    <td>{{ item.receivingType }}</td>
-                    <td>{{ item.supplierName }}</td>
-                    <td class="font-mono text-xs">{{ item.skuCode }}</td>
-                    <td>{{ item.product }}</td>
-                    <td class="font-mono text-xs">
-                      <div v-if="item.epcTags && item.epcTags.length > 0" class="space-y-1">
-                        <div v-for="(epc, epcIndex) in item.epcTags" :key="epcIndex" class="text-green-700">
-                          {{ epc }}
-                        </div>
-                      </div>
-                      <span v-else class="text-gray-500">N/A</span>
+                      <td>{{ item.poNumber || 'N/A' }}</td>
+                      <td>{{ item.supplierName }}</td>
+                      <td class="font-mono text-xs">
+                        <div v-for="(it, iIdx) in item.items" :key="iIdx" class="break-words">{{ it.skuCode }}</div>
+                      </td>
+                      <td class="font-mono text-xs">
+                        <div v-for="(it, iIdx) in item.items" :key="iIdx" class="text-gray-800">{{ it.product }}</div>
+                      </td>
+                    <td class="text-center font-semibold">
+                      <div v-for="(it, iIdx) in item.items" :key="iIdx">{{ it.receivedQty }}</div>
                     </td>
-                    <td class="text-center font-semibold">{{ item.qty }}</td>
-                    <td class="text-center">{{ item.uom }}</td>
+                    <td class="text-center">
+                      <div v-for="(it, iIdx) in item.items" :key="iIdx">{{ it.uom }}</div>
+                    </td>
                     <td class="text-xs">{{ item.timestamp }}</td>
                   </tr>
                 </tbody>
               </table>
 
               <template #summary>
-                <div class="space-y-2">
-                  <div class="flex justify-between text-sm">
-                    <span class="text-gray-600">Total Received:</span>
+                <div class="space-y-2 text-sm">
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Total PO Issued:</span>
+                    <span class="font-semibold text-gray-900">{{ getTotalPOIssued() }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Total Qty Ordered:</span>
+                    <span class="font-semibold text-gray-900">{{ getTotalQtyOrdered() }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Total Qty Received:</span>
                     <span class="font-semibold text-gray-900">{{ getTotalReceived() }}</span>
                   </div>
-                  <div class="flex justify-between text-sm">
-                    <span class="text-gray-600">EPC Compliance:</span>
-                    <span class="font-semibold text-gray-900">{{ getEPCCompliance() }}</span>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Overall Completion:</span>
+                    <span class="font-semibold text-gray-900">{{ getOverallCompletion() }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">EPC Tracking Applied:</span>
+                    <span class="font-semibold text-gray-900">{{ getEPCTrackingApplied() }}</span>
                   </div>
                 </div>
               </template>
@@ -472,43 +483,60 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 }
 
-const stockData = ref([
-  { 
-    id: 1, 
-    receivingType: 'Raw Material', 
-    supplierName: 'ABC Electronics', 
-    skuCode: 'SKU-001', 
-    product: 'Laptop HP Elite', 
-    epcTags: ['AA0012345678121125000001', 'AA0012345678121125000002', 'AA0012345678121125000003', 'AA0012345678121125000004', 'AA0012345678121125000005', 'AA0012345678121125000006', 'AA0012345678121125000007'],
-    qty: 7, 
-    uom: 'PCS', 
-    timestamp: '2025-11-18 09:30:00', 
-    warehouse: 'Main Warehouse' 
+  // Each PO contains multiple items (sku/product/orderedQty/receivedQty/uom/epcTags)
+  const stockData = ref([
+  {
+    id: 1,
+    poNumber: 'PO-1001',
+    supplierName: 'Supplier A',
+    timestamp: '2025-11-18 09:30:00',
+    warehouse: 'Main Warehouse',
+    items: [
+      { skuCode: 'SKU-101-A', product: 'Laptop HP Elite - Model A', orderedQty: 100, receivedQty: 90, uom: 'PCS', epcTags: ['AA0012345678121125000001'] },
+      { skuCode: 'SKU-101-B', product: 'Laptop HP Elite - Model B', orderedQty: 100, receivedQty: 90, uom: 'PCS', epcTags: ['AA0012345678121125000002'] }
+    ]
   },
-  { 
-    id: 2, 
-    receivingType: 'Finished Goods', 
-    supplierName: 'XYZ Supplies', 
-    skuCode: 'SKU-002', 
-    product: 'Mouse Logitech', 
-    epcTags: ['BB0012345678121125000001', 'BB0012345678121125000002', 'BB0012345678121125000003', 'BB0012345678121125000004', 'BB0012345678121125000005', 'BB0012345678121125000006', 'BB0012345678121125000007', 'BB0012345678121125000008'],
-    qty: 8, 
-    uom: 'PCS', 
-    timestamp: '2025-11-18 10:15:00', 
-    warehouse: 'Main Warehouse' 
+  {
+    id: 2,
+    poNumber: 'PO-1002',
+    supplierName: 'Supplier B',
+    timestamp: '2025-11-18 10:15:00',
+    warehouse: 'Main Warehouse',
+    items: [
+      { skuCode: 'SKU-102', product: 'Mouse Logitech', orderedQty: 150, receivedQty: 120, uom: 'PCS', epcTags: ['BB0012345678121125000001'] }
+    ]
   },
-  { 
-    id: 3, 
-    receivingType: 'Return', 
-    supplierName: 'Internal Transfer', 
-    skuCode: 'SKU-003', 
-    product: 'Keyboard Mechanical', 
-    epcTags: [],
-    qty: 5, 
-    uom: 'PCS', 
-    timestamp: '2025-11-18 11:00:00', 
-    warehouse: 'South Branch' 
+  {
+    id: 3,
+    poNumber: 'PO-1003',
+    supplierName: 'Supplier C',
+    timestamp: '2025-11-18 11:00:00',
+    warehouse: 'South Branch',
+    items: [
+      { skuCode: 'SKU-103', product: 'Keyboard Mechanical', orderedQty: 100, receivedQty: 80, uom: 'PCS', epcTags: [] }
+    ]
   },
+  {
+    id: 4,
+    poNumber: 'PO-1004',
+    supplierName: 'Supplier D',
+    timestamp: '2025-11-18 12:00:00',
+    warehouse: 'East Branch',
+    items: [
+      { skuCode: 'SKU-104-A', product: 'Monitor Samsung 24"', orderedQty: 50, receivedQty: 25, uom: 'PCS', epcTags: ['CC0012345678121125000001'] },
+      { skuCode: 'SKU-104-B', product: 'Monitor Samsung 27"', orderedQty: 50, receivedQty: 25, uom: 'PCS', epcTags: ['CC0012345678121125000002'] }
+    ]
+  },
+  {
+    id: 5,
+    poNumber: 'PO-1005',
+    supplierName: 'Supplier E',
+    timestamp: '2025-11-18 13:30:00',
+    warehouse: 'West Branch',
+    items: [
+      { skuCode: 'SKU-105', product: 'USB Cable', orderedQty: 50, receivedQty: 40, uom: 'PCS', epcTags: [] }
+    ]
+  }
 ])
 
 const filteredData = computed(() => {
@@ -519,24 +547,56 @@ const filteredData = computed(() => {
 })
 
 const getTotalReceived = () => {
-  return filteredData.value.reduce((total, item) => total + item.qty, 0)
+  return filteredData.value.reduce((total, po) => {
+    const sum = po.items.reduce((s, it) => s + (it.receivedQty || 0), 0)
+    return total + sum
+  }, 0)
 }
 
-// Use pagination composable to handle page splitting
+const getTotalPOIssued = () => {
+  const set = new Set(filteredData.value.map(i => i.poNumber).filter(Boolean))
+  return set.size
+}
+
+const getTotalQtyOrdered = () => {
+  return filteredData.value.reduce((total, po) => {
+    const sum = po.items.reduce((s, it) => s + (it.orderedQty || 0), 0)
+    return total + sum
+  }, 0)
+}
+
+const getOverallCompletion = () => {
+  const ordered = getTotalQtyOrdered()
+  const received = getTotalReceived()
+  if (ordered === 0) return '0.0%'
+  const percent = (received / ordered) * 100
+  return `${percent.toFixed(1)}%`
+}
+
+const getEPCTrackingApplied = () => {
+  const suppliers = new Set(filteredData.value.map(i => i.supplierName).filter(Boolean))
+  const suppliersWithEPC = new Set(filteredData.value.filter(po => po.items.some(it => (it.epcTags?.length || 0) > 0)).map(po => po.supplierName))
+  const total = suppliers.size
+  const applied = suppliersWithEPC.size
+  const percent = total > 0 ? Math.round((applied / total) * 100) : 0
+  return `${applied}/${total} (${percent}%)`
+}
+
+// Use pagination composable
 const { totalPages, paginatedData } = useReportPagination({
   data: filteredData,
-  itemsPerPage: 15,
+  itemsPerPage: 10,
   headerHeight: 220,
   footerHeight: 60,
-  rowHeight: 50,
+  rowHeight: 70,
   orientation: a4Orientation
 })
 
 const numberOfPages = totalPages
 
 const getEPCCompliance = () => {
-  const totalQty = filteredData.value.reduce((sum, item) => sum + item.qty, 0)
-  const epcQty = filteredData.value.reduce((sum, item) => sum + (item.epcTags?.length || 0), 0)
+  const totalQty = filteredData.value.reduce((sumPo, po) => sumPo + po.items.reduce((s, it) => s + (it.receivedQty || 0), 0), 0)
+  const epcQty = filteredData.value.reduce((sumPo, po) => sumPo + po.items.reduce((s, it) => s + (it.epcTags?.length || 0), 0), 0)
   const percentage = totalQty > 0 ? Math.round((epcQty / totalQty) * 100) : 0
   return `${epcQty}/${totalQty} (${percentage}%)`
 }
@@ -544,9 +604,9 @@ const getEPCCompliance = () => {
 const getReportTitle = () => {
   let title = ''
   if (filters.value.period) {
-    title = `${filters.value.period} Stock Received Summary`
+    title = `${filters.value.period} Purchase Order Summary`
   } else {
-    title = 'Stock Received Summary'
+    title = 'Purchase Order Summary'
   }
   
   if (filters.value.warehouse) {
@@ -575,7 +635,9 @@ const getReportSubtitle = () => {
 }
 
 const getTotalQuantity = () => {
-  return filteredData.value.reduce((total, item) => total + item.qty, 0)
+  return filteredData.value.reduce((total, po) => {
+    return total + po.items.reduce((s, it) => s + (it.receivedQty || 0), 0)
+  }, 0)
 }
 
 const getAppliedFilters = () => {
@@ -584,8 +646,11 @@ const getAppliedFilters = () => {
 
 const getSummaryCards = () => {
   return [
-    { label: 'Total Received', value: getTotalReceived().toString(), subtitle: 'Items received' },
-    { label: 'EPC Compliance', value: getEPCCompliance(), subtitle: 'Compliance rate' }
+    { label: 'Total PO Issued', value: getTotalPOIssued().toString(), subtitle: 'Distinct POs' },
+    { label: 'Total Qty Ordered', value: getTotalQtyOrdered().toString(), subtitle: 'Items ordered' },
+    { label: 'Total Qty Received', value: getTotalReceived().toString(), subtitle: 'Items received' },
+    { label: 'Overall Completion', value: getOverallCompletion(), subtitle: 'Received / Ordered' },
+    { label: 'EPC Tracking Applied', value: getEPCTrackingApplied(), subtitle: 'Suppliers using EPC' }
   ]
 }
 
@@ -632,6 +697,7 @@ const openPrintWindow = () => {
   const printContent = document.getElementById('printable-report')
   if (!printContent) return
 
+  // Clone and sanitize preview HTML: remove transform scaling and enforce A4 sizes
   let rawHtml = printContent.outerHTML
   const pageWidth = a4Orientation?.value === 'landscape' ? '297mm' : '210mm'
   const pageHeight = a4Orientation?.value === 'landscape' ? '210mm' : '297mm'
@@ -665,7 +731,7 @@ const openPrintWindow = () => {
   const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
-  <title>Stock Received Report</title>
+  <title>Purchase Order Report</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   ${stylesheets}
@@ -898,19 +964,9 @@ const exportToPDF = async () => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   ${stylesheets}
   <style>
-    * {
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    
     @page {
-      size: A4 ${a4Orientation?.value || 'portrait'};
-      margin: 0;
-    }
-    
-    html {
-      margin: 0;
-      padding: 0;
+      size: A4;
+      margin: 5mm;
     }
     
     body {
@@ -998,17 +1054,24 @@ const exportToPDF = async () => {
 }
 
 const exportToExcel = () => {
-  const data = filteredData.value.map((item, index) => ({
-    'No': index + 1,
-    'Receiving Type': item.receivingType,
-    'Supplier Name': item.supplierName,
-    'SKU Code': item.skuCode,
-    'Product Name': item.product,
-    'EPC Tags': item.epcTags?.join(', ') || 'N/A',
-    'Qty': item.qty,
-    'UOM': item.uom,
-    'Timestamp': item.timestamp
-  }))
+  const data = filteredData.value.map((po, index) => {
+    const skuCodes = po.items.map(it => it.skuCode).join('; ')
+    const orderedList = po.items.map(it => it.orderedQty).join('; ')
+    const receivedList = po.items.map(it => it.receivedQty).join('; ')
+    const products = po.items.map(it => it.product).join('; ')
+    const uoms = po.items.map(it => it.uom).join('; ')
+    return {
+      'No': index + 1,
+      'PO Number': po.poNumber || 'N/A',
+      'Supplier Name': po.supplierName,
+      'SKU Code(s)': skuCodes,
+      'Ordered Qty(s)': orderedList,
+      'Received Qty(s)': receivedList,
+      'Product Name(s)': products,
+      'UOM(s)': uoms,
+      'Timestamp': po.timestamp
+    }
+  })
   
   const ws = XLSX.utils.json_to_sheet(data)
   const wb = XLSX.utils.book_new()
@@ -1017,11 +1080,12 @@ const exportToExcel = () => {
   // Add column widths
   ws['!cols'] = [
     { wch: 5 },  // No
-    { wch: 18 }, // Receiving Type
+    { wch: 18 }, // PO Number
     { wch: 25 }, // Supplier Name
     { wch: 15 }, // SKU Code
-    { wch: 30 }, // Product Name
-    { wch: 10 }, // EPC Used
+    { wch: 12 }, // Ordered Qty
+    { wch: 30 }, // Product Name(s)
+    { wch: 10 }, // Qty
     { wch: 8 },  // Qty
     { wch: 8 },  // UOM
     { wch: 20 }  // Timestamp
@@ -1031,17 +1095,17 @@ const exportToExcel = () => {
 }
 
 const exportToCSV = () => {
-  const headers = ['No', 'Receiving Type', 'Supplier Name', 'SKU Code', 'Product Name', 'EPC Tags', 'Qty', 'UOM', 'Timestamp']
-  const rows = filteredData.value.map((item, index) => [
+  const headers = ['No', 'PO Number', 'Supplier Name', 'SKU Code(s)', 'Ordered Qty(s)', 'Received Qty(s)', 'Product Name(s)', 'UOM(s)', 'Timestamp']
+  const rows = filteredData.value.map((po, index) => [
     index + 1,
-    item.receivingType,
-    item.supplierName,
-    item.skuCode,
-    item.product,
-    item.epcTags?.join(', ') || 'N/A',
-    item.qty,
-    item.uom,
-    item.timestamp
+    po.poNumber || 'N/A',
+    po.supplierName,
+    po.items.map(it => it.skuCode).join('; '),
+    po.items.map(it => it.orderedQty).join('; '),
+    po.items.map(it => it.receivedQty).join('; '),
+    po.items.map(it => it.product).join('; '),
+    po.items.map(it => it.uom).join('; '),
+    po.timestamp
   ])
   
   let csvContent = headers.join(',') + '\n'
