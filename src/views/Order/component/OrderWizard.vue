@@ -135,7 +135,7 @@
                           class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed opacity-60"
                           disabled
                         >
-                          {{ formData.status || 'Created' }}
+                          {{ formData.status || 'PENDING' }}
                           <span class="icon-[tabler--chevron-down] size-4"></span>
                         </button>
                       </div>
@@ -598,7 +598,7 @@ const orderTypeDropdownRef = ref<any>(null)
 const itemStatusDropdownRef = ref<any>(null)
 
 const orderTypes = ['PO', 'SO']
-const orderStatuses = ['Created', 'Processing', 'Confirmed', 'Shipped', 'Completed', 'Cancelled']
+const orderStatuses = ['PENDING', 'PROCESSING', 'SHIPPED', 'RECEIVED', 'DELIVERED', 'CLOSED', 'CANCELLED']
 const itemStatuses = ['Pending', 'Allocated', 'Picked', 'Packed', 'Shipped', 'Delivered', 'Backordered', 'Rejected', 'Cancelled']
 
 const openDropdowns = reactive<Record<string, boolean>>({})
@@ -675,7 +675,7 @@ const closeModal = async (force = false) => {
 const resetForm = () => {
   formData.orderNo = ''
   formData.orderType = ''
-  formData.status = 'Created'
+  formData.status = 'PENDING'
   formData.estimatedDeliveryTime = ''
   formData.orderRemarks = ''
   formData.picName = ''

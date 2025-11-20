@@ -148,10 +148,10 @@ const fetchData = async () => {
     
     // Filter active orders within date range
     // Active orders are those NOT in 'Completed' or 'Cancelled' status
-    const activeStatuses = ['Created', 'Processing', 'Confirmed', 'Shipped']
+    const activeStatuses = ['PENDING', 'PROCESSING', 'SHIPPED', 'RECEIVED', 'DELIVERED']
     const filteredOrders = orders.filter(order => {
       const dateField = order.orderDate || order.createdAt || order.date || order.created_at
-      const status = order.orderStatus || order.status || 'Created'
+      const status = order.orderStatus || order.status || 'PENDING'
       
       if (!dateField) return false
       

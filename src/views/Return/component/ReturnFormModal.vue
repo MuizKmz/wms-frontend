@@ -814,14 +814,14 @@ const fetchOrders = async () => {
         if (formData.returnType === 'Customer' || formData.returnType === 'Customer Return') {
           // Show SO orders that have been shipped
           return order.orderType === 'SO' &&
-                 (order.status === 'Shipped' || order.status === 'Delivered')
+                 (order.status === 'SHIPPED' || order.status === 'DELIVERED')
         } else if (formData.returnType === 'Supplier' || formData.returnType === 'Supplier Return') {
           // Show PO orders that have been received
-          return order.orderType === 'PO' && order.status === 'Received'
+          return order.orderType === 'PO' && order.status === 'RECEIVED'
         }
         // If no return type selected yet, show all completed orders
-        return (order.orderType === 'SO' && (order.status === 'Shipped' || order.status === 'Delivered')) ||
-               (order.orderType === 'PO' && order.status === 'Received')
+        return (order.orderType === 'SO' && (order.status === 'SHIPPED' || order.status === 'DELIVERED')) ||
+               (order.orderType === 'PO' && order.status === 'RECEIVED')
       })
     }
   } catch (error) {

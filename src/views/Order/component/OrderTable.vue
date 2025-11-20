@@ -402,19 +402,14 @@ const handleColumnsUpdate = (columns) => {
 const statusClass = (status) => {
   if (!status) return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
   const map = {
-    Created: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
-    Processing: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
-    Preparing: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
-    Confirmed: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200',
-    Allocated: 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200',
-    Picked: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-200',
-    Packed: 'bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-200',
-    Shipped: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200',
-    Delivered: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200',
-    Completed: 'bg-green-200 text-green-900 dark:bg-green-900/60 dark:text-green-100',
-    Backordered: 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200',
-    Rejected: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200',
-    Cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200',
+    // Simplified OrderStatus enum
+    PENDING: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
+    PROCESSING: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
+    SHIPPED: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200',
+    RECEIVED: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-200',
+    DELIVERED: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200',
+    CLOSED: 'bg-green-200 text-green-900 dark:bg-green-900/60 dark:text-green-100',
+    CANCELLED: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200',
   }
   return map[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
 }

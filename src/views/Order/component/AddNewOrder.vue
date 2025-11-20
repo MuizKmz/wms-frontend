@@ -467,7 +467,7 @@ const errors = reactive({
 
 const orderTypes = ['PO', 'SO',]
 // Expanded, realistic order lifecycle for procurement / warehouse
-const orderStatuses = ['Created', 'Processing', 'Confirmed', 'Shipped', 'Completed', 'Cancelled']
+const orderStatuses = ['PENDING', 'PROCESSING', 'SHIPPED', 'RECEIVED', 'DELIVERED', 'CLOSED', 'CANCELLED']
 // Unified item lifecycle (applies to all order items together in this form)
 const itemStatuses = ['Pending', 'Allocated', 'Picked', 'Packed', 'Shipped', 'Delivered', 'Backordered', 'Rejected', 'Cancelled']
 const customers = ref<Customer[]>([])

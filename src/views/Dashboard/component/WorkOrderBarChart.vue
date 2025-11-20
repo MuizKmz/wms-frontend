@@ -201,7 +201,7 @@ const fetchData = async () => {
         }
         
         if (key && dateMap[key]) {
-          const status = order.orderStatus || order.status || 'Created'
+          const status = order.orderStatus || order.status || 'PENDING'
           if (dateMap[key][status] !== undefined) {
             dateMap[key][status]++
           }

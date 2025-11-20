@@ -508,7 +508,7 @@ const errors = reactive<Record<string, string>>({
 })
 
 const orderTypes = ['PO', 'SO', 'RMA']
-const orderStatuses = ['Created', 'Processing', 'Confirmed', 'Shipped', 'Completed', 'Cancelled']
+const orderStatuses = ['PENDING', 'PROCESSING', 'SHIPPED', 'RECEIVED', 'DELIVERED', 'CLOSED', 'CANCELLED']
 const itemStatuses = ['Pending', 'Allocated', 'Picked', 'Packed', 'Shipped', 'Delivered', 'Backordered', 'Rejected', 'Cancelled']
 const customers = ref<Customer[]>([])
 const products = ref<Product[]>([])

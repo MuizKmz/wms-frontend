@@ -1,372 +1,446 @@
 <template>
   <teleport to="body">
     <transition
-      enter-active-class="transition-opacity duration-300 ease-out"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition-opacity duration-250 ease-in"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
+      enter-active-class="transition-opacity duration-300"
+      leave-active-class="transition-opacity duration-200"
       @after-leave="unlockScroll"
     >
-      <div
-        v-if="isOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center"
-        aria-hidden="false"
-        @click.self="closeModal"
-      >
-        <!-- overlay -->
-        <div class="absolute inset-0 bg-black/50"></div>
-
-        <!-- modal panel -->
+      <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50" @click.self="() => closeModal()"></div>
         <transition
-          enter-active-class="transition-all duration-300 ease-out"
-          enter-from-class="opacity-0 scale-95 translate-y-4"
-          enter-to-class="opacity-100 scale-100 translate-y-0"
-          leave-active-class="transition-all duration-250 ease-in"
-          leave-from-class="opacity-100 scale-100 translate-y-0"
-          leave-to-class="opacity-0 scale-95 translate-y-4"
+          enter-active-class="transition-all duration-300"
+          enter-from-class="opacity-0 scale-95"
+          enter-to-class="opacity-100 scale-100"
           appear
         >
-          <div
-            v-if="isOpen"
-            ref="panelRef"
-            class="relative z-10 w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col"
-            @click.stop
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="modal-title"
-          >
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col min-h-0 max-h-[90vh]">
-              <!-- header -->
+          <div v-if="isOpen" class="relative z-10 w-full max-w-3xl mx-4">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden">
+              <!-- Header -->
               <div class="flex items-center justify-between p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">
-                  Edit Receiving
-                </h2>
+                <div>
+                  <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+                    {{ isViewMode ? 'View Receiving' : 'Edit Receiving Information' }}
+                  </h2>
+                  <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Step {{ currentStep }} of {{ totalSteps }}</p>
+                </div>
                 <button
-                  type="button"
-                  class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                  @click="closeModal"
+                  @click="() => closeModal()"
                   :disabled="isSubmitting"
+                  class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   aria-label="Close modal"
                 >
                   ✕
                 </button>
               </div>
 
-              <!-- body -->
-              <div class="space-y-4 overflow-y-auto p-6 flex-1">
-                <!-- Submit Error -->
-                <div v-if="errors.submit" class="alert alert-error">
-                  <span>{{ errors.submit }}</span>
-                </div>
-
-                <!-- Row 1: Receiving Code & PO Number (Both Disabled) -->
-                <div class="grid grid-cols-2 gap-4">
-                  <!-- Receiving Code (Disabled) -->
-                  <div class="relative">
-                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                      <span class="text-red-500">*</span> Receiving Code
-                    </label>
-                    <input
-                      v-model="form.receivingCode"
-                      type="text"
-                      placeholder="Enter Receiving Code"
-                      maxlength="50"
-                      class="input input-bordered w-full bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white cursor-not-allowed"
-                      disabled
-                      readonly
-                    />
-                  </div>
-
-                  <!-- PO Number (Disabled) -->
-                  <div class="relative">
-                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                      PO Number
-                    </label>
-                    <input
-                      v-model="form.poNumber"
-                      type="text"
-                      placeholder="PO Number"
-                      maxlength="50"
-                      class="input input-bordered w-full bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white cursor-not-allowed"
-                      disabled
-                      readonly
-                    />
-                  </div>
-                </div>
-
-                <!-- Row 2: DO Number & Supplier (DO editable, Supplier disabled) -->
-                <div class="grid grid-cols-2 gap-4">
-                  <!-- DO Number (Editable) -->
-                  <div class="relative">
-                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                      DO Number
-                    </label>
-                    <input
-                      v-model="form.doNumber"
-                      type="text"
-                      placeholder="Enter DO Number"
-                      maxlength="50"
-                      :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.doNumber }]"
-                      :readonly="isViewMode"
-                      :disabled="isViewMode"
-                    />
-                  </div>
-
-                  <!-- Supplier (Disabled) -->
-                  <div class="relative">
-                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                      <span class="text-red-500">*</span> Supplier
-                    </label>
-                    <input
-                      :value="getSupplierName(form.supplierId)"
-                      type="text"
-                      placeholder="Supplier"
-                      class="input input-bordered w-full bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white cursor-not-allowed"
-                      disabled
-                      readonly
-                    />
-                  </div>
-                </div>
-
-                <!-- Row 3: Warehouse & Location (Both Editable with fixed positioning) -->
-                <div class="grid grid-cols-2 gap-4">
-                  <!-- Warehouse -->
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Warehouse
-                    </label>
-                    <div class="relative" ref="warehouseDropdownRef">
-                      <button
-                        type="button"
-                        @click="!isViewMode && toggleDropdown('warehouse')"
-                        class="input input-bordered w-full text-left flex items-center justify-between"
-                        :disabled="isViewMode || loadingWarehouses"
+              <!-- Step Indicator -->
+              <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900/30">
+                <div class="flex items-center justify-between">
+                  <div
+                    v-for="(step, index) in steps"
+                    :key="step.id"
+                    class="flex items-center flex-1"
+                  >
+                    <div class="flex items-center">
+                      <div
+                        :class="[
+                          'w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all',
+                          currentStep > step.id
+                            ? 'bg-green-500 text-white'
+                            : currentStep === step.id
+                            ? 'bg-brand-500 text-white'
+                            : 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400',
+                        ]"
                       >
-                        <span>{{ getWarehouseName(form.warehouseId) || 'Select Warehouse' }}</span>
-                        <span class="icon-[tabler--chevron-down] size-4"></span>
-                      </button>
-                      <ul
-                        v-if="openDropdowns.warehouse"
-                        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-y-auto"
-                        :style="openDropdowns.warehouse ? warehouseMenuStyle : { display: 'none' }"
+                        <span v-if="currentStep > step.id">✓</span>
+                        <span v-else>{{ step.id }}</span>
+                      </div>
+                      <span
+                        :class="[
+                          'ml-2 text-sm font-medium hidden sm:inline',
+                          currentStep === step.id
+                            ? 'text-brand-600 dark:text-brand-400'
+                            : currentStep > step.id
+                            ? 'text-green-600 dark:text-green-400'
+                            : 'text-gray-500 dark:text-gray-400',
+                        ]"
                       >
-                        <li
-                          v-for="warehouse in warehouses"
-                          :key="warehouse.id"
-                          @click="selectWarehouse(warehouse.id)"
-                          class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm"
-                        >
-                          {{ warehouse.warehouseCode }} - {{ warehouse.name }}
-                        </li>
-                        <li v-if="warehouses.length === 0" class="px-4 py-2 text-sm text-gray-500">
-                          No warehouses found
-                        </li>
-                      </ul>
+                        {{ step.name }}
+                      </span>
                     </div>
+                    <div
+                      v-if="index < steps.length - 1"
+                      :class="[
+                        'flex-1 h-0.5 mx-3',
+                        currentStep > step.id ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600',
+                      ]"
+                    ></div>
                   </div>
+                </div>
+              </div>
 
-                  <!-- Location Hierarchy -->
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Location (Optional)
-                    </label>
-                    <div class="relative" ref="locationDropdownRef">
-                      <button
-                        type="button"
-                        @click="!isViewMode && toggleDropdown('location')"
-                        class="input input-bordered w-full text-left flex items-center justify-between"
-                        :disabled="isViewMode || !form.warehouseId || loadingLocations"
-                      >
-                        <span>{{ getLocationName(form.locationId) || 'Select Location' }}</span>
-                        <span class="icon-[tabler--chevron-down] size-4"></span>
-                      </button>
-                      <ul
-                        v-if="openDropdowns.location"
-                        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-y-auto"
-                        :style="openDropdowns.location ? locationMenuStyle : { display: 'none' }"
-                      >
-                        <li
-                          v-for="location in hierarchicalLocations"
-                          :key="location.id"
-                          @click="selectLocation(location.id)"
-                          class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm"
-                          :style="{ paddingLeft: (location.depth * 1.5 + 1) + 'rem' }"
-                        >
-                          <div class="flex items-center gap-2">
-                            <span v-if="location.hasChildren" class="text-xs">{{ location.isExpanded ? '▼' : '▶' }}</span>
-                            <span v-else class="w-3"></span>
-                            <span>{{ location.locationCode }} - {{ location.locationName }}</span>
-                          </div>
-                        </li>
-                        <li v-if="hierarchicalLocations.length === 0" class="px-4 py-2 text-sm text-gray-500">
-                          {{ form.warehouseId ? 'No locations found' : 'Please select a warehouse first' }}
-                        </li>
-                      </ul>
+              <!-- Form Content -->
+              <div class="p-6 min-h-[400px]">
+                <!-- Error Message Banner -->
+                <div v-if="submitError" class="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                  <div class="flex items-start">
+                    <svg class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                    <div class="ml-3 flex-1">
+                      <h3 class="text-sm font-medium text-red-800 dark:text-red-200">Error</h3>
+                      <p class="mt-1 text-sm text-red-700 dark:text-red-300">{{ submitError }}</p>
                     </div>
+                    <button @click="submitError = ''" class="ml-3 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200">
+                      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                      </svg>
+                    </button>
                   </div>
                 </div>
 
-                <!-- Row 4: Receiving Purpose & Received By (Both Editable) -->
-                <div class="grid grid-cols-2 gap-4">
-                  <!-- Receiving Purpose (Editable) -->
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      <span class="text-red-500">*</span> Receiving Purpose
-                    </label>
-                    <div class="relative" ref="purposeDropdownRef">
-                      <button
-                        type="button"
-                        @click="!isViewMode && toggleDropdown('receivingPurpose')"
-                        class="input input-bordered w-full text-left flex items-center justify-between"
-                        :class="{ 'input-error': errors.receivingPurpose }"
-                        :disabled="isViewMode"
-                      >
-                        <span>{{ formatPurposeDisplay(form.receivingPurpose) || 'Select Receiving Purpose' }}</span>
-                        <span class="icon-[tabler--chevron-down] size-4"></span>
-                      </button>
-                      <ul
-                        v-if="openDropdowns.receivingPurpose"
-                        class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                      >
-                        <li
-                          v-for="option in receivingPurposeOptions"
-                          :key="option.value"
-                          @click="selectPurpose(option.value)"
-                          class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm"
-                        >
-                          {{ option.label }}
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
+                <!-- Step 1: Status & Receiving Details -->
+                <div v-if="currentStep === 1">
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Status & Receiving Details</h3>
+                  <div class="space-y-4">
 
-                  <!-- Received By (Editable) -->
-                  <div class="relative">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      <span class="text-red-500">*</span> Received By
-                    </label>
-                    <input
-                      v-model="form.receivedBy"
-                      type="text"
-                      placeholder="Enter Receiver Name"
-                      maxlength="100"
-                      :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.receivedBy }]"
-                      :readonly="isViewMode"
-                      :disabled="isViewMode"
-                    />
-                  </div>
-                </div>
-
-                <!-- Row 5: Receiving Date & Remarks (Both Editable) -->
-                <div class="grid grid-cols-2 gap-4">
-                  <!-- Receiving Date (Editable) -->
-                  <div class="relative">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Receiving Date
-                    </label>
-                    <input
-                      ref="receivingDateInput"
-                      v-model="form.receivingDate"
-                      type="text"
-                      placeholder="Select Date"
-                      :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.receivingDate }]"
-                      readonly
-                      :disabled="isViewMode"
-                    />
-                  </div>
-
-                  <!-- Remarks (Editable) -->
-                  <div class="relative">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Remarks
-                    </label>
-                    <input
-                      v-model="form.remarks"
-                      type="text"
-                      placeholder="Enter Remarks"
-                      maxlength="500"
-                      :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.remarks }]"
-                      :readonly="isViewMode"
-                      :disabled="isViewMode"
-                    />
-                  </div>
-                </div>
-
-                <!-- Product Table (Products are disabled, only quantity is editable) -->
-                <div class="mt-6">
-                  <h4 class="text-md font-semibold text-gray-900 dark:text-white mb-3">Product Information</h4>
-
-                <!-- Product Rows (Product names disabled, only quantity editable) -->
-                <div class="space-y-3 max-h-60 overflow-y-auto" style="padding-right: 8px;">
-                  <div v-for="(product, index) in form.products" :key="index" class="grid grid-cols-12 gap-4 items-start">
-                    <!-- Product Name (Disabled) -->
-                    <div class="col-span-7 relative">
-                      <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                        <span class="text-red-500">*</span> Product {{ index + 1 }}
+                    <!-- Status Selection (Prominent) -->
+                    <div class="bg-brand-50 dark:bg-brand-900/20 p-4 rounded-lg border border-brand-200 dark:border-brand-800">
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                        Receiving Status <span class="text-red-500">*</span>
                       </label>
-                      <input
-                        :value="getProductName(product.productId)"
-                        type="text"
-                        placeholder="Product"
-                        class="input input-bordered w-full bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white cursor-not-allowed"
-                        disabled
-                        readonly
-                      />
+                      <div class="grid grid-cols-2 gap-3">
+                        <label
+                          v-for="status in statusOptions"
+                          :key="status"
+                          class="flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all"
+                          :class="[
+                            formData.status === status
+                              ? getStatusBorderClass(status)
+                              : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                          ]"
+                        >
+                          <input
+                            v-model="formData.status"
+                            type="radio"
+                            :value="status"
+                            class="radio radio-primary"
+                            :disabled="isViewMode"
+                          />
+                          <span class="flex-1">
+                            <span :class="['badge text-white font-medium', getStatusBadgeClass(status)]">
+                              {{ status }}
+                            </span>
+                          </span>
+                        </label>
+                      </div>
+                      <p class="text-xs text-gray-500 mt-2">
+                        ℹ️ Update the receiving status. Mark as COMPLETED when all items are received.
+                      </p>
                     </div>
 
-                    <!-- Product Quantity (Editable) -->
-                    <div class="col-span-4 relative">
-                      <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                        <span class="text-red-500">*</span> Actual Quantity
-                      </label>
-                      <div class="flex items-center gap-2">
-                        <button
-                          type="button"
-                          @click="!isViewMode && decreaseQuantity(index)"
-                          class="btn btn-outline btn-sm w-10 h-10 p-0 flex items-center justify-center"
-                          :disabled="isViewMode"
-                        >
-                          −
-                        </button>
+                    <!-- Row 1: Receiving Code & PO Number (Read-only) -->
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Receiving Code
+                        </label>
                         <input
-                          v-model.number="product.quantity"
-                          type="number"
-                          min="1"
-                          :class="['input input-bordered text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors[`quantity${index}`] }]"
-                          style="width: 5rem"
-                          @input="!isViewMode && validateQuantity(index)"
-                          :readonly="isViewMode"
-                          :disabled="isViewMode"
+                          v-model="formData.receivingCode"
+                          type="text"
+                          class="input input-bordered w-full bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
+                          readonly
+                          disabled
                         />
-                        <button
-                          type="button"
-                          @click="!isViewMode && increaseQuantity(index)"
-                          class="btn btn-primary btn-sm w-10 h-10 p-0 flex items-center justify-center"
-                          :disabled="isViewMode"
-                        >
-                          +
-                        </button>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          PO Number
+                        </label>
+                        <input
+                          :value="formData.poNumber || 'N/A'"
+                          type="text"
+                          class="input input-bordered w-full bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
+                          readonly
+                          disabled
+                        />
                       </div>
                     </div>
 
-                    <!-- Spacer for alignment -->
-                    <div class="col-span-1"></div>
+                    <!-- Row 2: DO Number (Editable) -->
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          DO Number <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                          v-model="formData.doNumber"
+                          type="text"
+                          class="input input-bordered w-full"
+                          placeholder="Enter DO number"
+                          :readonly="isViewMode"
+                          :disabled="isViewMode"
+                        />
+                        <span v-if="errors.doNumber" class="text-xs text-red-500 mt-1">{{ errors.doNumber }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Row 3: Receiving Type & Received By -->
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Receiving Type <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative" ref="receivingTypeDropdownRef">
+                          <button
+                            type="button"
+                            @click="!isViewMode && toggleDropdown('receivingType')"
+                            class="input input-bordered w-full text-left flex items-center justify-between"
+                            :disabled="isViewMode"
+                          >
+                            <span>{{ formatPurposeDisplay(formData.receivingPurpose) || 'Select Receiving Type' }}</span>
+                            <span v-if="!isViewMode" class="icon-[tabler--chevron-down] size-4"></span>
+                          </button>
+                          <ul
+                            v-if="openDropdowns.receivingType && !isViewMode"
+                            class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                          >
+                            <li
+                              v-for="option in receivingTypeOptions"
+                              :key="option.value"
+                              @click="selectReceivingType(option.value)"
+                              class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm"
+                            >
+                              {{ option.label }}
+                            </li>
+                          </ul>
+                        </div>
+                        <span v-if="errors.receivingType" class="text-xs text-red-500 mt-1">{{ errors.receivingType }}</span>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Received By <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                          v-model="formData.receivedBy"
+                          type="text"
+                          class="input input-bordered w-full"
+                          placeholder="Enter received by"
+                          :readonly="isViewMode"
+                          :disabled="isViewMode"
+                        />
+                        <span v-if="errors.receivedBy" class="text-xs text-red-500 mt-1">{{ errors.receivedBy }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Row 4: Receiving Date & Remarks -->
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Receiving Date <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                          ref="receivingDateInput"
+                          v-model="formData.receivingDate"
+                          type="text"
+                          placeholder="Select Date"
+                          class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          readonly
+                          :disabled="isViewMode"
+                        />
+                        <span v-if="errors.receivingDate" class="text-xs text-red-500 mt-1">{{ errors.receivingDate }}</span>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Remarks
+                        </label>
+                        <textarea
+                          v-model="formData.remarks"
+                          rows="3"
+                          class="input input-bordered w-full"
+                          placeholder="Enter any remarks"
+                          :readonly="isViewMode"
+                          :disabled="isViewMode"
+                        ></textarea>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Step 2: Supplier (Read-only) -->
+                <div v-if="currentStep === 2">
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Supplier Information</h3>
+                  <div class="space-y-4">
+                    <!-- Info banner -->
+                    <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <p class="text-sm text-blue-800 dark:text-blue-200">
+                        ℹ️ Supplier cannot be changed after receiving is created.
+                      </p>
+                    </div>
+
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Supplier
+                      </label>
+                      <input
+                        :value="getSupplierName(formData.supplierId)"
+                        type="text"
+                        class="input input-bordered w-full bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
+                        readonly
+                        disabled
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Step 3: Products (Quantities Editable) -->
+                <div v-if="currentStep === 3">
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Product Information</h3>
+
+                  <!-- Info banner -->
+                  <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800 mb-4">
+                    <p class="text-sm text-blue-800 dark:text-blue-200">
+                      ℹ️ Products cannot be changed. You can only update the received quantities.
+                    </p>
+                  </div>
+
+                  <!-- Product Rows -->
+                  <div class="space-y-3 max-h-96 overflow-y-auto" style="padding-right: 8px;">
+                    <div v-for="(product, index) in formData.products" :key="index" class="grid grid-cols-12 gap-4 items-start">
+                      <!-- Product Name (Read-only) -->
+                      <div class="col-span-7 relative">
+                        <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                          Product {{ index + 1 }}
+                        </label>
+                        <input
+                          :value="getProductName(product.productId)"
+                          type="text"
+                          class="input input-bordered w-full bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
+                          readonly
+                          disabled
+                        />
+                      </div>
+
+                      <!-- Product Quantity (Editable) -->
+                      <div class="col-span-4 relative">
+                        <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                          <span class="text-red-500">*</span> Actual Quantity
+                        </label>
+                        <div class="flex items-center gap-1">
+                          <button
+                            type="button"
+                            @click="!isViewMode && decreaseQuantity(index)"
+                            class="btn btn-outline btn-sm w-8 h-8 p-0 flex items-center justify-center dark:bg-gray-700 dark:text-gray-400"
+                            :disabled="isViewMode"
+                          >
+                            −
+                          </button>
+                          <input
+                            v-model.number="product.quantity"
+                            type="number"
+                            min="1"
+                            class="input input-bordered text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            style="width: 5rem"
+                            :readonly="isViewMode"
+                            :disabled="isViewMode"
+                          />
+                          <button
+                            type="button"
+                            @click="!isViewMode && increaseQuantity(index)"
+                            class="btn bg-brand-500 border-none btn-sm w-8 h-8 p-0 flex items-center justify-center"
+                            :disabled="isViewMode"
+                          >
+                            +
+                          </button>
+                        </div>
+                        <span v-if="errors[`quantity${index}`]" class="text-xs text-red-500 mt-1">{{ errors[`quantity${index}`] }}</span>
+                      </div>
+
+                      <div class="col-span-1"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Step 4: Location (Read-only) -->
+                <div v-if="currentStep === 4">
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Location Information</h3>
+
+                  <!-- Info banner -->
+                  <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800 mb-4">
+                    <p class="text-sm text-blue-800 dark:text-blue-200">
+                      ℹ️ Warehouse and location cannot be changed after receiving is created.
+                    </p>
+                  </div>
+
+                  <div class="space-y-4">
+                    <!-- Warehouse (Read-only) -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Warehouse
+                      </label>
+                      <input
+                        :value="getWarehouseName(formData.warehouseId) || 'Not Assigned'"
+                        type="text"
+                        class="input input-bordered w-full bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
+                        readonly
+                        disabled
+                      />
+                    </div>
+
+                    <!-- Location (Read-only) -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Location
+                      </label>
+                      <input
+                        :value="getLocationName(formData.locationId) || 'Not Assigned'"
+                        type="text"
+                        class="input input-bordered w-full bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
+                        readonly
+                        disabled
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-              </div>
 
-              <!-- footer -->
-              <div class="flex justify-end gap-2 p-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button @click="closeModal" class="btn btn-outline btn-error" :disabled="isSubmitting">
-                  {{ isViewMode ? 'Close' : 'Cancel' }}
+              <!-- Footer with Navigation -->
+              <div class="flex items-center justify-between p-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  v-if="currentStep > 1"
+                  @click="previousStep"
+                  :disabled="isSubmitting"
+                  class="btn btn-outline"
+                >
+                  ← Previous
                 </button>
-                <button v-if="!isViewMode" @click="submitForm" class="btn btn-primary" :disabled="isSubmitting">
-                  <span v-if="isSubmitting" class="loading loading-spinner loading-sm"></span>
-                  {{ isSubmitting ? 'Saving...' : 'Save' }}
-                </button>
+                <div v-else></div>
+
+                <div class="flex gap-2">
+                  <button
+                    @click="() => closeModal()"
+                    :disabled="isSubmitting"
+                    class="btn btn-outline"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    v-if="currentStep < totalSteps && !isViewMode"
+                    @click="nextStep"
+                    class="btn bg-brand-500 border-none"
+                  >
+                    Next →
+                  </button>
+                  <button
+                    v-if="currentStep === totalSteps && !isViewMode"
+                    @click="submitForm"
+                    :disabled="isSubmitting"
+                    class="btn btn-primary"
+                  >
+                    <span v-if="isSubmitting" class="loading loading-spinner loading-sm"></span>
+                    {{ isSubmitting ? 'Saving...' : 'Save Changes' }}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -376,204 +450,77 @@
   </teleport>
 </template>
 
-<script setup>
-import { ref, reactive, computed, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+<script setup lang="ts">
+import { ref, reactive, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { authenticatedFetch } from '@/utils/authenticatedFetch'
 import flatpickr from 'flatpickr'
 import 'flatpickr/dist/flatpickr.css'
-import { authenticatedFetch } from '@/utils/authenticatedFetch'
 
+const emit = defineEmits(['receiving-updated', 'close'])
 
-
-const emit = defineEmits(['receiving-created', 'receiving-updated'])
-
-// track edit mode and current receiving id
-const isEditMode = ref(false)
-const isViewMode = ref(false)
-const currentReceivingId = ref(null)
-
-/* state */
 const isOpen = ref(false)
+const isViewMode = ref(false)
 const isSubmitting = ref(false)
-const panelRef = ref(null)
-const warehouseDropdownRef = ref(null)
-const locationDropdownRef = ref(null)
-const rackDropdownRef = ref(null)
-const sectionDropdownRef = ref(null)
-const supplierDropdownRef = ref(null)
-const purposeDropdownRef = ref(null)
-const productDropdownRefs = ref([])
-const unitDropdownRefs = ref([])
-const receivingDateInput = ref(null)
-let flatpickrInstance = null
+const currentStep = ref(1)
+const totalSteps = 4
+const receivingId = ref<number | null>(null)
 
-// API Data
-const warehouses = ref([])
-const locations = ref([])
-const expandedLocationIds = ref([])
-const racks = ref([])
-const sections = ref([])
-const suppliers = ref([])
-const products = ref([])
-const loadingWarehouses = ref(false)
-const loadingLocations = ref(false)
+const steps = [
+  { id: 1, name: 'Status & Details' },
+  { id: 2, name: 'Supplier' },
+  { id: 3, name: 'Products' },
+  { id: 4, name: 'Location' },
+]
 
-const form = reactive({
+const statusOptions = ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CLOSED']
+
+const formData = reactive({
   receivingCode: '',
   poNumber: '',
   doNumber: '',
-  warehouseId: null,
-  locationId: null,
-  rackId: null,
-  sectionId: null,
-  supplierId: null,
-  source: '',
-  receivingPurpose: '',
-  receivedBy: '',
-  receivingDate: new Date().toISOString().split('T')[0],
-  remarks: '',
-  products: [
-    { productId: null, quantity: 1, unit: 'pcs' }
-  ]
-})
-
-const errors = reactive({
-  receivingCode: '',
-  doNumber: '',
-  warehouseId: '',
-  rackId: '',
-  sectionId: '',
-  supplierId: '',
-  source: '',
   receivingPurpose: '',
   receivedBy: '',
   receivingDate: '',
   remarks: '',
-  submit: ''
+  status: 'PENDING',
+  supplierId: null as number | null,
+  products: [] as { productId: number | null; quantity: number }[],
+  warehouseId: null as number | null,
+  locationId: null as number | null,
 })
 
-const receivingPurposeOptions = [
+const errors = reactive<Record<string, string>>({})
+const submitError = ref<string>('')
+
+// API Data
+const suppliers = ref<any[]>([])
+const products = ref<any[]>([])
+const warehouses = ref<any[]>([])
+const locations = ref<any[]>([])
+
+const receivingTypeDropdownRef = ref<any>(null)
+const receivingDateInput = ref(null)
+let flatpickrInstance: any = null
+
+const openDropdowns = reactive<Record<string, boolean>>({
+  receivingType: false,
+})
+
+// Receiving Type options
+const receivingTypeOptions = [
   { label: 'Raw Material', value: 'RAW_MATERIAL' },
   { label: 'Finished Goods', value: 'FINISHED_GOODS' }
 ]
-const openDropdowns = reactive({})
-
-// Dropdown overlay styles
-const productMenuStyles = reactive([])
-const unitMenuStyles = reactive([])
-const warehouseMenuStyle = ref({})
-const locationMenuStyle = ref({})
-
-// Units dropdown options for product unit
-const unitsOptions = ['pcs',]
-
-/* Modal scroll lock utilities */
-let scrollY = 0
-let scrollbarWidth = 0
-
-const getScrollbarWidth = () => {
-  return window.innerWidth - document.documentElement.clientWidth
-}
 
 const lockScroll = () => {
-  scrollY = window.scrollY
-  scrollbarWidth = getScrollbarWidth()
-
-  document.body.style.paddingRight = `${scrollbarWidth}px`
-  document.body.style.position = 'fixed'
-  document.body.style.top = `-${scrollY}px`
-  document.body.style.width = '100%'
   document.body.style.overflow = 'hidden'
 }
 
 const unlockScroll = () => {
-  document.body.style.paddingRight = ''
-  document.body.style.position = ''
-  document.body.style.top = ''
-  document.body.style.width = ''
   document.body.style.overflow = ''
-
-  requestAnimationFrame(() => {
-    window.scrollTo(0, scrollY)
-  })
 }
 
-/* Fetch API Data */
-const fetchWarehouses = async () => {
-  loadingWarehouses.value = true
-  try {
-    const response = await authenticatedFetch('/api/warehouse')
-    if (response.ok) {
-      warehouses.value = await response.json()
-    }
-  } catch (error) {
-    console.error('Error fetching warehouses:', error)
-  } finally {
-    loadingWarehouses.value = false
-  }
-}
-
-const fetchLocations = async (warehouseId) => {
-  if (!warehouseId) {
-    locations.value = []
-    return
-  }
-
-  loadingLocations.value = true
-  try {
-    const response = await authenticatedFetch(`/api/location?warehouseId=${warehouseId}`)
-    if (response.ok) {
-      const data = await response.json()
-      locations.value = (data || []).map((location) => ({
-        id: location.id,
-        locationCode: location.locationCode || '-',
-        locationName: location.locationName || location.name || '-',
-        warehouseId: location.warehouse?.id || location.warehouseId || null,
-        type: location.type || location.locationType || 'Other',
-        hierarchy: location.hierarchy || 'Level 0',
-        parentLocationId: location.parentLocationId || null,
-        child1LocationId: location.child1LocationId || null,
-      }))
-    }
-  } catch (error) {
-    console.error('Error fetching locations:', error)
-    locations.value = []
-  } finally {
-    loadingLocations.value = false
-  }
-}
-
-const fetchRacks = async (warehouseId) => {
-  if (!warehouseId) {
-    racks.value = []
-    return
-  }
-  try {
-    const response = await authenticatedFetch(`/api/rack?warehouseId=${warehouseId}`)
-    if (response.ok) {
-      racks.value = await response.json()
-      console.log(racks.value)
-    }
-  } catch (error) {
-    console.error('Error fetching racks:', error)
-  }
-}
-
-const fetchSections = async (rackId) => {
-  if (!rackId) {
-    sections.value = []
-    return
-  }
-  try {
-    const response = await authenticatedFetch(`/api/section?rackId=${rackId}`)
-    if (response.ok) {
-      sections.value = await response.json()
-      console.log(sections.value)
-    }
-  } catch (error) {
-    console.error('Error fetching sections:', error)
-  }
-}
-
+/* Fetch Suppliers */
 const fetchSuppliers = async () => {
   try {
     const response = await authenticatedFetch('/api/supplier')
@@ -585,6 +532,7 @@ const fetchSuppliers = async () => {
   }
 }
 
+/* Fetch Products */
 const fetchProducts = async () => {
   try {
     const response = await authenticatedFetch('/api/product')
@@ -596,479 +544,109 @@ const fetchProducts = async () => {
   }
 }
 
-/* Helper functions to get names */
-const getWarehouseName = (id) => {
-  const warehouse = warehouses.value.find(w => w.id === id)
-  return warehouse ? warehouse.name : ''
+/* Fetch Warehouses */
+const fetchWarehouses = async () => {
+  try {
+    const response = await authenticatedFetch('/api/warehouse')
+    if (response.ok) {
+      warehouses.value = await response.json()
+    }
+  } catch (error) {
+    console.error('Error fetching warehouses:', error)
+  }
 }
 
-const getRackName = (id) => {
-  const rack = racks.value.find(r => r.id === id)
-  if (!rack) return ''
-  // API returns rackCode in the list, but older code expects name
-  return rack.rackCode || rack.name || ''
+/* Fetch Locations */
+const fetchLocations = async () => {
+  try {
+    const response = await authenticatedFetch('/api/location')
+    if (response.ok) {
+      locations.value = await response.json()
+    }
+  } catch (error) {
+    console.error('Error fetching locations:', error)
+  }
 }
 
-const getSectionName = (id) => {
-  const section = sections.value.find(s => s.id === id)
-  if (!section) return ''
-  // API returns sectionCode in the list, but older code expects name
-  return section.sectionCode || section.name || ''
-}
-
-const getSupplierName = (id) => {
+/* Helper functions */
+const getSupplierName = (id: number | null) => {
+  if (!id) return 'N/A'
   const supplier = suppliers.value.find(s => s.id === id)
-  return supplier ? supplier.supplierName : ''
+  return supplier ? supplier.supplierName : 'N/A'
 }
 
-const getProductName = (id) => {
+const getProductName = (id: number | null) => {
+  if (!id) return 'N/A'
   const product = products.value.find(p => p.id === id)
-  return product ? product.name : ''
+  return product ? product.name : 'N/A'
 }
 
-const getLocationName = (id) => {
+const getWarehouseName = (id: number | null) => {
+  if (!id) return ''
+  const warehouse = warehouses.value.find(w => w.id === id)
+  return warehouse ? `${warehouse.warehouseCode} - ${warehouse.name}` : ''
+}
+
+const getLocationName = (id: number | null) => {
   if (!id) return ''
   const location = locations.value.find(l => l.id === id)
-  return location ? `${location.locationCode} - ${location.locationName}` : ''
+  return location ? `${location.locationCode} - ${location.locationName || location.name}` : ''
 }
 
-const formatPurposeDisplay = (value) => {
-  const option = receivingPurposeOptions.find(opt => opt.value === value)
+const formatPurposeDisplay = (value: string) => {
+  const option = receivingTypeOptions.find(opt => opt.value === value)
   return option ? option.label : value
 }
 
-const buildLocationHierarchy = (locs, parentId = null, depth = 0) => {
-  const result = []
-  const children = locs.filter(loc => {
-    if (depth === 0) {
-      return loc.hierarchy === 'Level 0' && loc.parentLocationId === null
-    } else if (depth === 1) {
-      return loc.hierarchy === 'Level 1' && loc.parentLocationId === parentId
-    } else if (depth === 2) {
-      return loc.hierarchy === 'Level 2' && loc.child1LocationId === parentId
-    }
-    return false
-  })
-
-  children.forEach(location => {
-    let hasChildren = false
-    if (location.hierarchy === 'Level 0') {
-      hasChildren = locs.some(loc =>
-        loc.hierarchy === 'Level 1' && loc.parentLocationId === location.id
-      )
-    } else if (location.hierarchy === 'Level 1') {
-      hasChildren = locs.some(loc =>
-        loc.hierarchy === 'Level 2' && loc.child1LocationId === location.id
-      )
-    }
-
-    result.push({
-      ...location,
-      depth,
-      hasChildren,
-      isExpanded: expandedLocationIds.value.includes(location.id)
-    })
-
-    if (expandedLocationIds.value.includes(location.id)) {
-      const childLocs = buildLocationHierarchy(locs, location.id, depth + 1)
-      result.push(...childLocs)
-    }
-  })
-
-  return result
+const getStatusBadgeClass = (status: string) => {
+  const classes: Record<string, string> = {
+    'PENDING': 'bg-yellow-500',
+    'IN_PROGRESS': 'bg-blue-500',
+    'COMPLETED': 'bg-green-500',
+    'CLOSED': 'bg-gray-500',
+  }
+  return classes[status] || 'bg-gray-500'
 }
 
-const hierarchicalLocations = computed(() => {
-  return buildLocationHierarchy(locations.value)
-})
+const getStatusBorderClass = (status: string) => {
+  const classes: Record<string, string> = {
+    'PENDING': 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20',
+    'IN_PROGRESS': 'border-blue-500 bg-blue-50 dark:bg-blue-900/20',
+    'COMPLETED': 'border-green-500 bg-green-50 dark:bg-green-900/20',
+    'CLOSED': 'border-gray-500 bg-gray-50 dark:bg-gray-900/20',
+  }
+  return classes[status] || 'border-gray-500'
+}
 
 /* Dropdown handlers */
-const toggleDropdown = async (name) => {
-  // Close other dropdowns
-  Object.keys(openDropdowns).forEach(k => { if (k !== name) openDropdowns[k] = false })
+const toggleDropdown = (name: string) => {
+  if (isViewMode.value) return
+  Object.keys(openDropdowns).forEach(k => {
+    if (k !== name) openDropdowns[k] = false
+  })
   openDropdowns[name] = !openDropdowns[name]
+}
 
-  // If opening a product dropdown, compute its fixed-position style so it overlays instead of pushing modal height
-  if (openDropdowns[name] && name.startsWith('product')) {
-    const idx = parseInt(name.replace('product', ''), 10)
-    await nextTick()
-    positionProductMenu(idx)
+const selectReceivingType = (value: string) => {
+  formData.receivingPurpose = value
+  openDropdowns.receivingType = false
+}
+
+/* Product quantity management */
+const increaseQuantity = (index: number) => {
+  formData.products[index].quantity++
+}
+
+const decreaseQuantity = (index: number) => {
+  if (formData.products[index].quantity > 1) {
+    formData.products[index].quantity--
   }
+}
+
+/* Handle clicks outside dropdown */
+const handleClickOutside = (event: any) => {
+  const refs = [receivingTypeDropdownRef.value]
   
-  // Position warehouse dropdown
-  if (openDropdowns[name] && name === 'warehouse') {
-    await positionWarehouseMenu()
-  }
-  
-  // Position location dropdown
-  if (openDropdowns[name] && name === 'location') {
-    await positionLocationMenu()
-  }
-}
-
-const positionProductMenu = (index) => {
-  const container = productDropdownRefs.value[index]
-  if (!container) return
-
-  // find the button inside the container
-  const btn = container.querySelector('button')
-  if (!btn) return
-
-  const rect = btn.getBoundingClientRect()
-
-  // try to compute panel width so dropdown can expand to full modal content width
-  const panelRect = panelRef.value ? panelRef.value.getBoundingClientRect() : null
-
-  const maxMenuHeight = 300
-  const gap = 8
-  const belowSpace = window.innerHeight - rect.bottom - gap
-  const aboveSpace = rect.top - gap
-
-  const style = {
-    position: 'fixed',
-    // default to align with button
-    left: `${rect.left}px`,
-    width: `${rect.width}px`,
-    zIndex: '9999',
-    overflowY: 'auto',
-    overflowX: 'hidden',
-    whiteSpace: 'normal',
-    wordBreak: 'break-word',
-    boxSizing: 'border-box'
-  }
-
-  // Align overlay exactly with the button width to match other dropdowns visually
-  // Use the button rect for left and width so the overlay matches the triggering button
-  style.left = `${rect.left}px`
-  style.width = `${rect.width}px`
-
-  if (belowSpace >= 150) {
-    style.top = `${rect.bottom}px`
-    style.maxHeight = `${Math.min(maxMenuHeight, belowSpace)}px`
-  } else {
-    // show above if not enough space below
-    const usedHeight = Math.min(maxMenuHeight, aboveSpace)
-    style.top = `${rect.top - usedHeight}px`
-    style.maxHeight = `${usedHeight}px`
-  }
-
-  // ensure reactive array has slot
-  productMenuStyles[index] = style
-}
-
-const repositionOpenProductMenus = () => {
-  Object.keys(openDropdowns).forEach(key => {
-    if (key.startsWith('product') && openDropdowns[key]) {
-      const idx = parseInt(key.replace('product', ''), 10)
-      positionProductMenu(idx)
-    }
-    if (key.startsWith('unit') && openDropdowns[key]) {
-      const idx = parseInt(key.replace('unit', ''), 10)
-      positionUnitMenu(idx)
-    }
-    if (key === 'warehouse' && openDropdowns[key]) {
-      positionWarehouseMenu()
-    }
-    if (key === 'location' && openDropdowns[key]) {
-      positionLocationMenu()
-    }
-  })
-}
-
-const positionWarehouseMenu = async () => {
-  await nextTick()
-  if (!warehouseDropdownRef.value) return
-
-  const btn = warehouseDropdownRef.value.querySelector('button')
-  if (!btn) return
-
-  const rect = btn.getBoundingClientRect()
-  const maxMenuHeight = 300
-  const gap = 8
-  const belowSpace = window.innerHeight - rect.bottom - gap
-  const aboveSpace = rect.top - gap
-
-  const style = {
-    position: 'fixed',
-    left: `${rect.left}px`,
-    width: `${rect.width}px`,
-    zIndex: '9999',
-    overflowY: 'auto',
-    overflowX: 'hidden',
-    boxSizing: 'border-box'
-  }
-
-  if (belowSpace >= 150) {
-    style.top = `${rect.bottom}px`
-    style.maxHeight = `${Math.min(maxMenuHeight, belowSpace)}px`
-  } else {
-    const usedHeight = Math.min(maxMenuHeight, aboveSpace)
-    style.top = `${rect.top - usedHeight}px`
-    style.maxHeight = `${usedHeight}px`
-  }
-
-  warehouseMenuStyle.value = style
-}
-
-const positionLocationMenu = async () => {
-  await nextTick()
-  if (!locationDropdownRef.value) return
-
-  const btn = locationDropdownRef.value.querySelector('button')
-  if (!btn) return
-
-  const rect = btn.getBoundingClientRect()
-  const maxMenuHeight = 300
-  const gap = 8
-  const belowSpace = window.innerHeight - rect.bottom - gap
-  const aboveSpace = rect.top - gap
-
-  const style = {
-    position: 'fixed',
-    left: `${rect.left}px`,
-    width: `${rect.width}px`,
-    zIndex: '9999',
-    overflowY: 'auto',
-    overflowX: 'hidden',
-    boxSizing: 'border-box'
-  }
-
-  if (belowSpace >= 150) {
-    style.top = `${rect.bottom}px`
-    style.maxHeight = `${Math.min(maxMenuHeight, belowSpace)}px`
-  } else {
-    const usedHeight = Math.min(maxMenuHeight, aboveSpace)
-    style.top = `${rect.top - usedHeight}px`
-    style.maxHeight = `${usedHeight}px`
-  }
-
-  locationMenuStyle.value = style
-}
-
-const positionUnitMenu = (index) => {
-  const container = unitDropdownRefs.value[index]
-  if (!container) return
-
-  const btn = container.querySelector('button')
-  if (!btn) return
-
-  const rect = btn.getBoundingClientRect()
-
-  // try to compute panel width so dropdown can expand to full modal content width
-  const panelRect = panelRef.value ? panelRef.value.getBoundingClientRect() : null
-
-  const maxMenuHeight = 200
-  const gap = 6
-  const belowSpace = window.innerHeight - rect.bottom - gap
-  const aboveSpace = rect.top - gap
-
-  const style = {
-    position: 'fixed',
-    left: `${rect.left}px`,
-    width: `${rect.width}px`,
-    zIndex: '9999',
-    boxSizing: 'border-box',
-    overflowX: 'hidden',
-    whiteSpace: 'normal',
-    wordBreak: 'break-word'
-  }
-
-  // Align unit overlay with the button width so it matches the unit button
-  style.left = `${rect.left}px`
-  style.width = `${rect.width}px`
-
-  if (belowSpace >= 120) {
-    style.top = `${rect.bottom}px`
-    style.maxHeight = `${Math.min(maxMenuHeight, belowSpace)}px`
-  } else {
-    const used = Math.min(maxMenuHeight, aboveSpace)
-    style.top = `${rect.top - used}px`
-    style.maxHeight = `${used}px`
-  }
-
-  unitMenuStyles[index] = style
-}
-
-const toggleUnitDropdown = async (index) => {
-  // close other dropdowns
-  Object.keys(openDropdowns).forEach(k => { if (!k.startsWith(`unit`) || k === `unit${index}`) return; openDropdowns[k] = false })
-  const key = `unit${index}`
-  openDropdowns[key] = !openDropdowns[key]
-  if (openDropdowns[key]) {
-    await nextTick()
-    positionUnitMenu(index)
-  }
-}
-
-const selectUnit = (index, unit) => {
-  form.products[index].unit = unit
-  openDropdowns[`unit${index}`] = false
-}
-
-const selectWarehouse = async (id) => {
-  form.warehouseId = id
-  form.locationId = null
-  openDropdowns.warehouse = false
-  await fetchLocations(id)
-}
-
-const selectLocation = (id) => {
-  const location = locations.value.find(l => l.id === id)
-  if (location) {
-    const hasChildren = locations.value.some(loc =>
-      (loc.hierarchy === 'Level 1' && loc.parentLocationId === id) ||
-      (loc.hierarchy === 'Level 2' && loc.child1LocationId === id)
-    )
-
-    if (hasChildren) {
-      const index = expandedLocationIds.value.indexOf(id)
-      if (index > -1) {
-        expandedLocationIds.value.splice(index, 1)
-      } else {
-        expandedLocationIds.value.push(id)
-      }
-      return
-    }
-  }
-
-  form.locationId = id
-  openDropdowns.location = false
-}
-
-const selectRack = async (id) => {
-  form.rackId = id
-  form.sectionId = null
-  openDropdowns.rack = false
-  await fetchSections(id)
-}
-
-const selectSection = (id) => {
-  form.sectionId = id
-  openDropdowns.section = false
-}
-
-const selectSupplier = (id) => {
-  form.supplierId = id
-  openDropdowns.supplier = false
-}
-
-const selectPurpose = (receivingPurpose) => {
-  form.receivingPurpose = receivingPurpose
-  openDropdowns.receivingPurpose = false
-}
-
-const selectProduct = (index, productId) => {
-  form.products[index].productId = productId
-  openDropdowns[`product${index}`] = false
-}
-
-// Return products that are not selected in other rows (available for this index)
-const availableProducts = (index) => {
-  const takenIds = form.products
-    .map((p, i) => i !== index ? p.productId : null)
-    .filter(Boolean)
-
-  return products.value.filter(p => !takenIds.includes(p.id))
-}
-
-/* Product management */
-const addProduct = () => {
-  form.products.push({ productId: null, quantity: 1, unit: 'pcs' })
-  // keep style slot for new product dropdown
-  productMenuStyles.push({})
-  unitMenuStyles.push({})
-}
-
-const removeProduct = (index) => {
-  form.products.splice(index, 1)
-  // remove the style slot for removed product
-  productMenuStyles.splice(index, 1)
-  unitMenuStyles.splice(index, 1)
-  // close product dropdowns to avoid index shift issues
-  Object.keys(openDropdowns).forEach(k => { if (k.startsWith('product') || k.startsWith('unit')) openDropdowns[k] = false })
-}
-
-const increaseQuantity = (index) => {
-  form.products[index].quantity++
-}
-
-const decreaseQuantity = (index) => {
-  if (form.products[index].quantity > 1) {
-    form.products[index].quantity--
-  }
-}
-
-const validateQuantity = (index) => {
-  if (form.products[index].quantity < 1) {
-    form.products[index].quantity = 1
-  }
-}
-
-/* Validation */
-const validateForm = () => {
-  // Reset errors
-  Object.keys(errors).forEach(key => errors[key] = '')
-
-  let isValid = true
-
-  // Receiving Code validation (disabled in edit, but still validate)
-  if (!form.receivingCode.trim()) {
-    errors.receivingCode = 'Receiving Code is required'
-    isValid = false
-  }
-
-  // Supplier validation (disabled in edit, but still validate)
-  if (!form.supplierId) {
-    errors.supplierId = 'Supplier is required'
-    isValid = false
-  }
-
-  // Purpose validation
-  if (!form.receivingPurpose) {
-    errors.receivingPurpose = 'Receiving Purpose is required'
-    isValid = false
-  }
-
-  // Received By validation
-  if (!form.receivedBy.trim()) {
-    errors.receivedBy = 'Received By is required'
-    isValid = false
-  }
-
-  // Product validation
-  form.products.forEach((product, index) => {
-    if (!product.productId) {
-      errors[`product${index}`] = 'Product is required'
-      isValid = false
-    }
-    if (!product.quantity || product.quantity < 1) {
-      errors[`quantity${index}`] = 'Quantity must be at least 1'
-      isValid = false
-    }
-  })
-
-  return isValid
-}
-
-// Clear error when user types
-watch(() => form.receivingCode, () => { if (errors.receivingCode) errors.receivingCode = '' })
-watch(() => form.supplierId, () => { if (errors.supplierId) errors.supplierId = '' })
-watch(() => form.receivingPurpose, () => { if (errors.receivingPurpose) errors.receivingPurpose = '' })
-watch(() => form.receivedBy, () => { if (errors.receivedBy) errors.receivedBy = '' })
-
-/* close dropdowns when clicking outside */
-const handleClickOutside = (event) => {
-  const refs = [
-    warehouseDropdownRef.value,
-    locationDropdownRef.value,
-    rackDropdownRef.value,
-    sectionDropdownRef.value,
-    supplierDropdownRef.value,
-    purposeDropdownRef.value,
-    ...productDropdownRefs.value,
-    ...unitDropdownRefs.value
-  ]
-
   let clickedInside = false
   for (const ref of refs) {
     if (ref && ref.contains(event.target)) {
@@ -1084,295 +662,183 @@ const handleClickOutside = (event) => {
   }
 }
 
-/* open/close modal */
-// openModal can accept an optional receiving object to prefill form for editing
-// openModal can accept an optional receiving object to prefill form for editing
-// The second optional argument `viewOnly` will open the modal in read-only view mode
-const openModal = async (receiving = null, viewOnly = false) => {
-  // Fetch all required data
+const openModal = async (receiving: any = null, viewOnly = false) => {
+  // Fetch required data
   await Promise.all([
-    fetchWarehouses(),
     fetchSuppliers(),
-    fetchProducts()
+    fetchProducts(),
+    fetchWarehouses(),
+    fetchLocations()
   ])
 
-  // Reset form
-  form.receivingCode = ''
-  form.doNumber = ''
-  form.warehouseId = null
-  form.rackId = null
-  form.sectionId = null
-  form.supplierId = null
-  form.source = ''
-  form.receivingPurpose = ''
-  form.receivedBy = ''
-  form.receivingDate = new Date().toISOString().split('T')[0]
-  form.remarks = ''
-  form.products = [{ productId: null, quantity: 1, unit: 'pcs' }]
-  // ensure product menu styles slot matches products
-  productMenuStyles.length = 0
-  unitMenuStyles.length = 0
-  form.products.forEach((_, i) => { productMenuStyles.push({}); unitMenuStyles.push({}) })
+  isViewMode.value = viewOnly
+  currentStep.value = 1
 
-  // Reset errors
-  Object.keys(errors).forEach(key => errors[key] = '')
+  if (receiving && receiving.id) {
+    receivingId.value = receiving.id
 
-  // If a receiving object is provided, populate the form for edit
-  if (receiving) {
-    isEditMode.value = !viewOnly
-    isViewMode.value = !!viewOnly
-    currentReceivingId.value = receiving.id
-    currentReceivingId.value = receiving.id
-    // Populate basic fields
-    form.receivingCode = receiving.receivingCode || ''
-    form.poNumber = receiving.order?.orderNo || ''
-    form.doNumber = receiving.doNumber || ''
-    form.warehouseId = receiving.warehouseId || null
-    form.locationId = receiving.locationId || null
-    // fetch locations for selected warehouse
-    if (form.warehouseId) await fetchLocations(form.warehouseId)
-    form.supplierId = receiving.supplierId || null
-    form.source = receiving.source || ''
-    form.receivingPurpose = receiving.receivingPurpose || ''
-    form.receivedBy = receiving.receivedBy || ''
-    form.receivingDate = receiving.receivingDate ? receiving.receivingDate.split('T')[0] : form.receivingDate
-    form.remarks = receiving.remarks || ''
-    // populate products from receiving.receivingItems if present
-    if (receiving.receivingItems && Array.isArray(receiving.receivingItems) && receiving.receivingItems.length) {
-      form.products = receiving.receivingItems.map(item => ({ productId: item.productId, quantity: item.quantity || 1, unit: item.unit || 'pcs' }))
+    // Populate form with receiving data
+    formData.receivingCode = receiving.receivingCode || ''
+    formData.poNumber = receiving.order?.orderNo || ''
+    formData.doNumber = receiving.doNumber || ''
+    formData.receivingPurpose = receiving.receivingPurpose || ''
+    formData.receivedBy = receiving.receivedBy || ''
+    formData.receivingDate = receiving.receivingDate ? receiving.receivingDate.split('T')[0] : ''
+    formData.remarks = receiving.remarks || ''
+    formData.status = receiving.status || 'PENDING'
+    formData.supplierId = receiving.supplierId || null
+    formData.warehouseId = receiving.warehouseId || null
+    formData.locationId = receiving.locationId || null
+
+    // Populate products
+    if (receiving.receivingItems && receiving.receivingItems.length > 0) {
+      formData.products = receiving.receivingItems.map((item: any) => ({
+        productId: item.productId || item.product?.id,
+        quantity: item.quantity || 1
+      }))
     }
-  } else {
-    isEditMode.value = false
-    isViewMode.value = false
-    currentReceivingId.value = null
   }
 
   isOpen.value = true
   lockScroll()
+
+  // Initialize Flatpickr
   await nextTick()
-
-  // Initialize Flatpickr and make sure it reflects form.receivingDate
-  if (receivingDateInput.value) {
-    // ensure the input shows the current form value immediately
-    receivingDateInput.value.value = form.receivingDate || ''
-
-    if (!flatpickrInstance) {
-      flatpickrInstance = flatpickr(receivingDateInput.value, {
-        dateFormat: 'Y-m-d',
-        // use the form value (which may come from API) as the default date
-        defaultDate: form.receivingDate || new Date(),
-        onChange: (selectedDates, dateStr) => {
-          form.receivingDate = dateStr
-        }
-      })
-    } else {
-      // if flatpickr already exists (rare), update its selected date
-      try {
-        flatpickrInstance.setDate(form.receivingDate, false, 'Y-m-d')
-      } catch (e) {
-        // ignore setDate errors
+  if (receivingDateInput.value && !flatpickrInstance && !isViewMode.value) {
+    flatpickrInstance = flatpickr(receivingDateInput.value, {
+      dateFormat: 'Y-m-d',
+      defaultDate: formData.receivingDate || new Date(),
+      onChange: (selectedDates: Date[], dateStr: string) => {
+        formData.receivingDate = dateStr
       }
-    }
+    })
   }
-
-  panelRef.value?.querySelector('input,select,textarea,button')?.focus()
 }
 
-const closeModal = async () => {
+const closeModal = async (force = false) => {
+  if (isSubmitting.value && !force) return
+
+  // Close all dropdowns
   Object.keys(openDropdowns).forEach(key => openDropdowns[key] = false)
 
-  // Destroy Flatpickr instance
+  // Destroy Flatpickr
   if (flatpickrInstance) {
     flatpickrInstance.destroy()
     flatpickrInstance = null
   }
 
   isOpen.value = false
+  unlockScroll()
 
-  // Reset form after modal is closed
   await nextTick()
-  form.receivingCode = ''
-  form.poNumber = ''
-  form.doNumber = ''
-  form.warehouseId = null
-  form.locationId = null
-  form.rackId = null
-  form.sectionId = null
-  form.supplierId = null
-  form.source = ''
-  form.receivingPurpose = ''
-  form.receivedBy = ''
-  form.receivingDate = new Date().toISOString().split('T')[0]
-  form.remarks = ''
-  form.products = [{ productId: null, quantity: 1, unit: 'pcs' }]
-  productMenuStyles.length = 0
-  unitMenuStyles.length = 0
-
-  // Reset errors
-  Object.keys(errors).forEach(key => errors[key] = '')
-
-  // If view mode, make sure nothing is editable by disabling inputs via a CSS class or attribute
-
-  // Reset edit mode state
-  isEditMode.value = false
-  currentReceivingId.value = null
+  emit('close')
 }
 
-/* submit */
-const submitForm = async () => {
-  if (!validateForm()) {
-    return
+const validateStep = (step: number): boolean => {
+  Object.keys(errors).forEach((key) => delete errors[key])
+
+  if (step === 1) {
+    if (!formData.status) errors.status = 'Status is required'
+    if (!formData.doNumber || !formData.doNumber.trim()) errors.doNumber = 'DO Number is required'
+    if (!formData.receivingPurpose) errors.receivingType = 'Receiving type is required'
+    if (!formData.receivedBy || !formData.receivedBy.trim()) errors.receivedBy = 'Received by is required'
+    if (!formData.receivingDate) errors.receivingDate = 'Receiving date is required'
+  } else if (step === 3) {
+    formData.products.forEach((product, index) => {
+      if (!product.quantity || product.quantity < 1) {
+        errors[`quantity${index}`] = 'Quantity must be at least 1'
+      }
+    })
   }
 
+  return Object.keys(errors).length === 0
+}
+
+const nextStep = () => {
+  if (!validateStep(currentStep.value)) return
+  submitError.value = ''
+  if (currentStep.value < totalSteps) {
+    currentStep.value++
+  }
+}
+
+const previousStep = () => {
+  if (currentStep.value > 1) {
+    currentStep.value--
+  }
+}
+
+const submitForm = async () => {
+  if (!validateStep(currentStep.value)) return
+
+  submitError.value = ''
   isSubmitting.value = true
-  errors.submit = ''
 
   try {
-    // Format the data to match backend expectations
-    // Backend expects each receiving item to have productId, quantity and unit (see API sample)
-    const submissionData = {
-      receivingCode: form.receivingCode,
-      doNumber: form.doNumber || null,
-      warehouseId: form.warehouseId,
-      rackId: form.rackId || null,
-      sectionId: form.sectionId || null,
-      source: form.source || null,
-      supplierId: form.supplierId,
-      receivingDate: form.receivingDate,
-      receivedBy: form.receivedBy,
-      receivingPurpose: form.receivingPurpose || null,
-      remarks: form.remarks || null,
-      receivingItems: form.products.map(p => ({
-        productId: p.productId,
-        // use the simple `quantity` field which the table/other components expect
-        quantity: p.quantity,
-        // default unit to 'pcs' when user didn't provide one
-        unit: p.unit || 'pcs',
+    const updateData = {
+      doNumber: formData.doNumber,
+      receivingPurpose: formData.receivingPurpose,
+      receivedBy: formData.receivedBy,
+      receivingDate: formData.receivingDate,
+      remarks: formData.remarks || null,
+      status: formData.status,
+      receivingItems: formData.products.map(product => ({
+        productId: product.productId,
+        quantity: product.quantity,
       }))
     }
 
-    console.debug('Submitting receiving:', submissionData)
-
-    // Make the API call (POST for create, PUT for update in edit mode)
-    let response
-    if (isEditMode.value && currentReceivingId.value) {
-      // For update: first update header, then update items
-      response = await authenticatedFetch(`/api/receiving/${currentReceivingId.value}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          receivingCode: submissionData.receivingCode,
-          doNumber: submissionData.doNumber,
-          warehouseId: submissionData.warehouseId,
-          rackId: submissionData.rackId,
-          sectionId: submissionData.sectionId,
-          source: submissionData.source,
-          supplierId: submissionData.supplierId,
-          receivingDate: submissionData.receivingDate,
-          receivedBy: submissionData.receivedBy,
-          receivingPurpose: submissionData.receivingPurpose, // include purpose so backend persists changes
-          remarks: submissionData.remarks
-        })
-      })
-
-      // Then update items separately
-      if (response.ok) {
-        response = await authenticatedFetch(`/api/receiving/${currentReceivingId.value}/items`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ receivingItems: submissionData.receivingItems })
-        })
-      }
-    } else {
-      response = await authenticatedFetch('/api/receiving', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submissionData)
-      })
-    }
+    const response = await authenticatedFetch(`/api/receiving/${receivingId.value}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updateData)
+    })
 
     if (!response.ok) {
-      let errorMessage = isEditMode.value ? 'Failed to update receiving record' : 'Failed to create receiving record'
-      try {
-        const errorData = await response.json()
-        errorMessage = errorData.message || JSON.stringify(errorData)
-      } catch {
-        try {
-          const text = await response.text()
-          if (text) errorMessage = text
-        } catch {}
-      }
-      console.error(errorMessage)
-      throw new Error(errorMessage)
+      const errorData = await response.json()
+      throw new Error(errorData.message || 'Failed to update receiving')
     }
 
-    // Try to parse JSON body if present, otherwise fallback to empty object
-    let data = {}
-    try {
-      // Some APIs return 204 No Content; guard against parsing errors
-      if (response.status !== 204) {
-        data = await response.json()
-      }
-    } catch (e) {
-      console.warn('Response had no JSON body or failed to parse:', e)
-      data = {}
-    }
+    const responseData = await response.json()
 
-    console.log('Server response:', data)
+    emit('receiving-updated', {
+      success: true,
+      message: 'Successfully updated receiving',
+      data: responseData,
+    })
 
-    // Capture current mode before closing (closeModal resets isEditMode)
-    const wasEditMode = isEditMode.value
-    // Close modal and emit success
-    await closeModal()
-    if (wasEditMode) {
-      emit('receiving-updated', { success: true, data })
-    } else {
-      emit('receiving-created', { success: true, data })
-    }
+    await new Promise(resolve => setTimeout(resolve, 100))
+    await closeModal(true)
 
   } catch (error) {
-    console.error('Error creating receiving:', error)
-    errors.submit = error.message || (isEditMode.value ? 'Failed to update receiving record. Please try again.' : 'Failed to create receiving record. Please try again.')
-    // Emit failure event according to mode so parent can show toast or refresh accordingly
-    if (isEditMode.value) {
-      emit('receiving-updated', { success: false, error: error.message || 'Failed to update receiving record' })
-    } else {
-      emit('receiving-created', { success: false, error: error.message || 'Failed to create receiving record' })
-    }
+    console.error('Error updating receiving:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Failed to update receiving'
+    submitError.value = errorMessage
+
+    emit('receiving-updated', {
+      success: false,
+      error: errorMessage,
+    })
   } finally {
     isSubmitting.value = false
   }
 }
 
-/* lifecycle */
+defineExpose({
+  openModal,
+  closeModal,
+})
+
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
-  window.addEventListener('resize', repositionOpenProductMenus)
-  window.addEventListener('scroll', repositionOpenProductMenus, true)
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
 
-  // Clean up Flatpickr
   if (flatpickrInstance) {
     flatpickrInstance.destroy()
     flatpickrInstance = null
   }
-
-  if (isOpen.value) {
-    unlockScroll()
-  }
-  window.removeEventListener('resize', repositionOpenProductMenus)
-  window.removeEventListener('scroll', repositionOpenProductMenus, true)
 })
-
-/* expose to parent */
-defineExpose({ openModal, closeModal })
 </script>
-
-<style scoped>
-[role="dialog"] > .bg-white {
-  transform-origin: center;
-}
-</style>
