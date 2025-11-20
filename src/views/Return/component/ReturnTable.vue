@@ -108,6 +108,75 @@
             <td class="px-6 py-4">
               <div class="flex items-center gap-2">
                 <button
+                  v-if="row.status === 'PENDING_APPROVAL'"
+                  @click="approveReturn(row)"
+                  class="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                  aria-label="Approve"
+                  title="Approve Return"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </button>
+                <button
+                  v-if="row.status === 'APPROVED'"
+                  @click="receiveReturn(row)"
+                  class="p-1 text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                  aria-label="Mark as Received"
+                  title="Mark as Received"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </button>
+                <button
+                  v-if="row.status === 'RECEIVED'"
+                  @click="completeReturn(row)"
+                  class="p-1 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                  aria-label="Complete Return"
+                  title="Complete Return"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                    />
+                  </svg>
+                </button>
+                <button
+                  @click="viewReturn(row)"
+                  class="p-1 text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                  aria-label="View"
+                  title="View Details"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                    />
+                  </svg>
+                </button>
+                <button
                   @click="editReturn(row)"
                   class="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
                   aria-label="Edit"
@@ -247,17 +316,31 @@ import SelectTable from '@/components/common/SelectTable.vue'
 
 interface ReturnItem {
   id: number
-  returnNo: string
-  returnType: string
-  referenceNo: string
-  returnDate: string
-  from: string
-  to: string
-  skuQuantity: number
-  totalQuantity: number
-  createdBy: string
-  lastUpdated: string
-  remarks?: string
+  returnCode: string
+  returnType: 'CUSTOMER_RETURN' | 'SUPPLIER_RETURN'
+  status: string
+  orderId?: number
+  receivingId?: number
+  customerId?: number
+  supplierId?: number
+  requestedDate: string
+  returnDate?: string
+  requestedBy: number
+  reason?: string
+  notes?: string
+  source?: string
+  createdAt?: string
+  updatedAt?: string
+  order?: any
+  receiving?: any
+  customer?: any
+  supplier?: any
+  requester?: any
+  returnItems?: any[]
+  warehouse?: any
+  location?: any
+  authorizer?: any
+  [key: string]: any
 }
 
 // Props for return filters
@@ -270,6 +353,9 @@ const emit = defineEmits<{
   'delete-return': [result: any]
   'edit-return': [returnItem: ReturnItem]
   'view-return': [returnItem: ReturnItem]
+  'approve-return': [result: any]
+  'receive-return': [result: any]
+  'complete-return': [result: any]
 }>()
 
 const data = ref<ReturnItem[]>([])
@@ -346,44 +432,33 @@ const fetchReturns = async () => {
   loading.value = true
   error.value = null
   try {
-    // TODO: Replace with actual API call
-    // const response = await authenticatedFetch(API_URL)
-    // if (!response.ok) throw new Error('Failed to fetch return records')
-    // const json = await response.json()
-    // data.value = json || []
+    const response = await authenticatedFetch(API_URL)
+    if (!response.ok) throw new Error('Failed to fetch return records')
 
-    // Mock data for now
-    await new Promise(resolve => setTimeout(resolve, 500))
-    data.value = [
-      {
-        id: 1,
-        returnNo: 'RET-2024-001',
-        returnType: 'Customer',
-        referenceNo: 'ORD-2024-123',
-        returnDate: '2024-11-15',
-        from: 'Customer - ABC Corp',
-        to: 'Warehouse A',
-        skuQuantity: 3,
-        totalQuantity: 15,
-        createdBy: 'John Doe',
-        lastUpdated: '2024-11-15T10:30:00',
-        remarks: 'Defective items'
-      },
-      {
-        id: 2,
-        returnNo: 'RET-2024-002',
-        returnType: 'Supplier',
-        referenceNo: 'PO-2024-456',
-        returnDate: '2024-11-14',
-        from: 'Warehouse B',
-        to: 'Supplier - XYZ Ltd',
-        skuQuantity: 2,
-        totalQuantity: 8,
-        createdBy: 'Jane Smith',
-        lastUpdated: '2024-11-14T14:20:00',
-        remarks: 'Wrong items received'
-      },
-    ]
+    const json = await response.json()
+
+    // Transform backend data to match frontend structure
+    data.value = (json || []).map((item: any) => ({
+      id: item.id,
+      returnNo: item.returnCode,
+      returnType: item.returnType === 'CUSTOMER_RETURN' ? 'Customer' : 'Supplier',
+      referenceNo: item.orderId ? `Order #${item.orderId}` : item.receivingId ? `Receiving #${item.receivingId}` : '-',
+      returnDate: item.requestedDate || item.createdAt,
+      from: item.returnType === 'CUSTOMER_RETURN'
+        ? (item.customer?.name || 'Customer')
+        : (item.warehouse?.name || 'Warehouse'),
+      to: item.returnType === 'CUSTOMER_RETURN'
+        ? (item.warehouse?.name || 'Warehouse')
+        : (item.supplier?.name || 'Supplier'),
+      skuQuantity: item.returnItems?.length || 0,
+      totalQuantity: item.returnItems?.reduce((sum: number, ri: any) => sum + (ri.quantity || 0), 0) || 0,
+      createdBy: item.requester?.username || item.requester?.fullName || 'System',
+      lastUpdated: item.updatedAt || item.createdAt,
+      remarks: item.reason || item.notes || '-',
+      status: item.status,
+      // Keep original data for edit/view
+      _raw: item
+    }))
   } catch (e: any) {
     error.value = e.message
     console.error('Error fetching returns:', e)
@@ -597,15 +672,14 @@ const deleteReturn = async (item: ReturnItem) => {
   }
 
   try {
-    // TODO: Replace with actual API call
-    // const endpoint = `${API_URL}/${item.id}`
-    // const response = await authenticatedFetch(endpoint, {
-    //   method: 'DELETE',
-    //   headers: { 'Content-Type': 'application/json' },
-    // })
-    // if (!response.ok) throw new Error('Failed to delete')
+    const endpoint = `${API_URL}/${item.id}`
+    const response = await authenticatedFetch(endpoint, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+    })
+    if (!response.ok) throw new Error('Failed to delete')
 
-    // Mock deletion
+    // Remove from local data
     data.value = data.value.filter((r) => r.id !== item.id)
     selectedItems.value = selectedItems.value.filter((id) => id !== item.id)
 
@@ -650,15 +724,14 @@ const bulkDelete = async () => {
   }
 
   try {
-    // TODO: Replace with actual API call
-    // const response = await authenticatedFetch(`${API_URL}/bulk-delete`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ returnIds: selectedItems.value }),
-    // })
-    // if (!response.ok) throw new Error('Failed to bulk delete')
+    const response = await authenticatedFetch(`${API_URL}/bulk-delete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: selectedItems.value }),
+    })
+    if (!response.ok) throw new Error('Failed to bulk delete')
 
-    // Mock bulk deletion
+    // Remove from local data
     data.value = data.value.filter((r) => !selectedItems.value.includes(r.id))
     const deletedCount = selectedItems.value.length
 
@@ -687,9 +760,91 @@ const adjustPageAfterDeletion = () => {
   }
 }
 
+// Approve return request
+const approveReturn = async (row: ReturnItem) => {
+  if (!confirm(`Are you sure you want to approve this return (${row.returnCode})?`)) {
+    return
+  }
+
+  try {
+    const response = await authenticatedFetch(`${API_URL}/${row.id}/approve`, {
+      method: 'POST'
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.message || 'Failed to approve return')
+    }
+
+    const result = await response.json()
+
+    // Emit success and refresh data
+    emit('approve-return', { success: true, data: result })
+    await fetchReturns()
+  } catch (error: any) {
+    console.error('Error approving return:', error)
+    emit('approve-return', { success: false, error: error.message })
+  }
+}
+
+// Mark return as received
+const receiveReturn = async (row: ReturnItem) => {
+  if (!confirm(`Mark this return as received (${row.returnCode})?`)) {
+    return
+  }
+
+  try {
+    const response = await authenticatedFetch(`${API_URL}/${row.id}/receive`, {
+      method: 'POST'
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.message || 'Failed to mark return as received')
+    }
+
+    const result = await response.json()
+
+    emit('receive-return', { success: true, data: result })
+    await fetchReturns()
+  } catch (error: any) {
+    console.error('Error receiving return:', error)
+    emit('receive-return', { success: false, error: error.message })
+  }
+}
+
+// Complete return and process EPCs
+const completeReturn = async (row: ReturnItem) => {
+  if (!confirm(`Complete this return and process all EPCs (${row.returnCode})? This will update EPC statuses and inventory.`)) {
+    return
+  }
+
+  try {
+    const response = await authenticatedFetch(`${API_URL}/${row.id}/complete`, {
+      method: 'POST'
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.message || 'Failed to complete return')
+    }
+
+    const result = await response.json()
+
+    emit('complete-return', { success: true, data: result })
+    await fetchReturns()
+  } catch (error: any) {
+    console.error('Error completing return:', error)
+    emit('complete-return', { success: false, error: error.message })
+  }
+}
+
 // Open return modal and emit event
 const viewReturn = (row: ReturnItem) => {
-  emit('view-return', row)
+  // Use raw API data if available, otherwise use transformed data
+  const rowWithRaw = row as ReturnItem & { _raw?: ReturnItem }
+  const rawData = rowWithRaw._raw || row
+  emit('view-return', rawData)
 }
 
 // Expose refresh method for parent component

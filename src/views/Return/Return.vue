@@ -65,6 +65,9 @@
             @delete-return="handleDeleteReturn"
             @edit-return="handleEditReturn"
             @view-return="handleViewReturn"
+            @approve-return="handleApproveReturn"
+            @receive-return="handleReceiveReturn"
+            @complete-return="handleCompleteReturn"
           />
         </div>
       </ComponentCard>
@@ -98,18 +101,31 @@ import ReturnView from './component/ReturnView.vue'
 import ReturnListFilter from './component/ReturnListFilter.vue'
 
 interface ReturnItem {
-  id?: number
-  returnNo?: string
-  returnType: string
-  referenceNo: string
-  returnDate: string
-  from: string
-  to: string
-  skuQuantity: number
-  totalQuantity: number
-  createdBy?: string
-  lastUpdated?: string
+  id: number
+  returnCode: string
+  returnType: 'CUSTOMER_RETURN' | 'SUPPLIER_RETURN'
+  status: string
+  orderId?: number
+  receivingId?: number
+  customerId?: number
+  supplierId?: number
+  requestedDate: string
+  requestedBy: number
+  reason?: string
   notes?: string
+  source?: string
+  createdAt?: string
+  updatedAt?: string
+  order?: any
+  receiving?: any
+  customer?: any
+  supplier?: any
+  requester?: any
+  returnItems?: any[]
+  warehouse?: any
+  location?: any
+  authorizer?: any
+  [key: string]: any
 }
 
 interface Result {
@@ -211,14 +227,60 @@ const handleBulkDelete = async () => {
 // Handle opening the edit modal
 const handleEditReturn = (returnItem: ReturnItem) => {
   if (editReturnModalRef.value) {
-    editReturnModalRef.value.openModal(returnItem)
+    editReturnModalRef.value.openModal(returnItem as any)
   }
 }
 
 // Handle opening the view modal
 const handleViewReturn = (returnItem: ReturnItem) => {
   if (returnViewModalRef.value) {
-    returnViewModalRef.value.openModal(returnItem)
+    // Ensure all required fields have default values
+    const viewData = {
+      ...returnItem,
+      source: returnItem.source || 'admin',
+      createdAt: returnItem.createdAt || new Date().toISOString(),
+      updatedAt: returnItem.updatedAt || new Date().toISOString(),
+      reason: returnItem.reason || '',
+      notes: returnItem.notes || ''
+    }
+    returnViewModalRef.value.openModal(viewData as any)
+  }
+}
+
+// Handle approve return
+const handleApproveReturn = async (result: Result) => {
+  if (result.success) {
+    showToastMessage('Return has been successfully approved', 'success')
+    // Refresh the return list
+    if (returnTableRef.value) {
+      returnTableRef.value.refreshData()
+    }
+  } else {
+    showToastMessage(result.error || 'Failed to approve return', 'error')
+  }
+}
+
+// Handle receive return
+const handleReceiveReturn = async (result: Result) => {
+  if (result.success) {
+    showToastMessage('Return has been marked as received', 'success')
+    if (returnTableRef.value) {
+      returnTableRef.value.refreshData()
+    }
+  } else {
+    showToastMessage(result.error || 'Failed to mark return as received', 'error')
+  }
+}
+
+// Handle complete return
+const handleCompleteReturn = async (result: Result) => {
+  if (result.success) {
+    showToastMessage('Return has been completed. EPCs and inventory updated.', 'success')
+    if (returnTableRef.value) {
+      returnTableRef.value.refreshData()
+    }
+  } else {
+    showToastMessage(result.error || 'Failed to complete return', 'error')
   }
 }
 

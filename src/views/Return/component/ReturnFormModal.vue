@@ -155,8 +155,8 @@
                             @input="handleReferenceSearch"
                             @focus="showReferenceDropdown = true"
                           />
-                          <button 
-                            type="button" 
+                          <button
+                            type="button"
                             @click="toggleReferenceDropdown"
                             class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1"
                           >
@@ -186,8 +186,8 @@
                                 <div class="flex-1">
                                   <div class="font-medium text-gray-900 dark:text-white">{{ order.orderNo }}</div>
                                   <div class="text-xs text-gray-500 dark:text-gray-400">
-                                    <span class="font-semibold">{{ order.orderType }}</span> • 
-                                    {{ order.customer?.customerName || order.supplier?.supplierName || 'N/A' }} • 
+                                    <span class="font-semibold">{{ order.orderType }}</span> •
+                                    {{ order.customer?.customerName || order.supplier?.supplierName || 'N/A' }} •
                                     <span class="text-green-600 dark:text-green-400">{{ order.status }}</span>
                                   </div>
                                 </div>
@@ -200,7 +200,11 @@
                         </div>
                         <span v-if="errors.referenceNumber" class="text-xs text-red-500 mt-1">{{ errors.referenceNumber }}</span>
                         <p class="text-xs text-gray-500 mt-1">
-                          Search for received orders only
+                          {{ formData.returnType === 'Customer' || formData.returnType === 'Customer Return'
+                            ? 'Search for shipped/delivered Sales Orders (SO)'
+                            : formData.returnType === 'Supplier' || formData.returnType === 'Supplier Return'
+                            ? 'Search for received Purchase Orders (PO)'
+                            : 'Select return type first to see available orders' }}
                         </p>
                       </div>
                     </div>
@@ -332,8 +336,8 @@
                             No products available
                           </li>
                           <li v-for="availProduct in availableProducts" :key="availProduct.id">
-                            <a 
-                              class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" 
+                            <a
+                              class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer"
                               @click="selectProduct(pIndex, availProduct)"
                             >
                               <div class="font-medium">{{ availProduct.name }}</div>
@@ -367,9 +371,14 @@
                                 v-model.number="reason.quantity"
                                 type="number"
                                 min="1"
+                                :max="product.maxQuantity || 999"
                                 class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                                 :class="{ 'border-red-500': errors[`product${pIndex}Reason${rIndex}Quantity`] }"
+                                @input="validateQuantity(pIndex, rIndex)"
                               />
+                              <p v-if="product.maxQuantity" class="text-xs text-gray-500 mt-1">
+                                Max available: {{ product.maxQuantity }}
+                              </p>
                               <span v-if="errors[`product${pIndex}Reason${rIndex}Quantity`]" class="text-xs text-red-500 mt-1">{{ errors[`product${pIndex}Reason${rIndex}Quantity`] }}</span>
                             </div>
 
@@ -439,17 +448,76 @@
                         </button>
                       </div>
 
-                      <!-- EPC for Return -->
+                      <!-- EPC for Return (Multiple EPCs) -->
                       <div class="mt-3">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          EPC for Return
+                          EPCs for Return
+                          <span v-if="product.availableEpcs && product.availableEpcs.length > 0" class="text-xs text-gray-500">
+                            ({{ product.availableEpcs.length }} available from order)
+                          </span>
                         </label>
-                        <input
-                          v-model="product.epcForReturn"
-                          type="text"
-                          class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                          placeholder="Enter or scan EPC"
-                        />
+
+                        <!-- Show available EPCs from order (for SO - customer returns) -->
+                        <div v-if="product.availableEpcs && product.availableEpcs.length > 0" class="mb-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                          <p class="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2">Available EPCs from shipped order:</p>
+                          <div class="flex flex-wrap gap-2">
+                            <button
+                              v-for="epc in product.availableEpcs"
+                              :key="epc.epcCode"
+                              type="button"
+                              @click="toggleEpcSelection(pIndex, epc.epcCode)"
+                              :class="[
+                                'px-2 py-1 text-xs rounded border transition-colors',
+                                product.epcCodes.includes(epc.epcCode)
+                                  ? 'bg-brand-500 text-white border-brand-600'
+                                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-brand-500'
+                              ]"
+                            >
+                              {{ epc.epcCode }}
+                            </button>
+                          </div>
+                          <p class="text-xs text-gray-500 mt-2">
+                            Selected: {{ product.epcCodes.length }} / {{ product.availableEpcs.length }}
+                          </p>
+                        </div>
+
+                        <!-- Manual EPC input (for PO - supplier returns or if no EPCs available) -->
+                        <div>
+                          <div class="flex gap-2">
+                            <input
+                              v-model="newEpcInput[pIndex]"
+                              type="text"
+                              class="input input-bordered flex-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                              placeholder="Enter or scan EPC manually"
+                              @keyup.enter="addManualEpc(pIndex)"
+                            />
+                            <button
+                              type="button"
+                              @click="addManualEpc(pIndex)"
+                              class="btn bg-brand-500 hover:bg-brand-600 text-white border-none btn-sm"
+                            >
+                              Add
+                            </button>
+                          </div>
+
+                          <!-- Display manually added EPCs -->
+                          <div v-if="product.epcCodes.length > 0 && (!product.availableEpcs || product.availableEpcs.length === 0)" class="mt-2 flex flex-wrap gap-2">
+                            <span
+                              v-for="(epc, eIdx) in product.epcCodes"
+                              :key="eIdx"
+                              class="inline-flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded"
+                            >
+                              {{ epc }}
+                              <button
+                                type="button"
+                                @click="removeEpc(pIndex, eIdx)"
+                                class="text-red-500 hover:text-red-700"
+                              >
+                                ✕
+                              </button>
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -517,7 +585,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, nextTick, onBeforeUnmount, computed } from 'vue'
+import { ref, reactive, nextTick, onBeforeUnmount, computed, watch } from 'vue'
 import flatpickr from 'flatpickr'
 import 'flatpickr/dist/flatpickr.css'
 import authenticatedFetch from '@/utils/authenticatedFetch'
@@ -525,12 +593,19 @@ import authenticatedFetch from '@/utils/authenticatedFetch'
 interface Product {
   productId: number
   productName: string
+  skuCode: string
+  maxQuantity: number
   reasons: Array<{
     quantity: number
     reasonOfReturn: string
     other: string
   }>
-  epcForReturn: string
+  epcCodes: string[]  // Array of EPCs instead of single string
+  availableEpcs?: Array<{
+    epcCode: string
+    warehouseCode: string
+    locationCode: string
+  }>
 }
 
 interface Order {
@@ -538,13 +613,13 @@ interface Order {
   orderType: string
   orderNo: string
   status: string
-  customer: { 
+  customer: {
     id: number
-    customerName: string 
+    customerName: string
   } | null
-  supplier: { 
+  supplier: {
     id: number
-    supplierName: string 
+    supplierName: string
   } | null
   orderItems: Array<{
     id: number
@@ -554,6 +629,23 @@ interface Order {
       id: number
       name: string
       skuCode: string
+    }
+    allocatedEpcs?: Array<{
+      epcCode: string
+      warehouseCode: string
+      locationCode: string
+    }>
+    orderItemEpcs?: Array<{
+      epcCode: string
+    }>
+  }>
+  receivings?: Array<{
+    id: number
+    receivingCode: string
+    warehouse?: {
+      id: number
+      name?: string
+      warehouseCode?: string
     }
   }>
 }
@@ -576,17 +668,15 @@ const steps = [
   { id: 2, name: 'Product' },
 ]
 
-// Computed filtered orders - only show received orders
+// Computed filtered orders - filter based on search term only (status already filtered in fetchOrders)
 const filteredOrders = computed(() => {
   if (!formData.referenceNumber) return allOrders.value
 
   const searchTerm = formData.referenceNumber.toLowerCase()
-  return allOrders.value.filter(order => 
-    // Only show orders with 'Received' status (received orders)
-    order.status === 'Received' &&
-    (order.orderNo.toLowerCase().includes(searchTerm) ||
+  return allOrders.value.filter(order =>
+    order.orderNo.toLowerCase().includes(searchTerm) ||
     order.customer?.customerName?.toLowerCase().includes(searchTerm) ||
-    order.supplier?.supplierName?.toLowerCase().includes(searchTerm))
+    order.supplier?.supplierName?.toLowerCase().includes(searchTerm)
   )
 })
 
@@ -598,7 +688,7 @@ const selectedOrder = computed(() => {
 // Get available products from selected order (excluding already selected)
 const availableProducts = computed(() => {
   if (!selectedOrder.value) return []
-  
+
   const selectedProductIds = formData.products.map(p => p.productId)
   return selectedOrder.value.orderItems
     .filter(item => !selectedProductIds.includes(item.productId))
@@ -606,7 +696,8 @@ const availableProducts = computed(() => {
       id: item.product.id,
       name: item.product.name,
       skuCode: item.product.skuCode,
-      maxQuantity: item.quantity
+      maxQuantity: item.quantity,
+      allocatedEpcs: item.allocatedEpcs || [] // Include EPCs if available
     }))
 })
 
@@ -620,7 +711,15 @@ const formData = reactive({
   personInCharge: '',
   remarks: '',
   products: [
-    { productId: 0, productName: '', reasons: [{ quantity: 1, reasonOfReturn: '', other: '' }], epcForReturn: '' }
+    {
+      productId: 0,
+      productName: '',
+      skuCode: '',
+      maxQuantity: 0,
+      reasons: [{ quantity: 1, reasonOfReturn: '', other: '' }],
+      epcCodes: [],
+      availableEpcs: []
+    }
   ] as Product[]
 })
 
@@ -634,6 +733,9 @@ const openDropdowns = reactive<Record<string, boolean>>({})
 const returnTypeMenuStyle = ref<any>({})
 const productMenuStyles = ref<Record<number, any>>({})
 const reasonMenuStyles = ref<Record<string, any>>({})
+
+// EPC input tracking
+const newEpcInput = ref<Record<number, string>>({})
 
 const lockScroll = () => {
   document.body.style.overflow = 'hidden'
@@ -650,7 +752,7 @@ const openModal = () => {
   lockScroll()
   initializeFlatpickr()
   fetchOrders() // Fetch orders when modal opens
-  
+
   // Add event listeners
   nextTick(() => {
     document.addEventListener('click', handleClickOutside)
@@ -661,18 +763,18 @@ const openModal = () => {
 
 const closeModal = () => {
   if (isSubmitting.value) return
-  
+
   // Destroy Flatpickr instance
   if (flatpickrReturnDate) {
     flatpickrReturnDate.destroy()
     flatpickrReturnDate = null
   }
-  
+
   // Remove event listeners
   document.removeEventListener('click', handleClickOutside)
   window.removeEventListener('resize', repositionOpenMenus)
   window.removeEventListener('scroll', repositionOpenMenus, true)
-  
+
   isOpen.value = false
   showReferenceDropdown.value = false
   unlockScroll()
@@ -689,12 +791,13 @@ const resetForm = () => {
   formData.personInCharge = ''
   formData.remarks = ''
   formData.products = [
-    { productId: 0, productName: '', reasons: [{ quantity: 1, reasonOfReturn: '', other: '' }], epcForReturn: '' }
+    { productId: 0, productName: '', skuCode: '', maxQuantity: 0, reasons: [{ quantity: 1, reasonOfReturn: '', other: '' }], epcCodes: [] }
   ]
 
   Object.keys(errors).forEach((key) => delete errors[key])
   Object.keys(openDropdowns).forEach((key) => delete openDropdowns[key])
   showReferenceDropdown.value = false
+  newEpcInput.value = {}
 }
 
 // Fetch orders from API
@@ -704,10 +807,22 @@ const fetchOrders = async () => {
     const response = await authenticatedFetch('/api/order')
     if (response.ok) {
       const data = await response.json()
-      // Only include received orders
-      allOrders.value = data.filter((order: Order) => 
-        order.status === 'Received'
-      )
+      // Filter orders based on return type:
+      // - Customer Return: SO orders that are Shipped/Delivered
+      // - Supplier Return: PO orders that are Received
+      allOrders.value = data.filter((order: Order) => {
+        if (formData.returnType === 'Customer' || formData.returnType === 'Customer Return') {
+          // Show SO orders that have been shipped
+          return order.orderType === 'SO' &&
+                 (order.status === 'Shipped' || order.status === 'Delivered')
+        } else if (formData.returnType === 'Supplier' || formData.returnType === 'Supplier Return') {
+          // Show PO orders that have been received
+          return order.orderType === 'PO' && order.status === 'Received'
+        }
+        // If no return type selected yet, show all completed orders
+        return (order.orderType === 'SO' && (order.status === 'Shipped' || order.status === 'Delivered')) ||
+               (order.orderType === 'PO' && order.status === 'Received')
+      })
     }
   } catch (error) {
     console.error('Error fetching orders:', error)
@@ -733,11 +848,19 @@ const toggleReferenceDropdown = () => {
 const selectReferenceOrder = (order: Order) => {
   formData.referenceNumber = order.orderNo
   showReferenceDropdown.value = false
-  
+
   // Auto-fill from and to based on order type
   if (order.orderType === 'PO' && order.supplier) {
     // For Purchase Order (Supplier return): From Warehouse -> To Supplier
-    formData.from = 'Warehouse'
+    // Get warehouse name from receivings if available
+    let warehouseName = 'Warehouse'
+    if (order.receivings && order.receivings.length > 0) {
+      const receiving = order.receivings[0]
+      if (receiving.warehouse) {
+        warehouseName = receiving.warehouse.name || 'Warehouse'
+      }
+    }
+    formData.from = warehouseName
     formData.to = `Supplier - ${order.supplier.supplierName}`
     formData.returnType = 'Supplier'
   } else if (order.orderType === 'SO' && order.customer) {
@@ -791,8 +914,10 @@ const addProduct = () => {
     formData.products.push({
       productId: 0,
       productName: '',
+      skuCode: '',
+      maxQuantity: 0,
       reasons: [{ quantity: 1, reasonOfReturn: '', other: '' }],
-      epcForReturn: ''
+      epcCodes: []
     })
   }
 }
@@ -820,6 +945,10 @@ const removeReason = (productIndex: number, reasonIndex: number) => {
 const selectProduct = (productIndex: number, product: any) => {
   formData.products[productIndex].productId = product.id
   formData.products[productIndex].productName = product.name
+  formData.products[productIndex].skuCode = product.skuCode || ''
+  formData.products[productIndex].maxQuantity = product.maxQuantity || 0
+  formData.products[productIndex].availableEpcs = product.allocatedEpcs || []
+
   openDropdowns[`product${productIndex}`] = false
 }
 
@@ -829,7 +958,7 @@ const toggleProductDropdown = async (productIndex: number) => {
     if (k !== key) openDropdowns[k] = false
   })
   openDropdowns[key] = !openDropdowns[key]
-  
+
   if (openDropdowns[key]) {
     await positionProductMenu(productIndex)
   }
@@ -869,7 +998,7 @@ const toggleDropdown = async (name: string) => {
   if (name === 'returnType' && openDropdowns[name]) {
     await positionReturnTypeMenu()
   }
-  
+
   // If opening reason dropdown, compute its position
   if (name.startsWith('reason') && openDropdowns[name]) {
     await positionReasonMenu(name)
@@ -959,7 +1088,7 @@ const positionReasonMenu = async (key: string) => {
   // Find the button by searching for the dropdown with the matching key
   const buttons = document.querySelectorAll('.dropdown button')
   let targetBtn: Element | null = null
-  
+
   for (const btn of buttons) {
     if (btn.getAttribute('aria-expanded') === 'true') {
       const parent = btn.closest('.dropdown')
@@ -969,7 +1098,7 @@ const positionReasonMenu = async (key: string) => {
       }
     }
   }
-  
+
   if (!targetBtn) return
 
   const rect = targetBtn.getBoundingClientRect()
@@ -1015,6 +1144,49 @@ const repositionOpenMenus = () => {
   })
 }
 
+// EPC Selection Handlers
+const toggleEpcSelection = (productIndex: number, epcCode: string) => {
+  const product = formData.products[productIndex]
+  const index = product.epcCodes.indexOf(epcCode)
+
+  if (index > -1) {
+    product.epcCodes.splice(index, 1) // Remove if already selected
+  } else {
+    product.epcCodes.push(epcCode) // Add if not selected
+  }
+}
+
+const addManualEpc = (productIndex: number) => {
+  const epcCode = newEpcInput.value[productIndex]?.trim()
+  if (!epcCode) return
+
+  const product = formData.products[productIndex]
+  if (!product.epcCodes.includes(epcCode)) {
+    product.epcCodes.push(epcCode)
+  }
+
+  newEpcInput.value[productIndex] = '' // Clear input
+}
+
+const removeEpc = (productIndex: number, epcIndex: number) => {
+  formData.products[productIndex].epcCodes.splice(epcIndex, 1)
+}
+
+// Validate quantity doesn't exceed max available
+const validateQuantity = (productIndex: number, reasonIndex: number) => {
+  const product = formData.products[productIndex]
+  const reason = product.reasons[reasonIndex]
+
+  if (product.maxQuantity && reason.quantity > product.maxQuantity) {
+    reason.quantity = product.maxQuantity
+    errors[`product${productIndex}Reason${reasonIndex}Quantity`] = `Cannot exceed ${product.maxQuantity}`
+
+    setTimeout(() => {
+      delete errors[`product${productIndex}Reason${reasonIndex}Quantity`]
+    }, 3000)
+  }
+}
+
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as Node
 
@@ -1056,12 +1228,77 @@ const submitForm = async () => {
   isSubmitting.value = true
 
   try {
-    // TODO: Replace with actual API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Map form data to backend API structure
+    const returnType = formData.returnType === 'Customer' ? 'CUSTOMER_RETURN' : 'SUPPLIER_RETURN'
+
+    // Find the selected order to get IDs
+    const selectedOrder = allOrders.value.find(o => o.orderNo === formData.referenceNumber)
+    if (!selectedOrder) {
+      throw new Error('Selected order not found')
+    }
+
+    // Get receivingId for PO orders (from receivings array)
+    let receivingId = null
+    if (selectedOrder.orderType === 'PO' && selectedOrder.receivings && selectedOrder.receivings.length > 0) {
+      // Take the first receiving record (or latest one if multiple)
+      receivingId = selectedOrder.receivings[0].id
+    }
+
+    // Map products and reasons to returnItems
+    // Each product can have multiple EPCs, create one returnItem per EPC
+    const returnItems = formData.products.flatMap(product => {
+      // If EPCs are specified, create one item per EPC
+      if (product.epcCodes && product.epcCodes.length > 0) {
+        return product.epcCodes.map(epcCode => ({
+          productId: product.productId,
+          epcCode: epcCode,
+          quantity: 1,  // Each EPC represents 1 item
+          condition: mapReasonToCondition(product.reasons[0]?.reasonOfReturn || 'Good'),
+          conditionNotes: product.reasons[0]?.other || product.reasons[0]?.reasonOfReturn || ''
+        }))
+      } else {
+        // No EPCs specified, use reason quantities
+        return product.reasons.map(reason => ({
+          productId: product.productId,
+          epcCode: null,
+          quantity: reason.quantity,
+          condition: mapReasonToCondition(reason.reasonOfReturn),
+          conditionNotes: reason.other || reason.reasonOfReturn
+        }))
+      }
+    })
+
+    const payload = {
+      returnType,
+      orderId: selectedOrder.orderType === 'SO' ? selectedOrder.id : null,
+      receivingId: receivingId,
+      customerId: selectedOrder.customer?.id || null,
+      supplierId: selectedOrder.supplier?.id || null,
+      warehouseId: null, // Optional - can be set later during receiving
+      locationId: null,
+      requestedDate: formData.returnDate,
+      reason: formData.remarks,
+      notes: formData.remarks,
+      status: 'PENDING_APPROVAL',
+      returnItems
+    }
+
+    const response = await authenticatedFetch('/api/return', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.message || 'Failed to create return')
+    }
+
+    const result = await response.json()
 
     emit('return-created', {
       success: true,
-      data: { ...formData }
+      data: { returnNo: result.returnCode, ...result }
     })
 
     closeModal()
@@ -1075,6 +1312,26 @@ const submitForm = async () => {
     isSubmitting.value = false
   }
 }
+
+// Helper function to map reason to condition enum
+const mapReasonToCondition = (reason: string): string => {
+  const mapping: Record<string, string> = {
+    'Defective': 'DEFECTIVE',
+    'Damaged': 'DAMAGED',
+    'Wrong Item': 'WRONG_ITEM',
+    'Expired': 'DEFECTIVE',
+    'Other': 'GOOD'
+  }
+  return mapping[reason] || 'GOOD'
+}
+
+// Watch for return type changes to refetch appropriate orders
+watch(() => formData.returnType, (newType) => {
+  if (newType && allOrders.value.length > 0) {
+    // Refetch orders when return type changes to filter correctly
+    fetchOrders()
+  }
+})
 
 defineExpose({
   openModal,
