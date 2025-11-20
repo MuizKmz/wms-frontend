@@ -436,7 +436,7 @@ const emit = defineEmits(['refresh', 'show-toast'])
 
 const handleApprove = async () => {
   if (isProcessing.value) return
-  
+
   try {
     isProcessing.value = true
     const response = await authenticatedFetch(`/api/return/${returnData.id}/approve`, {
@@ -462,7 +462,7 @@ const handleApprove = async () => {
 
 const handleReject = async () => {
   if (isProcessing.value) return
-  
+
   const reason = prompt('Please enter rejection reason:')
   if (!reason || reason.trim() === '') {
     emit('show-toast', 'Rejection reason is required', 'error')
@@ -498,7 +498,7 @@ const handleReject = async () => {
 
 const handleReceive = async () => {
   if (isProcessing.value) return
-  
+
   if (!confirm('Mark this return as received?')) {
     return
   }
@@ -528,7 +528,7 @@ const handleReceive = async () => {
 
 const handleComplete = async () => {
   if (isProcessing.value) return
-  
+
   if (!confirm('Complete this return? EPCs will be processed based on their condition.')) {
     return
   }

@@ -2,7 +2,7 @@
   <div class="w-full h-full relative flex flex-col p-6 overflow-visible" ref="cardContainer">
     <!-- Header with Dropdown -->
     <div class="flex justify-between items-center mb-6 flex-shrink-0">
-      
+
       <div class="dropdown relative inline-flex ml-auto">
         <button
           ref="rangeDropdownRef"
@@ -30,8 +30,8 @@
           aria-orientation="vertical"
         >
           <li v-for="option in rangeOptions" :key="option.value">
-            <a 
-              class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg whitespace-nowrap" 
+            <a
+              class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg whitespace-nowrap"
               @click="selectRange(option.value)"
             >
               {{ option.label }}
@@ -128,15 +128,15 @@ const fetchData = async () => {
     const response = await authenticatedFetch(API_URL)
     console.log('TotalActiveOrder: Response status:', response.status)
     if (!response.ok) throw new Error('Failed to fetch orders')
-    
+
     const orders = await response.json()
     console.log('TotalActiveOrder: Received orders:', orders.length)
-    
+
     // Calculate date range
     const days = parseInt(selectedRange.value)
     const now = new Date()
     const startDate = new Date(now)
-    
+
     if (days === 1) {
       // Today: from start of today
       startDate.setHours(0, 0, 0, 0)
@@ -145,23 +145,23 @@ const fetchData = async () => {
       startDate.setDate(startDate.getDate() - days)
       startDate.setHours(0, 0, 0, 0)
     }
-    
+
     // Filter active orders within date range
     // Active orders are those NOT in 'Completed' or 'Cancelled' status
     const activeStatuses = ['PENDING', 'PROCESSING', 'SHIPPED', 'RECEIVED', 'DELIVERED']
     const filteredOrders = orders.filter(order => {
       const dateField = order.orderDate || order.createdAt || order.date || order.created_at
       const status = order.orderStatus || order.status || 'PENDING'
-      
+
       if (!dateField) return false
-      
+
       const orderDate = new Date(dateField)
       return orderDate >= startDate && orderDate <= now && activeStatuses.includes(status)
     })
-    
+
     totalActiveOrders.value = filteredOrders.length
     console.log('TotalActiveOrder: Total active orders:', totalActiveOrders.value)
-    
+
     loading.value = false
   } catch (e) {
     error.value = e.message
@@ -183,7 +183,7 @@ let resizeObserver = null
 
 onMounted(async () => {
   console.log('TotalActiveOrder: Component mounted')
-  
+
   try {
     await fetchData()
   } catch (e) {
@@ -191,10 +191,10 @@ onMounted(async () => {
     error.value = e.message || 'Failed to load data'
     loading.value = false
   }
-  
+
   // Setup click outside handler for dropdown
   document.addEventListener('click', handleClickOutside)
-  
+
   // Watch for card resize
   if (cardContainer.value) {
     checkCardWidth()

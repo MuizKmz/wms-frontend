@@ -201,7 +201,7 @@
                   <div class="flex justify-between items-center">
                     <span class="text-sm text-gray-600 dark:text-gray-400">Fulfillment Status:</span>
                     <span class="font-semibold" :class="totalReceivedQuantity >= totalExpectedQuantity ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'">
-                      {{ totalReceivedQuantity >= totalExpectedQuantity ? 'Complete' : 'Partial' }} 
+                      {{ totalReceivedQuantity >= totalExpectedQuantity ? 'Complete' : 'Partial' }}
                       ({{ totalExpectedQuantity > 0 ? Math.round((totalReceivedQuantity / totalExpectedQuantity) * 100) : 0 }}%)
                     </span>
                   </div>

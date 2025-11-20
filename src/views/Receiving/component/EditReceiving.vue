@@ -646,7 +646,7 @@ const decreaseQuantity = (index: number) => {
 /* Handle clicks outside dropdown */
 const handleClickOutside = (event: any) => {
   const refs = [receivingTypeDropdownRef.value]
-  
+
   let clickedInside = false
   for (const ref of refs) {
     if (ref && ref.contains(event.target)) {

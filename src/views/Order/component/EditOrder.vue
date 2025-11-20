@@ -668,10 +668,10 @@ const getAvailableProducts = (currentIndex: number) => {
   const selectedProductIds = form.orderItems
     .map((item, idx) => idx !== currentIndex ? item.productId : null)
     .filter(Boolean)
-  
+
   // Return products that are not selected in other rows
-  return products.value.filter(product => 
-    !selectedProductIds.includes(product.id.toString()) && 
+  return products.value.filter(product =>
+    !selectedProductIds.includes(product.id.toString()) &&
     !selectedProductIds.includes(product.id)
   )
 }
@@ -679,24 +679,24 @@ const getAvailableProducts = (currentIndex: number) => {
 const updateOrderItem = async (index: number, key: string, value: any) => {
   if (key === 'productId') {
     // Check if product is already selected in another row
-    const isAlreadySelected = form.orderItems.some((item, idx) => 
+    const isAlreadySelected = form.orderItems.some((item, idx) =>
       idx !== index && (item.productId === value || item.productId.toString() === value.toString())
     )
-    
+
     if (isAlreadySelected) {
       console.warn('Product already selected in another row')
       openDropdowns[`product${index}`] = false
       return
     }
-    
+
     form.orderItems[index].productId = value
     openDropdowns[`product${index}`] = false
-    
+
     // Clear product error
     if (errors[`item${index}Product`]) {
       delete errors[`item${index}Product`]
     }
-    
+
     // Fetch inventory if order type is SO
     if (form.orderType === 'SO') {
       await fetchProductInventory(index)
@@ -850,11 +850,11 @@ const prefillOrder = (order: any) => {
 
   // Try to determine customerId via multiple fallbacks
   let derivedCustomerId: string | null = null
-  
+
   console.log('Checking customer data...')
   console.log('order.customer:', order.customer)
   console.log('order.customerId:', order.customerId)
-  
+
   if (order.customer?.id) {
     derivedCustomerId = order.customer.id.toString()
     prefilledCustomerName.value = order.customer.customerName || null
@@ -892,7 +892,7 @@ const prefillOrder = (order: any) => {
     prefilledCustomerName.value = null
     console.log('No customer data found')
   }
-  
+
   form.customerId = derivedCustomerId
   console.log('Final form.customerId:', form.customerId)
   console.log('Final prefilledCustomerName:', prefilledCustomerName.value)
@@ -907,7 +907,7 @@ const prefillOrder = (order: any) => {
       availableStock: undefined,
       allocatedEpcs: i.allocatedEpcs || [] // Use existing allocated EPCs from order
     }))
-    
+
     // For SO orders, load existing allocations - don't fetch new ones unless user changes quantity
     if (form.orderType === 'SO') {
       form.orderItems.forEach((item, index) => {
