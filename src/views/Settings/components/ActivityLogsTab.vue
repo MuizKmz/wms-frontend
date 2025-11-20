@@ -260,7 +260,7 @@
     <dialog ref="detailsModal" class="modal">
       <div class="modal-box max-w-2xl bg-white dark:bg-gray-800">
         <h3 class="font-bold text-lg text-gray-900 dark:text-white mb-4">Activity Details</h3>
-        
+
         <div v-if="selectedLog" class="space-y-4">
           <div class="grid grid-cols-2 gap-4">
             <div>

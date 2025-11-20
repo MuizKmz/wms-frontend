@@ -7,7 +7,7 @@
           <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
             <div>
               <h2 class="text-xl font-bold text-gray-900 dark:text-white">Return Details</h2>
-              <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ returnData.returnNo }}</p>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ returnData.returnCode }}</p>
             </div>
             <button @click="closeModal" class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -25,63 +25,72 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Return No</label>
-                    <p class="text-gray-900 dark:text-white font-medium">{{ returnData.returnNo }}</p>
+                    <p class="text-gray-900 dark:text-white font-medium">{{ returnData.returnCode }}</p>
                   </div>
 
                   <div>
                     <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Return Type</label>
-                    <span :class="getReturnTypeClass(returnData.returnType)" class="inline-block px-3 py-1 text-sm font-medium rounded-full">
-                      {{ returnData.returnType }}
+                    <span :class="getReturnTypeClass(displayReturnType)" class="inline-block px-3 py-1 text-sm font-medium rounded-full">
+                      {{ displayReturnType }}
                     </span>
                   </div>
 
                   <div>
                     <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Reference No</label>
-                    <p class="text-gray-900 dark:text-white">{{ returnData.referenceNo }}</p>
+                    <p class="text-gray-900 dark:text-white">{{ displayReferenceNo }}</p>
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Return Date</label>
-                    <p class="text-gray-900 dark:text-white">{{ formatDate(returnData.returnDate) }}</p>
+                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Status</label>
+                    <span class="inline-block px-3 py-1 text-sm font-medium rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                      {{ returnData.status }}
+                    </span>
                   </div>
 
                   <div>
                     <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">From</label>
-                    <p class="text-gray-900 dark:text-white">{{ returnData.from }}</p>
+                    <p class="text-gray-900 dark:text-white">{{ displayFrom }}</p>
                   </div>
 
                   <div>
                     <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">To</label>
-                    <p class="text-gray-900 dark:text-white">{{ returnData.to }}</p>
+                    <p class="text-gray-900 dark:text-white">{{ displayTo }}</p>
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">SKU Quantity</label>
-                    <p class="text-gray-900 dark:text-white font-medium">{{ returnData.skuQuantity }}</p>
+                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Items</label>
+                    <p class="text-gray-900 dark:text-white font-medium">{{ skuQuantity }}</p>
                   </div>
 
                   <div>
                     <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Quantity</label>
-                    <p class="text-gray-900 dark:text-white font-medium">{{ returnData.totalQuantity }}</p>
+                    <p class="text-gray-900 dark:text-white font-medium">{{ totalQuantity }}</p>
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Created By</label>
-                    <p class="text-gray-900 dark:text-white">{{ returnData.createdBy }}</p>
+                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Requested By</label>
+                    <p class="text-gray-900 dark:text-white">{{ returnData.requester?.fullName || returnData.requester?.username || '-' }}</p>
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Last Updated</label>
-                    <p class="text-gray-900 dark:text-white">{{ formatDate(returnData.lastUpdated || '') }}</p>
+                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Requested Date</label>
+                    <p class="text-gray-900 dark:text-white">{{ formatDate(returnData.requestedDate) }}</p>
                   </div>
                 </div>
               </div>
 
-              <!-- Remarks -->
-              <div v-if="returnData.remarks">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Remarks</h3>
-                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                  <p class="text-gray-900 dark:text-white whitespace-pre-line">{{ returnData.remarks }}</p>
+              <!-- Reason & Notes -->
+              <div v-if="returnData.reason || returnData.notes">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Reason & Notes</h3>
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-2">
+                  <div v-if="returnData.reason">
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Reason:</p>
+                    <p class="text-gray-900 dark:text-white">{{ returnData.reason }}</p>
+                  </div>
+                  <div v-if="returnData.notes">
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Notes:</p>
+                    <p class="text-gray-900 dark:text-white whitespace-pre-line">{{ returnData.notes }}</p>
+                  </div>
                 </div>
               </div>
 
@@ -95,41 +104,45 @@
                         <tr>
                           <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600">No</th>
                           <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600">Product</th>
+                          <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600">SKU Code</th>
                           <th class="px-4 py-3 text-center text-sm font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600">Quantity</th>
-                          <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600">Reason of return</th>
-                          <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600">EPC for Return</th>
+                          <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600">Condition</th>
+                          <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600">EPC Code</th>
+                          <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600">Notes</th>
                         </tr>
                       </thead>
                       <tbody class="bg-white dark:bg-gray-800">
-                        <template v-if="returnData.items && returnData.items.length > 0">
-                          <template v-for="(item, index) in returnData.items" :key="index">
-                            <tr v-for="(reason, reasonIndex) in item.reasons" :key="`${index}-${reasonIndex}`" class="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
-                              <td v-if="reasonIndex === 0" :rowspan="item.reasons.length" class="px-4 py-3 text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700 align-top">
-                                {{ index + 1 }}
-                              </td>
-                              <td v-if="reasonIndex === 0" :rowspan="item.reasons.length" class="px-4 py-3 text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700 align-top">
-                                <span class="text-blue-600 dark:text-blue-400 underline cursor-pointer hover:text-blue-700 dark:hover:text-blue-300">
-                                  {{ item.product }}
-                                </span>
-                              </td>
-                              <td class="px-4 py-3 text-sm text-center text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700">
-                                {{ reason.quantity }}
-                              </td>
-                              <td class="px-4 py-3 text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700">
-                                {{ reason.reason }}
-                              </td>
-                              <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                                <div class="space-y-1">
-                                  <div v-for="epc in reason.epcs" :key="epc" class="font-mono text-xs">
-                                    {{ epc }}
-                                  </div>
-                                </div>
-                              </td>
-                            </tr>
-                          </template>
+                        <template v-if="returnData.returnItems && returnData.returnItems.length > 0">
+                          <tr v-for="(item, index) in returnData.returnItems" :key="item.id" class="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                              {{ index + 1 }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                              <span class="text-blue-600 dark:text-blue-400 font-medium">
+                                {{ item.product?.name || '-' }}
+                              </span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 font-mono">
+                              {{ item.product?.skuCode || '-' }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-center text-gray-900 dark:text-white font-medium">
+                              {{ item.quantity }}
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                              <span :class="getConditionBadge(item.condition)" class="inline-block px-2 py-1 text-xs font-medium rounded-full">
+                                {{ getConditionLabel(item.condition) }}
+                              </span>
+                            </td>
+                            <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 font-mono">
+                              {{ item.epcCode || '-' }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                              {{ item.conditionNotes || '-' }}
+                            </td>
+                          </tr>
                         </template>
                         <tr v-else>
-                          <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                          <td colspan="7" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
                             No return items found
                           </td>
                         </tr>
@@ -158,46 +171,140 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 
-interface ReturnReason {
-  quantity: number
-  reason: string
-  epcs: string[]
+interface Product {
+  id: number
+  name: string
+  skuCode?: string
 }
 
 interface ReturnItem {
-  product: string
-  reasons: ReturnReason[]
+  id: number
+  productId: number
+  epcCode: string | null
+  quantity: number
+  condition: string
+  conditionNotes: string
+  product?: Product
+}
+
+interface Customer {
+  id: number
+  customerName: string
+}
+
+interface Supplier {
+  id: number
+  supplierName: string
+}
+
+interface Order {
+  id: number
+  orderNo: string
+  orderType: string
+}
+
+interface Receiving {
+  id: number
+  receivingCode: string
+}
+
+interface Requester {
+  id: number
+  username: string
+  fullName: string
 }
 
 interface ReturnData {
-  id?: number
-  returnNo?: string
-  returnType: string
-  referenceNo: string
-  returnDate: string
-  from: string
-  to: string
-  skuQuantity: number
-  totalQuantity: number
-  createdBy?: string
-  lastUpdated?: string
-  remarks?: string
-  items?: ReturnItem[]
+  id: number
+  returnCode: string
+  returnType: 'CUSTOMER_RETURN' | 'SUPPLIER_RETURN'
+  status: string
+  orderId?: number
+  receivingId?: number
+  customerId?: number
+  supplierId?: number
+  returnDate?: string
+  requestedDate: string
+  authorizedDate?: string
+  completedDate?: string
+  warehouseId?: number
+  locationId?: number
+  requestedBy: number
+  authorizedBy?: number
+  receivedBy?: string
+  reason?: string
+  notes?: string
+  source?: string
+  createdAt: string
+  updatedAt: string
+  order?: Order
+  receiving?: Receiving
+  customer?: Customer
+  supplier?: Supplier
+  requester?: Requester
+  returnItems?: ReturnItem[]
 }
 
 const isOpen = ref(false)
 
 const returnData = reactive<ReturnData>({
-  returnType: '',
-  referenceNo: '',
-  returnDate: '',
-  from: '',
-  to: '',
-  skuQuantity: 0,
-  totalQuantity: 0,
-  items: []
+  id: 0,
+  returnCode: '',
+  returnType: 'CUSTOMER_RETURN',
+  status: '',
+  requestedDate: '',
+  requestedBy: 0,
+  reason: '',
+  notes: '',
+  source: 'admin',
+  createdAt: '',
+  updatedAt: '',
+  returnItems: []
+})
+
+// Computed properties for display
+const displayReturnType = computed(() => {
+  return returnData.returnType === 'CUSTOMER_RETURN' ? 'Customer' : 'Supplier'
+})
+
+const displayReferenceNo = computed(() => {
+  if (returnData.order) {
+    return returnData.order.orderNo
+  }
+  if (returnData.receiving) {
+    return returnData.receiving.receivingCode
+  }
+  return '-'
+})
+
+const displayFrom = computed(() => {
+  if (returnData.returnType === 'CUSTOMER_RETURN' && returnData.customer) {
+    return returnData.customer.customerName
+  }
+  if (returnData.returnType === 'SUPPLIER_RETURN') {
+    return 'Warehouse'
+  }
+  return '-'
+})
+
+const displayTo = computed(() => {
+  if (returnData.returnType === 'CUSTOMER_RETURN') {
+    return 'Warehouse'
+  }
+  if (returnData.returnType === 'SUPPLIER_RETURN' && returnData.supplier) {
+    return returnData.supplier.supplierName
+  }
+  return '-'
+})
+
+const totalQuantity = computed(() => {
+  return returnData.returnItems?.reduce((sum, item) => sum + item.quantity, 0) || 0
+})
+
+const skuQuantity = computed(() => {
+  return returnData.returnItems?.length || 0
 })
 
 const openModal = (data: ReturnData) => {
@@ -221,11 +328,29 @@ const formatDate = (dateString: string) => {
 const getReturnTypeClass = (type: string) => {
   const classes = {
     'Customer': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-    'Supplier': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-    'Internal': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-    'Failed Delivery': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+    'Supplier': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
   }
   return classes[type as keyof typeof classes] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+}
+
+const getConditionBadge = (condition: string) => {
+  const classes = {
+    'GOOD': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    'DEFECTIVE': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+    'DAMAGED': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+    'WRONG_ITEM': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+  }
+  return classes[condition as keyof typeof classes] || 'bg-gray-100 text-gray-800'
+}
+
+const getConditionLabel = (condition: string) => {
+  const labels = {
+    'GOOD': 'Good',
+    'DEFECTIVE': 'Defective',
+    'DAMAGED': 'Damaged',
+    'WRONG_ITEM': 'Wrong Item'
+  }
+  return labels[condition as keyof typeof labels] || condition
 }
 
 defineExpose({ openModal, closeModal })

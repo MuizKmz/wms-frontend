@@ -419,7 +419,7 @@ const allMenuGroups = [
         icon: RefreshIcon,
         name: "Return",
         path: "/return",
-        // module: "Return"  // Temporarily disabled for testing
+        module: "Return"
       },
     ],
   },
