@@ -29,8 +29,8 @@
           aria-orientation="vertical"
         >
           <li v-for="option in rangeOptions" :key="option.value">
-            <a 
-              class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg whitespace-nowrap" 
+            <a
+              class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg whitespace-nowrap"
               @click="selectRange(option.value)"
             >
               {{ option.label }}
@@ -63,8 +63,8 @@
       </div>
 
       <!-- Actual Chart -->
-      <canvas 
-        v-show="!loading && !error" 
+      <canvas
+        v-show="!loading && !error"
         ref="chartCanvas"
         class="transition-opacity duration-300 w-full h-full"
         :class="{ 'opacity-0': loading, 'opacity-100': !loading && !error }"
@@ -151,16 +151,16 @@ const fetchData = async () => {
     const response = await authenticatedFetch(API_URL)
     console.log('WorkOrderBarChart: Response status:', response.status)
     if (!response.ok) throw new Error('Failed to fetch orders')
-    
+
     const orders = await response.json()
     console.log('WorkOrderBarChart: Received orders:', orders.length, orders)
-    
+
     // Group orders by date and status
     const days = parseInt(selectedRange.value)
     console.log('WorkOrderBarChart: Selected range days:', days)
     const dateMap = {}
     const now = new Date()
-    
+
     if (days === 1) {
       // Initialize 24 hours for today
       for (let hour = 0; hour < 24; hour++) {
@@ -176,13 +176,13 @@ const fetchData = async () => {
         dateMap[key] = { Created: 0, Processing: 0, Confirmed: 0, Shipped: 0, Completed: 0, Cancelled: 0 }
       }
     }
-    
+
     // Count orders by date/hour and status
     orders.forEach(order => {
       const dateField = order.orderDate || order.createdAt || order.date || order.created_at
       if (dateField) {
         const orderDate = new Date(dateField)
-        
+
         let key
         if (days === 1) {
           // Group by hour for today
@@ -190,7 +190,7 @@ const fetchData = async () => {
           todayStart.setHours(0, 0, 0, 0)
           const todayEnd = new Date()
           todayEnd.setHours(23, 59, 59, 999)
-          
+
           if (orderDate >= todayStart && orderDate <= todayEnd) {
             const hour = orderDate.getHours()
             key = `${hour}:00`
@@ -199,16 +199,16 @@ const fetchData = async () => {
           // Group by date
           key = orderDate.toISOString().split('T')[0]
         }
-        
+
         if (key && dateMap[key]) {
-          const status = order.orderStatus || order.status || 'Created'
+          const status = order.orderStatus || order.status || 'PENDING'
           if (dateMap[key][status] !== undefined) {
             dateMap[key][status]++
           }
         }
       }
     })
-    
+
     // Prepare chart data
     const labels = Object.keys(dateMap).map(key => {
       if (days === 1) {
@@ -220,7 +220,7 @@ const fetchData = async () => {
         return `${d.getMonth() + 1}/${d.getDate()}`
       }
     })
-    
+
     const datasets = [
       {
         label: 'Created',
@@ -259,13 +259,13 @@ const fetchData = async () => {
         borderSkipped: false
       }
     ]
-    
+
     console.log('WorkOrderBarChart: Chart data prepared:', { labels, datasets })
-    
+
     // Wait for DOM update before creating chart
     await nextTick()
     console.log('WorkOrderBarChart: After nextTick, canvas ref:', chartCanvas.value)
-    
+
     createChart({ labels, datasets })
   } catch (e) {
     error.value = e.message
@@ -277,7 +277,7 @@ const fetchData = async () => {
 const createChart = (data) => {
   try {
     console.log('WorkOrderBarChart: createChart called with data:', data)
-    
+
     const ctx = chartCanvas.value?.getContext('2d')
     if (!ctx) {
       console.error('WorkOrderBarChart: Canvas context not available!')
@@ -285,7 +285,7 @@ const createChart = (data) => {
       loading.value = false
       return
     }
-    
+
     console.log('WorkOrderBarChart: Canvas context obtained')
     if (chartInstance.value) {
       console.log('WorkOrderBarChart: Destroying previous chart instance')
@@ -349,7 +349,7 @@ const createChart = (data) => {
         }
       }
     })
-    
+
     console.log('WorkOrderBarChart: Chart instance created successfully')
     loading.value = false
   } catch (e) {
@@ -373,7 +373,7 @@ let resizeObserver = null
 
 onMounted(async () => {
   console.log('WorkOrderBarChart: Component mounted')
-  
+
   try {
     await fetchData()
   } catch (e) {
@@ -381,10 +381,10 @@ onMounted(async () => {
     error.value = e.message || 'Failed to initialize chart'
     loading.value = false
   }
-  
+
   // Setup click outside handler for dropdown
   document.addEventListener('click', handleClickOutside)
-  
+
   // Watch for card resize
   if (cardContainer.value) {
     checkCardWidth()
@@ -393,7 +393,7 @@ onMounted(async () => {
     })
     resizeObserver.observe(cardContainer.value)
   }
-  
+
   // Watch for theme changes
   themeObserver = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
@@ -406,7 +406,7 @@ onMounted(async () => {
       }
     })
   })
-  
+
   themeObserver.observe(document.documentElement, {
     attributes: true,
     attributeFilter: ['class']

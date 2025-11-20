@@ -85,6 +85,8 @@
 
     <ReturnView
       ref="returnViewModalRef"
+      @refresh="handleReturnActionCompleted"
+      @show-toast="showToastMessage"
     />
   </AdminLayout>
 </template>
@@ -294,6 +296,14 @@ const handleReturnUpdated = async (result: Result) => {
     }
   } else {
     showToastMessage(result.error || 'Failed to update return', 'error')
+  }
+}
+
+// Handle return action completed (approve/reject/receive/complete from ReturnView)
+const handleReturnActionCompleted = async () => {
+  // Refresh the return list
+  if (returnTableRef.value) {
+    await returnTableRef.value.refreshData()
   }
 }
 </script>

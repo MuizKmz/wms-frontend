@@ -203,7 +203,7 @@ const fetchData = async () => {
     })
 
     // Define all possible order statuses
-    const allStatuses = ['Created', 'Processing', 'Confirmed', 'Shipped', 'Completed', 'Cancelled']
+    const allStatuses = ['PENDING', 'PROCESSING', 'SHIPPED', 'RECEIVED', 'DELIVERED', 'CLOSED', 'CANCELLED']
     const colors = ['#3B82F6', '#F59E0B', '#8B5CF6', '#10B981', '#22C55E', '#EF4444']
 
     // Initialize a count dictionary, all set to 0
@@ -211,7 +211,7 @@ const fetchData = async () => {
 
     // Count orders based on the filtered results
     filteredOrders.forEach((order) => {
-      const status = order.orderStatus || order.status || 'Created'
+      const status = order.orderStatus || order.status || 'PENDING'
       if (statusCounts.hasOwnProperty(status)) {
         statusCounts[status] += 1
       }

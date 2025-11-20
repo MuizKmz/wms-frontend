@@ -155,19 +155,15 @@ let flatpickrInstance = null
 const fetchStatuses = async () => {
   loadingStatuses.value = true
   try {
+    // Simplified ShipmentStatus enum from backend
     const statusList = [
-      'Pending',
-      'Preparing',
-      'Ready for Dispatch',
-      'In Transit',
-      'Out for Delivery',
-      'Delivered',
-      'Failed Delivery',
-      'Returned',
-      'Cancelled',
+      'PENDING',
+      'SHIPPED',
+      'DELIVERED',
+      'CANCELLED',
     ]
     statuses.value = statusList.map((status) => ({
-      label: status,
+      label: status.charAt(0) + status.slice(1).toLowerCase(),
       value: status,
     }))
   } finally {

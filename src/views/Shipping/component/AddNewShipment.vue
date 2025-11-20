@@ -344,15 +344,10 @@ const errors = reactive({
 })
 
 const statusOptions = [
-  'Pending',
-  'Preparing',
-  'Ready for Dispatch',
-  'In Transit',
-  'Out for Delivery',
-  'Delivered',
-  'Failed Delivery',
-  'Returned',
-  'Cancelled'
+  'PENDING',
+  'SHIPPED',
+  'DELIVERED',
+  'CANCELLED'
 ]
 
 const orders = ref<Order[]>([])

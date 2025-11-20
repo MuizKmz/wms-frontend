@@ -388,15 +388,10 @@ let flatpickrShippingDate: any = null
 let flatpickrEstimatedDate: any = null
 
 const statusOptions = [
-  'Pending',
-  'Preparing',
-  'Ready for Dispatch',
-  'In Transit',
-  'Out for Delivery',
-  'Delivered',
-  'Failed Delivery',
-  'Returned',
-  'Cancelled'
+  'PENDING',
+  'SHIPPED',
+  'DELIVERED',
+  'CANCELLED'
 ]
 
 const openDropdowns = reactive<Record<string, boolean>>({})
@@ -436,12 +431,13 @@ const fetchOrders = async () => {
 
     // Filter orders to only show those:
     // 1. Order type is 'SO' (Sales Order)
-    // 2. Not yet shipped (status !== 'Shipped' and status !== 'Completed')
+    // 2. Not yet shipped (status !== 'SHIPPED' and status !== 'DELIVERED' and status !== 'CLOSED')
     // 3. Don't already have a shipment created
     orders.value = orderData.filter((order: any) =>
       order.orderType === 'SO' &&
-      order.status !== 'Shipped' &&
-      order.status !== 'Completed' &&
+      order.status !== 'SHIPPED' &&
+      order.status !== 'DELIVERED' &&
+      order.status !== 'CLOSED' &&
       !shippedOrderIds.has(order.id)
     )
   } catch (error) {

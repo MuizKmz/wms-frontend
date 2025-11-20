@@ -365,15 +365,10 @@ const errors = reactive({
 })
 
 const statusOptions = [
-  'Pending',
-  'Preparing',
-  'Ready for Dispatch',
-  'In Transit',
-  'Out for Delivery',
-  'Delivered',
-  'Failed Delivery',
-  'Returned',
-  'Cancelled'
+  'PENDING',
+  'SHIPPED',
+  'DELIVERED',
+  'CANCELLED'
 ]
 
 const orders = ref<Order[]>([])
@@ -518,7 +513,7 @@ const toggleDropdown = async (name: 'status' | 'order' ) => {
     if (k !== name) openDropdowns[k as keyof typeof openDropdowns] = false
   })
   openDropdowns[name] = !openDropdowns[name]
-  
+
   if (name === 'status' && openDropdowns[name]) {
     await positionStatusMenu()
   }
@@ -578,11 +573,11 @@ const prefillForm = (shipment: Shipment) => {
   const anyShipment: any = shipment as any
   form.order = shipment.orderNo || anyShipment.order || (anyShipment.raw && (anyShipment.raw.order?.orderNo || anyShipment.raw.order?.name)) || ''
   form.destination = shipment.destination || ''
-  
+
   // Format dates to YYYY-MM-DD
   form.shippingDate = shipment.shippingDate ? shipment.shippingDate.split('T')[0] : new Date().toISOString().split('T')[0]
   form.estimatedDeliveryDate = shipment.estimatedDeliveryDate ? shipment.estimatedDeliveryDate.split('T')[0] : new Date().toISOString().split('T')[0]
-  
+
   form.status = shipment.state || ''
   form.remark = shipment.remark || ''
 }

@@ -37,7 +37,10 @@
                   <div v-for="(rec, idx) in receivingData.receivings" :key="rec.id" class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
                     <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-2">
                       <h4 class="font-semibold text-gray-900 dark:text-white">{{ rec.receivingCode }}</h4>
-                      <span class="text-xs text-gray-500 dark:text-gray-400">{{ formatDate(rec.receivingDate) }}</span>
+                      <div class="flex items-center gap-2">
+                        <span :class="getStatusClass(rec.status)" class="px-2 py-1 rounded text-xs font-medium">{{ rec.status || 'PENDING' }}</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">{{ formatDate(rec.receivingDate) }}</span>
+                      </div>
                     </div>
 
                     <!-- Receiving Items Table -->
@@ -155,6 +158,10 @@
 
                 <div class="grid grid-cols-3 gap-4">
                   <div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Status</p>
+                    <span :class="getStatusClass(receivingData.status)" class="inline-block px-2 py-1 rounded text-xs font-medium">{{ receivingData.status || 'PENDING' }}</span>
+                  </div>
+                  <div>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Date Received</p>
                     <p class="font-medium text-gray-900 dark:text-white">{{ formatDate(receivingData.receivingDate) }}</p>
                   </div>
@@ -162,6 +169,9 @@
                     <p class="text-xs text-gray-500 dark:text-gray-400">Received By</p>
                     <p class="font-medium text-gray-900 dark:text-white">{{ receivingData.receivedBy || '-' }}</p>
                   </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
                   <div>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Warehouse</p>
                     <p class="font-medium text-gray-900 dark:text-white">{{ receivingData.warehouse?.name || '-' }}</p>
@@ -191,7 +201,7 @@
                   <div class="flex justify-between items-center">
                     <span class="text-sm text-gray-600 dark:text-gray-400">Fulfillment Status:</span>
                     <span class="font-semibold" :class="totalReceivedQuantity >= totalExpectedQuantity ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'">
-                      {{ totalReceivedQuantity >= totalExpectedQuantity ? 'Complete' : 'Partial' }} 
+                      {{ totalReceivedQuantity >= totalExpectedQuantity ? 'Complete' : 'Partial' }}
                       ({{ totalExpectedQuantity > 0 ? Math.round((totalReceivedQuantity / totalExpectedQuantity) * 100) : 0 }}%)
                     </span>
                   </div>
@@ -327,6 +337,16 @@ const formatDate = (dateString: string) => {
   } catch {
     return dateString
   }
+}
+
+const getStatusClass = (status: string) => {
+  const statusMap: Record<string, string> = {
+    'PENDING': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+    'IN_PROGRESS': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+    'COMPLETED': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    'CLOSED': 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+  }
+  return statusMap[status] || statusMap['PENDING']
 }
 
 defineExpose({ openModal, closeModal })

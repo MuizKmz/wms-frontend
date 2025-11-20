@@ -123,14 +123,15 @@ const filters = ref({
   date: '', // Stores the selected date string
 })
 
-// Fixed status options
+// Fixed status options - Simplified OrderStatus enum
 const statuses = ref([
-  { label: 'Created', value: 'Created' },
-  { label: 'Processing', value: 'Processing' },
-  { label: 'Confirmed', value: 'Confirmed' },
-  { label: 'Shipped', value: 'Shipped' },
-  { label: 'Completed', value: 'Completed' },
-  { label: 'Cancelled', value: 'Cancelled' },
+  { label: 'Pending', value: 'PENDING' },
+  { label: 'Processing', value: 'PROCESSING' },
+  { label: 'Shipped', value: 'SHIPPED' },
+  { label: 'Received', value: 'RECEIVED' },
+  { label: 'Delivered', value: 'DELIVERED' },
+  { label: 'Closed', value: 'CLOSED' },
+  { label: 'Cancelled', value: 'CANCELLED' },
 ])
 
 const openDropdowns = reactive({
