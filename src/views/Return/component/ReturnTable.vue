@@ -1,5 +1,5 @@
 <template>
-  <div class="overflow-hidden">
+  <div class="overflow-visible">
     <!-- Header with Select Columns Button -->
     <div class="flex justify-between items-center mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -91,8 +91,11 @@
               </span>
 
               <!-- Status badge column -->
-              <span v-else-if="col === 'status'" :class="['px-3 py-1 text-xs rounded-full font-medium', returnStatusClass(getCellValue(row, 'status'))]">
-                {{ (getCellValue(row, 'status') || '-').toString().toUpperCase() }}
+              <span
+                v-else-if="col === 'status'"
+                :class="['inline-flex items-center whitespace-nowrap px-3 py-1 text-xs rounded-full font-medium', returnStatusClass(getCellValue(row, 'status'))]"
+              >
+                {{ formatStatus(getCellValue(row, 'status')) }}
               </span>
 
               <!-- Date fields -->
@@ -462,7 +465,7 @@ const fetchReturns = async () => {
       id: item.id,
       returnNo: item.returnCode,
       returnType: item.returnType === 'CUSTOMER_RETURN' ? 'CUSTOMER' : 'SUPPLIER',
-      referenceNo: item.orderId ? `Order #${item.orderId}` : item.receivingId ? `Receiving #${item.receivingId}` : '-',
+      referenceNo: item.order?.orderNo || item.receiving?.receivingCode || (item.orderId ? `Order #${item.orderId}` : item.receivingId ? `Receiving #${item.receivingId}` : '-') ,
       returnDate: item.requestedDate || item.createdAt,
       from: item.returnType === 'CUSTOMER_RETURN'
         ? (item.customer?.name || 'Customer')
@@ -669,6 +672,18 @@ const formatDate = (dateString: string) => {
   })
 }
 
+// Format status for display (replace underscores with spaces, uppercase)
+const formatStatus = (status: string | undefined | null) => {
+  if (!status) return '-'
+  return String(status).toUpperCase().replace(/_/g, ' ')
+}
+
+// Get a displayable return code from transformed or raw data
+const getReturnCode = (row: ReturnItem) => {
+  const anyRow = row as any
+  return anyRow.returnNo ?? anyRow.returnCode ?? anyRow._raw?.returnCode ?? '-'
+}
+
 // ------------------------------------------------
 // --- Actions & Exposed Methods ---
 // ------------------------------------------------
@@ -783,9 +798,17 @@ const adjustPageAfterDeletion = () => {
 
 // Approve return request
 const approveReturn = async (row: ReturnItem) => {
-  if (!confirm(`Are you sure you want to approve this return (${row.returnCode})?`)) {
-    return
-  }
+  const confirmResult = await Swal.fire({
+    title: 'Approve Return',
+    text: `Are you sure you want to approve this return (${getReturnCode(row)})?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, approve it',
+  })
+
+  if (!confirmResult.isConfirmed) return
 
   try {
     const response = await authenticatedFetch(`${API_URL}/${row.id}/approve`, {
@@ -797,10 +820,10 @@ const approveReturn = async (row: ReturnItem) => {
       throw new Error(error.message || 'Failed to approve return')
     }
 
-    const result = await response.json()
+    const resJson = await response.json()
 
     // Emit success and refresh data
-    emit('approve-return', { success: true, data: result })
+    emit('approve-return', { success: true, data: resJson })
     await fetchReturns()
   } catch (error: any) {
     console.error('Error approving return:', error)
@@ -810,9 +833,17 @@ const approveReturn = async (row: ReturnItem) => {
 
 // Mark return as received
 const receiveReturn = async (row: ReturnItem) => {
-  if (!confirm(`Mark this return as received (${row.returnCode})?`)) {
-    return
-  }
+  const confirmResult = await Swal.fire({
+    title: 'Mark as Received',
+    text: `Mark this return as received (${getReturnCode(row)})?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, mark as received',
+  })
+
+  if (!confirmResult.isConfirmed) return
 
   try {
     const response = await authenticatedFetch(`${API_URL}/${row.id}/receive`, {
@@ -824,9 +855,9 @@ const receiveReturn = async (row: ReturnItem) => {
       throw new Error(error.message || 'Failed to mark return as received')
     }
 
-    const result = await response.json()
+    const resJson = await response.json()
 
-    emit('receive-return', { success: true, data: result })
+    emit('receive-return', { success: true, data: resJson })
     await fetchReturns()
   } catch (error: any) {
     console.error('Error receiving return:', error)
@@ -836,9 +867,17 @@ const receiveReturn = async (row: ReturnItem) => {
 
 // Complete return and process EPCs
 const completeReturn = async (row: ReturnItem) => {
-  if (!confirm(`Complete this return and process all EPCs (${row.returnCode})? This will update EPC statuses and inventory.`)) {
-    return
-  }
+  const confirmResult = await Swal.fire({
+    title: 'Complete Return',
+    text: `Complete this return and process all EPCs (${getReturnCode(row)})? This will update EPC statuses and inventory.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, complete it',
+  })
+
+  if (!confirmResult.isConfirmed) return
 
   try {
     const response = await authenticatedFetch(`${API_URL}/${row.id}/complete`, {
@@ -850,9 +889,9 @@ const completeReturn = async (row: ReturnItem) => {
       throw new Error(error.message || 'Failed to complete return')
     }
 
-    const result = await response.json()
+    const resJson = await response.json()
 
-    emit('complete-return', { success: true, data: result })
+    emit('complete-return', { success: true, data: resJson })
     await fetchReturns()
   } catch (error: any) {
     console.error('Error completing return:', error)

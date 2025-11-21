@@ -1301,7 +1301,10 @@ const submitForm = async () => {
       data: { returnNo: result.returnCode, ...result }
     })
 
+    // Allow programmatic close even if isSubmitting was true
+    isSubmitting.value = false
     closeModal()
+    return
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to create return'
     emit('return-created', {
