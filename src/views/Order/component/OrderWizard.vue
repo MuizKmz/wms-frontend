@@ -135,7 +135,7 @@
                           class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed opacity-60"
                           disabled
                         >
-                          {{ formData.status || 'PENDING' }}
+                                            {{ displayStatus }}
                           <span class="icon-[tabler--chevron-down] size-4"></span>
                         </button>
                       </div>
@@ -619,6 +619,12 @@ const selectedSupplierLabel = computed(() => {
   if (!formData.supplierId) return null
   const supplier = suppliers.value.find(s => s.id === formData.supplierId)
   return supplier ? supplier.supplierName : null
+})
+
+// Display-friendly order status (UI only). Keeps `formData.status` unchanged for API submission.
+const displayStatus = computed(() => {
+  const s = formData.status || 'PENDING'
+  return s ? (s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()) : 'Pending'
 })
 
 const lockScroll = () => {

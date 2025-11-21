@@ -191,18 +191,20 @@
                   </td>
                   <td class="px-4 py-4">
                     <span :class="[
-                      'px-2 py-1 text-xs font-medium rounded-full',
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
                       getStatusClass(epc.status)
                     ]">
-                      {{ formatStatus(epc.status) }}
+                      {{ String(formatStatus(epc.status) ?? '--').toUpperCase() }}
                     </span>
                   </td>
                   <td class="px-4 py-4">
                     <span :class="[
-                      'px-2 py-1 text-xs font-medium rounded-full',
-                      epc.isReserved ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                      epc.isReserved
+                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200'
+                        : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
                     ]">
-                      {{ epc.isReserved ? 'Yes' : 'No' }}
+                      {{ epc.isReserved ? 'YES' : 'NO' }}
                     </span>
                   </td>
                 </tr>
@@ -319,12 +321,13 @@ const toggleEpcSelection = (epcId) => {
 }
 
 const getStatusClass = (status) => {
+  const s = String(status || '').toUpperCase()
   const statusMap = {
-    'GENERATED': 'bg-gray-100 text-gray-800 dark:bg-gray-700/30 dark:text-gray-300',
-    'INBOUND': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    'OUTBOUND': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+    GENERATED: 'bg-gray-100 text-gray-800 dark:bg-gray-700/30 dark:text-gray-300',
+    INBOUND: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    OUTBOUND: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
   }
-  return statusMap[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+  return statusMap[s] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
 }
 
 const formatStatus = (status) => {

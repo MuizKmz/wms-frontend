@@ -472,7 +472,7 @@ const steps = [
   { id: 4, name: 'Location' },
 ]
 
-const statusOptions = ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CLOSED']
+const statusOptions = ['PENDING', 'COMPLETED']
 
 const formData = reactive({
   receivingCode: '',

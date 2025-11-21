@@ -86,7 +86,7 @@
 
               <!-- Status with badge styling -->
               <span v-else-if="col === 'status'" :class="statusBadgeClass(getCellValue(item, col))">
-                {{ getCellValue(item, col) || 'Unknown' }}
+                {{ String(getCellValue(item, col) ?? 'Unknown').toUpperCase() }}
               </span>
 
               <!-- Default display -->
@@ -334,16 +334,16 @@ const getCellValue = (item, col) => {
 
 // Get status badge class
 const statusBadgeClass = (status) => {
-  const baseClasses = 'px-3 py-1 text-xs rounded-full font-medium'
-  switch (status) {
-    case 'Active':
-      return `${baseClasses} bg-green-100 text-green-600`
-    case 'Inactive':
-      return `${baseClasses} bg-blue-100 text-blue-600`
-    case 'Pending':
-      return `${baseClasses} bg-yellow-100 text-yellow-600`
+  const baseClasses = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium'
+  switch (String(status || '').toLowerCase()) {
+    case 'active':
+      return `${baseClasses} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200`
+    case 'inactive':
+      return `${baseClasses} bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200`
+    case 'pending':
+      return `${baseClasses} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200`
     default:
-      return `${baseClasses} bg-gray-100 text-gray-600`
+      return `${baseClasses} bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200`
   }
 }
 

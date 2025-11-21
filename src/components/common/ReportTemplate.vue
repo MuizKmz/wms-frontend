@@ -83,7 +83,7 @@
     </div>
 
     <!-- Main Content Slot -->
-    <div v-if="showTable && hasData" class="report-content flex-1" style="min-height: 0; overflow: hidden;">
+    <div v-if="showTable && hasData" class="report-content flex-1" style="min-height: 0; overflow: visible;">
       <slot></slot>
     </div>
 

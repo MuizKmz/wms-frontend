@@ -118,7 +118,7 @@
                               {{ index + 1 }}
                             </td>
                             <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
-                              <span class="text-blue-600 dark:text-blue-400 font-medium">
+                              <span class="text-black-600 dark:text-blue-400 font-medium">
                                 {{ item.product?.name || '-' }}
                               </span>
                             </td>
@@ -344,7 +344,7 @@ const returnData = reactive<ReturnData>({
 
 // Computed properties for display
 const displayReturnType = computed(() => {
-  return returnData.returnType === 'CUSTOMER_RETURN' ? 'Customer' : 'Supplier'
+  return returnData.returnType === 'CUSTOMER_RETURN' ? 'CUSTOMER' : 'SUPPLIER'
 })
 
 const displayReferenceNo = computed(() => {
@@ -405,8 +405,8 @@ const formatDate = (dateString: string) => {
 
 const getReturnTypeClass = (type: string) => {
   const classes = {
-    'Customer': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-    'Supplier': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+    'CUSTOMER': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    'SUPPLIER': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
   }
   return classes[type as keyof typeof classes] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
 }
@@ -422,13 +422,14 @@ const getConditionBadge = (condition: string) => {
 }
 
 const getConditionLabel = (condition: string) => {
+  // Return uppercase labels to match requested UI
   const labels = {
-    'GOOD': 'Good',
-    'DEFECTIVE': 'Defective',
-    'DAMAGED': 'Damaged',
-    'WRONG_ITEM': 'Wrong Item'
+    'GOOD': 'GOOD',
+    'DEFECTIVE': 'DEFECTIVE',
+    'DAMAGED': 'DAMAGED',
+    'WRONG_ITEM': 'WRONG_ITEM'
   }
-  return labels[condition as keyof typeof labels] || condition
+  return labels[condition as keyof typeof labels] || (condition ? condition.toString().toUpperCase() : condition)
 }
 
 // Action Handlers

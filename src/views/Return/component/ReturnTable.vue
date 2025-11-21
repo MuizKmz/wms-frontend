@@ -90,6 +90,11 @@
                 {{ getCellValue(row, col) }}
               </span>
 
+              <!-- Status badge column -->
+              <span v-else-if="col === 'status'" :class="['px-3 py-1 text-xs rounded-full font-medium', returnStatusClass(getCellValue(row, 'status'))]">
+                {{ (getCellValue(row, 'status') || '-').toString().toUpperCase() }}
+              </span>
+
               <!-- Date fields -->
               <span
                 v-else-if="col === 'returnDate' || col === 'lastUpdated'"
@@ -374,6 +379,7 @@ const allowedColumns = [
   'to',
   'skuQuantity',
   'totalQuantity',
+  'status',
   'createdBy',
   'lastUpdated',
 ]
@@ -416,12 +422,26 @@ const handleColumnsUpdate = (columns: string[]) => {
 // Map return types to badge color classes
 const getReturnTypeClass = (type: string) => {
   const map: Record<string, string> = {
-    'Customer': 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
-    'Supplier': 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200',
-    'Internal': 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200',
-    'Failed Delivery': 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200',
+    'CUSTOMER': 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
+    'SUPPLIER': 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200',
+    'INTERNAL': 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200',
+    'FAILED DELIVERY': 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200',
   }
   return map[type] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+}
+
+// Map return status to badge classes
+const returnStatusClass = (status: string | undefined) => {
+  if (!status) return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+  const s = status.toString().toUpperCase()
+  const map: Record<string, string> = {
+    PENDING_APPROVAL: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+    APPROVED: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    RECEIVED: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-200',
+    COMPLETED: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200',
+    REJECTED: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200',
+  }
+  return map[s] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
 }
 
 // API endpoint for returns
@@ -441,7 +461,7 @@ const fetchReturns = async () => {
     data.value = (json || []).map((item: any) => ({
       id: item.id,
       returnNo: item.returnCode,
-      returnType: item.returnType === 'CUSTOMER_RETURN' ? 'Customer' : 'Supplier',
+      returnType: item.returnType === 'CUSTOMER_RETURN' ? 'CUSTOMER' : 'SUPPLIER',
       referenceNo: item.orderId ? `Order #${item.orderId}` : item.receivingId ? `Receiving #${item.receivingId}` : '-',
       returnDate: item.requestedDate || item.createdAt,
       from: item.returnType === 'CUSTOMER_RETURN'
@@ -452,10 +472,10 @@ const fetchReturns = async () => {
         : (item.supplier?.name || 'Supplier'),
       skuQuantity: item.returnItems?.length || 0,
       totalQuantity: item.returnItems?.reduce((sum: number, ri: any) => sum + (ri.quantity || 0), 0) || 0,
+      status: item.status || '',
       createdBy: item.requester?.username || item.requester?.fullName || 'System',
       lastUpdated: item.updatedAt || item.createdAt,
       remarks: item.reason || item.notes || '-',
-      status: item.status,
       // Keep original data for edit/view
       _raw: item
     }))
@@ -498,6 +518,7 @@ const filteredData = computed(() => {
       return false
     if (props.filters?.dateRange) {
       const [startDate, endDate] = props.filters.dateRange.split(' to ')
+      if (!item.returnDate) return false
       const itemDate = new Date(item.returnDate)
       if (startDate && new Date(startDate) > itemDate) return false
       if (endDate && new Date(endDate) < itemDate) return false

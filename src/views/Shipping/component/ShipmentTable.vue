@@ -89,8 +89,8 @@
               </span>
 
               <!-- Status with badge styling (if applicable) -->
-              <span v-else-if="col === 'status'" class="text-sm text-gray-900 dark:text-white">
-                {{ getCellValue(item, col) }}
+              <span v-else-if="col === 'status'" :class="['px-3 py-1 text-xs rounded-full font-medium', shipmentStatusClass(item.state)]">
+                {{ formatShipmentStatus(item.state) }}
               </span>
 
               <!-- Date fields -->
@@ -305,6 +305,8 @@ const fieldAliases = {
   shippingDate: ['shippingDate', 'shipDate'],
   estimatedDeliveryDate: ['estimatedDeliveryDate', 'estimatedDelivery', 'deliveryDate'],
   remark: ['remark', 'remarks', 'note'],
+  // support plural key used in allowedColumns
+  remarks: ['remarks', 'remark', 'note'],
 }
 
 // Format column name for display
@@ -318,7 +320,7 @@ const formatColumnName = (name) => {
     status: 'Status',
     shippingDate: 'Shipping Date',
     estimatedDeliveryDate: 'Estimated Delivery Date',
-    remark: 'Remarks',
+    remarks: 'Remarks',
   }
 
   return (
@@ -366,6 +368,28 @@ const formatOrderNumbers = (orderValue) => {
   return orderValue
 }
 
+// Format shipment status for display (UI only). Returns uppercase labels to match `OrderTable`.
+const formatShipmentStatus = (status: string | undefined): string => {
+  const s = (status || '').toString().toUpperCase()
+  return s || '-'
+}
+
+// Map shipment status to badge classes (match `OrderTable.vue` mapping for consistent UI)
+const shipmentStatusClass = (status: string | undefined): string => {
+  if (!status) return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+  const s = status.toString().toUpperCase()
+  const map: Record<string, string> = {
+    PENDING: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
+    PROCESSING: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
+    SHIPPED: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200',
+    RECEIVED: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-200',
+    DELIVERED: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200',
+    CLOSED: 'bg-green-200 text-green-900 dark:bg-green-900/60 dark:text-green-100',
+    CANCELLED: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200',
+  }
+  return map[s] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+}
+
 // View shipment details
 const viewShipment = (shipment) => {
   emit('view-shipment', shipment)
@@ -387,9 +411,8 @@ const fetchShipments = async () => {
 
     const json = await response.json()
     // Normalize server shipment objects to the shape used by the table
-    data.value = (json || []).map((p) => {
-      // compute quantity if inventory relation is included
-      let quantity = 0
+    const mapped = (json || []).map((p) => {
+      const normalizedRemark = p.remarks || p.remark || p.note || '-'
 
       return {
         id: p.id,
@@ -401,13 +424,19 @@ const fetchShipments = async () => {
         state: p.state || p.state || '',
         shippingDate: p.shippingDate || p.shippingDate || '',
         estimatedDeliveryDate: p.estimatedDeliveryDate || p.estimatedDeliveryDate || '',
-        remark: p.remarks || p.remark || p.remark || '-',
+        // expose both singular and plural keys so aliases/resolution always find the value
+        remark: normalizedRemark,
+        remarks: normalizedRemark,
         raw: p,
       }
-      if (selectedColumns.value.length === 0) {
-        selectedColumns.value = [...allowedColumns]
-      }
     })
+
+    data.value = mapped
+
+    // Ensure default columns are set if user hasn't selected any
+    if (selectedColumns.value.length === 0) {
+      selectedColumns.value = [...allowedColumns]
+    }
   } catch (e) {
     error.value = e.message
     console.error('Error fetching shipments:', e)

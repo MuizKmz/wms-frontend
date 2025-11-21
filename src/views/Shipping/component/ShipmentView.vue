@@ -19,7 +19,11 @@
                 </div>
                 <div>
                   <p class="text-xs text-gray-500">Status</p>
-                  <p class="font-medium text-gray-900 dark:text-white">{{ shipment.state || shipment.status || '-' }}</p>
+                  <p>
+                    <span :class="['px-3 py-1 text-xs rounded-full font-medium', shipStatusClass(shipment.state || shipment.status)]">
+                      {{ formatShipStatus(shipment.state || shipment.status) }}
+                    </span>
+                  </p>
                 </div>
               </div>
 
@@ -127,6 +131,27 @@ const formatDate = (dateString: string) => {
   } catch {
     return dateString
   }
+}
+
+// Format and class helpers for shipment status (uppercase label + badge classes)
+const formatShipStatus = (status: string | undefined) => {
+  const s = (status || '').toString().toUpperCase()
+  return s || '-'
+}
+
+const shipStatusClass = (status: string | undefined) => {
+  if (!status) return 'bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-300'
+  const s = status.toString().toUpperCase()
+  const map: Record<string, string> = {
+    PENDING: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
+    PROCESSING: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
+    SHIPPED: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200',
+    RECEIVED: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-200',
+    DELIVERED: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200',
+    CLOSED: 'bg-green-200 text-green-900 dark:bg-green-900/60 dark:text-green-100',
+    CANCELLED: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200',
+  }
+  return map[s] || 'bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-300'
 }
 
 const getOrderNumber = () => {

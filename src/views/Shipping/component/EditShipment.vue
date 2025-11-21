@@ -1,291 +1,278 @@
 <template>
   <teleport to="body">
     <transition
-      enter-active-class="transition-opacity duration-300 ease-out"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition-opacity duration-250 ease-in"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
+      enter-active-class="transition-opacity duration-300"
+      leave-active-class="transition-opacity duration-200"
       @after-leave="unlockScroll"
     >
-      <div
-        v-if="isOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center"
-        aria-hidden="false"
-        @click.self="closeModal"
-      >
-        <div class="absolute inset-0 bg-black/50"></div>
-
+      <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50" @click.self="closeModal"></div>
         <transition
-          enter-active-class="transition-all duration-300 ease-out"
-          enter-from-class="opacity-0 scale-95 translate-y-4"
-          enter-to-class="opacity-100 scale-100 translate-y-0"
-          leave-active-class="transition-all duration-250 ease-in"
-          leave-from-class="opacity-100 scale-100 translate-y-0"
-          leave-to-class="opacity-0 scale-95 translate-y-4"
+          enter-active-class="transition-all duration-300"
+          enter-from-class="opacity-0 scale-95"
+          enter-to-class="opacity-100 scale-100"
           appear
         >
-          <div
-            v-if="isOpen"
-            ref="panelRef"
-            class="relative z-10 w-full max-w-xl mx-4 max-h-[90vh] flex flex-col"
-            @click.stop
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="modal-title"
-          >
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col min-h-[600px] max-h-[90vh]">
+          <div v-if="isOpen" class="relative z-10 w-full max-w-3xl mx-4">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden">
+              <!-- Header -->
               <div class="flex items-center justify-between p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">
-                  Edit Shipment
-                </h2>
+                <div>
+                  <h2 class="text-xl font-bold text-gray-900 dark:text-white">Edit Shipment</h2>
+                  <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Step {{ currentStep }} of {{ totalSteps }}</p>
+                </div>
                 <button
-                  type="button"
-                  class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   @click="closeModal"
                   :disabled="isSubmitting"
+                  class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   aria-label="Close modal"
                 >
                   ✕
                 </button>
               </div>
 
-              <div class="space-y-4 overflow-y-auto p-6 flex-1">
-                <div v-if="errors.submit" class="alert alert-error">
-                  <span>{{ errors.submit }}</span>
-                </div>
-
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Tracking Code
-                  </label>
-                  <input
-                    v-model="form.trackingCode"
-                    type="text"
-                    placeholder="Enter Tracking Code"
-                    maxlength="50"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.trackingCode }]"
-                  />
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.trackingCode" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.trackingCode }}</p>
+              <!-- Step Indicator -->
+              <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900/30">
+                <div class="flex items-center justify-center">
+                  <div class="flex items-center max-w-2xl w-full pl-20 pr-20">
+                    <div v-for="(step, index) in steps" :key="step.id" class="flex items-center" :class="index < steps.length - 1 ? 'flex-1' : ''">
+                      <div class="flex items-center justify-center flex-col flex-shrink-0">
+                        <div :class="[
+                          'w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all',
+                          currentStep > step.id
+                            ? 'bg-green-500 text-white'
+                            : currentStep === step.id
+                            ? 'bg-brand-500 text-white'
+                            : 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400',
+                        ]">
+                          <span v-if="currentStep > step.id">✓</span>
+                          <span v-else>{{ step.id }}</span>
+                        </div>
+                        <span :class="[
+                          'mt-2 text-xs font-medium text-center whitespace-nowrap',
+                          currentStep === step.id
+                            ? 'text-brand-500 dark:text-brand-400'
+                            : currentStep > step.id
+                            ? 'text-green-600 dark:text-green-400'
+                            : 'text-gray-500 dark:text-gray-400',
+                        ]">
+                          {{ step.name }}
+                        </span>
+                      </div>
+                      <div v-if="index < steps.length - 1" :class="[
+                        'flex-1 h-0.5 mx-3 self-start mt-4',
+                        currentStep > step.id ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+                      ]"></div>
                     </div>
-                  </transition>
-                </div>
-
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Shipping Carrier
-                  </label>
-                  <input
-                    v-model="form.carrier"
-                    type="text"
-                    placeholder="Enter Carrier"
-                    maxlength="50"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.carrier }]"
-                  />
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.carrier" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.carrier }}</p>
-                    </div>
-                  </transition>
-                </div>
-
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span>Sales Order Number
-                  </label>
-                  <div class="dropdown relative inline-flex w-full" ref="orderDropdownRef">
-                    <button
-                      type="button"
-                      :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.order }]"
-                      :aria-expanded="openDropdowns.order"
-                      @click.stop="toggleDropdown('order')"
-                      :disabled="loadingOrders"
-                    >
-                      {{ form.order || 'Select Order' }}
-                      <span
-                        class="icon-[tabler--chevron-down] size-4 transition-transform"
-                        :class="{ 'rotate-180': openDropdowns.order }"
-                      ></span>
-                    </button>
-
-                    <ul
-                      class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
-                      :class="{ 'opacity-100 pointer-events-auto': openDropdowns.order, 'opacity-0 pointer-events-none': !openDropdowns.order }"
-                      role="menu"
-                    >
-                      <li v-for="order in orders" :key="order.id">
-                        <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('order', order.orderNo)">
-                          {{ order.orderNo }}
-                        </a>
-                      </li>
-                    </ul>
                   </div>
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.order" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.order }}</p>
-                    </div>
-                  </transition>
-                </div>
-
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Destination
-                  </label>
-                  <input
-                    v-model="form.destination"
-                    type="text"
-                    placeholder="Enter Shipping Destination"
-                    maxlength="50"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.destination }]"
-                  />
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.destination" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.destination }}</p>
-                    </div>
-                  </transition>
-                </div>
-
-                  <div class="relative">
-                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                      Shipping Date
-                    </label>
-                    <input
-                      ref="shippingDateInput"
-                      v-model="form.shippingDate"
-                      type="text"
-                      placeholder="Select Date"
-                      :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.shippingDate }]"
-                      readonly
-                    />
-                  </div>
-
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    Estimated Delivery Date
-                  </label>
-                  <input
-                    ref="estimatedDeliveryDateInput"
-                    v-model="form.estimatedDeliveryDate"
-                    type="text"
-                    placeholder="Select Date"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.estimatedDeliveryDate }]"
-                    readonly
-                  />
-                </div>
-
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Status
-                  </label>
-                  <div class="dropdown relative inline-flex w-full" ref="statusDropdownRef">
-                    <button
-                      type="button"
-                      :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.status }]"
-                      :aria-expanded="openDropdowns.status"
-                      @click.stop="toggleDropdown('status')"
-                    >
-                      {{ form.status || 'Select Status' }}
-                      <span
-                        class="icon-[tabler--chevron-down] size-4 transition-transform"
-                        :class="{ 'rotate-180': openDropdowns.status }"
-                      ></span>
-                    </button>
-                  </div>
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.status" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.status }}</p>
-                    </div>
-                  </transition>
-                </div>
-
-                <!-- Status dropdown menu - rendered outside normal flow -->
-                <teleport to="body">
-                  <ul
-                    v-if="openDropdowns.status"
-                    class="dropdown-menu transition-opacity duration-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg text-gray-900 dark:text-white opacity-100"
-                    :style="statusMenuStyle"
-                    role="menu"
-                  >
-                    <li v-for="status in statusOptions" :key="status">
-                      <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('status', status)">
-                        {{ status }}
-                      </a>
-                    </li>
-                  </ul>
-                </teleport>
-
-                <div class="relative">
-                  <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                    Remarks
-                  </label>
-                  <input
-                    v-model="form.remark"
-                    type="text"
-                    placeholder="Enter Remarks"
-                    maxlength="200"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.remark }]"
-                  />
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.remark" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.remark }}</p>
-                    </div>
-                  </transition>
                 </div>
               </div>
 
-              <div class="flex justify-end gap-2 p-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button @click="closeModal" class="btn btn-outline" :disabled="isSubmitting">
-                  Cancel
+              <!-- Form Content -->
+              <div class="p-6 min-h-[400px]">
+                <div v-if="errors.submit" class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p class="text-sm text-red-600 dark:text-red-400">{{ errors.submit }}</p>
+                </div>
+
+                <!-- Step 1: Order Information -->
+                <div v-if="currentStep === 1">
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Order Information</h3>
+                  <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                      <!-- Tracking Code (Read-only) -->
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Tracking Code <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                          v-model="form.trackingCode"
+                          type="text"
+                          class="input input-bordered w-full bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                          readonly
+                          disabled
+                        />
+                      </div>
+
+                      <!-- Sales Order Number (Read-only) -->
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Sales Order Number <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                          v-model="form.order"
+                          type="text"
+                          class="input input-bordered w-full bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                          readonly
+                          disabled
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Step 2: Shipping Details -->
+                <div v-if="currentStep === 2">
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Shipping Details</h3>
+                  <div class="space-y-4">
+
+                  <div class="grid grid-cols-2 gap-4">
+                    <!-- Shipping Carrier -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Shipping Carrier <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        v-model="form.carrier"
+                        type="text"
+                        class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        :class="{ 'border-red-500': errors.carrier }"
+                        placeholder="Enter carrier name"
+                        maxlength="50"
+                      />
+                      <span v-if="errors.carrier" class="text-xs text-red-500 mt-1">{{ errors.carrier }}</span>
+                    </div>
+
+                    <!-- Destination -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Destination <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        v-model="form.destination"
+                        type="text"
+                        class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        :class="{ 'border-red-500': errors.destination }"
+                        placeholder="Enter destination"
+                        maxlength="50"
+                      />
+                      <span v-if="errors.destination" class="text-xs text-red-500 mt-1">{{ errors.destination }}</span>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-4">
+                    <!-- Shipping Date -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Shipping Date
+                      </label>
+                      <input
+                        ref="shippingDateInput"
+                        v-model="form.shippingDate"
+                        type="text"
+                        class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        placeholder="Select date"
+                        readonly
+                      />
+                    </div>
+
+                    <!-- Estimated Delivery Date -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Estimated Delivery Date
+                      </label>
+                      <input
+                        ref="estimatedDeliveryDateInput"
+                        v-model="form.estimatedDeliveryDate"
+                        type="text"
+                        class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        placeholder="Select date"
+                        readonly
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Status -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Status <span class="text-red-500">*</span>
+                    </label>
+                    <div class="dropdown relative inline-flex w-full" ref="statusDropdownRef">
+                      <button
+                        type="button"
+                        :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400 text-left', { 'btn-error': errors.status }]"
+                        :aria-expanded="openDropdowns.status"
+                        @click.stop="toggleDropdown('status')"
+                      >
+                        <span class="truncate pr-2">{{ displayStatus }}</span>
+                        <span
+                          class="icon-[tabler--chevron-down] size-4 transition-transform flex-shrink-0"
+                          :class="{ 'rotate-180': openDropdowns.status }"
+                        ></span>
+                      </button>
+                    </div>
+                    <span v-if="errors.status" class="text-xs text-red-500 mt-1">{{ errors.status }}</span>
+                  </div>
+
+                  <!-- Status dropdown menu - rendered outside normal flow -->
+                  <teleport to="body">
+                    <ul
+                      v-if="openDropdowns.status"
+                      class="dropdown-menu transition-opacity duration-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg text-gray-900 dark:text-white opacity-100"
+                      :style="statusMenuStyle"
+                      role="menu"
+                    >
+                      <li v-for="status in statusOptions" :key="status">
+                        <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectStatus(status)">
+                          {{ formatStatus(status) }}
+                        </a>
+                      </li>
+                    </ul>
+                  </teleport>
+
+                  <!-- Remarks -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Remarks
+                    </label>
+                    <textarea
+                      v-model="form.remark"
+                      rows="3"
+                      class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      placeholder="Enter any remarks"
+                      maxlength="200"
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer with Navigation -->
+              <div class="flex items-center justify-between p-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  v-if="currentStep > 1"
+                  @click="previousStep"
+                  :disabled="isSubmitting"
+                  class="btn btn-outline"
+                >
+                  ← Previous
                 </button>
-                <button @click="submitForm" class="btn bg-brand-500 border-none" :disabled="isSubmitting">
-                  <span v-if="isSubmitting" class="loading loading-spinner loading-sm"></span>
-                  {{ isSubmitting ? 'Updating...' : 'Update' }}
-                </button>
+                <div v-else></div>
+
+                <div class="flex gap-2">
+                  <button
+                    @click="closeModal"
+                    :disabled="isSubmitting"
+                    class="btn btn-outline"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    v-if="currentStep < totalSteps"
+                    @click="nextStep"
+                    class="btn bg-brand-500 hover:bg-brand-600 text-white border-none"
+                  >
+                    Next →
+                  </button>
+                  <button
+                    v-else
+                    @click="submitForm"
+                    :disabled="isSubmitting"
+                    class="btn bg-brand-500 hover:bg-brand-600 text-white border-none"
+                  >
+                    <span v-if="isSubmitting" class="loading loading-spinner loading-sm"></span>
+                    {{ isSubmitting ? 'Updating...' : 'Update' }}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -296,7 +283,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import authenticatedFetch from '@/utils/authenticatedFetch'
 import flatpickr from 'flatpickr'
 import 'flatpickr/dist/flatpickr.css'
@@ -327,21 +314,26 @@ const emit = defineEmits(['shipment-updated'])
 /* state */
 const isOpen = ref(false)
 const isSubmitting = ref(false)
-const loadingOrders = ref(false)
-const panelRef = ref<HTMLElement | null>(null)
+const currentStep = ref(1)
+const totalSteps = 2
+
+const steps = [
+  { id: 1, name: 'Order Info' },
+  { id: 2, name: 'Shipping' },
+]
+
 const statusDropdownRef = ref<HTMLElement | null>(null)
-const orderDropdownRef = ref<HTMLElement | null>(null)
 const shippingDateInput = ref(null)
 const estimatedDeliveryDateInput = ref(null)
 let flatpickrInstance: any = null
 let flatpickrInstanceEstimated: any = null
 
 const currentShipmentId = ref<number | null>(null)
+const shipmentData = ref<Shipment | null>(null)
 const statusMenuStyle = ref<any>({})
 
 const form = reactive({
   trackingCode: '',
-  name: '',
   carrier: '',
   order: '',
   destination: '',
@@ -352,10 +344,7 @@ const form = reactive({
 })
 
 const errors = reactive({
-  trackingCode: '',
-  name: '',
   carrier: '',
-  order: '',
   destination: '',
   shippingDate: '',
   estimatedDeliveryDate: '',
@@ -371,25 +360,21 @@ const statusOptions = [
   'CANCELLED'
 ]
 
-const orders = ref<Order[]>([])
-const openDropdowns = reactive({ status: false, order: false })
+const openDropdowns = reactive({ status: false })
 
-/* Fetch orders  */
-const fetchOrder = async () => {
-  loadingOrders.value = true
-  try {
-    const response = await authenticatedFetch('/api/order')
-    if (!response.ok) throw new Error('Failed to fetch orders')
-    const data = await response.json()
-    orders.value = data
-    console.log('Fetched orders:', data)
-  } catch (error) {
-    console.error('Error fetching orders:', error)
-  } finally {
-    loadingOrders.value = false
-  }
+// Format status for UI display
+const formatStatus = (status: string) => {
+  const s = (status || '').toString().toUpperCase()
+  if (s === 'PENDING') return 'Pending'
+  if (s === 'SHIPPED') return 'Shipped'
+  if (s === 'DELIVERED') return 'Delivered'
+  if (s === 'CANCELLED') return 'Cancelled'
+  return s ? (s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()) : 'Select Status'
 }
 
+const displayStatus = computed(() => {
+  return form.status ? formatStatus(form.status) : 'Select Status'
+})
 
 /* Modal scroll lock utilities */
 let scrollY = 0
@@ -429,18 +414,6 @@ const validateForm = () => {
 
   let isValid = true
 
-  // Tracking Code validation
-  if (!form.trackingCode.trim()) {
-    errors.trackingCode = 'Tracking Code is required'
-    isValid = false
-  }
-
-  // Order No validation
-  if (!form.order) {
-    errors.order = 'Order is required'
-    isValid = false
-  }
-
   // Shipping Carrier validation
   if (!form.carrier.trim()) {
     errors.carrier = 'Shipping Carrier is required'
@@ -463,8 +436,6 @@ const validateForm = () => {
 }
 
 // Clear error when user types
-watch(() => form.trackingCode, () => { if (errors.trackingCode) errors.trackingCode = '' })
-watch(() => form.order, () => { if (errors.order) errors.order = '' })
 watch(() => form.carrier, () => { if (errors.carrier) errors.carrier = '' })
 watch(() => form.destination, () => { if (errors.destination) errors.destination = '' })
 watch(() => form.status, () => { if (errors.status) errors.status = '' })
@@ -508,38 +479,23 @@ const positionStatusMenu = async () => {
   statusMenuStyle.value = style
 }
 
-const toggleDropdown = async (name: 'status' | 'order' ) => {
-  Object.keys(openDropdowns).forEach(k => {
-    if (k !== name) openDropdowns[k as keyof typeof openDropdowns] = false
-  })
-  openDropdowns[name] = !openDropdowns[name]
+const toggleDropdown = async (name: 'status') => {
+  openDropdowns.status = !openDropdowns.status
 
-  if (name === 'status' && openDropdowns[name]) {
+  if (name === 'status' && openDropdowns.status) {
     await positionStatusMenu()
   }
 }
 
-const selectOption = (key: keyof typeof form, value: string) => {
-  form[key] = value as never
-
-  // Determine which dropdown state key to close
-  let dropdownKey: keyof typeof openDropdowns | null = null;
-  if (key === 'order') {
-    dropdownKey = 'order';
-  } else if (key === 'status') {
-    dropdownKey = 'status';
-  }
-
-  if (dropdownKey) {
-    openDropdowns[dropdownKey] = false
-  }
+const selectStatus = (status: string) => {
+  form.status = status
+  openDropdowns.status = false
 }
 
 /* close dropdowns when clicking outside */
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as Node
   const statusDd = statusDropdownRef.value
-  const orderDd = orderDropdownRef.value
 
   // Check if click is on status dropdown menu items
   const statusMenu = document.querySelector('.dropdown-menu[role="menu"]')
@@ -550,10 +506,6 @@ const handleClickOutside = (event: MouseEvent) => {
   if (statusDd && !statusDd.contains(target)) {
     openDropdowns.status = false
   }
-
-  if (orderDd && !orderDd.contains(target)) {
-    openDropdowns.order = false
-  }
 }
 
 const repositionStatusMenu = () => {
@@ -562,9 +514,69 @@ const repositionStatusMenu = () => {
   }
 }
 
+const nextStep = () => {
+  if (currentStep.value < totalSteps) {
+    currentStep.value++
+
+    // Initialize Flatpickr when entering step 2
+    if (currentStep.value === 2) {
+      initializeFlatpickr()
+    }
+  }
+}
+
+const previousStep = () => {
+  if (currentStep.value > 1) {
+    currentStep.value--
+  }
+}
+
+/* Initialize Flatpickr for date inputs */
+const initializeFlatpickr = async () => {
+  await nextTick()
+
+  // Destroy existing instances if any
+  if (flatpickrInstance) {
+    flatpickrInstance.destroy()
+    flatpickrInstance = null
+  }
+  if (flatpickrInstanceEstimated) {
+    flatpickrInstanceEstimated.destroy()
+    flatpickrInstanceEstimated = null
+  }
+
+  // Initialize shipping date picker
+  if (shippingDateInput.value) {
+    flatpickrInstance = flatpickr(shippingDateInput.value, {
+      dateFormat: 'Y-m-d',
+      defaultDate: form.shippingDate || new Date(),
+      onChange: (selectedDates: Date[]) => {
+        if (selectedDates && selectedDates[0]) {
+          form.shippingDate = selectedDates[0].toISOString().split('T')[0]
+        }
+      }
+    })
+  }
+
+  // Initialize estimated delivery date picker
+  if (estimatedDeliveryDateInput.value) {
+    flatpickrInstanceEstimated = flatpickr(estimatedDeliveryDateInput.value, {
+      dateFormat: 'Y-m-d',
+      defaultDate: form.estimatedDeliveryDate || new Date(),
+      onChange: (selectedDates: Date[]) => {
+        if (selectedDates && selectedDates[0]) {
+          form.estimatedDeliveryDate = selectedDates[0].toISOString().split('T')[0]
+        }
+      }
+    })
+  }
+}
+
 /* Prefill form with shipment data */
 const prefillForm = (shipment: Shipment) => {
+  console.log('Prefilling form with shipment:', shipment)
   currentShipmentId.value = shipment.id
+  shipmentData.value = shipment
   form.trackingCode = shipment.trackingCode || ''
   form.carrier = shipment.carrier || ''
   // shipment may come in different shapes: sometimes it's the raw server object
@@ -580,50 +592,25 @@ const prefillForm = (shipment: Shipment) => {
 
   form.status = shipment.state || ''
   form.remark = shipment.remark || ''
+  
+  console.log('Stored shipmentData with orderId:', shipmentData.value?.orderId)
 }
 
 /* open/close modal */
 const openModal = async (shipment: Shipment) => {
-  // Fetch orders when modal opens
-  await Promise.all([fetchOrder()])
-
   // Prefill form with shipment data
   prefillForm(shipment)
 
-  // Reset errors
+  // Reset errors and step
   Object.keys(errors).forEach(key => errors[key as keyof typeof errors] = '')
+  currentStep.value = 1
 
   isOpen.value = true
   lockScroll()
-  await nextTick()
-  const firstEl = panelRef.value?.querySelector('input,select,textarea,button') as HTMLElement | null
-  firstEl?.focus()
-
-  // Initialize Flatpickr instances for date inputs
-  if (shippingDateInput.value && !flatpickrInstance) {
-    flatpickrInstance = flatpickr(shippingDateInput.value, {
-      dateFormat: 'Y-m-d',
-      defaultDate: form.shippingDate ? new Date(form.shippingDate) : new Date(),
-      onChange: (selectedDates: Date[]) => {
-        if (selectedDates && selectedDates[0]) form.shippingDate = selectedDates[0].toISOString().split('T')[0]
-      }
-    })
-  }
-
-  if (estimatedDeliveryDateInput.value && !flatpickrInstanceEstimated) {
-    flatpickrInstanceEstimated = flatpickr(estimatedDeliveryDateInput.value, {
-      dateFormat: 'Y-m-d',
-      defaultDate: form.estimatedDeliveryDate ? new Date(form.estimatedDeliveryDate) : new Date(),
-      onChange: (selectedDates: Date[]) => {
-        if (selectedDates && selectedDates[0]) form.estimatedDeliveryDate = selectedDates[0].toISOString().split('T')[0]
-      }
-    })
-  }
 }
 
 const closeModal = async () => {
   openDropdowns.status = false
-  openDropdowns.order = false
 
   // Destroy Flatpickr instance
   if (flatpickrInstance) {
@@ -640,6 +627,7 @@ const closeModal = async () => {
   // Reset form after modal is closed
   await nextTick()
   currentShipmentId.value = null
+  currentStep.value = 1
   form.trackingCode = ''
   form.order = ''
   form.carrier = ''
@@ -668,12 +656,19 @@ const submitForm = async () => {
   errors.submit = ''
 
   try {
-    // Map selected orderNo to orderId for backend
-    const selectedOrder = orders.value.find((o: Order) => o.orderNo === form.order)
-    const orderId = selectedOrder ? selectedOrder.id : null
+    // Get orderId from the prefilled shipment
+    // Try multiple possible locations for orderId
+    const anyShipment: any = shipmentData.value as any
+    const orderId = shipmentData.value?.orderId 
+      || anyShipment?.order?.id 
+      || anyShipment?.raw?.orderId
+      || anyShipment?.raw?.order?.id
+
+    console.log('Looking for orderId in shipmentData:', shipmentData.value)
+    console.log('Found orderId:', orderId)
 
     if (!orderId) {
-      errors.submit = 'Selected order not found. Please select a valid order.'
+      errors.submit = 'Order ID not found in shipment data. Please check the shipment details.'
       isSubmitting.value = false
       return
     }

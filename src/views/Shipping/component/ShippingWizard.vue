@@ -242,7 +242,7 @@
                           :aria-expanded="openDropdowns.status"
                           @click.stop="toggleDropdown('status')"
                         >
-                          <span class="truncate pr-2">{{ formData.status || 'Select Status' }}</span>
+                          <span class="truncate pr-2">{{ displayStatus }}</span>
                           <span
                             class="icon-[tabler--chevron-down] size-4 transition-transform flex-shrink-0"
                             :class="{ 'rotate-180': openDropdowns.status }"
@@ -262,7 +262,7 @@
                       >
                         <li v-for="status in statusOptions" :key="status">
                           <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectStatus(status)">
-                            {{ status }}
+                            {{ formatStatus(status) }}
                           </a>
                         </li>
                       </ul>
@@ -333,7 +333,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
 import authenticatedFetch from '@/utils/authenticatedFetch'
 import OrderWizard from '@/views/Order/component/OrderWizard.vue'
 import flatpickr from 'flatpickr'
@@ -604,6 +604,20 @@ const selectStatus = (status: string) => {
   formData.status = status
   openDropdowns.status = false
 }
+
+// Format status for UI display while keeping the underlying value unchanged for API submission.
+const formatStatus = (status: string) => {
+  const s = (status || '').toString().toUpperCase()
+  if (s === 'PENDING') return 'Pending'
+  if (s === 'SHIPPED') return 'Shipped'
+  if (s === 'DELIVERED') return 'Delivered'
+  if (s === 'CANCELLED') return 'Cancelled'
+  return s ? (s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()) : 'Select Status'
+}
+
+const displayStatus = computed(() => {
+  return formData.status ? formatStatus(formData.status) : 'Select Status'
+})
 
 const getOrderLabel = (orderId: string | number) => {
   if (!orderId) return null

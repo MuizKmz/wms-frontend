@@ -174,7 +174,7 @@
                         : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
                 ]"
               >
-                {{ row.type || 'Other' }}
+                {{ String(row.type || 'Other').toUpperCase() }}
               </span>
             </td>
 
@@ -197,7 +197,7 @@
                       : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
                 ]"
               >
-                {{ row.status || 'Unknown' }}
+                {{ String(row.status || 'Unknown').toUpperCase() }}
               </span>
             </td>
 

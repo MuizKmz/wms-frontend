@@ -91,7 +91,7 @@
       class="overflow-auto max-h-[calc(100vh-300px)] bg-gray-100 dark:bg-gray-900 p-4"
     >
       <div class="flex flex-col items-center">
-        <div class="space-y-4 w-full flex flex-col items-center">
+        <div id="printable-report" class="space-y-4 w-full flex flex-col items-center">
           <!-- Page indicator -->
           <div v-if="pagesArray.length > 1" class="text-sm text-gray-600 dark:text-gray-400 mb-2">
             Showing {{ pagesArray.length }} page{{ pagesArray.length > 1 ? 's' : '' }}
@@ -235,22 +235,49 @@ const props = defineProps({
 
 const emit = defineEmits(['update:activeTab', 'update:orientation'])
 
+const pxPerMm = ref<number | null>(null)
+
+const computePxPerMm = () => {
+  try {
+    const el = document.createElement('div')
+    el.style.width = '100mm'
+    el.style.position = 'absolute'
+    el.style.left = '-9999px'
+    document.body.appendChild(el)
+    const px = el.getBoundingClientRect().width / 100
+    document.body.removeChild(el)
+    return px || 3.78
+  } catch (e) {
+    return 3.78
+  }
+}
+
+onMounted(() => {
+  if (typeof document !== 'undefined') pxPerMm.value = computePxPerMm()
+})
+
 const pageStyle = computed(() => {
+  const zoom = zoomLevel.value / 100
+  const px = pxPerMm.value ?? computePxPerMm()
   if (props.orientation === 'landscape') {
+    const w = Math.round(297 * px) + 'px'
+    const h = Math.round(210 * px) + 'px'
     return {
-      width: '297mm',
-      height: '210mm',
-      transform: `scale(${zoomLevel.value / 100})`,
+      width: w,
+      height: h,
+      transform: `scale(${zoom})`,
       transformOrigin: 'top center',
       overflow: 'hidden',
       boxSizing: 'border-box' as const
     }
   }
 
+  const w = Math.round(210 * px) + 'px'
+  const h = Math.round(297 * px) + 'px'
   return {
-    width: '210mm',
-    height: '297mm',
-    transform: `scale(${zoomLevel.value / 100})`,
+    width: w,
+    height: h,
+    transform: `scale(${zoom})`,
     transformOrigin: 'top center',
     overflow: 'hidden',
     boxSizing: 'border-box' as const
