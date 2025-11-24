@@ -80,7 +80,7 @@
     </div>
 
     <!-- Filters -->
-    <div class="card bg-white dark:bg-gray-800 shadow-xl">
+    <div class="card bg-white dark:bg-gray-800 shadow-md">
       <div class="card-body">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <!-- Search -->
@@ -92,37 +92,91 @@
           />
 
           <!-- Module Filter -->
-          <select
-            v-model="filters.module"
-            class="select select-bordered bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          >
-            <option value="">All Modules</option>
-            <option v-for="module in modules" :key="module" :value="module">
-              {{ module }}
-            </option>
-          </select>
+          <div class="dropdown relative inline-flex w-full">
+            <button
+              ref="moduleDropdownRef"
+              type="button"
+              class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400"
+              aria-haspopup="menu"
+              :aria-expanded="openDropdowns.module"
+              @click="toggleDropdown('module')"
+            >
+              {{ filters.module || 'All Modules' }}
+              <span class="icon-[tabler--chevron-down] size-4 transition-transform" :class="{ 'rotate-180': openDropdowns.module }"></span>
+            </button>
+            <ul
+              class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white"
+              :class="{ 'opacity-100': openDropdowns.module, 'opacity-0 pointer-events-none': !openDropdowns.module }"
+              role="menu"
+            >
+              <li>
+                <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('module', '')">All Modules</a>
+              </li>
+              <li v-for="module in modules" :key="module">
+                <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('module', module)">{{ module }}</a>
+              </li>
+            </ul>
+          </div>
 
           <!-- Action Filter -->
-          <select
-            v-model="filters.action"
-            class="select select-bordered bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          >
-            <option value="">All Actions</option>
-            <option v-for="action in actions" :key="action" :value="action">
-              {{ action }}
-            </option>
-          </select>
+          <div class="dropdown relative inline-flex w-full">
+            <button
+              ref="actionDropdownRef"
+              type="button"
+              class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400"
+              aria-haspopup="menu"
+              :aria-expanded="openDropdowns.action"
+              @click="toggleDropdown('action')"
+            >
+              {{ filters.action || 'All Actions' }}
+              <span class="icon-[tabler--chevron-down] size-4 transition-transform" :class="{ 'rotate-180': openDropdowns.action }"></span>
+            </button>
+            <ul
+              class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white"
+              :class="{ 'opacity-100': openDropdowns.action, 'opacity-0 pointer-events-none': !openDropdowns.action }"
+              role="menu"
+            >
+              <li>
+                <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('action', '')">All Actions</a>
+              </li>
+              <li v-for="action in actions" :key="action">
+                <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('action', action)">{{ action }}</a>
+              </li>
+            </ul>
+          </div>
 
           <!-- Source Filter -->
-          <select
-            v-model="filters.source"
-            class="select select-bordered bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          >
-            <option value="">All Sources</option>
-            <option value="admin">Admin Portal</option>
-            <option value="handheld">Handheld Device</option>
-            <option value="system">System</option>
-          </select>
+          <div class="dropdown relative inline-flex w-full">
+            <button
+              ref="sourceDropdownRef"
+              type="button"
+              class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400"
+              aria-haspopup="menu"
+              :aria-expanded="openDropdowns.source"
+              @click="toggleDropdown('source')"
+            >
+              {{ getSourceLabel(filters.source) || 'All Sources' }}
+              <span class="icon-[tabler--chevron-down] size-4 transition-transform" :class="{ 'rotate-180': openDropdowns.source }"></span>
+            </button>
+            <ul
+              class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white"
+              :class="{ 'opacity-100': openDropdowns.source, 'opacity-0 pointer-events-none': !openDropdowns.source }"
+              role="menu"
+            >
+              <li>
+                <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('source', '')">All Sources</a>
+              </li>
+              <li>
+                <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('source', 'admin')">Admin Portal</a>
+              </li>
+              <li>
+                <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('source', 'handheld')">Handheld Device</a>
+              </li>
+              <li>
+                <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('source', 'system')">System</a>
+              </li>
+            </ul>
+          </div>
 
           <!-- Date Range -->
           <input
@@ -155,7 +209,7 @@
     </div>
 
     <!-- Activity Logs Table -->
-    <div v-else class="card bg-white dark:bg-gray-800 shadow-xl">
+    <div v-else class="card bg-white dark:bg-gray-800 shadow-md">
       <div class="overflow-x-auto">
         <table class="table table-zebra">
           <thead>
@@ -167,7 +221,6 @@
               <th>Description</th>
               <th>Source</th>
               <th>IP Address</th>
-              <th>Details</th>
             </tr>
           </thead>
           <tbody>
@@ -179,10 +232,10 @@
               <td>
                 <div v-if="log.user" class="flex items-center gap-2">
                   <div class="avatar placeholder">
-                    <div class="bg-primary text-primary-content rounded-full w-8">
-                      <span class="text-xs">{{ getUserInitials(log.user.fullName) }}</span>
+                      <div class="bg-primary text-primary-content rounded-full w-8 h-8 relative">
+                        <span class="absolute inset-0 flex items-center justify-center text-xs leading-none text-center">{{ getUserInitials(log.user.fullName) }}</span>
+                      </div>
                     </div>
-                  </div>
                   <div>
                     <div class="font-medium text-gray-900 dark:text-white">{{ log.user.fullName }}</div>
                     <div class="text-xs text-gray-500 dark:text-gray-400">@{{ log.user.username }}</div>
@@ -212,17 +265,6 @@
               </td>
               <td class="text-gray-900 dark:text-white text-xs">
                 {{ log.ipAddress || 'N/A' }}
-              </td>
-              <td>
-                <button
-                  v-if="log.metadata"
-                  @click="viewDetails(log)"
-                  class="btn btn-xs btn-ghost"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </button>
               </td>
             </tr>
           </tbody>
@@ -317,7 +359,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import axios from '@/utils/axios'
 
 const API_URL = '/activity-log'
@@ -335,6 +377,40 @@ const filters = ref({
   action: '',
   source: '',
   date: '',
+})
+
+// Dropdown state for filters (Warehouse-style)
+const openDropdowns = ref<Record<string, boolean>>({ module: false, action: false, source: false })
+const moduleDropdownRef = ref<HTMLElement | null>(null)
+const actionDropdownRef = ref<HTMLElement | null>(null)
+const sourceDropdownRef = ref<HTMLElement | null>(null)
+
+const toggleDropdown = (name: string) => {
+  Object.keys(openDropdowns.value).forEach((k) => {
+    if (k !== name) (openDropdowns.value as Record<string, boolean>)[k] = false
+  })
+  ;(openDropdowns.value as Record<string, boolean>)[name] = !(openDropdowns.value as Record<string, boolean>)[name]
+}
+
+const selectOption = (key: string, value: any) => {
+  ;(filters.value as any)[key] = value
+  ;(openDropdowns.value as Record<string, boolean>)[key] = false
+}
+
+const handleClickOutside = (e: MouseEvent) => {
+  const refs = [moduleDropdownRef.value, actionDropdownRef.value, sourceDropdownRef.value]
+  const isInside = refs.some((el) => el && el.closest && el.closest('.dropdown') && el.closest('.dropdown')!.contains(e.target as Node))
+  if (!isInside) {
+    Object.keys(openDropdowns.value).forEach((k) => (openDropdowns.value as Record<string, boolean>)[k] = false)
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
 })
 
 const modules = ref<string[]>([

@@ -54,11 +54,11 @@ const activeTab = ref('roles')
 
 const tabs = [
   { id: 'roles', label: 'Roles' },
-  { id: 'permissions', label: 'Permissions' },
+  // { id: 'permissions', label: 'Permissions' },
   { id: 'users', label: 'Users' },
   { id: 'activity-logs', label: 'Activity Logs' },
   { id: 'customization', label: 'Customization' },
-  { id: 'debug', label: '🐛 Debug' },
+  // { id: 'debug', label: '🐛 Debug' },
 ]
 
 const currentTabComponent = computed(() => {
