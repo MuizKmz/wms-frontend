@@ -486,7 +486,7 @@ const getTotalReceived = () => {
 }
 
 // Use pagination composable to handle page splitting
-const { totalPages, paginatedData } = useReportPagination({
+const pagination = useReportPagination({
   data: filteredData,
   itemsPerPage: 15, // Optimized with better spacing
   headerHeight: 220,
@@ -494,6 +494,8 @@ const { totalPages, paginatedData } = useReportPagination({
   rowHeight: 50,
   orientation: a4Orientation
 })
+
+const { totalPages, paginatedData } = pagination
 
 const numberOfPages = totalPages
 
@@ -559,6 +561,13 @@ const generateReport = () => {
   setTimeout(() => {
     generating.value = false
     reportGenerated.value = true
+    nextTick(() => {
+      console.log('Pagination debug', {
+        pages: numberOfPages.value,
+        itemsPerPage: pagination.itemsPerPage.value,
+        availableContentHeight: pagination.availableContentHeight.value
+      })
+    })
   }, 1500)
 }
 
@@ -673,7 +682,8 @@ const openPrintWindow = () => {
     /* Ensure footer appears on each page */
     .report-template {
       position: relative;
-      min-height: 100vh;
+      min-height: ${pageHeight};
+      height: ${pageHeight};
     }
     
     .report-footer {

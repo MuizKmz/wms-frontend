@@ -62,19 +62,62 @@
 
             <!-- Bulk Status Update Controls -->
             <div class="flex items-center gap-2 ml-auto" v-if="epcList.length > 0">
-              <div class="flex items-center gap-2">
-                <label class="text-xs font-medium text-gray-600 dark:text-gray-400">Bulk Status</label>
-                <select v-model="bulkStatus" class="select select-bordered select-xs w-40">
-                  <option disabled value="">Select status</option>
-                  <option value="GENERATED">Generated</option>
-                  <option value="INBOUND">Inbound</option>
-                  <option value="OUTBOUND">Outbound</option>
-                </select>
-              </div>
+                <div class="flex items-center gap-2 dropdown relative">
+                  <label class="hidden md:inline-block text-xs font-medium text-gray-600 dark:text-gray-400 mr-1"> Bulk Status Update</label>
+                  <button
+                    ref="bulkStatusDropdownRef"
+                    type="button"
+                    class="dropdown-toggle btn btn-outline px-3 justify-between dark:bg-gray-700 dark:text-gray-400 text-xs w-40 truncate text-left"
+                    aria-haspopup="menu"
+                    :aria-expanded="openDropdowns.bulkStatus"
+                    aria-label="Select bulk status"
+                    @click="toggleDropdown('bulkStatus')"
+                  >
+                    <span class="truncate">{{ statusOptions.find((opt) => opt.value === bulkStatus)?.label || 'Select status' }}</span>
+                    <span
+                      class="icon-[tabler--chevron-down] size-4 transition-transform ml-2"
+                      :class="{ 'rotate-180': openDropdowns.bulkStatus }"
+                    ></span>
+                  </button>
+                  <ul
+                    class="dropdown-menu w-40 transition-opacity duration-200 absolute top-full right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white text-sm"
+                    :class="{
+                      'opacity-100': openDropdowns.bulkStatus,
+                      'opacity-0 pointer-events-none': !openDropdowns.bulkStatus,
+                    }"
+                    role="menu"
+                    aria-orientation="vertical"
+                  >
+                    <li>
+                      <a
+                        class="block px-4 py-2 hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer"
+                        @click="selectOption('bulkStatus', '')"
+                      >Select status</a>
+                    </li>
+                    <li>
+                      <a
+                        class="block px-4 py-2 hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer"
+                        @click="selectOption('bulkStatus', 'GENERATED')"
+                      >Generated</a>
+                    </li>
+                    <li>
+                      <a
+                        class="block px-4 py-2 hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer"
+                        @click="selectOption('bulkStatus', 'INBOUND')"
+                      >Inbound</a>
+                    </li>
+                    <li>
+                      <a
+                        class="block px-4 py-2 hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer"
+                        @click="selectOption('bulkStatus', 'OUTBOUND')"
+                      >Outbound</a>
+                    </li>
+                  </ul>
+                </div>
               <button
                 @click="applyBulkStatus"
                 :disabled="selectedEpcs.length === 0 || !bulkStatus || loadingBulk"
-                class="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg transition-colors
+                class="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg transition-colors ml-4 shrink-0
                   disabled:opacity-50 disabled:cursor-not-allowed
                   bg-indigo-600 hover:bg-indigo-700 text-white"
               >
@@ -191,18 +234,20 @@
                   </td>
                   <td class="px-4 py-4">
                     <span :class="[
-                      'px-2 py-1 text-xs font-medium rounded-full',
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
                       getStatusClass(epc.status)
                     ]">
-                      {{ formatStatus(epc.status) }}
+                      {{ String(formatStatus(epc.status) ?? '--').toUpperCase() }}
                     </span>
                   </td>
                   <td class="px-4 py-4">
                     <span :class="[
-                      'px-2 py-1 text-xs font-medium rounded-full',
-                      epc.isReserved ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                      epc.isReserved
+                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200'
+                        : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
                     ]">
-                      {{ epc.isReserved ? 'Yes' : 'No' }}
+                      {{ epc.isReserved ? 'YES' : 'NO' }}
                     </span>
                   </td>
                 </tr>
@@ -249,7 +294,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { authenticatedFetch } from '@/utils/authenticatedFetch'
 import ViewEPC from '@/views/EPC/component/ViewEPC.vue'
 
@@ -264,6 +309,58 @@ const loadingBulk = ref(false)
 const viewEPCModalRef = ref(null)
 const showViewEPCModal = ref(false)
 const selectedEpcCode = ref(null)
+
+// Bulk status dropdown state (styled like WarehouseFilters)
+const statusOptions = ref([
+  { label: 'Generated', value: 'GENERATED' },
+  { label: 'Inbound', value: 'INBOUND' },
+  { label: 'Outbound', value: 'OUTBOUND' },
+])
+
+const openDropdowns = ref({
+  bulkStatus: false,
+})
+
+const bulkStatusDropdownRef = ref(null)
+
+const toggleDropdown = (dropdownName) => {
+  Object.keys(openDropdowns.value).forEach((key) => {
+    if (key !== dropdownName) {
+      openDropdowns.value[key] = false
+    }
+  })
+  openDropdowns.value[dropdownName] = !openDropdowns.value[dropdownName]
+}
+
+const selectOption = (key, value) => {
+  if (key === 'bulkStatus') bulkStatus.value = value
+  openDropdowns.value[key] = false
+}
+
+const closeAllDropdowns = () => {
+  Object.keys(openDropdowns.value).forEach((key) => {
+    openDropdowns.value[key] = false
+  })
+}
+
+const handleClickOutside = (event) => {
+  const refEl = bulkStatusDropdownRef.value
+  if (!refEl) return
+  const dropdownContainer = refEl.closest && refEl.closest('.dropdown') ? refEl.closest('.dropdown') : null
+  if (dropdownContainer && !dropdownContainer.contains(event.target)) {
+    closeAllDropdowns()
+  } else if (!dropdownContainer && !refEl.contains(event.target)) {
+    closeAllDropdowns()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 /* Computed */
 const epcList = computed(() => {
@@ -319,12 +416,13 @@ const toggleEpcSelection = (epcId) => {
 }
 
 const getStatusClass = (status) => {
+  const s = String(status || '').toUpperCase()
   const statusMap = {
-    'GENERATED': 'bg-gray-100 text-gray-800 dark:bg-gray-700/30 dark:text-gray-300',
-    'INBOUND': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    'OUTBOUND': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+    GENERATED: 'bg-gray-100 text-gray-800 dark:bg-gray-700/30 dark:text-gray-300',
+    INBOUND: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    OUTBOUND: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
   }
-  return statusMap[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+  return statusMap[s] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
 }
 
 const formatStatus = (status) => {

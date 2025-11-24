@@ -1,426 +1,397 @@
 <template>
   <teleport to="body">
-    <transition
-      enter-active-class="transition-opacity duration-300 ease-out"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition-opacity duration-250 ease-in"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
-      @after-leave="unlockScroll"
-    >
-      <div
-        v-if="isOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center"
-        aria-hidden="false"
-        @click.self="closeModal"
-      >
-        <div class="absolute inset-0 bg-black/50"></div>
-
-        <transition
-          enter-active-class="transition-all duration-300 ease-out"
-          enter-from-class="opacity-0 scale-95 translate-y-4"
-          enter-to-class="opacity-100 scale-100 translate-y-0"
-          leave-active-class="transition-all duration-250 ease-in"
-          leave-from-class="opacity-100 scale-100 translate-y-0"
-          leave-to-class="opacity-0 scale-95 translate-y-4"
-          appear
-        >
-          <div
-            v-if="isOpen"
-            ref="panelRef"
-            class="relative z-10 w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col"
-            @click.stop
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="modal-title"
-          >
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col min-h-[600px] max-h-[90vh]">
+    <transition enter-active-class="transition-opacity duration-300"
+      leave-active-class="transition-opacity duration-200" @after-leave="unlockScroll">
+      <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50" @click.self="() => closeModal()"></div>
+        <transition enter-active-class="transition-all duration-300" enter-from-class="opacity-0 scale-95"
+          enter-to-class="opacity-100 scale-100" appear>
+          <div v-if="isOpen" class="relative z-10 w-full max-w-3xl mx-4">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden">
+              <!-- Header -->
               <div class="flex items-center justify-between p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">
-                  Edit Order
-                </h2>
-                <button
-                  type="button"
-                  class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                  @click="closeModal"
-                  :disabled="isSubmitting"
-                  aria-label="Close modal"
-                >
-                  ✕
-                </button>
+                <div>
+                  <h2 class="text-xl font-bold text-gray-900 dark:text-white">Edit Order</h2>
+                  <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Step {{ currentStep }} of {{ totalSteps }}</p>
+                </div>
+                <button @click="() => closeModal()" :disabled="isSubmitting"
+                  class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" aria-label="Close modal">✕</button>
               </div>
 
-              <div class="space-y-4 overflow-y-auto p-6 flex-1">
-                <div v-if="errors.submit" class="alert alert-error">
-                  <span>{{ errors.submit }}</span>
-                </div>
-
-                <!-- Order Number -->
-                <div class="relative">
-                  <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Order Number
-                  </label>
-                  <input
-                    v-model="form.orderNo"
-                    type="text"
-                    placeholder="Enter Order Number"
-                    maxlength="50"
-                    disabled
-                    :class="['input input-bordered w-full bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white cursor-not-allowed', { 'input-error': errors.orderNo }]"
-                  />
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.orderNo" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.orderNo }}</p>
-                    </div>
-                  </transition>
-                </div>
-
-                <!-- Order Type & Customer ID Row -->
-                <div class="grid grid-cols-2 gap-4">
-                  <!-- Order Type -->
-                  <div class="relative">
-                    <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
-                      <span class="text-red-500">*</span> Order Type
-                    </label>
-                    <div class="dropdown relative inline-flex w-full">
-                      <button
-                        type="button"
-                        disabled
-                        class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-600 dark:text-gray-400 cursor-not-allowed opacity-60 bg-gray-100"
-                      >
-                        {{ form.orderType || 'Select Type' }}
-                        <span class="icon-[tabler--chevron-down] size-4"></span>
-                      </button>
-                    </div>
-                    <transition
-                      enter-active-class="transition-all duration-200 ease-out"
-                      enter-from-class="opacity-0 -translate-y-1"
-                      enter-to-class="opacity-100 translate-y-0"
-                      leave-active-class="transition-all duration-150 ease-in"
-                      leave-from-class="opacity-100 translate-y-0"
-                      leave-to-class="opacity-0 -translate-y-1"
-                    >
-                      <div v-if="errors.orderType" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                        <p class="text-xs text-red-600 dark:text-red-400">{{ errors.orderType }}</p>
+              <!-- Step Indicator -->
+              <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900/30">
+                <div class="flex items-center justify-center">
+                  <div class="flex items-center max-w-2xl w-full">
+                    <div v-for="(step, index) in steps" :key="step.id" class="flex items-center" :class="index < steps.length - 1 ? 'flex-1' : ''">
+                      <div class="flex items-center justify-center flex-col flex-shrink-0">
+                        <div :class="[
+                          'w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all',
+                          currentStep > step.id
+                            ? 'bg-green-500 text-white'
+                            : currentStep === step.id
+                              ? 'bg-brand-500 text-white'
+                              : 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400',
+                        ]">
+                          <span v-if="currentStep > step.id">✓</span>
+                          <span v-else>{{ step.id }}</span>
+                        </div>
+                        <span :class="[
+                          'mt-2 text-xs font-medium text-center whitespace-nowrap',
+                          currentStep === step.id
+                            ? 'text-brand-500 dark:text-brand-400'
+                            : currentStep > step.id
+                              ? 'text-green-600 dark:text-green-400'
+                              : 'text-gray-500 dark:text-gray-400',
+                        ]">{{ step.name }}</span>
                       </div>
-                    </transition>
-                  </div>
-
-                  <!-- Customer ID -->
-                  <div class="relative">
-                    <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
-                      <span class="text-red-500">*</span> Customer Code
-                    </label>
-                    <div class="dropdown relative inline-flex w-full">
-                      <button
-                        type="button"
-                        disabled
-                        class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-600 dark:text-gray-400 cursor-not-allowed opacity-60 bg-gray-100"
-                      >
-                        {{ selectedCustomerLabel || 'Select Customer' }}
-                        <span class="icon-[tabler--chevron-down] size-4"></span>
-                      </button>
+                      <div v-if="index < steps.length - 1" :class="[
+                        'flex-1 h-0.5 mx-3 self-start mt-4',
+                        currentStep > step.id ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+                      ]"></div>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <!-- Order Status -->
-                <div class="relative">
-                  <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Order Status
-                  </label>
-                  <div class="dropdown relative inline-flex w-full" ref="orderStatusDropdownRef">
-                    <button
-                      type="button"
-                      :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors.orderStatus }]"
-                      :aria-expanded="openDropdowns.orderStatus"
-                      @click.stop="toggleDropdown('orderStatus')"
-                    >
-                      {{ form.status || 'Select Status' }}
-                      <span class="icon-[tabler--chevron-down] size-4 transition-transform" :class="{ 'rotate-180': openDropdowns.orderStatus }"></span>
-                    </button>
-                    <ul
-                      class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white"
-                      :class="{ 'opacity-100 pointer-events-auto': openDropdowns.orderStatus, 'opacity-0 pointer-events-none': !openDropdowns.orderStatus }"
-                      role="menu"
-                    >
-                      <li v-for="stat in orderStatuses" :key="stat">
-                        <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('orderStatus', stat)">
-                          {{ stat }}
-                        </a>
-                      </li>
-                    </ul>
-                  </div>
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.orderStatus" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.orderStatus }}</p>
-                    </div>
-                  </transition>
-                </div>
-
-                <!-- PIC Name -->
-                <div class="relative">
-                  <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> PIC's Name
-                  </label>
-                  <input
-                    v-model="form.picName"
-                    type="text"
-                    placeholder="Enter PIC Name"
-                    maxlength="100"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.picName }]"
-                  />
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.picName" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.picName }}</p>
-                    </div>
-                  </transition>
-                </div>
-
-                <!-- Order Items Section -->
-                <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-                  <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Order Items</h3>
-
-                  <div v-for="(item, index) in form.orderItems" :key="index" class="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-                    <div class="flex justify-between items-center mb-2">
-                      <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Product {{ index + 1 }}</span>
-                      <button
-                        v-if="form.orderItems.length > 1"
-                        type="button"
-                        @click="removeOrderItem(index)"
-                        class="text-red-500 hover:text-red-700 text-sm"
-                      >
-                        Remove
-                      </button>
-                    </div>
-
-                    <!-- Product Selection -->
-                    <div class="mb-3 relative">
-                      <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                        <span class="text-red-500">*</span> Product
-                      </label>
-                      <div class="dropdown relative inline-flex w-full" :ref="`productDropdown${index}`">
-                        <button
-                          type="button"
-                          :class="['dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400', { 'btn-error': errors[`item${index}Product`] }]"
-                          :aria-expanded="openDropdowns[`product${index}`]"
-                          @click.stop="toggleDropdown(`product${index}`)"
-                          :disabled="loadingProducts"
-                        >
-                          {{ getProductLabel(item.productId) || 'Select Product' }}
-                          <span
-                            class="icon-[tabler--chevron-down] size-4 transition-transform"
-                            :class="{ 'rotate-180': openDropdowns[`product${index}`] }"
-                          ></span>
-                        </button>
-
-                        <ul
-                          class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
-                          :class="{ 'opacity-100 pointer-events-auto': openDropdowns[`product${index}`], 'opacity-0 pointer-events-none': !openDropdowns[`product${index}`] }"
-                          role="menu"
-                        >
-                          <li v-for="product in getAvailableProducts(index)" :key="product.id">
-                            <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="updateOrderItem(index, 'productId', product.id.toString())">
-                              {{ product.skuCode }} - {{ product.name }}
-                            </a>
-                          </li>
-                          <li v-if="getAvailableProducts(index).length === 0" class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 text-center">
-                            All products already selected
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-
-                    <!-- Quantity and Status Row -->
-                    <div class="grid grid-cols-1 gap-3">
-                      <!-- Quantity -->
-                      <div class="relative">
-                        <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
-                          <span class="text-red-500">*</span> Quantity
-                          <span v-if="form.orderType === 'SO' && item.productId && item.availableStock !== undefined" class="text-xs text-gray-500 ml-1">
-                            (Available: {{ item.availableStock }})
-                          </span>
+              <!-- Form Content -->
+              <div class="p-6 min-h-[400px]">
+                <!-- Step 1: Order Details -->
+                <div v-if="currentStep === 1">
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Order Details</h3>
+                  <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Order Type <span class="text-red-500">*</span>
                         </label>
-                        <div class="flex items-center gap-2">
-                          <button
-                            type="button"
-                            @click="decreaseQuantity(index)"
-                            class="btn btn-sm btn-outline"
-                          >
-                            −
-                          </button>
-                          <input
-                            :value="item.quantity"
-                            type="number"
-                            min="1"
-                            :max="form.orderType === 'SO' && item.availableStock !== undefined ? item.availableStock : undefined"
-                            class="input input-bordered w-full text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                            @input="validateQuantityInput(index, ($event.target as HTMLInputElement).value)"
-                          />
-                          <button
-                            type="button"
-                            @click="increaseQuantity(index)"
-                            :disabled="form.orderType === 'SO' && item.availableStock !== undefined && item.quantity >= item.availableStock"
-                            class="btn btn-sm bg-brand-500 border-none disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            +
+                        <div class="dropdown relative inline-flex w-full">
+                          <button type="button"
+                            class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed opacity-60"
+                            disabled>
+                            {{ formData.orderType || 'Select Type' }}
+                            <span class="icon-[tabler--chevron-down] size-4"></span>
                           </button>
                         </div>
-                        <span v-if="form.orderType === 'SO' && item.productId && item.availableStock !== undefined && item.quantity > item.availableStock" class="text-xs text-orange-600 dark:text-orange-400 mt-1 block">
-                          ⚠️ Quantity exceeds available stock ({{ item.availableStock }})
-                        </span>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Order Number <span class="text-red-500">*</span>
+                        </label>
+                        <input v-model="formData.orderNo" type="text"
+                          class="input input-bordered w-full bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                          readonly disabled />
                       </div>
                     </div>
-
-                    <!-- Remarks -->
-                    <div class="mt-3">
-                      <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">Remarks</label>
-                      <textarea
-                        v-model="item.remarks"
-                        rows="2"
-                        placeholder="Enter product remarks (optional)"
-                        class="textarea textarea-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
-                      ></textarea>
-                    </div>
-
-                    <!-- Product Allocation Table for SO Orders -->
-                    <div v-if="form.orderType === 'SO' && item.productId" class="mt-3">
-                      <div class="flex items-center justify-between mb-2">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Product Allocation (FIFO)
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          PIC Name <span class="text-red-500">*</span>
                         </label>
-                        <button
-                          type="button"
-                          @click="fetchProductInventory(index)"
-                          class="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                          :disabled="loadingInventory[index]"
-                        >
-                          {{ loadingInventory[index] ? 'Loading...' : 'Refresh' }}
+                        <input v-model="formData.picName" type="text"
+                          class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          placeholder="Enter PIC name" maxlength="100"
+                          @input="() => { if (errors.picName) delete errors.picName }" />
+                        <span v-if="errors.picName" class="text-xs text-red-500 mt-1">{{ errors.picName }}</span>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Estimated Delivery Time <span class="text-red-500">*</span>
+                        </label>
+                        <input ref="estimatedDeliveryTimeInput" v-model="formData.estimatedDeliveryTime" type="text"
+                          placeholder="Select Date"
+                          class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          readonly />
+                        <span v-if="errors.estimatedDeliveryTime" class="text-xs text-red-500 mt-1">{{
+                          errors.estimatedDeliveryTime }}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Order Status <span class="text-xs text-gray-500 dark:text-gray-400 ml-2">(Auto-managed)</span>
+                      </label>
+                      <div class="dropdown relative inline-flex w-full">
+                        <button type="button"
+                          class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed opacity-60"
+                          disabled>
+                          {{ displayStatus }}
+                          <span class="icon-[tabler--chevron-down] size-4"></span>
                         </button>
                       </div>
-                      <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                          <thead class="bg-gray-50 dark:bg-gray-900/50">
-                            <tr>
-                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                                EPC Code
-                              </th>
-                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                                Warehouse
-                              </th>
-                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                                Location
-                              </th>
-                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                                Last Updated
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            <tr v-if="loadingInventory[index]">
-                              <td colspan="4" class="px-3 py-4 text-center text-sm text-gray-500">
-                                <div class="flex items-center justify-center gap-2">
-                                  <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" />
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                                  </svg>
-                                  Loading allocation...
-                                </div>
-                              </td>
-                            </tr>
-                            <tr v-else-if="!item.allocatedEpcs || item.allocatedEpcs.length === 0">
-                              <td colspan="4" class="px-3 py-4 text-center text-sm text-gray-500">
-                                {{ item.quantity > 0 ? 'Insufficient inventory - no INBOUND EPCs available' : 'Set quantity to view allocation' }}
-                              </td>
-                            </tr>
-                            <tr v-else v-for="(allocation, allocIdx) in item.allocatedEpcs" :key="allocIdx" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                              <td class="px-3 py-2 text-sm font-mono text-gray-900 dark:text-white">
-                                {{ allocation.epcCode }}
-                              </td>
-                              <td class="px-3 py-2 text-sm text-gray-900 dark:text-white">
-                                {{ allocation.warehouseCode || '-' }}
-                              </td>
-                              <td class="px-3 py-2 text-sm text-gray-900 dark:text-white">
-                                {{ allocation.locationCode || '-' }}
-                              </td>
-                              <td class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-                                {{ formatDate(allocation.inboundDate) }}
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
+                      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Status updates automatically based on workflow (receiving, stock-in, shipping)
+                      </p>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Order Remarks
+                      </label>
+                      <textarea v-model="formData.orderRemarks" rows="3"
+                        class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        placeholder="Enter any order remarks"></textarea>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Step 2: Customer/Supplier -->
+                <div v-if="currentStep === 2">
+                  <!-- Sales Order - Show Customer -->
+                  <div v-if="formData.orderType === 'SO'">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Customer Information</h3>
+                    <div class="space-y-4">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Customer <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                          <button type="button"
+                            class="input input-bordered w-full text-left flex items-center justify-between cursor-not-allowed opacity-60 bg-gray-100 dark:bg-gray-900"
+                            disabled>
+                            <span>{{ selectedCustomerLabel || 'Select Customer' }}</span>
+                            <span class="icon-[tabler--chevron-down] size-4"></span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <!-- Add Another Product Button -->
-                  <button
-                    type="button"
-                    @click="addOrderItem"
-                    class="btn bg-brand-500 border-none btn-sm w-full"
-                  >
-                    <span class="text-lg">+</span> Add Another Product
-                  </button>
+                  <!-- Purchase Order - Show Supplier -->
+                  <div v-if="formData.orderType === 'PO'">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Supplier Information</h3>
+                    <div class="space-y-4">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Supplier <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                          <button type="button"
+                            class="input input-bordered w-full text-left flex items-center justify-between cursor-not-allowed opacity-60 bg-gray-100 dark:bg-gray-900"
+                            disabled>
+                            <span>{{ selectedSupplierLabel || 'Select Supplier' }}</span>
+                            <span class="icon-[tabler--chevron-down] size-4"></span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- No Order Type Selected -->
+                  <div v-if="!formData.orderType">
+                    <div class="flex items-center justify-center h-64">
+                      <p class="text-gray-500 dark:text-gray-400">
+                        Please select an order type in the previous step
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
-                <!-- Estimated Delivery Time -->
-                <div class="relative">
-                  <label class="block text-sm mb-2 text-gray-700 dark:text-gray-300">
-                    <span class="text-red-500">*</span> Estimated Delivery Time
-                  </label>
-                  <input
-                    ref="deliveryDateInput"
-                    v-model="form.estimatedDeliveryTime"
-                    type="text"
-                    placeholder="Pick Date"
-                    :class="['input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white', { 'input-error': errors.estimatedDeliveryTime }]"
-                    readonly
-                  />
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-1"
-                  >
-                    <div v-if="errors.estimatedDeliveryTime" class="absolute left-0 right-0 mt-1 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg z-10">
-                      <p class="text-xs text-red-600 dark:text-red-400">{{ errors.estimatedDeliveryTime }}</p>
+                <!-- Step 3: Products -->
+                <div v-if="currentStep === 3">
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Product Items</h3>
+                  <div class="space-y-4">
+                    <!-- Order Items -->
+                    <div class="space-y-4 max-h-96 overflow-y-auto" style="padding-right: 8px;">
+                      <div v-for="(item, index) in formData.orderItems" :key="index" class="p-4 rounded-lg">
+                        <div class="space-y-3">
+                          <div class="grid grid-cols-12 gap-4 items-start">
+                            <!-- Product Dropdown -->
+                            <div class="col-span-7 relative">
+                              <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                                <span class="text-red-500">*</span> Product {{ index + 1 }}
+                              </label>
+                              <div class="dropdown relative inline-flex w-full" :ref="el => productDropdownRefs[index] = el">
+                                <button type="button"
+                                  class="dropdown-toggle btn btn-outline w-full justify-between dark:bg-gray-700 dark:text-gray-400"
+                                  :aria-expanded="openDropdowns[`product${index}`]"
+                                  @click.stop="toggleDropdown(`product${index}`)"
+                                  :disabled="loadingProducts">
+                                  <span class="truncate pr-2">{{ getProductLabel(item.productId) || 'Select Product' }}</span>
+                                  <span class="icon-[tabler--chevron-down] size-4 transition-transform"
+                                    :class="{ 'rotate-180': openDropdowns[`product${index}`] }"></span>
+                                </button>
+
+                                <ul
+                                  class="dropdown-menu transition-opacity duration-200 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white max-h-60 overflow-y-auto"
+                                  :style="openDropdowns[`product${index}`] ? (productMenuStyles[index] || { position: 'fixed', top: '-9999px', left: '0px', width: 'auto' }) : { display: 'none' }"
+                                  :class="{ 'opacity-100 pointer-events-auto': openDropdowns[`product${index}`], 'opacity-0 pointer-events-none': !openDropdowns[`product${index}`] }"
+                                  role="menu">
+                                  <li v-for="product in availableProducts(index)" :key="product.id">
+                                    <a class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg"
+                                      @click="selectProduct(index, product.id)">
+                                      {{ product.skuCode }} - {{ product.name }}
+                                    </a>
+                                  </li>
+                                </ul>
+                              </div>
+                              <span v-if="errors[`item${index}Product`]" class="text-xs text-red-500 mt-1">{{
+                                errors[`item${index}Product`] }}</span>
+                            </div>
+
+                            <!-- Product Quantity -->
+                            <div class="col-span-4 relative">
+                              <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                                <span class="text-red-500">*</span> Quantity
+                                <span v-if="formData.orderType === 'SO' && item.productId && item.availableStock !== undefined"
+                                  class="text-xs text-gray-500 ml-1">
+                                  (Available: {{ item.availableStock }})
+                                </span>
+                              </label>
+                              <div class="flex items-center gap-1">
+                                <button type="button" @click="decreaseQuantity(index)"
+                                  class="btn btn-outline btn-sm w-8 h-8 p-0 flex items-center justify-center dark:bg-gray-700 dark:text-gray-400">
+                                  −
+                                </button>
+                                <input v-model.number="item.quantity" type="number" min="1"
+                                  :max="formData.orderType === 'SO' && item.availableStock !== undefined ? item.availableStock : undefined"
+                                  :class="[
+                                    'input input-bordered text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white',
+                                    { 'input-error': errors[`item${index}Quantity`] }
+                                  ]" style="width: 4rem" @input="validateQuantity(index)" />
+                                <button type="button" @click="increaseQuantity(index)"
+                                  :disabled="formData.orderType === 'SO' && item.availableStock !== undefined && item.quantity >= item.availableStock"
+                                  class="btn bg-brand-500 border-none btn-sm w-8 h-8 p-0 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                                  +
+                                </button>
+                              </div>
+                              <span v-if="errors[`item${index}Quantity`]" class="text-xs text-red-500 mt-1">{{
+                                errors[`item${index}Quantity`] }}</span>
+                              <span
+                                v-if="formData.orderType === 'SO' && item.productId && item.availableStock !== undefined && item.quantity > item.availableStock"
+                                class="text-xs text-orange-600 dark:text-orange-400 mt-1 block">
+                                ⚠️ Quantity exceeds available stock ({{ item.availableStock }})
+                              </span>
+                            </div>
+
+                            <!-- Remove Button -->
+                            <div class="col-span-1">
+                              <button type="button" @click="removeOrderItem(index)"
+                                v-if="formData.orderItems.length > 1"
+                                class="btn btn-outline btn-error btn-sm w-10 h-10 p-0 flex items-center justify-center mt-6"
+                                title="Remove Product">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+
+                          <!-- Product Remarks -->
+                          <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Product Remarks
+                            </label>
+                            <textarea v-model="item.remarks" rows="2"
+                              class="input input-bordered w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                              placeholder="Enter product remarks"></textarea>
+                          </div>
+
+                          <!-- Product Allocation Table for SO Orders (FIFO Auto-Assignment) -->
+                          <div v-if="formData.orderType === 'SO' && item.productId" class="mt-3">
+                            <div class="flex items-center justify-between mb-2">
+                              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Product Allocation (FIFO)
+                              </label>
+                              <button type="button" @click="fetchProductInventory(index)"
+                                class="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                                :disabled="loadingInventory[index]">
+                                {{ loadingInventory[index] ? 'Loading...' : 'Refresh' }}
+                              </button>
+                            </div>
+                            <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+                              <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-gray-900/50">
+                                  <tr>
+                                    <th
+                                      class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                      EPC Code
+                                    </th>
+                                    <th
+                                      class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                      Warehouse
+                                    </th>
+                                    <th
+                                      class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                      Location
+                                    </th>
+                                    <th
+                                      class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                                      Last Updated
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                  <tr v-if="loadingInventory[index]">
+                                    <td colspan="4" class="px-3 py-4 text-center text-sm text-gray-500">
+                                      <div class="flex items-center justify-center gap-2">
+                                        <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                            stroke-width="4" fill="none" />
+                                          <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                        </svg>
+                                        Loading allocation...
+                                      </div>
+                                    </td>
+                                  </tr>
+                                  <tr v-else-if="!item.allocatedEpcs || item.allocatedEpcs.length === 0">
+                                    <td colspan="4" class="px-3 py-4 text-center text-sm text-gray-500">
+                                      {{ item.quantity > 0 ? 'Insufficient inventory - no INBOUND EPCs available' : 'Set quantity to view allocation' }}
+                                    </td>
+                                  </tr>
+                                  <tr v-else v-for="(allocation, allocIdx) in item.allocatedEpcs" :key="allocIdx"
+                                    class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                    <td class="px-3 py-2 text-sm font-mono text-gray-900 dark:text-white">
+                                      {{ allocation.epcCode }}
+                                    </td>
+                                    <td class="px-3 py-2 text-sm text-gray-900 dark:text-white">
+                                      {{ allocation.warehouseCode || '-' }}
+                                    </td>
+                                    <td class="px-3 py-2 text-sm text-gray-900 dark:text-white">
+                                      {{ allocation.locationCode || '-' }}
+                                    </td>
+                                    <td class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                      {{ formatDate(allocation.inboundDate) }}
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </transition>
+
+                    <button type="button" @click="addOrderItem" class="btn bg-brand-500 border-none btn-sm mt-4">
+                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                      </svg>
+                      Add Another Product
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div class="flex justify-end gap-2 p-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button @click="closeModal" class="btn btn-outline" :disabled="isSubmitting">
-                  Cancel
+              <!-- Footer with Navigation -->
+              <div class="flex items-center justify-between p-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button v-if="currentStep > 1" @click="previousStep" :disabled="isSubmitting" class="btn btn-outline">
+                  ← Previous
                 </button>
-                <button @click="submitForm" class="btn bg-brand-500 border-none" :disabled="isSubmitting">
-                  <span v-if="isSubmitting" class="loading loading-spinner loading-sm"></span>
-                  {{ isSubmitting ? 'Updating...' : 'Update' }}
-                </button>
+                <div v-else></div>
+
+                <div class="flex gap-2">
+                  <button @click="() => closeModal()" :disabled="isSubmitting" class="btn btn-outline">
+                    Cancel
+                  </button>
+                  <button v-if="currentStep < totalSteps" @click="nextStep"
+                    class="btn bg-brand-500 hover:bg-brand-600 text-white border-none">
+                    Next →
+                  </button>
+                  <button v-else @click="submitForm" :disabled="isSubmitting"
+                    class="btn bg-brand-500 hover:bg-brand-600 text-white border-none">
+                    <span v-if="isSubmitting" class="loading loading-spinner loading-sm"></span>
+                    {{ isSubmitting ? 'Updating...' : 'Update' }}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -431,7 +402,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch, computed } from 'vue'
+import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import authenticatedFetch from '@/utils/authenticatedFetch'
 import flatpickr from 'flatpickr'
 import 'flatpickr/dist/flatpickr.css'
@@ -439,23 +410,30 @@ import 'flatpickr/dist/flatpickr.css'
 interface Customer {
   id: number
   customerName: string
-  customerCode?: string
+}
+
+interface Supplier {
+  id: number
+  supplierName: string
 }
 
 interface Product {
   id: number
   skuCode: string
   name: string
+  supplier?: {
+    id: number
+    supplierName: string
+  }
 }
 
 interface OrderItem {
   productId: string | number
   quantity: number
   status: string
-  remarks: string
+  remarks?: string
   availableStock?: number
-  allocatedEpcs: Array<{
-    id?: number
+  allocatedEpcs?: Array<{
     epcCode: string
     warehouseCode: string
     locationCode: string
@@ -463,312 +441,305 @@ interface OrderItem {
   }>
 }
 
-interface OrderForm {
-  id: number | null
-  orderNo: string
-  orderType: string
-  customerId: string | null
-  picName: string
-  estimatedDeliveryTime: string
-  status: string
-  orderItems: OrderItem[]
-}
+const emit = defineEmits(['order-updated', 'close'])
 
-const emit = defineEmits(['order-updated'])
-
-/* State */
 const isOpen = ref(false)
 const isSubmitting = ref(false)
-const panelRef = ref<HTMLElement | null>(null)
+const currentStep = ref(1)
+const totalSteps = 3
+
+const steps = [
+  { id: 1, name: 'Order' },
+  { id: 2, name: 'Customer/Supplier' },
+  { id: 3, name: 'Products' },
+]
+
+const formData = reactive({
+  id: null as number | null,
+  orderNo: '',
+  orderType: '',
+  status: '',
+  estimatedDeliveryTime: '',
+  orderRemarks: '',
+  picName: '',
+  customerId: null as number | null,
+  supplierId: null as number | null,
+  itemStatus: 'Pending',
+  orderItems: [{ productId: '', quantity: 1, status: 'Pending', remarks: '', availableStock: undefined, allocatedEpcs: [] }] as OrderItem[]
+})
+
+const errors = reactive<Record<string, string>>({})
+
 const loadingCustomers = ref(false)
+const loadingSuppliers = ref(false)
 const loadingProducts = ref(false)
 const loadingInventory = ref<Record<number, boolean>>({})
-const deliveryDateInput = ref(null)
+const customers = ref<Customer[]>([])
+const suppliers = ref<Supplier[]>([])
+const products = ref<Product[]>([])
+const productDropdownRefs = ref<any[]>([])
+
+const openDropdowns = reactive<Record<string, boolean>>({})
+
+const estimatedDeliveryTimeInput = ref(null)
 let flatpickrInstance: any = null
 
-const form = reactive<OrderForm>({
-  id: null,
-  orderNo: '',
-  orderType: '',
-  customerId: null,
-  picName: '',
-  estimatedDeliveryTime: '',
-  status: '',
-  orderItems: [{ productId: '', quantity: 1, status: 'Pending', remarks: '', availableStock: undefined, allocatedEpcs: [] }]
-})
-
-const errors = reactive<Record<string, string>>({
-  submit: '',
-  orderNo: '',
-  orderType: '',
-  customerId: '',
-  picName: '',
-  estimatedDeliveryTime: '',
-  orderStatus: ''
-})
-
-const orderTypes = ['PO', 'SO', 'RMA']
-const orderStatuses = ['PENDING', 'PROCESSING', 'SHIPPED', 'RECEIVED', 'DELIVERED', 'CLOSED', 'CANCELLED']
-const itemStatuses = ['Pending', 'Allocated', 'Picked', 'Packed', 'Shipped', 'Delivered', 'Backordered', 'Rejected', 'Cancelled']
-const customers = ref<Customer[]>([])
-const products = ref<Product[]>([])
-const openDropdowns = reactive<Record<string, boolean>>({
-  orderType: false,
-  customer: false,
-  orderStatus: false,
-  itemStatus: false
-})
-
-// Fallback label if the customer isn't in the fetched list (e.g. soft-deleted or filtered out)
-const prefilledCustomerName = ref<string | null>(null)
+const productMenuStyles = reactive<any[]>([])
 
 const selectedCustomerLabel = computed(() => {
-  if (!form.customerId) return prefilledCustomerName.value
-  const customer = customers.value.find(c => c.id.toString() === form.customerId)
-  // If customer not found yet (maybe filtered or not loaded), show the raw ID as fallback
-  return customer ? customer.customerName : `Customer #${form.customerId}`
+  if (!formData.customerId) return null
+  const customer = customers.value.find(c => c.id === formData.customerId)
+  return customer ? customer.customerName : null
 })
 
-/* Scroll Lock */
-let scrollY = 0
-let scrollbarWidth = 0
+const selectedSupplierLabel = computed(() => {
+  if (!formData.supplierId) return null
+  const supplier = suppliers.value.find(s => s.id === formData.supplierId)
+  return supplier ? supplier.supplierName : null
+})
 
-const getScrollbarWidth = () => window.innerWidth - document.documentElement.clientWidth
+const displayStatus = computed(() => {
+  const s = formData.status || 'PENDING'
+  return s ? (s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()) : 'Pending'
+})
 
 const lockScroll = () => {
-  scrollY = window.scrollY
-  scrollbarWidth = getScrollbarWidth()
-  document.body.style.paddingRight = `${scrollbarWidth}px`
-  document.body.style.position = 'fixed'
-  document.body.style.top = `-${scrollY}px`
-  document.body.style.width = '100%'
   document.body.style.overflow = 'hidden'
 }
 
 const unlockScroll = () => {
-  document.body.style.paddingRight = ''
-  document.body.style.position = ''
-  document.body.style.top = ''
-  document.body.style.width = ''
   document.body.style.overflow = ''
-  requestAnimationFrame(() => window.scrollTo(0, scrollY))
 }
 
-/* Fetch Data */
 const fetchData = async () => {
   loadingCustomers.value = true
+  loadingSuppliers.value = true
   loadingProducts.value = true
   try {
-    const [customersRes, productsRes] = await Promise.all([
+    const [customersRes, suppliersRes, productsRes] = await Promise.all([
       authenticatedFetch('/api/customer'),
+      authenticatedFetch('/api/supplier'),
       authenticatedFetch('/api/product')
     ])
 
     if (customersRes.ok) customers.value = await customersRes.json()
+    if (suppliersRes.ok) suppliers.value = await suppliersRes.json()
     if (productsRes.ok) products.value = await productsRes.json()
   } catch (error) {
     console.error('Error fetching data:', error)
-    errors.submit = 'Failed to load customers and products'
   } finally {
     loadingCustomers.value = false
+    loadingSuppliers.value = false
     loadingProducts.value = false
   }
 }
 
-/* Validation */
-const validateForm = () => {
-  Object.keys(errors).forEach(key => errors[key] = '')
-  let isValid = true
-
-  if (!form.orderNo.trim()) {
-    errors.orderNo = 'Order Number is required'
-    isValid = false
+const prefillOrder = (order: any) => {
+  formData.id = order.id || null
+  formData.orderNo = order.orderNo || ''
+  formData.orderType = order.orderType || ''
+  formData.status = order.status || 'PENDING'
+  formData.picName = order.picName || ''
+  formData.orderRemarks = order.orderRemarks || ''
+  
+  if (order.estimatedDeliveryTime) {
+    formData.estimatedDeliveryTime = order.estimatedDeliveryTime.split('T')[0]
   }
 
-  if (!form.orderType) {
-    errors.orderType = 'Order Type is required'
-    isValid = false
+  if (order.orderType === 'SO') {
+    formData.customerId = order.customer?.id || order.customerId || null
+  } else if (order.orderType === 'PO') {
+    formData.supplierId = order.supplier?.id || order.supplierId || null
   }
 
-  if (!form.picName.trim()) {
-    errors.picName = 'PIC Name is required'
-    isValid = false
-  }
+  if (order.orderItems && order.orderItems.length > 0) {
+    formData.orderItems = order.orderItems.map((item: any) => ({
+      productId: item.product?.id || item.productId || '',
+      quantity: item.quantity || 1,
+      status: item.status || 'Pending',
+      remarks: item.remarks || '',
+      availableStock: undefined,
+      allocatedEpcs: item.allocatedEpcs || []
+    }))
 
-  if (!form.status) {
-    errors.orderStatus = 'Order Status is required'
-    isValid = false
-  }
+    productMenuStyles.length = 0
+    formData.orderItems.forEach(() => productMenuStyles.push({}))
 
-  if (!form.estimatedDeliveryTime) {
-    errors.estimatedDeliveryTime = 'Estimated Delivery Time is required'
-    isValid = false
-  }
-
-  form.orderItems.forEach((item, idx) => {
-    if (!item.productId) {
-      errors[`item${idx}Product`] = 'Product is required'
-      isValid = false
+    if (formData.orderType === 'SO') {
+      formData.orderItems.forEach((item, index) => {
+        if (item.productId) {
+          fetchProductInventory(index)
+        }
+      })
     }
-    if (!item.quantity || item.quantity < 1) {
-      errors[`item${idx}Quantity`] = 'Valid quantity is required'
-      isValid = false
-    }
-  })
-
-  return isValid
+  } else {
+    formData.orderItems = [{ productId: '', quantity: 1, status: 'Pending', remarks: '', availableStock: undefined, allocatedEpcs: [] }]
+    productMenuStyles.push({})
+  }
 }
 
-/* Clear errors on input */
-watch(() => form.orderNo, () => { if (errors.orderNo) errors.orderNo = '' })
-watch(() => form.orderType, () => { if (errors.orderType) errors.orderType = '' })
-watch(() => form.picName, () => { if (errors.picName) errors.picName = '' })
-watch(() => form.status, () => { if (errors.orderStatus) errors.orderStatus = '' })
+const openModal = async (order: any) => {
+  await fetchData()
+  prefillOrder(order)
+  isOpen.value = true
+  currentStep.value = 1
+  lockScroll()
 
-/* Helpers */
-const toggleDropdown = (name: string) => {
+  await nextTick()
+  initializeFlatpickr()
+}
+
+const closeModal = async (force = false) => {
+  if (isSubmitting.value && !force) return
+  isOpen.value = false
+  unlockScroll()
+  await nextTick()
+  emit('close')
+}
+
+const validateStep = (step: number): boolean => {
+  Object.keys(errors).forEach((key) => delete errors[key])
+
+  if (step === 1) {
+    if (!formData.orderNo || !formData.orderNo.trim()) errors.orderNo = 'Order number is required'
+    if (!formData.orderType) errors.orderType = 'Order type is required'
+    if (!formData.picName || !formData.picName.trim()) errors.picName = 'PIC name is required'
+    if (!formData.estimatedDeliveryTime) errors.estimatedDeliveryTime = 'Estimated delivery time is required'
+  } else if (step === 2) {
+    if (formData.orderType === 'SO') {
+      if (!formData.customerId) errors.customerId = 'Customer is required for Sales Order'
+    } else if (formData.orderType === 'PO') {
+      if (!formData.supplierId) errors.supplierId = 'Supplier is required for Purchase Order'
+    }
+  } else if (step === 3) {
+    formData.orderItems.forEach((item, idx) => {
+      if (!item.productId) {
+        errors[`item${idx}Product`] = 'Product is required'
+      }
+      if (!item.quantity || item.quantity < 1) {
+        errors[`item${idx}Quantity`] = 'Valid quantity is required'
+      }
+      if (formData.orderType === 'SO' && item.availableStock !== undefined && item.quantity > item.availableStock) {
+        errors[`item${idx}Quantity`] = `Quantity exceeds available stock (${item.availableStock})`
+      }
+    })
+  }
+
+  return Object.keys(errors).length === 0
+}
+
+const initializeFlatpickr = () => {
+  if (flatpickrInstance) {
+    flatpickrInstance.destroy()
+    flatpickrInstance = null
+  }
+
+  nextTick(() => {
+    if (estimatedDeliveryTimeInput.value) {
+      flatpickrInstance = flatpickr(estimatedDeliveryTimeInput.value, {
+        dateFormat: 'Y-m-d',
+        defaultDate: formData.estimatedDeliveryTime || new Date(),
+        onChange: (selectedDates: Date[], dateStr: string) => {
+          formData.estimatedDeliveryTime = dateStr
+          if (errors.estimatedDeliveryTime) {
+            delete errors.estimatedDeliveryTime
+          }
+        }
+      })
+    }
+  })
+}
+
+const nextStep = () => {
+  if (!validateStep(currentStep.value)) return
+  if (currentStep.value < totalSteps) {
+    currentStep.value++
+
+    if (currentStep.value === 1) {
+      initializeFlatpickr()
+    }
+  }
+}
+
+const previousStep = () => {
+  if (currentStep.value > 1) {
+    currentStep.value--
+  }
+}
+
+const toggleDropdown = async (name: string) => {
   Object.keys(openDropdowns).forEach(k => {
     if (k !== name) openDropdowns[k] = false
   })
   openDropdowns[name] = !openDropdowns[name]
+
+  if (openDropdowns[name] && name.startsWith('product')) {
+    const idx = parseInt(name.replace('product', ''), 10)
+    await positionProductMenu(idx)
+  }
 }
 
-const selectOption = (key: string, value: string) => {
-  switch (key) {
-    case 'orderType':
-      form.orderType = value
-      openDropdowns.orderType = false
-      break
-    case 'customerId':
-      form.customerId = value
-      openDropdowns.customer = false
-      break
-    case 'orderStatus':
-      form.status = value
-      openDropdowns.orderStatus = false
-      break
+const selectProduct = async (index: number, productId: number) => {
+  const takenIndex = formData.orderItems.findIndex((p, i) => i !== index && p.productId === productId)
+  if (takenIndex !== -1) {
+    console.warn(`Product ${productId} is already selected in row ${takenIndex}`)
+    openDropdowns[`product${index}`] = false
+    return
+  }
+
+  formData.orderItems[index].productId = productId
+  openDropdowns[`product${index}`] = false
+
+  if (errors[`item${index}Product`]) {
+    delete errors[`item${index}Product`]
+  }
+
+  if (formData.orderType === 'SO') {
+    await fetchProductInventory(index)
   }
 }
 
 const getProductLabel = (productId: string | number) => {
+  if (!productId) return null
   const product = products.value.find(p => p.id.toString() === productId.toString())
   return product ? `${product.skuCode} - ${product.name}` : null
 }
 
+const availableProducts = (index: number) => {
+  const takenIds = formData.orderItems
+    .map((p, i) => i !== index ? p.productId : null)
+    .filter(Boolean)
+
+  let filteredProducts = products.value.filter(p => !takenIds.includes(p.id))
+
+  if (formData.orderType === 'PO' && formData.supplierId) {
+    filteredProducts = filteredProducts.filter(p => p.supplier?.id === formData.supplierId)
+  }
+
+  return filteredProducts
+}
+
 const addOrderItem = () => {
-  form.orderItems.push({ productId: '', quantity: 1, status: 'Pending', remarks: '', availableStock: undefined, allocatedEpcs: [] })
+  formData.orderItems.push({ productId: '', quantity: 1, status: formData.itemStatus || 'Pending', remarks: '', availableStock: undefined, allocatedEpcs: [] })
+  productMenuStyles.push({})
 }
 
 const removeOrderItem = (index: number) => {
-  form.orderItems.splice(index, 1)
+  formData.orderItems.splice(index, 1)
+  productMenuStyles.splice(index, 1)
+  Object.keys(openDropdowns).forEach(k => { if (k.startsWith('product')) openDropdowns[k] = false })
 }
 
-const getAvailableProducts = (currentIndex: number) => {
-  // Get list of product IDs already selected in other rows
-  const selectedProductIds = form.orderItems
-    .map((item, idx) => idx !== currentIndex ? item.productId : null)
-    .filter(Boolean)
-
-  // Return products that are not selected in other rows
-  return products.value.filter(product =>
-    !selectedProductIds.includes(product.id.toString()) &&
-    !selectedProductIds.includes(product.id)
-  )
-}
-
-const updateOrderItem = async (index: number, key: string, value: any) => {
-  if (key === 'productId') {
-    // Check if product is already selected in another row
-    const isAlreadySelected = form.orderItems.some((item, idx) =>
-      idx !== index && (item.productId === value || item.productId.toString() === value.toString())
-    )
-
-    if (isAlreadySelected) {
-      console.warn('Product already selected in another row')
-      openDropdowns[`product${index}`] = false
-      return
-    }
-
-    form.orderItems[index].productId = value
-    openDropdowns[`product${index}`] = false
-
-    // Clear product error
-    if (errors[`item${index}Product`]) {
-      delete errors[`item${index}Product`]
-    }
-
-    // Fetch inventory if order type is SO
-    if (form.orderType === 'SO') {
-      await fetchProductInventory(index)
-    }
-  } else if (key === 'quantity') {
-    form.orderItems[index].quantity = value
-  }
-}
-
-const increaseQuantity = (index: number) => {
-  const item = form.orderItems[index]
-
-  // Check available stock limit for SO orders
-  if (form.orderType === 'SO' && item.availableStock !== undefined) {
-    if (item.quantity >= item.availableStock) {
-      return // Don't increase beyond available stock
-    }
-  }
-
-  form.orderItems[index].quantity++
-  // Re-allocate EPCs if SO order
-  if (form.orderType === 'SO' && form.orderItems[index].productId) {
-    fetchProductInventory(index)
-  }
-}
-
-const decreaseQuantity = (index: number) => {
-  if (form.orderItems[index].quantity > 1) {
-    form.orderItems[index].quantity--
-    // Re-allocate EPCs if SO order
-    if (form.orderType === 'SO' && form.orderItems[index].productId) {
-      fetchProductInventory(index)
-    }
-  }
-}
-
-const validateQuantityInput = (index: number, value: string) => {
-  const item = form.orderItems[index]
-  let newQuantity = parseInt(value) || 1
-
-  if (newQuantity < 1) {
-    newQuantity = 1
-  }
-
-  // Enforce available stock limit for SO orders
-  if (form.orderType === 'SO' && item.availableStock !== undefined) {
-    if (newQuantity > item.availableStock) {
-      newQuantity = item.availableStock || 1
-    }
-  }
-
-  form.orderItems[index].quantity = newQuantity
-
-  // Re-allocate EPCs if SO order
-  if (form.orderType === 'SO' && form.orderItems[index].productId) {
-    fetchProductInventory(index)
-  }
-}
-
-/* Fetch product inventory for SO orders and auto-assign EPCs using FIFO */
 const fetchProductInventory = async (index: number) => {
-  const item = form.orderItems[index]
+  const item = formData.orderItems[index]
   if (!item.productId) return
 
   loadingInventory.value[index] = true
   try {
-    // Use available-epcs endpoint that excludes already-allocated EPCs
     const response = await authenticatedFetch('/api/inventory/available-epcs/list')
     if (response.ok) {
       const allInventory = await response.json()
 
-      // Collect all INBOUND EPCs for this product with their location info
       const allEpcs: any[] = []
 
       allInventory.forEach((inv: any) => {
@@ -786,29 +757,24 @@ const fetchProductInventory = async (index: number) => {
         }
       })
 
-      // Sort by inbound date ascending (FIFO - First In First Out)
       allEpcs.sort((a, b) => {
         return new Date(a.inboundDate).getTime() - new Date(b.inboundDate).getTime()
       })
 
-      // Filter out EPCs already allocated to other order items (prevent duplicates)
       const availableEpcs = allEpcs.filter(epc => {
-        const isAlreadyUsed = form.orderItems.some((otherItem, idx) => {
-          if (idx === index) return false // Don't check against self
+        const isAlreadyUsed = formData.orderItems.some((otherItem, idx) => {
+          if (idx === index) return false
           return otherItem.allocatedEpcs?.some(allocated => allocated.epcCode === epc.epcCode)
         })
         return !isAlreadyUsed
       })
 
-      // Set available stock (after filtering duplicates)
       item.availableStock = availableEpcs.length
 
-      // Enforce quantity limit
       if (item.quantity > availableEpcs.length) {
         item.quantity = availableEpcs.length || 1
       }
 
-      // Allocate EPCs based on quantity (FIFO)
       const allocatedEpcs = availableEpcs.slice(0, item.quantity)
       item.allocatedEpcs = allocatedEpcs
     }
@@ -831,163 +797,125 @@ const formatDate = (dateString: string) => {
   })
 }
 
-const handleClickOutside = (event: MouseEvent) => {
-  const target = event.target as Node
-  if (!panelRef.value?.contains(target)) {
-    Object.keys(openDropdowns).forEach(k => openDropdowns[k] = false)
+const increaseQuantity = (index: number) => {
+  const item = formData.orderItems[index]
+
+  if (formData.orderType === 'SO' && item.availableStock !== undefined) {
+    if (item.quantity >= item.availableStock) {
+      return
+    }
+  }
+
+  formData.orderItems[index].quantity++
+  if (formData.orderType === 'SO' && formData.orderItems[index].productId) {
+    fetchProductInventory(index)
   }
 }
 
-/* Prefill existing order */
-const prefillOrder = (order: any) => {
-  console.log('Prefilling order:', order)
-  form.id = order.id || null
-  form.orderNo = order.orderNo || ''
-  form.orderType = order.orderType || ''
-  form.picName = order.picName || ''
-  form.status = order.status || ''
-  form.estimatedDeliveryTime = order.estimatedDeliveryTime ? order.estimatedDeliveryTime.split('T')[0] : ''
-
-  // Try to determine customerId via multiple fallbacks
-  let derivedCustomerId: string | null = null
-
-  console.log('Checking customer data...')
-  console.log('order.customer:', order.customer)
-  console.log('order.customerId:', order.customerId)
-
-  if (order.customer?.id) {
-    derivedCustomerId = order.customer.id.toString()
-    prefilledCustomerName.value = order.customer.customerName || null
-    console.log('Using order.customer.id:', derivedCustomerId)
-    // Verify this customer exists in our fetched list
-    const exists = customers.value.find(c => c.id.toString() === derivedCustomerId)
-    console.log('Customer exists in list:', exists)
-    if (!exists) {
-      console.warn(`Customer Code ${derivedCustomerId} not found in fetched customers list`)
+const decreaseQuantity = (index: number) => {
+  if (formData.orderItems[index].quantity > 1) {
+    formData.orderItems[index].quantity--
+    if (formData.orderType === 'SO' && formData.orderItems[index].productId) {
+      fetchProductInventory(index)
     }
-  } else if (order.customerId) {
-    derivedCustomerId = order.customerId.toString()
-    console.log('Using order.customerId:', derivedCustomerId)
-    // Try to find the customer name from our fetched list
-    const customer = customers.value.find(c => c.id.toString() === derivedCustomerId)
-    console.log('Found customer in list:', customer)
-    prefilledCustomerName.value = customer?.customerName || null
-  } else if (order.customerCode || order.customerName) {
-    console.log('Trying to match by code/name')
-    // Attempt to match against fetched customers by code or name
-    const match = customers.value.find(c =>
-      (order.customerCode && c.customerCode === order.customerCode) ||
-      (order.customerName && c.customerName === order.customerName)
-    )
-    if (match) {
-      derivedCustomerId = match.id.toString()
-      prefilledCustomerName.value = match.customerName
-      console.log('Matched customer:', match)
-    } else {
-      // store provided display name even if not found
-      prefilledCustomerName.value = order.customerName || order.customerCode || null
-      console.log('No match found, using name:', prefilledCustomerName.value)
-    }
-  } else {
-    prefilledCustomerName.value = null
-    console.log('No customer data found')
-  }
-
-  form.customerId = derivedCustomerId
-  console.log('Final form.customerId:', form.customerId)
-  console.log('Final prefilledCustomerName:', prefilledCustomerName.value)
-
-  // Map order items with existing data (including allocated EPCs from the order)
-  if (order.orderItems && order.orderItems.length) {
-    form.orderItems = order.orderItems.map((i: any) => ({
-      productId: i.product?.id ? i.product.id.toString() : (i.productId ? i.productId.toString() : ''),
-      quantity: i.quantity || 1,
-      status: i.status || 'Pending',
-      remarks: i.remarks || '',
-      availableStock: undefined,
-      allocatedEpcs: i.allocatedEpcs || [] // Use existing allocated EPCs from order
-    }))
-
-    // For SO orders, load existing allocations - don't fetch new ones unless user changes quantity
-    if (form.orderType === 'SO') {
-      form.orderItems.forEach((item, index) => {
-        if (item.productId && item.allocatedEpcs.length === 0) {
-          // Only fetch if no allocations exist
-          fetchProductInventory(index)
-        } else if (item.allocatedEpcs.length > 0) {
-          // Set available stock based on existing allocations
-          item.availableStock = item.allocatedEpcs.length
-        }
-      })
-    }
-  } else {
-    form.orderItems = [{ productId: '', quantity: 1, status: 'Pending', remarks: '', availableStock: undefined, allocatedEpcs: [] }]
   }
 }
 
-/* Modal Control */
-const openModal = async (order: any) => {
-  console.log('Opening modal with order:', order)
-  await fetchData()
-  await nextTick() // Wait for Vue to update reactive data
-  console.log('Customers loaded:', customers.value)
-  console.log('Customer from order:', order.customer, 'CustomerId:', order.customerId)
-  prefillOrder(order)
-  console.log('Form customerId after prefill:', form.customerId)
-  Object.keys(errors).forEach(key => errors[key] = '')
+const validateQuantity = (index: number) => {
+  const item = formData.orderItems[index]
 
-  isOpen.value = true
-  lockScroll()
+  if (item.quantity < 1) {
+    item.quantity = 1
+  }
+
+  if (formData.orderType === 'SO' && item.availableStock !== undefined) {
+    if (item.quantity > item.availableStock) {
+      item.quantity = item.availableStock || 1
+    }
+  }
+
+  if (item.quantity >= 1) {
+    if (errors[`item${index}Quantity`]) {
+      delete errors[`item${index}Quantity`]
+    }
+  }
+
+  if (formData.orderType === 'SO' && formData.orderItems[index].productId) {
+    fetchProductInventory(index)
+  }
+}
+
+const positionProductMenu = async (index: number) => {
   await nextTick()
+  const container = productDropdownRefs.value[index]
+  if (!container) return
 
-  if (deliveryDateInput.value && !flatpickrInstance) {
-    flatpickrInstance = flatpickr(deliveryDateInput.value, {
-      dateFormat: 'Y-m-d',
-      defaultDate: form.estimatedDeliveryTime ? new Date(form.estimatedDeliveryTime) : new Date(),
-      onChange: (dates: Date[]) => {
-        if (dates[0]) {
-          const year = dates[0].getFullYear()
-          const month = String(dates[0].getMonth() + 1).padStart(2, '0')
-          const day = String(dates[0].getDate()).padStart(2, '0')
-          form.estimatedDeliveryTime = `${year}-${month}-${day}`
-        }
-      }
-    })
+  const btn = container.querySelector('button')
+  if (!btn) return
+
+  const rect = btn.getBoundingClientRect()
+
+  const maxMenuHeight = 300
+  const gap = 8
+  const belowSpace = window.innerHeight - rect.bottom - gap
+  const aboveSpace = rect.top - gap
+
+  const style: any = {
+    position: 'fixed',
+    left: `${rect.left}px`,
+    width: `${rect.width}px`,
+    zIndex: '9999',
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    whiteSpace: 'normal',
+    wordBreak: 'break-word',
+    boxSizing: 'border-box'
   }
+
+  if (belowSpace >= 150) {
+    style.top = `${rect.bottom}px`
+    style.maxHeight = `${Math.min(maxMenuHeight, belowSpace)}px`
+  } else {
+    const usedHeight = Math.min(maxMenuHeight, aboveSpace)
+    style.top = `${rect.top - usedHeight}px`
+    style.maxHeight = `${usedHeight}px`
+  }
+
+  productMenuStyles[index] = style
 }
 
-const closeModal = async () => {
-  Object.keys(openDropdowns).forEach(k => openDropdowns[k] = false)
-
-  if (flatpickrInstance) {
-    flatpickrInstance.destroy()
-    flatpickrInstance = null
-  }
-
-  isOpen.value = false
-  await nextTick()
+const repositionOpenProductMenus = () => {
+  Object.keys(openDropdowns).forEach(key => {
+    if (key.startsWith('product') && openDropdowns[key]) {
+      const idx = parseInt(key.replace('product', ''), 10)
+      positionProductMenu(idx)
+    }
+  })
 }
 
-/* Submit (PATCH existing order) */
 const submitForm = async () => {
-  if (!validateForm()) return
-  if (!form.id) {
-    errors.submit = 'Order ID missing'
+  if (!validateStep(currentStep.value)) return
+  
+  if (!formData.id) {
+    console.error('Order ID is missing')
     return
   }
 
   isSubmitting.value = true
-  errors.submit = ''
 
   try {
+    formData.orderItems.forEach(item => { item.status = formData.itemStatus })
+
     const submissionData = {
-      orderNo: form.orderNo,
-      orderType: form.orderType,
-      customerId: form.customerId ? parseInt(form.customerId) : null,
-      picName: form.picName,
-      status: form.status,
-      estimatedDeliveryTime: form.estimatedDeliveryTime,
-      orderItems: form.orderItems.map(item => ({
+      orderNo: formData.orderNo,
+      orderType: formData.orderType,
+      customerId: formData.orderType === 'SO' ? formData.customerId : null,
+      supplierId: formData.orderType === 'PO' ? formData.supplierId : null,
+      picName: formData.picName,
+      status: formData.status,
+      estimatedDeliveryTime: formData.estimatedDeliveryTime,
+      orderRemarks: formData.orderRemarks || null,
+      orderItems: formData.orderItems.map(item => ({
         productId: parseInt(item.productId.toString()),
         quantity: item.quantity,
         status: item.status,
@@ -996,7 +924,7 @@ const submitForm = async () => {
       }))
     }
 
-    const response = await authenticatedFetch(`/api/order/${form.id}`, {
+    const response = await authenticatedFetch(`/api/order/${formData.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(submissionData)
@@ -1008,33 +936,59 @@ const submitForm = async () => {
     }
 
     const data = await response.json()
-    await closeModal()
+
     emit('order-updated', { success: true, data })
+
+    await new Promise(resolve => setTimeout(resolve, 100))
+
+    await closeModal(true)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to update order'
-    errors.submit = message
     emit('order-updated', { success: false, error: message })
   } finally {
     isSubmitting.value = false
   }
 }
 
-/* Lifecycle */
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as Node
+  const refs = [...productDropdownRefs.value]
+
+  let clickedInside = false
+  for (const ref of refs) {
+    if (ref && ref.contains && ref.contains(target)) {
+      clickedInside = true
+      break
+    }
+  }
+
+  if (!clickedInside) {
+    Object.keys(openDropdowns).forEach(key => {
+      openDropdowns[key] = false
+    })
+  }
+}
+
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+  window.addEventListener('resize', repositionOpenProductMenus)
+  window.addEventListener('scroll', repositionOpenProductMenus, true)
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
-  if (flatpickrInstance) flatpickrInstance.destroy()
+  window.removeEventListener('resize', repositionOpenProductMenus)
+  window.removeEventListener('scroll', repositionOpenProductMenus, true)
   if (isOpen.value) unlockScroll()
+
+  if (flatpickrInstance) {
+    flatpickrInstance.destroy()
+    flatpickrInstance = null
+  }
 })
 
-defineExpose({ openModal, closeModal })
+defineExpose({
+  openModal,
+  closeModal,
+})
 </script>
-
-<style scoped>
-[role="dialog"] > .bg-white {
-  transform-origin: center;
-}
-</style>

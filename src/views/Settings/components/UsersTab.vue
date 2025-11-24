@@ -25,15 +25,31 @@
         placeholder="Search users..."
         class="input input-bordered flex-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
       />
-      <select
-        v-model="filterRole"
-        class="select select-bordered bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-      >
-        <option value="">All Roles</option>
-        <option v-for="role in roles" :key="role.id" :value="role.id">
-          {{ role.name }}
-        </option>
-      </select>
+      <div class="dropdown relative inline-flex">
+        <button
+          ref="roleDropdownRef"
+          type="button"
+          class="dropdown-toggle btn btn-outline w-48 justify-between dark:bg-gray-700 dark:text-gray-400 text-sm"
+          aria-haspopup="menu"
+          :aria-expanded="openDropdowns.roles"
+          @click="toggleDropdown('roles')"
+        >
+          {{ roles.find(r => r.id === filterRole)?.name || 'All Roles' }}
+          <span class="icon-[tabler--chevron-down] size-4 transition-transform" :class="{ 'rotate-180': openDropdowns.roles }"></span>
+        </button>
+        <ul
+          class="dropdown-menu min-w-full w-full transition-opacity duration-200 absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white text-sm"
+          :class="{ 'opacity-100': openDropdowns.roles, 'opacity-0 pointer-events-none': !openDropdowns.roles }"
+          role="menu"
+        >
+          <li>
+            <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('roles', '')">All Roles</a>
+          </li>
+          <li v-for="role in roles" :key="role.id">
+            <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('roles', role.id)">{{ role.name }}</a>
+          </li>
+        </ul>
+      </div>
     </div>
 
     <!-- Loading -->
@@ -60,8 +76,8 @@
               <td>
                 <div class="flex items-center gap-3">
                   <div class="avatar placeholder">
-                    <div class="bg-primary text-primary-content rounded-full w-10">
-                      <span class="text-sm">{{ getUserInitials(user.fullName) }}</span>
+                    <div class="bg-primary text-primary-content rounded-full w-10 h-10 relative">
+                      <span class="absolute inset-0 flex items-center justify-center text-sm leading-none text-center">{{ getUserInitials(user.fullName) }}</span>
                     </div>
                   </div>
                   <div>
@@ -137,7 +153,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import axios from '@/utils/axios'
 import UserFormModal from './UserFormModal.vue'
 import AssignRoleModal from './AssignRoleModal.vue'
@@ -145,16 +161,49 @@ import PermissionsViewModal from './PermissionsViewModal.vue'
 
 const API_URL = '' // Empty because axios baseURL is already '/api'
 
-const users = ref([])
-const roles = ref([])
+const users = ref<any[]>([])
+const roles = ref<any[]>([])
 const loading = ref(false)
 const searchQuery = ref('')
 const filterRole = ref('')
 
+// Dropdown state for role filter (Warehouse-style)
+const openDropdowns = ref<Record<string, boolean>>({ roles: false })
+const roleDropdownRef = ref<HTMLElement | null>(null)
+
+const toggleDropdown = (name: string) => {
+  Object.keys(openDropdowns.value).forEach((k) => {
+    if (k !== name) (openDropdowns.value as Record<string, boolean>)[k] = false
+  })
+  ;(openDropdowns.value as Record<string, boolean>)[name] = !(openDropdowns.value as Record<string, boolean>)[name]
+}
+
+const selectOption = (key: string, value: any) => {
+  if (key === 'roles') filterRole.value = value
+  ;(openDropdowns.value as Record<string, boolean>)[key] = false
+}
+
+const handleClickOutside = (e: MouseEvent) => {
+  const el = roleDropdownRef.value
+  if (!el) return
+  const container = el.closest('.dropdown') ? (el.closest('.dropdown') as HTMLElement) : null
+  if (container && !container.contains(e.target as Node)) {
+    Object.keys(openDropdowns.value).forEach((k) => (openDropdowns.value as Record<string, boolean>)[k] = false)
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
 // Modal refs using the new pattern
-const userFormModalRef = ref(null)
-const assignRoleModalRef = ref(null)
-const permissionsViewModalRef = ref(null)
+const userFormModalRef = ref<any>(null)
+const assignRoleModalRef = ref<any>(null)
+const permissionsViewModalRef = ref<any>(null)
 
 const filteredUsers = computed(() => {
   let filtered = users.value

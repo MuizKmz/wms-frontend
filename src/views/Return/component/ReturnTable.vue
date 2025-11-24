@@ -1,5 +1,5 @@
 <template>
-  <div class="overflow-hidden">
+  <div class="overflow-visible">
     <!-- Header with Select Columns Button -->
     <div class="flex justify-between items-center mb-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -88,6 +88,14 @@
                 :class="getReturnTypeClass(row.returnType)"
               >
                 {{ getCellValue(row, col) }}
+              </span>
+
+              <!-- Status badge column -->
+              <span
+                v-else-if="col === 'status'"
+                :class="['inline-flex items-center whitespace-nowrap px-3 py-1 text-xs rounded-full font-medium', returnStatusClass(getCellValue(row, 'status'))]"
+              >
+                {{ formatStatus(getCellValue(row, 'status')) }}
               </span>
 
               <!-- Date fields -->
@@ -374,6 +382,7 @@ const allowedColumns = [
   'to',
   'skuQuantity',
   'totalQuantity',
+  'status',
   'createdBy',
   'lastUpdated',
 ]
@@ -416,12 +425,26 @@ const handleColumnsUpdate = (columns: string[]) => {
 // Map return types to badge color classes
 const getReturnTypeClass = (type: string) => {
   const map: Record<string, string> = {
-    'Customer': 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
-    'Supplier': 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200',
-    'Internal': 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200',
-    'Failed Delivery': 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200',
+    'CUSTOMER': 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
+    'SUPPLIER': 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200',
+    'INTERNAL': 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200',
+    'FAILED DELIVERY': 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200',
   }
   return map[type] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+}
+
+// Map return status to badge classes
+const returnStatusClass = (status: string | undefined) => {
+  if (!status) return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+  const s = status.toString().toUpperCase()
+  const map: Record<string, string> = {
+    PENDING_APPROVAL: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+    APPROVED: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    RECEIVED: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-200',
+    COMPLETED: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200',
+    REJECTED: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200',
+  }
+  return map[s] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
 }
 
 // API endpoint for returns
@@ -441,8 +464,8 @@ const fetchReturns = async () => {
     data.value = (json || []).map((item: any) => ({
       id: item.id,
       returnNo: item.returnCode,
-      returnType: item.returnType === 'CUSTOMER_RETURN' ? 'Customer' : 'Supplier',
-      referenceNo: item.orderId ? `Order #${item.orderId}` : item.receivingId ? `Receiving #${item.receivingId}` : '-',
+      returnType: item.returnType === 'CUSTOMER_RETURN' ? 'CUSTOMER' : 'SUPPLIER',
+      referenceNo: item.order?.orderNo || item.receiving?.receivingCode || (item.orderId ? `Order #${item.orderId}` : item.receivingId ? `Receiving #${item.receivingId}` : '-') ,
       returnDate: item.requestedDate || item.createdAt,
       from: item.returnType === 'CUSTOMER_RETURN'
         ? (item.customer?.name || 'Customer')
@@ -452,10 +475,10 @@ const fetchReturns = async () => {
         : (item.supplier?.name || 'Supplier'),
       skuQuantity: item.returnItems?.length || 0,
       totalQuantity: item.returnItems?.reduce((sum: number, ri: any) => sum + (ri.quantity || 0), 0) || 0,
+      status: item.status || '',
       createdBy: item.requester?.username || item.requester?.fullName || 'System',
       lastUpdated: item.updatedAt || item.createdAt,
       remarks: item.reason || item.notes || '-',
-      status: item.status,
       // Keep original data for edit/view
       _raw: item
     }))
@@ -498,6 +521,7 @@ const filteredData = computed(() => {
       return false
     if (props.filters?.dateRange) {
       const [startDate, endDate] = props.filters.dateRange.split(' to ')
+      if (!item.returnDate) return false
       const itemDate = new Date(item.returnDate)
       if (startDate && new Date(startDate) > itemDate) return false
       if (endDate && new Date(endDate) < itemDate) return false
@@ -648,6 +672,18 @@ const formatDate = (dateString: string) => {
   })
 }
 
+// Format status for display (replace underscores with spaces, uppercase)
+const formatStatus = (status: string | undefined | null) => {
+  if (!status) return '-'
+  return String(status).toUpperCase().replace(/_/g, ' ')
+}
+
+// Get a displayable return code from transformed or raw data
+const getReturnCode = (row: ReturnItem) => {
+  const anyRow = row as any
+  return anyRow.returnNo ?? anyRow.returnCode ?? anyRow._raw?.returnCode ?? '-'
+}
+
 // ------------------------------------------------
 // --- Actions & Exposed Methods ---
 // ------------------------------------------------
@@ -762,9 +798,17 @@ const adjustPageAfterDeletion = () => {
 
 // Approve return request
 const approveReturn = async (row: ReturnItem) => {
-  if (!confirm(`Are you sure you want to approve this return (${row.returnCode})?`)) {
-    return
-  }
+  const confirmResult = await Swal.fire({
+    title: 'Approve Return',
+    text: `Are you sure you want to approve this return (${getReturnCode(row)})?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, approve it',
+  })
+
+  if (!confirmResult.isConfirmed) return
 
   try {
     const response = await authenticatedFetch(`${API_URL}/${row.id}/approve`, {
@@ -776,10 +820,10 @@ const approveReturn = async (row: ReturnItem) => {
       throw new Error(error.message || 'Failed to approve return')
     }
 
-    const result = await response.json()
+    const resJson = await response.json()
 
     // Emit success and refresh data
-    emit('approve-return', { success: true, data: result })
+    emit('approve-return', { success: true, data: resJson })
     await fetchReturns()
   } catch (error: any) {
     console.error('Error approving return:', error)
@@ -789,9 +833,17 @@ const approveReturn = async (row: ReturnItem) => {
 
 // Mark return as received
 const receiveReturn = async (row: ReturnItem) => {
-  if (!confirm(`Mark this return as received (${row.returnCode})?`)) {
-    return
-  }
+  const confirmResult = await Swal.fire({
+    title: 'Mark as Received',
+    text: `Mark this return as received (${getReturnCode(row)})?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, mark as received',
+  })
+
+  if (!confirmResult.isConfirmed) return
 
   try {
     const response = await authenticatedFetch(`${API_URL}/${row.id}/receive`, {
@@ -803,9 +855,9 @@ const receiveReturn = async (row: ReturnItem) => {
       throw new Error(error.message || 'Failed to mark return as received')
     }
 
-    const result = await response.json()
+    const resJson = await response.json()
 
-    emit('receive-return', { success: true, data: result })
+    emit('receive-return', { success: true, data: resJson })
     await fetchReturns()
   } catch (error: any) {
     console.error('Error receiving return:', error)
@@ -815,9 +867,17 @@ const receiveReturn = async (row: ReturnItem) => {
 
 // Complete return and process EPCs
 const completeReturn = async (row: ReturnItem) => {
-  if (!confirm(`Complete this return and process all EPCs (${row.returnCode})? This will update EPC statuses and inventory.`)) {
-    return
-  }
+  const confirmResult = await Swal.fire({
+    title: 'Complete Return',
+    text: `Complete this return and process all EPCs (${getReturnCode(row)})? This will update EPC statuses and inventory.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, complete it',
+  })
+
+  if (!confirmResult.isConfirmed) return
 
   try {
     const response = await authenticatedFetch(`${API_URL}/${row.id}/complete`, {
@@ -829,9 +889,9 @@ const completeReturn = async (row: ReturnItem) => {
       throw new Error(error.message || 'Failed to complete return')
     }
 
-    const result = await response.json()
+    const resJson = await response.json()
 
-    emit('complete-return', { success: true, data: result })
+    emit('complete-return', { success: true, data: resJson })
     await fetchReturns()
   } catch (error: any) {
     console.error('Error completing return:', error)

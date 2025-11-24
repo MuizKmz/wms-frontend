@@ -42,8 +42,8 @@
 
                   <div>
                     <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Status</label>
-                    <span class="inline-block px-3 py-1 text-sm font-medium rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                      {{ returnData.status }}
+                    <span class="inline-block px-3 py-1 text-sm font-medium rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 whitespace-nowrap">
+                      {{ formatStatus(returnData.status) }}
                     </span>
                   </div>
 
@@ -118,7 +118,7 @@
                               {{ index + 1 }}
                             </td>
                             <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
-                              <span class="text-blue-600 dark:text-blue-400 font-medium">
+                              <span class="text-black-600 dark:text-blue-400 font-medium">
                                 {{ item.product?.name || '-' }}
                               </span>
                             </td>
@@ -194,9 +194,9 @@
                 Reject
               </button>
 
-              <!-- Mark as Received Button (APPROVED only, Customer Return) -->
+              <!-- Mark as Received Button (APPROVED only) -->
               <button
-                v-if="returnData.status === 'APPROVED' && returnData.returnType === 'CUSTOMER_RETURN'"
+                v-if="returnData.status === 'APPROVED' && (isCustomerReturn || isSupplierReturn)"
                 @click="handleReceive"
                 :disabled="isProcessing"
                 type="button"
@@ -212,9 +212,9 @@
                 Mark as Received
               </button>
 
-              <!-- Complete Return Button (RECEIVED for Customer, APPROVED for Supplier) -->
+              <!-- Complete Return Button (RECEIVED required for both Customer and Supplier) -->
               <button
-                v-if="(returnData.status === 'RECEIVED' && returnData.returnType === 'CUSTOMER_RETURN') || (returnData.status === 'APPROVED' && returnData.returnType === 'SUPPLIER_RETURN')"
+                v-if="returnData.status === 'RECEIVED' && (isCustomerReturn || isSupplierReturn)"
                 @click="handleComplete"
                 :disabled="isProcessing"
                 type="button"
@@ -248,7 +248,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
-import { authenticatedFetch } from '@/utils/authenticatedFetch'
+import Swal from 'sweetalert2'
+import authenticatedFetch from '@/utils/authenticatedFetch'
 
 interface Product {
   id: number
@@ -343,8 +344,18 @@ const returnData = reactive<ReturnData>({
 })
 
 // Computed properties for display
+const isCustomerReturn = computed(() => {
+  const rt: any = (returnData as any).returnType || ''
+  return rt === 'CUSTOMER_RETURN' || String(rt).toUpperCase().includes('CUSTOM') || rt === 'CUSTOMER'
+})
+
+const isSupplierReturn = computed(() => {
+  const rt: any = (returnData as any).returnType || ''
+  return rt === 'SUPPLIER_RETURN' || String(rt).toUpperCase().includes('SUPPLIER') || rt === 'SUPPLIER'
+})
+
 const displayReturnType = computed(() => {
-  return returnData.returnType === 'CUSTOMER_RETURN' ? 'Customer' : 'Supplier'
+  return isCustomerReturn.value ? 'CUSTOMER' : 'SUPPLIER'
 })
 
 const displayReferenceNo = computed(() => {
@@ -388,6 +399,15 @@ const skuQuantity = computed(() => {
 const openModal = (data: ReturnData) => {
   Object.assign(returnData, data)
   isOpen.value = true
+  // Ensure we display the latest, full return detail (including returnItems)
+  ;(async () => {
+    try {
+      const fresh = await fetchReturnDetail(returnData.id)
+      if (fresh) Object.assign(returnData, fresh)
+    } catch (e) {
+      console.error('Error fetching detail on openModal:', e)
+    }
+  })()
 }
 
 const closeModal = () => {
@@ -405,8 +425,8 @@ const formatDate = (dateString: string) => {
 
 const getReturnTypeClass = (type: string) => {
   const classes = {
-    'Customer': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-    'Supplier': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+    'CUSTOMER': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    'SUPPLIER': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
   }
   return classes[type as keyof typeof classes] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
 }
@@ -422,13 +442,39 @@ const getConditionBadge = (condition: string) => {
 }
 
 const getConditionLabel = (condition: string) => {
-  const labels = {
-    'GOOD': 'Good',
-    'DEFECTIVE': 'Defective',
-    'DAMAGED': 'Damaged',
-    'WRONG_ITEM': 'Wrong Item'
+  // Return uppercase, human readable labels (replace underscores with spaces)
+  const labels: Record<string, string> = {
+    'GOOD': 'GOOD',
+    'DEFECTIVE': 'DEFECTIVE',
+    'DAMAGED': 'DAMAGED',
+    'WRONG_ITEM': 'WRONG ITEM'
   }
-  return labels[condition as keyof typeof labels] || condition
+  return (
+    labels[condition as keyof typeof labels] ||
+    (condition ? condition.toString().toUpperCase().replace(/_/g, ' ') : condition)
+  )
+}
+
+// Format status for display (replace underscores with spaces, uppercase)
+const formatStatus = (status: string | undefined | null) => {
+  if (!status) return '-'
+  return String(status).toUpperCase().replace(/_/g, ' ')
+}
+
+// Fetch full return detail from API and update local state
+const fetchReturnDetail = async (id: number) => {
+  try {
+    const resp = await authenticatedFetch(`/api/return/${id}`)
+    if (!resp.ok) {
+      console.error('Failed to fetch return detail', resp.status)
+      return null
+    }
+    const detail = await resp.json()
+    return detail
+  } catch (err) {
+    console.error('Error fetching return detail:', err)
+    return null
+  }
 }
 
 // Action Handlers
@@ -436,25 +482,50 @@ const emit = defineEmits(['refresh', 'show-toast'])
 
 const handleApprove = async () => {
   if (isProcessing.value) return
+  const confirmResult = await Swal.fire({
+    title: 'Approve Return',
+    text: `Are you sure you want to approve this return (${returnData.returnCode})?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, approve it',
+  })
 
+  if (!confirmResult.isConfirmed) return
   try {
     isProcessing.value = true
     const response = await authenticatedFetch(`/api/return/${returnData.id}/approve`, {
       method: 'POST'
     })
 
-    if (response.ok) {
-      const result = await response.json()
-      emit('show-toast', 'Return approved successfully', 'success')
-      Object.assign(returnData, result) // Update local data
-      emit('refresh') // Refresh parent list
-    } else {
+    if (!response.ok) {
       const error = await response.json()
-      emit('show-toast', error.message || 'Failed to approve return', 'error')
+      await Swal.fire('Error', error.message || 'Failed to approve return', 'error')
+    } else {
+      let result: any = {}
+      try {
+        const text = await response.text()
+        result = text ? JSON.parse(text) : {}
+      } catch (e) {
+        try {
+          result = await response.json()
+        } catch (e2) {
+          result = {}
+        }
+      }
+
+      emit('show-toast', 'Return approved successfully', 'success')
+      if (Object.keys(result).length > 0) Object.assign(returnData, result)
+      // Ensure UI progresses even if server returned minimal/empty response
+      returnData.status = (result && result.status) || 'APPROVED'
+      const fresh = await fetchReturnDetail(returnData.id)
+      if (fresh) Object.assign(returnData, fresh)
+      emit('refresh')
     }
   } catch (error: any) {
     console.error('Error approving return:', error)
-    emit('show-toast', error.message || 'An error occurred while approving the return', 'error')
+    await Swal.fire('Error', error.message || 'An error occurred while approving the return', 'error')
   } finally {
     isProcessing.value = false
   }
@@ -463,11 +534,26 @@ const handleApprove = async () => {
 const handleReject = async () => {
   if (isProcessing.value) return
 
-  const reason = prompt('Please enter rejection reason:')
-  if (!reason || reason.trim() === '') {
-    emit('show-toast', 'Rejection reason is required', 'error')
-    return
-  }
+  const { value: reason, isConfirmed } = await Swal.fire({
+    title: 'Reject Return',
+    input: 'textarea',
+    inputLabel: 'Rejection reason',
+    inputPlaceholder: 'Enter reason for rejection',
+    inputAttributes: {
+      'aria-label': 'Rejection reason'
+    },
+    showCancelButton: true,
+    confirmButtonText: 'Reject',
+    cancelButtonText: 'Cancel',
+    preConfirm: (value) => {
+      if (!value || !value.toString().trim()) {
+        return Swal.showValidationMessage('Rejection reason is required')
+      }
+      return value
+    }
+  })
+
+  if (!isConfirmed) return
 
   try {
     isProcessing.value = true
@@ -476,21 +562,21 @@ const handleReject = async () => {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ reason: reason.trim() })
+      body: JSON.stringify({ reason: (reason as string).trim() })
     })
 
     if (response.ok) {
       const result = await response.json()
-      emit('show-toast', 'Return rejected', 'success')
+      await Swal.fire('Rejected', 'Return has been rejected.', 'success')
       Object.assign(returnData, result)
       emit('refresh')
     } else {
       const error = await response.json()
-      emit('show-toast', error.message || 'Failed to reject return', 'error')
+      await Swal.fire('Error', error.message || 'Failed to reject return', 'error')
     }
   } catch (error: any) {
     console.error('Error rejecting return:', error)
-    emit('show-toast', error.message || 'An error occurred while rejecting the return', 'error')
+    await Swal.fire('Error', error.message || 'An error occurred while rejecting the return', 'error')
   } finally {
     isProcessing.value = false
   }
@@ -498,10 +584,17 @@ const handleReject = async () => {
 
 const handleReceive = async () => {
   if (isProcessing.value) return
+  const confirmResult = await Swal.fire({
+    title: 'Mark as Received',
+    text: `Mark this return as received (${returnData.returnCode})?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, mark as received',
+  })
 
-  if (!confirm('Mark this return as received?')) {
-    return
-  }
+  if (!confirmResult.isConfirmed) return
 
   try {
     isProcessing.value = true
@@ -509,18 +602,33 @@ const handleReceive = async () => {
       method: 'POST'
     })
 
-    if (response.ok) {
-      const result = await response.json()
-      emit('show-toast', 'Return marked as received', 'success')
-      Object.assign(returnData, result)
-      emit('refresh')
-    } else {
+    if (!response.ok) {
       const error = await response.json()
-      emit('show-toast', error.message || 'Failed to mark return as received', 'error')
+      await Swal.fire('Error', error.message || 'Failed to mark return as received', 'error')
+    } else {
+      let result: any = {}
+      try {
+        const text = await response.text()
+        result = text ? JSON.parse(text) : {}
+      } catch (e) {
+        try {
+          result = await response.json()
+        } catch (e2) {
+          result = {}
+        }
+      }
+
+      await Swal.fire('Success', 'Return marked as received', 'success')
+      if (Object.keys(result).length > 0) Object.assign(returnData, result)
+      // Fallback status to ensure Complete button appears
+      returnData.status = (result && result.status) || 'RECEIVED'
+      const fresh = await fetchReturnDetail(returnData.id)
+      if (fresh) Object.assign(returnData, fresh)
+      emit('refresh')
     }
   } catch (error: any) {
     console.error('Error receiving return:', error)
-    emit('show-toast', error.message || 'An error occurred while receiving the return', 'error')
+    await Swal.fire('Error', error.message || 'An error occurred while receiving the return', 'error')
   } finally {
     isProcessing.value = false
   }
@@ -529,9 +637,17 @@ const handleReceive = async () => {
 const handleComplete = async () => {
   if (isProcessing.value) return
 
-  if (!confirm('Complete this return? EPCs will be processed based on their condition.')) {
-    return
-  }
+  const confirmResult = await Swal.fire({
+    title: 'Complete Return',
+    text: `Complete this return and process all EPCs (${returnData.returnCode})? This will update EPC statuses and inventory.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, complete it',
+  })
+
+  if (!confirmResult.isConfirmed) return
 
   try {
     isProcessing.value = true
@@ -539,18 +655,35 @@ const handleComplete = async () => {
       method: 'POST'
     })
 
-    if (response.ok) {
-      const result = await response.json()
-      emit('show-toast', 'Return completed successfully. EPCs have been processed.', 'success')
-      Object.assign(returnData, result)
-      emit('refresh')
-    } else {
+    if (!response.ok) {
       const error = await response.json()
-      emit('show-toast', error.message || 'Failed to complete return', 'error')
+      const msg = error.message || 'Failed to complete return'
+      console.error('Complete return failed:', msg)
+      await Swal.fire('Error', msg, 'error')
+    } else {
+      let result: any = {}
+      try {
+        const text = await response.text()
+        result = text ? JSON.parse(text) : {}
+      } catch (e) {
+        try {
+          result = await response.json()
+        } catch (e2) {
+          result = {}
+        }
+      }
+
+      await Swal.fire('Completed', 'Return completed successfully. EPCs have been processed.', 'success')
+      if (Object.keys(result).length > 0) Object.assign(returnData, result)
+      // Fallback status
+      returnData.status = (result && result.status) || 'COMPLETED'
+      const fresh = await fetchReturnDetail(returnData.id)
+      if (fresh) Object.assign(returnData, fresh)
+      emit('refresh')
     }
   } catch (error: any) {
     console.error('Error completing return:', error)
-    emit('show-toast', error.message || 'An error occurred while completing the return', 'error')
+    await Swal.fire('Error', error.message || 'An error occurred while completing the return', 'error')
   } finally {
     isProcessing.value = false
   }

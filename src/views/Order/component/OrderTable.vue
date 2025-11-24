@@ -725,6 +725,22 @@ const editOrder = (row) => {
 }
 
 const deleteOrder = async (item) => {
+  // Prevent deletion if order has been RECEIVED - must delete receiving data first
+  try {
+    if (item && item.isOrder && item.status === 'RECEIVED') {
+      await Swal.fire({
+        title: 'Cannot delete order',
+        text: 'This order has receiving data. Please delete the receiving records first before deleting the order.',
+        icon: 'warning',
+        confirmButtonText: 'OK',
+      })
+      return
+    }
+  } catch (e) {
+    // If Swal fails for any reason, continue to the normal flow (will still perform checks below)
+    console.error('Swal check error:', e)
+  }
+
   const result = await Swal.fire({
     title: 'Are you sure?',
     text: `You are about to delete ${item.isOrder ? 'order record' : 'order item'}: ${item.orderNo}. This action cannot be undone.`,
@@ -810,7 +826,49 @@ const bulkDelete = async () => {
     return { success: false, error: 'Cancelled by user' }
   }
 
+  // Before proceeding, check if any selected orders are in RECEIVED state.
   try {
+    const selectedOrderIds = selectedItems.value
+      .filter((id) => id.startsWith('O-'))
+      .map((id) => parseInt(id.replace('O-', '')))
+
+    // Also find parent order ids for selected items (I-123 -> find order id from data)
+    const selectedItemIds = selectedItems.value
+      .filter((id) => id.startsWith('I-'))
+      .map((id) => parseInt(id.replace('I-', '')))
+
+    // Build a set of order ids that are affected by selection
+    const affectedOrderIds = new Set(selectedOrderIds)
+
+    if (selectedItemIds.length > 0) {
+      for (const itemId of selectedItemIds) {
+        const found = data.value.find((o) =>
+          o.orderItems && o.orderItems.some((it) => it.id === itemId),
+        )
+        if (found && found.id) affectedOrderIds.add(found.id)
+      }
+    }
+
+    // Check statuses
+    const receivedOrders = []
+    for (const oid of affectedOrderIds) {
+      const order = data.value.find((o) => o.id === oid)
+      if (order && order.status === 'RECEIVED') {
+        receivedOrders.push(order)
+      }
+    }
+
+    if (receivedOrders.length > 0) {
+      await Swal.fire({
+        title: 'Cannot delete selected items',
+        text: `One or more selected orders have receiving data and cannot be deleted. Please delete the receiving records first.`,
+        icon: 'warning',
+        confirmButtonText: 'OK',
+      })
+      return { success: false, error: 'Contains RECEIVED orders' }
+    }
+
+    // proceed to deletion
     const orderIds = selectedItems.value
       .filter((id) => id.startsWith('O-'))
       .map((id) => parseInt(id.replace('O-', '')))

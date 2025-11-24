@@ -144,7 +144,7 @@
                             : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
                     ]"
                   >
-                    {{ location.type || '-' }}
+                    {{ (location.type || '-').toString().toUpperCase() }}
                   </span>
                 </div>
 
@@ -165,7 +165,7 @@
                         : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
                     ]"
                   >
-                    {{ location.status || '-' }}
+                    {{ (location.status || '-').toString().toUpperCase() }}
                   </span>
                 </div>
               </div>

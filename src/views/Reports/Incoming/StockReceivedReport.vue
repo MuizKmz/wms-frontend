@@ -169,7 +169,6 @@
       <A4Preview v-if="reportGenerated" v-model:activeTab="activeTab" v-model:orientation="a4Orientation" :pages="numberOfPages" ref="a4PreviewRef">
         <!-- A4 Content -->
         <template #a4-content="{ pageIndex }">
-          <div id="printable-report">
             <ReportTemplate
               :title="getReportTitle()"
               :subtitle="getReportSubtitle()"
@@ -276,7 +275,6 @@
                 </div>
               </div>
             </div>
-          </div>
         </template>
       </A4Preview>
     </ReportLayout>
@@ -523,14 +521,17 @@ const getTotalReceived = () => {
 }
 
 // Use pagination composable to handle page splitting
-const { totalPages, paginatedData } = useReportPagination({
+const pagination = useReportPagination({
   data: filteredData,
-  itemsPerPage: 15,
+  itemsPerPage: 0, // 0 -> allow calculated capacity (force-split mode)
   headerHeight: 220,
   footerHeight: 60,
+  summaryReserve: 160,
   rowHeight: 50,
   orientation: a4Orientation
 })
+
+const { totalPages, paginatedData } = pagination
 
 const numberOfPages = totalPages
 
@@ -596,6 +597,45 @@ const generateReport = () => {
   setTimeout(() => {
     generating.value = false
     reportGenerated.value = true
+    // Debug pagination info
+    nextTick(() => {
+      // Try to measure real header/footer/row heights from the printable container
+      try {
+        const container = document.getElementById('printable-report')
+        if (container) {
+          if (typeof (pagination as any).paginateFromDom === 'function') {
+            ;(pagination as any).paginateFromDom(container)
+          } else if (typeof (pagination as any).measureFromContainer === 'function') {
+            ;(pagination as any).measureFromContainer(container)
+          }
+        }
+      } catch (e) {
+        // ignore measurement failures
+      }
+
+      // Slightly longer delay to ensure measurements and reactivity settle
+      setTimeout(() => {
+        // Extra debug: report page breakdown
+        try {
+          const pages = paginatedData.value
+          console.log('Pagination pages count:', pages.length)
+          pages.forEach(p => console.log(`Page ${p.pageNumber}: rows ${p.startRow}-${p.endRow}`))
+        } catch (e) {}
+        console.log('Pagination debug', {
+          pages: numberOfPages.value,
+          itemsPerPage: pagination.itemsPerPage.value,
+          availableContentHeight: pagination.availableContentHeight.value,
+          pageHeightPx: (pagination as any).pageHeightPx ? (pagination as any).pageHeightPx.value : null,
+          calculatedItemsPerPage: (pagination as any).calculatedItemsPerPage ? (pagination as any).calculatedItemsPerPage.value : null,
+          measured: (pagination as any).measured ? {
+            header: (pagination as any).measured.header.value,
+            footer: (pagination as any).measured.footer.value,
+            row: (pagination as any).measured.row.value,
+            pxPerMm: (pagination as any).measured.pxPerMm.value
+          } : null
+        })
+      }, 120)
+    })
   }, 1500)
 }
 
@@ -710,7 +750,8 @@ const openPrintWindow = () => {
     /* Ensure footer appears on each page */
     .report-template {
       position: relative;
-      min-height: 100vh;
+      min-height: ${pageHeight};
+      height: ${pageHeight};
     }
     
     .report-footer {

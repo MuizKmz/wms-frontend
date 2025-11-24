@@ -134,18 +134,12 @@
             <!-- Order Status -->
             <td class="px-6 py-4">
               <span
-                :class="{
-                  'px-3 py-1 text-xs rounded-full font-medium': true,
-                  'bg-green-100 text-green-600':
-                    item.orderStatus === 'Completed' || item.orderStatus === 'Confirmed',
-                  'bg-yellow-100 text-yellow-600': item.orderStatus === 'Shipped',
-                  'bg-blue-100 text-blue-600':
-                    item.orderStatus === 'PROCESSING' || item.orderStatus === 'PENDING',
-                  'bg-red-100 text-red-600': item.orderStatus === 'Cancelled',
-                  'bg-gray-100 text-gray-600': item.orderStatus === 'Draft',
-                }"
+                :class="[
+                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                  statusClass(item.orderStatus),
+                ]"
               >
-                {{ item.orderStatus }}
+                {{ String(formatOrderStatus(item.orderStatus) ?? '').toUpperCase() }}
               </span>
             </td>
           </tr>
@@ -309,9 +303,12 @@ const fetchData = async () => {
 
     const json = await response.json()
 
+    // Only include Sales Orders (SO)
+    const salesOrders = Array.isArray(json) ? json.filter(o => o.orderType === 'SO') : []
+
     // Flatten orderItems into individual rows
     const flattenedData = []
-    json.forEach((order) => {
+    salesOrders.forEach((order) => {
       if (order.orderItems && order.orderItems.length > 0) {
         order.orderItems.forEach((item) => {
           flattenedData.push({
@@ -457,6 +454,23 @@ const filteredData = computed(() => {
     return true
   })
 })
+
+// Format order status for display (UI only). Only maps RECEIVED, PENDING, DELIVERED.
+const formatOrderStatus = (status) => {
+  const s = (status || '').toString().toUpperCase()
+  if (s === 'RECEIVED') return 'Received'
+  if (s === 'PENDING') return 'Pending'
+  if (s === 'DELIVERED') return 'Delivered'
+  return s ? (s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()) : '-'
+}
+
+// Return tailwind class string for status badge
+const statusClass = (status) => {
+  const s = (status || '').toString().toUpperCase()
+  if (s === 'RECEIVED' || s === 'DELIVERED') return 'bg-green-100 text-green-600'
+  if (s === 'PENDING') return 'bg-blue-100 text-blue-600'
+  return 'bg-gray-100 text-gray-600'
+}
 
 // Pagination
 const currentPage = ref(1)

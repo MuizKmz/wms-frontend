@@ -42,11 +42,11 @@
           class="block cursor-pointer hover:opacity-80 transition-opacity duration-200"
           @click="closeMobileSidebar"
         >
-          <div v-if="logoUrl" class="bg-white rounded-lg p-3 mb-3 w-fit">
+          <div v-if="logoUrl" class="rounded-lg p-3 mb-3 w-fit flex items-center justify-center">
             <img :src="logoUrl" alt="Logo" class="w-8 h-8 object-contain" />
           </div>
-          <div v-else class="bg-white rounded-lg p-3 mb-3 w-fit">
-            <img src="/images/logo/logo-icon.svg" alt="Logo" width="32" height="32" />
+          <div v-else class="rounded-lg p-3 mb-3 w-fit flex items-center justify-center">
+            <img src="/images/logo/Zora_logo.jpg" alt="Logo" class="w-8 h-8 object-contain" />
           </div>
           <div class="space-y-1">
             <h1 class="text-lg font-bold text-white">{{ companyName }}</h1>
