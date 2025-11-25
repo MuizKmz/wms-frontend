@@ -147,9 +147,15 @@
                 </button>
                 <button
                   @click="editOrder(row)"
-                  class="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
+                  :disabled="row.status && row.status !== 'PENDING'"
+                  :class="[
+                    'p-1 transition-colors',
+                    row.status && row.status !== 'PENDING'
+                      ? 'text-gray-300 cursor-not-allowed opacity-60'
+                      : 'text-gray-400 hover:text-green-600 dark:hover:text-green-400'
+                  ]"
                   aria-label="Edit"
-                  title="Edit"
+                  :title="row.status && row.status !== 'PENDING' ? 'Cannot edit: operations already started' : 'Edit'"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -284,7 +290,6 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import OrderView from './OrderView.vue'
 import OrderQRModal from './OrderQRModal.vue'
-import QRCodeIcon from '@/icons/QRCodeIcon.vue'
 import Swal from 'sweetalert2'
 import authenticatedFetch from '@/utils/authenticatedFetch'
 import SelectTable from '@/components/common/SelectTable.vue'
@@ -628,15 +633,7 @@ const changePage = (page) => {
 }
 
 // Toggle expand/collapse for orders with items
-const toggleExpand = (orderId) => {
-  const index = expandedRows.value.indexOf(orderId)
-  if (index > -1) {
-    expandedRows.value.splice(index, 1)
-  } else {
-    expandedRows.value.push(orderId)
-  }
-  setTimeout(updateSelectAllState, 0)
-}
+// Note: expand/collapse is not currently used in this table variant
 
 // Watch filters to reset page
 watch(
@@ -721,6 +718,22 @@ const formatDate = (dateString) => {
 // ------------------------------------------------
 
 const editOrder = (row) => {
+  // Prevent editing if operations already started (status not PENDING)
+  try {
+    if (row && row.isOrder && row.status && row.status !== 'PENDING') {
+      Swal.fire({
+        title: 'Cannot edit order',
+        text: 'This order is already in progress and cannot be edited.',
+        icon: 'warning',
+        confirmButtonText: 'OK',
+      })
+      return
+    }
+  } catch (e) {
+    // fallback to protective behavior
+    if (row && row.isOrder && row.status && row.status !== 'PENDING') return
+  }
+
   emit('edit-order', row)
 }
 
@@ -736,9 +749,8 @@ const deleteOrder = async (item) => {
       })
       return
     }
-  } catch (e) {
+  } catch {
     // If Swal fails for any reason, continue to the normal flow (will still perform checks below)
-    console.error('Swal check error:', e)
   }
 
   const result = await Swal.fire({
@@ -764,10 +776,10 @@ const deleteOrder = async (item) => {
     })
 
     let body = null
-    try {
+      try {
       body = await response.json()
-      CONSOLE.log('Delete response body:', body)
-    } catch (e) {
+      console.log('Delete response body:', body)
+    } catch {
       // ignore parse errors
     }
 
