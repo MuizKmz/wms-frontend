@@ -548,7 +548,7 @@ const prefillOrder = (order: any) => {
   formData.status = order.status || 'PENDING'
   formData.picName = order.picName || ''
   formData.orderRemarks = order.orderRemarks || ''
-  
+
   if (order.estimatedDeliveryTime) {
     formData.estimatedDeliveryTime = order.estimatedDeliveryTime.split('T')[0]
   }
@@ -779,7 +779,7 @@ const fetchProductInventory = async (index: number) => {
             // Only include INBOUND EPCs that are NOT already in our original allocated list
             return epc.status === 'INBOUND' && !originallyAllocatedEpcCodes.has(epc.epcCode)
           }) || []
-          
+
           relevantEpcs.forEach((epc: any) => {
             allEpcs.push({
               epcCode: epc.epcCode,
@@ -936,7 +936,7 @@ const repositionOpenProductMenus = () => {
 
 const submitForm = async () => {
   if (!validateStep(currentStep.value)) return
-  
+
   if (!formData.id) {
     console.error('Order ID is missing')
     return
