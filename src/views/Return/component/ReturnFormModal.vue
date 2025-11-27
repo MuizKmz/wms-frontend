@@ -118,23 +118,15 @@
                           role="menu"
                         >
                           <li>
-                            <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectReturnType('Customer')">
-                              Customer
+                            <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectReturnType('Customer Return')">
+                              <div class="font-medium">Customer Return</div>
+                              <div class="text-xs text-gray-500">Items returning from customer</div>
                             </a>
                           </li>
                           <li>
-                            <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectReturnType('Supplier')">
-                              Supplier
-                            </a>
-                          </li>
-                          <li>
-                            <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectReturnType('Internal')">
-                              Internal
-                            </a>
-                          </li>
-                          <li>
-                            <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectReturnType('Failed Delivery')">
-                              Failed Delivery
+                            <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectReturnType('Supplier Return')">
+                              <div class="font-medium">Supplier Return</div>
+                              <div class="text-xs text-gray-500">Returning items to supplier</div>
                             </a>
                           </li>
                         </ul>
@@ -459,7 +451,12 @@
 
                         <!-- Show available EPCs from order (for SO - customer returns) -->
                         <div v-if="product.availableEpcs && product.availableEpcs.length > 0" class="mb-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                          <p class="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2">Available EPCs from shipped order:</p>
+                          <p class="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2">
+                            Available EPCs from shipped order:
+                            <span class="ml-2 text-blue-600 dark:text-blue-400">
+                              ✓ Only OUTBOUND EPCs (shipped to customer) can be returned
+                            </span>
+                          </p>
                           <div class="flex flex-wrap gap-2">
                             <button
                               v-for="epc in product.availableEpcs"
@@ -483,6 +480,9 @@
 
                         <!-- Manual EPC input (for PO - supplier returns or if no EPCs available) -->
                         <div>
+                          <p v-if="formData.returnType === 'Supplier Return' || formData.returnType === 'Supplier'" class="text-xs text-blue-500 mb-2">
+                            ✓ Only INBOUND EPCs (in warehouse) can be returned to supplier
+                          </p>
                           <div class="flex gap-2">
                             <input
                               v-model="newEpcInput[pIndex]"
@@ -692,13 +692,31 @@ const availableProducts = computed(() => {
   const selectedProductIds = formData.products.map(p => p.productId)
   return selectedOrder.value.orderItems
     .filter(item => !selectedProductIds.includes(item.productId))
-    .map(item => ({
-      id: item.product.id,
-      name: item.product.name,
-      skuCode: item.product.skuCode,
-      maxQuantity: item.quantity,
-      allocatedEpcs: item.allocatedEpcs || [] // Include EPCs if available
-    }))
+    .map(item => {
+      // For SO (Customer Return): Get EPCs from orderItemEpcs (allocated EPCs)
+      // For PO (Supplier Return): Get EPCs from receiving items
+      let epcs: Array<{ epcCode: string; warehouseCode?: string; locationCode?: string }> = []
+
+      if (selectedOrder.value?.orderType === 'SO' && item.orderItemEpcs) {
+        // Customer return - EPCs were allocated to this SO
+        epcs = item.orderItemEpcs.map(e => ({
+          epcCode: e.epcCode,
+          warehouseCode: '',
+          locationCode: ''
+        }))
+      } else if (selectedOrder.value?.orderType === 'PO' && item.allocatedEpcs) {
+        // Supplier return - EPCs from receiving
+        epcs = item.allocatedEpcs
+      }
+
+      return {
+        id: item.product.id,
+        name: item.product.name,
+        skuCode: item.product.skuCode,
+        maxQuantity: item.quantity,
+        allocatedEpcs: epcs
+      }
+    })
 })
 
 const formData = reactive({
@@ -800,34 +818,73 @@ const resetForm = () => {
   newEpcInput.value = {}
 }
 
-// Fetch orders from API
+// Fetch orders from API with full details
 const fetchOrders = async () => {
   loadingOrders.value = true
   try {
     const response = await authenticatedFetch('/api/order')
     if (response.ok) {
       const data = await response.json()
+
+      console.log('🔍 All orders from API:', data)
+      console.log('🔍 Return Type:', formData.returnType)
+
       // Filter orders based on return type:
       // - Customer Return: SO orders that are Shipped/Delivered
-      // - Supplier Return: PO orders that are Received
+      // - Supplier Return: PO orders that have receivings (PROCESSING, RECEIVED, or CLOSED)
       allOrders.value = data.filter((order: Order) => {
         if (formData.returnType === 'Customer' || formData.returnType === 'Customer Return') {
           // Show SO orders that have been shipped
           return order.orderType === 'SO' &&
                  (order.status === 'SHIPPED' || order.status === 'DELIVERED')
         } else if (formData.returnType === 'Supplier' || formData.returnType === 'Supplier Return') {
-          // Show PO orders that have been received
-          return order.orderType === 'PO' && order.status === 'RECEIVED'
+          // Show PO orders that have receivings (items were received into warehouse)
+          // Include PROCESSING (receiving in progress), RECEIVED (fully received), or CLOSED
+          const isValidPO = order.orderType === 'PO' &&
+                 (order.status === 'PROCESSING' || order.status === 'RECEIVED' || order.status === 'CLOSED') &&
+                 order.receivings && order.receivings.length > 0
+
+          // Debug each PO order
+          if (order.orderType === 'PO') {
+            console.log(`📦 PO Order: ${order.orderNo}`, {
+              status: order.status,
+              hasReceivings: !!order.receivings,
+              receivingsCount: order.receivings?.length || 0,
+              receivings: order.receivings,
+              isValidPO
+            })
+          }
+
+          return isValidPO
         }
         // If no return type selected yet, show all completed orders
         return (order.orderType === 'SO' && (order.status === 'SHIPPED' || order.status === 'DELIVERED')) ||
-               (order.orderType === 'PO' && order.status === 'RECEIVED')
+               (order.orderType === 'PO' && (order.status === 'PROCESSING' || order.status === 'RECEIVED' || order.status === 'CLOSED'))
       })
+
+      console.log('✅ Filtered orders:', allOrders.value)
     }
   } catch (error) {
     console.error('Error fetching orders:', error)
   } finally {
     loadingOrders.value = false
+  }
+}
+
+// Fetch detailed order data with EPCs when order is selected
+const fetchOrderDetails = async (orderId: number) => {
+  try {
+    const response = await authenticatedFetch(`/api/order/${orderId}`)
+    if (response.ok) {
+      const orderDetails = await response.json()
+      // Update the selected order in allOrders with full details
+      const index = allOrders.value.findIndex(o => o.id === orderId)
+      if (index !== -1) {
+        allOrders.value[index] = orderDetails
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching order details:', error)
   }
 }
 
@@ -845,9 +902,42 @@ const toggleReferenceDropdown = () => {
 }
 
 // Select order from dropdown
-const selectReferenceOrder = (order: Order) => {
+const selectReferenceOrder = async (order: Order) => {
   formData.referenceNumber = order.orderNo
   showReferenceDropdown.value = false
+
+  // Fetch full order details with EPCs
+  await fetchOrderDetails(order.id)
+
+  // For SUPPLIER returns: fetch INBOUND EPCs from receiving
+  if ((formData.returnType === 'Supplier' || formData.returnType === 'Supplier Return') &&
+      order.receivings && order.receivings.length > 0) {
+    const receiving = order.receivings[0]
+    console.log('🔍 Fetching INBOUND EPCs for receiving:', receiving.id)
+
+    try {
+      const epcResponse = await authenticatedFetch(`/api/epc/by-receiving/${receiving.id}?status=INBOUND`)
+      if (epcResponse.ok) {
+        const epcs = await epcResponse.json()
+        console.log('✅ INBOUND EPCs:', epcs)
+
+        // Group EPCs by product and update order items
+        const index = allOrders.value.findIndex(o => o.id === order.id)
+        if (index !== -1) {
+          allOrders.value[index].orderItems.forEach((item: any) => {
+            const productEpcs = epcs.filter((epc: any) => epc.productId === item.product.id)
+            item.allocatedEpcs = productEpcs.map((epc: any) => ({
+              epcCode: epc.epcCode,
+              warehouseCode: epc.warehouse?.warehouseCode || '',
+              locationCode: epc.location?.locationCode || ''
+            }))
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch INBOUND EPCs:', error)
+    }
+  }
 
   // Auto-fill from and to based on order type
   if (order.orderType === 'PO' && order.supplier) {
@@ -857,7 +947,7 @@ const selectReferenceOrder = (order: Order) => {
     if (order.receivings && order.receivings.length > 0) {
       const receiving = order.receivings[0]
       if (receiving.warehouse) {
-        warehouseName = receiving.warehouse.name || 'Warehouse'
+        warehouseName = receiving.warehouse.name || receiving.warehouse.warehouseCode || 'Warehouse'
       }
     }
     formData.from = warehouseName
@@ -869,31 +959,52 @@ const selectReferenceOrder = (order: Order) => {
     formData.to = 'Warehouse'
     formData.returnType = 'Customer'
   }
+
+  // Reset products when changing order
+  formData.products = [
+    { productId: 0, productName: '', skuCode: '', maxQuantity: 0, reasons: [{ quantity: 1, reasonOfReturn: '', other: '' }], epcCodes: [], availableEpcs: [] }
+  ]
 }
 
 const validateStep = (step: number): boolean => {
   Object.keys(errors).forEach((key) => delete errors[key])
+
+  console.log('🔍 Validating step:', step)
+  console.log('📋 Form data:', formData)
 
   if (step === 1) {
     if (!formData.returnType) errors.returnType = 'Return type is required'
     if (!formData.referenceNumber.trim()) errors.referenceNumber = 'Reference number is required'
   } else if (step === 2) {
     formData.products.forEach((product, idx) => {
+      console.log(`Checking product ${idx}:`, product)
+
       if (!product.productName) {
         errors[`product${idx}Name`] = 'Product name is required'
       }
+
       product.reasons.forEach((reason, rIdx) => {
+        console.log(`  Reason ${rIdx}:`, reason)
+
         if (!reason.quantity || reason.quantity < 1) {
           errors[`product${idx}Reason${rIdx}Quantity`] = 'Quantity must be at least 1'
         }
-        if (!reason.reasonOfReturn) {
+
+        // Check if reasonOfReturn is set and not empty
+        if (!reason.reasonOfReturn || reason.reasonOfReturn.trim() === '') {
           errors[`product${idx}Reason${rIdx}Type`] = 'Reason is required'
         }
       })
     })
   }
 
-  return Object.keys(errors).length === 0
+  const isValid = Object.keys(errors).length === 0
+  console.log('✅ Validation result:', isValid)
+  if (!isValid) {
+    console.log('❌ Validation errors:', errors)
+  }
+
+  return isValid
 }
 
 const nextStep = () => {
@@ -1154,6 +1265,11 @@ const toggleEpcSelection = (productIndex: number, epcCode: string) => {
   } else {
     product.epcCodes.push(epcCode) // Add if not selected
   }
+
+  // Auto-update quantity to match number of selected EPCs
+  if (product.reasons && product.reasons[0]) {
+    product.reasons[0].quantity = product.epcCodes.length || 1
+  }
 }
 
 const addManualEpc = (productIndex: number) => {
@@ -1163,6 +1279,11 @@ const addManualEpc = (productIndex: number) => {
   const product = formData.products[productIndex]
   if (!product.epcCodes.includes(epcCode)) {
     product.epcCodes.push(epcCode)
+
+    // Auto-update quantity to match number of selected EPCs
+    if (product.reasons && product.reasons[0]) {
+      product.reasons[0].quantity = product.epcCodes.length
+    }
   }
 
   newEpcInput.value[productIndex] = '' // Clear input
@@ -1170,6 +1291,12 @@ const addManualEpc = (productIndex: number) => {
 
 const removeEpc = (productIndex: number, epcIndex: number) => {
   formData.products[productIndex].epcCodes.splice(epcIndex, 1)
+
+  // Auto-update quantity to match number of selected EPCs
+  const product = formData.products[productIndex]
+  if (product.reasons && product.reasons[0]) {
+    product.reasons[0].quantity = product.epcCodes.length || 1
+  }
 }
 
 // Validate quantity doesn't exceed max available
@@ -1232,56 +1359,79 @@ const submitForm = async () => {
     const returnType = formData.returnType === 'Customer' ? 'CUSTOMER_RETURN' : 'SUPPLIER_RETURN'
 
     // Find the selected order to get IDs
-    const selectedOrder = allOrders.value.find(o => o.orderNo === formData.referenceNumber)
-    if (!selectedOrder) {
+    const selectedOrderData = allOrders.value.find(o => o.orderNo === formData.referenceNumber)
+    if (!selectedOrderData) {
       throw new Error('Selected order not found')
     }
 
-    // Get receivingId for PO orders (from receivings array)
+    // For CUSTOMER_RETURN: Must have orderId and customerId
+    // For SUPPLIER_RETURN: Must have orderId, receivingId, and supplierId
     let receivingId = null
-    if (selectedOrder.orderType === 'PO' && selectedOrder.receivings && selectedOrder.receivings.length > 0) {
-      // Take the first receiving record (or latest one if multiple)
-      receivingId = selectedOrder.receivings[0].id
+    if (returnType === 'SUPPLIER_RETURN') {
+      if (!selectedOrderData.receivings || selectedOrderData.receivings.length === 0) {
+        throw new Error('No receiving record found for this PO. Cannot create supplier return.')
+      }
+      // Take the first receiving record (or you could let user select if multiple)
+      receivingId = selectedOrderData.receivings[0].id
     }
 
     // Map products and reasons to returnItems
-    // Each product can have multiple EPCs, create one returnItem per EPC
-    const returnItems = formData.products.flatMap(product => {
+    // Each product can have multiple reasons with different quantities
+    const returnItems: Array<{
+      productId: number
+      epcCode: string | null
+      quantity: number
+      condition: string
+      conditionNotes: string
+    }> = []
+
+    formData.products.forEach(product => {
       // If EPCs are specified, create one item per EPC
       if (product.epcCodes && product.epcCodes.length > 0) {
-        return product.epcCodes.map(epcCode => ({
-          productId: product.productId,
-          epcCode: epcCode,
-          quantity: 1,  // Each EPC represents 1 item
-          condition: mapReasonToCondition(product.reasons[0]?.reasonOfReturn || 'Good'),
-          conditionNotes: product.reasons[0]?.other || product.reasons[0]?.reasonOfReturn || ''
-        }))
+        product.epcCodes.forEach(epcCode => {
+          returnItems.push({
+            productId: product.productId,
+            epcCode: epcCode,
+            quantity: 1,  // Each EPC represents 1 item
+            condition: mapReasonToCondition(product.reasons[0]?.reasonOfReturn || 'Good'),
+            conditionNotes: product.reasons[0]?.other || product.reasons[0]?.reasonOfReturn || ''
+          })
+        })
       } else {
-        // No EPCs specified, use reason quantities
-        return product.reasons.map(reason => ({
-          productId: product.productId,
-          epcCode: null,
-          quantity: reason.quantity,
-          condition: mapReasonToCondition(reason.reasonOfReturn),
-          conditionNotes: reason.other || reason.reasonOfReturn
-        }))
+        // No EPCs specified, use reason quantities (for non-serialized items)
+        product.reasons.forEach(reason => {
+          returnItems.push({
+            productId: product.productId,
+            epcCode: null,
+            quantity: reason.quantity,
+            condition: mapReasonToCondition(reason.reasonOfReturn),
+            conditionNotes: reason.other || reason.reasonOfReturn
+          })
+        })
       }
     })
 
+    // Validate returnItems
+    if (returnItems.length === 0) {
+      throw new Error('Please add at least one product to return')
+    }
+
     const payload = {
       returnType,
-      orderId: selectedOrder.orderType === 'SO' ? selectedOrder.id : null,
-      receivingId: receivingId,
-      customerId: selectedOrder.customer?.id || null,
-      supplierId: selectedOrder.supplier?.id || null,
-      warehouseId: null, // Optional - can be set later during receiving
-      locationId: null,
+      orderId: selectedOrderData.id, // Always include orderId (for both SO and PO)
+      receivingId: receivingId,      // Only for PO (supplier return)
+      customerId: returnType === 'CUSTOMER_RETURN' ? selectedOrderData.customer?.id : null,
+      supplierId: returnType === 'SUPPLIER_RETURN' ? selectedOrderData.supplier?.id : null,
+      warehouseId: null,             // Optional - can be set during return receiving
+      locationId: null,              // Optional
       requestedDate: formData.returnDate,
-      reason: formData.remarks,
-      notes: formData.remarks,
+      reason: formData.remarks || 'Return request',
+      notes: formData.personInCharge ? `Created by: ${formData.personInCharge}. ${formData.remarks || ''}` : formData.remarks,
       status: 'PENDING_APPROVAL',
       returnItems
     }
+
+    console.log('Submitting return payload:', payload)
 
     const response = await authenticatedFetch('/api/return', {
       method: 'POST',
@@ -1307,6 +1457,7 @@ const submitForm = async () => {
     return
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to create return'
+    console.error('Return creation error:', error)
     emit('return-created', {
       success: false,
       error: message
