@@ -103,6 +103,11 @@
       ref="editOrderModalRef"
       @order-updated="handleOrderUpdated"
     />
+    <ImportOrder
+      v-if="canCreate('Order')"
+      ref="importOrderModalRef"
+      @file-uploaded="handleFileUploaded"
+    />
   </AdminLayout>
 </template>
 
@@ -117,6 +122,7 @@ import AddNewOrder from './component/AddNewOrder.vue'
 import OrderWizard from './component/OrderWizard.vue'
 import EditOrder from './component/EditOrder.vue'
 import OrderListFilter from './component/OrderListFilter.vue'
+import ImportOrder from './component/ImportOrder.vue'
 
 // Get permission checking functions
 const { canCreate, canUpdate, canDelete } = useAuth()
@@ -148,6 +154,7 @@ const addOrderModalRef = ref<InstanceType<typeof AddNewOrder> | null>(null)
 const orderWizardModalRef = ref<InstanceType<typeof OrderWizard> | null>(null)
 const editOrderModalRef = ref<InstanceType<typeof EditOrder> | null>(null)
 const orderTableRef = ref<InstanceType<typeof OrderTable> | null>(null)
+const importOrderModalRef = ref<InstanceType<typeof ImportOrder> | null>(null)
 const activeTab = ref('table')
 
 // Toast state
@@ -247,8 +254,25 @@ const handleBulkDelete = async () => {
 }
 
 const handleImportOrder = () => {
+  if (importOrderModalRef.value) {
+    importOrderModalRef.value.openModal()
+    return
+  }
   console.log('Import Order clicked - implementation needed')
   showToastMessage('Order import feature is not yet implemented', 'error')
+}
+
+// Handle file upload response from ImportOrder component
+const handleFileUploaded = async (result: Result) => {
+  if (result.success) {
+    showToastMessage(`Successfully imported ${result.data?.count || 0} order(s)`, 'success')
+    // Refresh the order list
+    if (orderTableRef.value) {
+      await orderTableRef.value.refreshData()
+    }
+  } else {
+    showToastMessage(result.error || 'Failed to import orders', 'error')
+  }
 }
 
 // Handle opening the edit modal

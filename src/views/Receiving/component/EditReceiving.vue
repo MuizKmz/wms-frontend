@@ -600,10 +600,10 @@ const formatPurposeDisplay = (value: string) => {
 
 const getStatusBadgeClass = (status: string) => {
   const classes: Record<string, string> = {
-    'PENDING': 'bg-yellow-500',
-    'IN_PROGRESS': 'bg-blue-500',
-    'COMPLETED': 'bg-green-500',
-    'CLOSED': 'bg-gray-500',
+    'PENDING': 'bg-yellow-500 border-none',
+    'IN_PROGRESS': 'bg-blue-500 border-none',
+    'COMPLETED': 'bg-green-500 border-none',
+    'CLOSED': 'bg-gray-500 border-none',
   }
   return classes[status] || 'bg-gray-500'
 }

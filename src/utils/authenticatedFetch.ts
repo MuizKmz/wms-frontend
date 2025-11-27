@@ -52,21 +52,33 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
   // Handle 401 Unauthorized globally
   if (response.status === 401) {
     console.error('🚨 [AuthFetch] 401 Unauthorized - Token was rejected by backend!')
-    console.error('🚨 [AuthFetch] This means either:')
-    console.error('   1. Token is invalid/expired')
-    console.error('   2. Backend JWT secret doesn\'t match')
-    console.error('   3. Token format is wrong')
-    console.error('🚨 [AuthFetch] NOT redirecting - check console logs above!')
-    console.error('🚨 [AuthFetch] Request URL:', url)
-    console.error('🚨 [AuthFetch] Response:', await response.text())
+    console.error('🚨 [AuthFetch] Clearing local authentication and redirecting to /signin')
 
-    // DON'T redirect - let user see the logs
-    // localStorage.clear()
-    // setTimeout(() => {
-    //   window.location.href = '/signin'
-    // }, 1000)
+    // Try to read response text for debugging (do not await in production paths without need)
+    try {
+      const body = await response.text()
+      console.error('🚨 [AuthFetch] Response body:', body)
+    } catch (e) {
+      // ignore
+    }
 
-    throw new Error('Unauthorized - Check console logs!')
+    // Clear authentication from localStorage/sessionStorage
+    try {
+      localStorage.removeItem('user')
+      localStorage.removeItem('token')
+    } catch (e) {
+      console.error('⚠️ [AuthFetch] Error clearing storage during logout:', e)
+    }
+
+    // Redirect to sign-in page. Use location.replace to avoid leaving a back entry.
+    try {
+      window.location.replace('/signin')
+    } catch (e) {
+      console.error('⚠️ [AuthFetch] Redirect failed:', e)
+    }
+
+    // Throw to allow callers to handle if needed
+    throw new Error('Unauthorized - user logged out')
   }
 
   return response

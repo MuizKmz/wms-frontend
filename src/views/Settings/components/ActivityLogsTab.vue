@@ -128,7 +128,7 @@
               :aria-expanded="openDropdowns.action"
               @click="toggleDropdown('action')"
             >
-              {{ filters.action || 'All Actions' }}
+              {{ filters.action ? formatActionLabel(filters.action) : 'All Actions' }}
               <span class="icon-[tabler--chevron-down] size-4 transition-transform" :class="{ 'rotate-180': openDropdowns.action }"></span>
             </button>
             <ul
@@ -140,7 +140,7 @@
                 <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('action', '')">All Actions</a>
               </li>
               <li v-for="action in actions" :key="action">
-                <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('action', action)">{{ action }}</a>
+                <a class="block px-4 py-2 text-sm hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="selectOption('action', action)">{{ formatActionLabel(action) }}</a>
               </li>
             </ul>
           </div>
@@ -178,11 +178,13 @@
             </ul>
           </div>
 
-          <!-- Date Range -->
+          <!-- Date Range (flatpickr range) -->
           <input
-            v-model="filters.date"
-            type="date"
+            ref="dateRangeRef"
+            type="text"
+            placeholder="Select date range"
             class="input input-bordered bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            readonly
           />
         </div>
 
@@ -195,7 +197,7 @@
           </button>
           <button
             @click="applyFilters"
-            class="btn btn-sm btn-primary"
+            class="btn btn-sm bg-brand-500 border-none"
           >
             Apply Filters
           </button>
@@ -361,6 +363,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import axios from '@/utils/axios'
+// flatpickr styles (install with `npm install flatpickr`)
+import 'flatpickr/dist/flatpickr.min.css'
 
 const API_URL = '/activity-log'
 
@@ -376,7 +380,9 @@ const filters = ref({
   module: '',
   action: '',
   source: '',
-  date: '',
+  // Use explicit start/end dates for range filtering
+  startDate: '',
+  endDate: ''
 })
 
 // Dropdown state for filters (Warehouse-style)
@@ -397,6 +403,36 @@ const selectOption = (key: string, value: any) => {
   ;(openDropdowns.value as Record<string, boolean>)[key] = false
 }
 
+// Flatpickr date range setup
+const dateRangeRef = ref<HTMLInputElement | null>(null)
+let fpInstance: any = null
+
+const formatDateForApi = (d: Date) => {
+  try {
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+  } catch (e) {
+    return ''
+  }
+}
+
+const addOneDayString = (dateStr: string) => {
+  try {
+    const parts = dateStr.split('-').map((p) => parseInt(p, 10))
+    if (parts.length !== 3) return dateStr
+    const d = new Date(parts[0], parts[1] - 1, parts[2])
+    d.setDate(d.getDate() + 1)
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+  } catch (e) {
+    return dateStr
+  }
+}
+
 const handleClickOutside = (e: MouseEvent) => {
   const refs = [moduleDropdownRef.value, actionDropdownRef.value, sourceDropdownRef.value]
   const isInside = refs.some((el) => el && el.closest && el.closest('.dropdown') && el.closest('.dropdown')!.contains(e.target as Node))
@@ -407,10 +443,39 @@ const handleClickOutside = (e: MouseEvent) => {
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+
+  // initialize flatpickr dynamically
+  ;(async () => {
+    try {
+      const flatpickr = (await import('flatpickr')).default
+      if (dateRangeRef.value) {
+        fpInstance = flatpickr(dateRangeRef.value, {
+          mode: 'range',
+          dateFormat: 'Y-m-d',
+          allowInput: true,
+          onChange: (selectedDates: Date[]) => {
+            if (selectedDates.length === 2) {
+              filters.value.startDate = formatDateForApi(selectedDates[0])
+              filters.value.endDate = formatDateForApi(selectedDates[1])
+            } else if (selectedDates.length === 1) {
+              filters.value.startDate = formatDateForApi(selectedDates[0])
+              filters.value.endDate = ''
+            } else {
+              filters.value.startDate = ''
+              filters.value.endDate = ''
+            }
+          }
+        })
+      }
+    } catch (e) {
+      console.error('Flatpickr failed to load. Run `npm install flatpickr`', e)
+    }
+  })()
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+  try { fpInstance?.destroy?.() } catch (e) { /* ignore */ }
 })
 
 const modules = ref<string[]>([
@@ -422,6 +487,16 @@ const actions = ref<string[]>([
   'LOGIN', 'LOGOUT', 'CREATE', 'UPDATE', 'DELETE', 'SCAN', 'EXPORT',
   'IMPORT', 'APPROVE', 'REJECT', 'SHIP', 'RECEIVE', 'STOCK_IN', 'STOCK_OUT'
 ])
+
+const formatActionLabel = (action: string) => {
+  if (!action) return ''
+  // Replace underscores with spaces, lowercase then capitalize each word
+  return action
+    .toLowerCase()
+    .split('_')
+    .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+    .join(' ')
+}
 
 const currentPage = ref(1)
 const pageSize = ref(50)
@@ -442,7 +517,8 @@ const fetchLogs = async () => {
     if (filters.value.module) params.module = filters.value.module
     if (filters.value.action) params.action = filters.value.action
     if (filters.value.source) params.source = filters.value.source
-    if (filters.value.date) params.startDate = filters.value.date
+    if (filters.value.startDate) params.startDate = filters.value.startDate
+    if (filters.value.endDate) params.endDate = addOneDayString(filters.value.endDate)
 
     const response = await axios.get(API_URL, { params })
     logs.value = response.data.data
@@ -474,7 +550,14 @@ const clearFilters = () => {
     module: '',
     action: '',
     source: '',
-    date: '',
+    startDate: '',
+    endDate: ''
+  }
+  try {
+    if (fpInstance) fpInstance.clear()
+    if (dateRangeRef.value) dateRangeRef.value.value = ''
+  } catch (e) {
+    // ignore
   }
   applyFilters()
 }
@@ -499,7 +582,8 @@ const exportLogs = async () => {
     if (filters.value.module) params.module = filters.value.module
     if (filters.value.action) params.action = filters.value.action
     if (filters.value.source) params.source = filters.value.source
-    if (filters.value.date) params.startDate = filters.value.date
+    if (filters.value.startDate) params.startDate = filters.value.startDate
+    if (filters.value.endDate) params.endDate = addOneDayString(filters.value.endDate)
 
     const response = await axios.get(API_URL, {
       params: { ...params, limit: 10000 },
