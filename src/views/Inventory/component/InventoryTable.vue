@@ -132,7 +132,11 @@
 
             <td class="px-6 py-4 text-center">
               <p class="text-sm text-gray-900 dark:text-white">
-                {{ calculateInbound(item) }}
+                <span class="font-semibold text-green-600 dark:text-green-400">{{ calculateInbound(item).available }}</span>
+                <span class="text-gray-500 dark:text-gray-400"> / {{ calculateInbound(item).total }}</span>
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                available / total
               </p>
             </td>
 
@@ -501,7 +505,13 @@ const calculateReceivedToday = (item) => {
 // Calculate total inbound quantity from EPCs with INBOUND status
 const calculateInbound = (item) => {
   if (!item.product?.epcs) return 0
-  return item.product.epcs.filter((epc) => epc.status === 'INBOUND').length
+  const inboundEpcs = item.product.epcs.filter((epc) => epc.status === 'INBOUND')
+  const availableEpcs = inboundEpcs.filter((epc) => epc.isAvailableForSale === true && epc.qualityStatus === 'GOOD')
+  // Return object with both counts for display
+  return {
+    total: inboundEpcs.length,
+    available: availableEpcs.length
+  }
 }
 
 // Calculate outbound quantity from EPCs with OUTBOUND status
@@ -510,11 +520,10 @@ const calculateOutbound = (item) => {
   return item.product.epcs.filter((epc) => epc.status === 'OUTBOUND').length
 }
 
-// Calculate return quantity from EPCs with RETURNED status (if needed in future)
+// Calculate return quantity from EPCs with RETURNED status
 const calculateReturn = (item) => {
   if (!item.product?.epcs) return 0
-  // No RETURNED status in current schema, return 0
-  return 0
+  return item.product.epcs.filter((epc) => epc.status === 'RETURNED_TO_SUPPLIER' || epc.isReturned === true).length
 }
 
 // --- Actions ---
