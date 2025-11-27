@@ -41,23 +41,61 @@
         <!-- Action Bar -->
         <div class="p-6 border-b border-gray-200 dark:border-gray-700">
           <div class="flex flex-wrap items-center gap-3">
+            <div class="dropdown relative" ref="exportDropdownRef">
+              <button
+                type="button"
+                class="dropdown-toggle inline-flex items-center gap-2 px-3 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
+                aria-haspopup="menu"
+                :aria-expanded="showExportMenu"
+                aria-label="Export inventory"
+                @click="showExportMenu = !showExportMenu"
+              >
+                <!-- Export icon (download) -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                <span>Export Inventory</span>
+                <span class="icon-[tabler--chevron-down] size-4 transition-transform ml-2 text-white" :class="{ 'rotate-180': showExportMenu }"></span>
+              </button>
+
+              <ul
+                class="dropdown-menu w-40 transition-opacity duration-200 absolute top-full right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-gray-900 dark:text-white text-sm"
+                :class="{
+                  'opacity-100': showExportMenu,
+                  'opacity-0 pointer-events-none': !showExportMenu,
+                }"
+                role="menu"
+                aria-orientation="vertical"
+              >
+                <li>
+                  <a class="block px-4 py-2 hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="handleExport('pdf')">Export as PDF</a>
+                </li>
+                <li>
+                  <a class="block px-4 py-2 hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="handleExport('excel')">Export as Excel</a>
+                </li>
+                <li>
+                  <a class="block px-4 py-2 hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 cursor-pointer" @click="handleExport('csv')">Export as CSV</a>
+                </li>
+              </ul>
+            </div>
             <button
-              @click="exportInventory"
-              class="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Export Inventory
-            </button>
-            <button
-              class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              @click="refreshData"
+              class="p-2 text-gray-600 dark:text-gray-300 rounded-lg transition-colors bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+              @click="spinThenRefresh"
+              :disabled="refreshLoading"
               title="Refresh"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
+              <template v-if="refreshLoading">
+                <svg class="w-5 h-5 transform-gpu origin-center spin-360" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </template>
+              <template v-else>
+                <svg ref="refreshIconRef" class="w-5 h-5 transform-gpu origin-center" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </template>
             </button>
 
             <!-- Bulk Status Update Controls -->
@@ -321,9 +359,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { authenticatedFetch } from '@/utils/authenticatedFetch'
 import ViewEPC from '@/views/EPC/component/ViewEPC.vue'
+import * as XLSX from 'xlsx'
 
 const emit = defineEmits(['close'])
 
@@ -349,6 +388,10 @@ const openDropdowns = ref({
 })
 
 const bulkStatusDropdownRef = ref(null)
+const exportDropdownRef = ref(null)
+const showExportMenu = ref(false)
+const refreshLoading = ref(false)
+const refreshIconRef = ref(null)
 
 const toggleDropdown = (dropdownName) => {
   Object.keys(openDropdowns.value).forEach((key) => {
@@ -372,12 +415,24 @@ const closeAllDropdowns = () => {
 
 const handleClickOutside = (event) => {
   const refEl = bulkStatusDropdownRef.value
-  if (!refEl) return
-  const dropdownContainer = refEl.closest && refEl.closest('.dropdown') ? refEl.closest('.dropdown') : null
-  if (dropdownContainer && !dropdownContainer.contains(event.target)) {
+  const exportRefEl = exportDropdownRef.value
+
+  // Close bulk dropdowns
+  if (refEl) {
+    const dropdownContainer = refEl.closest && refEl.closest('.dropdown') ? refEl.closest('.dropdown') : null
+    if (dropdownContainer && !dropdownContainer.contains(event.target)) {
+      closeAllDropdowns()
+    } else if (!dropdownContainer && !refEl.contains(event.target)) {
+      closeAllDropdowns()
+    }
+  } else {
+    // if no bulk dropdown ref, still ensure dropdowns closed
     closeAllDropdowns()
-  } else if (!dropdownContainer && !refEl.contains(event.target)) {
-    closeAllDropdowns()
+  }
+
+  // Close export dropdown if click outside
+  if (exportRefEl && !exportRefEl.contains(event.target)) {
+    showExportMenu.value = false
   }
 }
 
@@ -401,6 +456,7 @@ const allSelected = computed(() => {
 
 /* Methods */
 const openModal = (data) => {
+  console.debug('InventoryDetails.openModal called with:', data)
   inventoryData.value = data
   selectedEpcs.value = []
   isOpen.value = true
@@ -471,25 +527,289 @@ const formatDate = (dateString) => {
 }
 
 const refreshData = () => {
-  // Emit event to parent to refresh data
+  // Fetch latest inventory details (EPC list) for the current inventory item
   console.log('Refreshing inventory data...')
-  // You can add API call here if needed
+  const productId = inventoryData.value?.product?.id || inventoryData.value?.productId || null
+  if (!productId) {
+    console.warn('No product id available to refresh')
+    return
+  }
+
+  // Show a small loading indicator
+  // animate refresh icon while fetching
+  refreshLoading.value = true
+  console.debug('refreshData: productId=', productId, 'current inventoryData=', inventoryData.value)
+  const processResponse = async (res) => {
+    if (!res.ok) throw new Error(`Failed to load inventory (${res.status})`)
+    const data = await res.json()
+    console.debug('Inventory refresh response shape:', data)
+
+    // Accept multiple possible response shapes from backend
+    if (data?.product?.epcs) {
+      inventoryData.value = data
+      return true
+    }
+
+    if (Array.isArray(data)) {
+      const found = data.find(item => Number(item.product?.id || item.productId) === Number(productId))
+      if (found) {
+        if (found.product?.epcs) {
+          inventoryData.value = found
+          return true
+        }
+        if (found.epcs) {
+          inventoryData.value = { product: { ...(inventoryData.value?.product || {}), epcs: found.epcs } }
+          return true
+        }
+      }
+      return false
+    }
+
+    if (data?.epcs) {
+      inventoryData.value = { product: { ...(inventoryData.value?.product || {}), epcs: data.epcs } }
+      return true
+    }
+
+    if (data?.data?.product?.epcs) {
+      inventoryData.value = data.data
+      return true
+    }
+
+    if (data?.result?.product?.epcs) {
+      inventoryData.value = data.result
+      return true
+    }
+
+    if (data?.product) {
+      inventoryData.value = { ...(inventoryData.value || {}), product: { ...(inventoryData.value?.product || {}), ...data.product } }
+      return !!inventoryData.value.product.epcs
+    }
+
+    return false
+  }
+
+  authenticatedFetch(`/api/inventory/${productId}`)
+    .then(processResponse)
+    .catch((err) => {
+      console.error('Error refreshing inventory (primary endpoint):', err)
+      // try fallback to the available-epcs list endpoint used elsewhere
+      authenticatedFetch('/api/inventory/available-epcs/list')
+        .then(async (res2) => {
+          try {
+            const ok = await processResponse(res2)
+            if (!ok) console.warn('Fallback endpoint responded but no EPCs found for product')
+          } catch (e) {
+            console.error('Error processing fallback response', e)
+          }
+        })
+        .catch((e2) => console.error('Fallback endpoint failed:', e2))
+    })
+    .finally(() => {
+      refreshLoading.value = false
+    })
+}
+
+// spin the icon 360deg then call refreshData; prevents automatic refresh
+const spinThenRefresh = async () => {
+  if (refreshLoading.value) return
+  // add a short spin animation before calling the network refresh
+  refreshLoading.value = true
+  try {
+    // ensure DOM updated so we can add animation-class if needed
+    await nextTick()
+    const el = refreshIconRef.value
+    if (el) {
+      // add the spin-360 class to trigger CSS animation
+      el.classList.add('spin-360')
+      // wait for animation duration (400ms) then perform refresh
+      await new Promise((res) => setTimeout(res, 400))
+      el.classList.remove('spin-360')
+    } else {
+      // fallback short delay
+      await new Promise((res) => setTimeout(res, 200))
+    }
+
+    // call actual refresh
+    await (async () => {
+      // reuse existing refreshData implementation but wrap as promise
+      return new Promise((resolve) => {
+        // call refreshData which toggles refreshLoading; here we want it to run
+        // but we must not change refreshLoading prematurely. We'll set a local flag.
+        // We'll call refreshData and when it finishes, resolve.
+        // To detect finish, observe refreshLoading transitions — simpler: call the logic directly.
+        const productId = inventoryData.value?.product?.id || inventoryData.value?.productId || null
+        if (!productId) {
+          resolve()
+          return
+        }
+
+        // Perform the same fetch steps as refreshData but without toggling loading twice
+        const processResponse = async (res) => {
+          if (!res.ok) throw new Error(`Failed to load inventory (${res.status})`)
+          const data = await res.json()
+
+          if (data?.product?.epcs) {
+            inventoryData.value = data
+            return true
+          }
+
+          if (Array.isArray(data)) {
+            const found = data.find(item => Number(item.product?.id || item.productId) === Number(productId))
+            if (found) {
+              if (found.product?.epcs) {
+                inventoryData.value = found
+                return true
+              }
+              if (found.epcs) {
+                inventoryData.value = { product: { ...(inventoryData.value?.product || {}), epcs: found.epcs } }
+                return true
+              }
+            }
+            return false
+          }
+
+          if (data?.epcs) {
+            inventoryData.value = { product: { ...(inventoryData.value?.product || {}), epcs: data.epcs } }
+            return true
+          }
+
+          if (data?.data?.product?.epcs) {
+            inventoryData.value = data.data
+            return true
+          }
+
+          if (data?.result?.product?.epcs) {
+            inventoryData.value = data.result
+            return true
+          }
+
+          if (data?.product) {
+            inventoryData.value = { ...(inventoryData.value || {}), product: { ...(inventoryData.value?.product || {}), ...data.product } }
+            return !!inventoryData.value.product.epcs
+          }
+
+          return false
+        }
+
+        authenticatedFetch(`/api/inventory/${productId}`)
+          .then(processResponse)
+          .catch(() => {
+            authenticatedFetch('/api/inventory/available-epcs/list')
+              .then(async (res2) => {
+                try {
+                  await processResponse(res2)
+                } catch (e) {
+                  console.error('Error processing fallback response', e)
+                }
+              })
+              .catch((e2) => console.error('Fallback endpoint failed:', e2))
+          })
+          .finally(() => {
+            resolve()
+          })
+      })
+    })()
+  } catch (e) {
+    console.error('spinThenRefresh error', e)
+  } finally {
+    refreshLoading.value = false
+  }
+}
+
+const handleExport = (format) => {
+  showExportMenu.value = false
+  // reuse existing exportInventory logic by delegating
+  if (format === 'pdf') {
+    exportInventoryAsPDF()
+  } else if (format === 'excel') {
+    exportInventoryAsExcel()
+  } else if (format === 'csv') {
+    exportInventoryAsCSV()
+  }
 }
 
 const exportInventory = () => {
-  // Export functionality
-  console.log('Exporting inventory for:', inventoryData.value?.product?.name)
-  console.log('Selected EPCs:', selectedEpcs.value)
+  // kept for compatibility; open export dropdown
+  showExportMenu.value = !showExportMenu.value
+}
 
-  // You can implement CSV export here
-  if (selectedEpcs.value.length > 0) {
-    const selectedData = epcList.value.filter(epc => selectedEpcs.value.includes(epc.id))
-    console.log('Exporting selected EPCs:', selectedData)
-    // Add export logic here
-  } else {
-    console.log('Exporting all EPCs:', epcList.value)
-    // Add export logic here
+const exportInventoryAsPDF = () => {
+  const header = `<h1 style="font-size:18px;margin-bottom:8px">Inventory EPCs - ${inventoryData.value?.product?.name || ''}</h1>`
+  let table = `<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="border:1px solid #ddd;padding:6px">EPC Code</th><th style="border:1px solid #ddd;padding:6px">Warehouse</th><th style="border:1px solid #ddd;padding:6px">Location</th><th style="border:1px solid #ddd;padding:6px">Inbound Date</th><th style="border:1px solid #ddd;padding:6px">Status</th></tr></thead><tbody>`
+  const dataToExport = selectedEpcs.value.length > 0 ? epcList.value.filter(epc => selectedEpcs.value.includes(epc.id)) : epcList.value
+  dataToExport.forEach(epc => {
+    table += `<tr><td style="border:1px solid #ddd;padding:6px">${epc.epcCode || ''}</td><td style="border:1px solid #ddd;padding:6px">${epc.warehouse?.warehouseCode || ''}</td><td style="border:1px solid #ddd;padding:6px">${epc.location?.locationCode || ''}</td><td style="border:1px solid #ddd;padding:6px">${formatDate(epc.inboundDate)}</td><td style="border:1px solid #ddd;padding:6px">${formatStatus(epc.status)}</td></tr>`
+  })
+  table += '</tbody></table>'
+
+  const stylesheets = Array.from(document.styleSheets)
+    .map(sheet => {
+      try {
+        if (sheet.href) return `<link rel="stylesheet" href="${sheet.href}">`
+        if (sheet.ownerNode && sheet.ownerNode.outerHTML) return sheet.ownerNode.outerHTML
+      } catch (e) {
+        if (sheet.href) return `<link rel="stylesheet" href="${sheet.href}">`
+      }
+      return ''
+    })
+    .join('\n')
+
+  const printWindow = window.open('', '_blank')
+  if (!printWindow) {
+    // popup blocked; show a simple alert
+    alert('Please allow popups to export PDF')
+    return
   }
+
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Inventory EPCs</title>${stylesheets}<style>body{padding:16px;font-family:Arial,Helvetica,sans-serif}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:6px;text-align:left}</style><script>window.onload=function(){setTimeout(function(){window.print();setTimeout(function(){if(window.opener)window.opener.postMessage('pdf-exported','*')},500)},500)}<\/script></head><body>${header}${table}</body></html>`
+  printWindow.document.write(html)
+  printWindow.document.close()
+
+  const handler = (e) => {
+    if (e.data === 'pdf-exported') {
+      // noop - silent success
+      window.removeEventListener('message', handler)
+    }
+  }
+  window.addEventListener('message', handler)
+}
+
+const exportInventoryAsExcel = () => {
+  const data = (selectedEpcs.value.length > 0 ? epcList.value.filter(epc => selectedEpcs.value.includes(epc.id)) : epcList.value).map(epc => ({
+    'EPC Code': epc.epcCode || '',
+    'Warehouse': epc.warehouse?.warehouseCode || '',
+    'Location': epc.location?.locationCode || '',
+    'Inbound Date': formatDate(epc.inboundDate),
+    'Status': formatStatus(epc.status)
+  }))
+
+  const ws = XLSX.utils.json_to_sheet(data)
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'Inventory EPCs')
+  ws['!cols'] = [{ wch: 30 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 15 }]
+  XLSX.writeFile(wb, `inventory-epcs-${Date.now()}.xlsx`)
+}
+
+const exportInventoryAsCSV = () => {
+  const headers = ['EPC Code', 'Warehouse', 'Location', 'Inbound Date', 'Status']
+  const rows = (selectedEpcs.value.length > 0 ? epcList.value.filter(epc => selectedEpcs.value.includes(epc.id)) : epcList.value).map(epc => [
+    epc.epcCode || '',
+    epc.warehouse?.warehouseCode || '',
+    epc.location?.locationCode || '',
+    formatDate(epc.inboundDate),
+    formatStatus(epc.status)
+  ])
+
+  let csvContent = headers.join(',') + '\n'
+  rows.forEach(row => {
+    csvContent += row.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',') + '\n'
+  })
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = `inventory-epcs-${Date.now()}.csv`
+  link.click()
 }
 
 const clearSelection = () => {
@@ -580,5 +900,15 @@ defineExpose({ openModal, closeModal })
 
 .dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: #6b7280;
+}
+
+/* spin-360 animation used for refresh icon */
+.spin-360 {
+  animation: spin-360 400ms linear;
+}
+
+@keyframes spin-360 {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 </style>

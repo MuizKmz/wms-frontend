@@ -41,7 +41,7 @@
               <!-- header -->
               <div class="flex items-center justify-between p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">
-                  Receiving Import from PO
+                  Import Order
                 </h2>
                 <button
                   type="button"
@@ -73,8 +73,8 @@
                   @dragleave.prevent="isDragging = false"
                   :class="[
                     'border-2 border-dashed rounded-lg p-12 text-center transition-colors',
-                    isDragging 
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                    isDragging
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                       : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50',
                     errors.file ? 'border-red-500' : ''
                   ]"
@@ -93,8 +93,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                       <span class="text-sm font-medium text-gray-900 dark:text-white">{{ selectedFile.name }}</span>
-                      <button 
-                        @click.stop="removeFile" 
+                      <button
+                        @click.stop="removeFile"
                         class="text-gray-500 hover:text-red-600 dark:hover:text-red-400"
                         :disabled="isUploading"
                       >
@@ -109,7 +109,7 @@
                   <p class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
                     {{ selectedFile ? 'File selected' : 'Drop files here' }}
                   </p>
-                  
+
                   <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
                     Supported format: .xls, .xlsx
                   </p>
@@ -159,24 +159,24 @@
 
               <!-- footer -->
               <div class="flex items-center justify-between p-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button 
-                  @click="downloadTemplate" 
+                <button
+                  @click="downloadTemplate"
                   class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm transition-colors"
                   :disabled="isUploading"
                 >
                   Download Template
                 </button>
-                
+
                 <div class="flex gap-2">
-                  <button 
-                    @click="closeModal" 
+                  <button
+                    @click="closeModal"
                     class="btn btn-outline"
                     :disabled="isUploading"
                   >
                     Cancel
                   </button>
-                  <button 
-                    @click="uploadFile" 
+                  <button
+                    @click="uploadFile"
                     class="btn bg-brand-500 border-none"
                     :disabled="!selectedFile || isUploading"
                   >
@@ -193,7 +193,7 @@
   </teleport>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, reactive, nextTick, onMounted, onBeforeUnmount } from 'vue'
 
 const emit = defineEmits(['file-uploaded'])
@@ -202,9 +202,9 @@ const emit = defineEmits(['file-uploaded'])
 const isOpen = ref(false)
 const isUploading = ref(false)
 const isDragging = ref(false)
-const selectedFile = ref(null)
-const fileInputRef = ref(null)
-const panelRef = ref(null)
+const selectedFile = ref<File | null>(null)
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const panelRef = ref<HTMLDivElement | null>(null)
 const uploadSuccess = ref('')
 
 const errors = reactive({
@@ -224,77 +224,99 @@ const lockScroll = () => {
   scrollY = window.scrollY
   scrollbarWidth = getScrollbarWidth()
 
-  document.body.style.paddingRight = `${scrollbarWidth}px`
   document.body.style.position = 'fixed'
   document.body.style.top = `-${scrollY}px`
-  document.body.style.width = '100%'
+  document.body.style.left = '0'
+  document.body.style.right = '0'
+  document.body.style.paddingRight = `${scrollbarWidth}px`
   document.body.style.overflow = 'hidden'
 }
 
 const unlockScroll = () => {
-  document.body.style.paddingRight = ''
   document.body.style.position = ''
   document.body.style.top = ''
-  document.body.style.width = ''
+  document.body.style.left = ''
+  document.body.style.right = ''
+  document.body.style.paddingRight = ''
   document.body.style.overflow = ''
 
-  requestAnimationFrame(() => {
-    window.scrollTo(0, scrollY)
-  })
+  window.scrollTo(0, scrollY)
 }
 
-/* File validation */
-const validateFile = (file) => {
+/* Modal methods */
+const openModal = async () => {
+  isOpen.value = true
+  lockScroll()
+
+  await nextTick()
+
+  if (panelRef.value) {
+    panelRef.value.focus()
+  }
+}
+
+const closeModal = async () => {
+  if (isUploading.value) return
+
+  isOpen.value = false
+
+  await nextTick()
+
+  selectedFile.value = null
   errors.file = ''
-  
+  errors.submit = ''
+  uploadSuccess.value = ''
+
+  if (fileInputRef.value) {
+    fileInputRef.value.value = ''
+  }
+}
+
+/* File handling */
+const triggerFileInput = () => {
+  if (fileInputRef.value) {
+    fileInputRef.value.click()
+  }
+}
+
+const validateFile = (file: File | null): boolean => {
   if (!file) {
     errors.file = 'Please select a file'
     return false
   }
 
-  const validExtensions = ['.xls', '.xlsx']
-  const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase()
-  
-  if (!validExtensions.includes(fileExtension)) {
-    errors.file = 'Invalid file format. Please upload .xls or .xlsx file'
+  const validExtensions = ['xls', 'xlsx']
+  const fileExtension = file.name.split('.').pop()?.toLowerCase()
+
+  if (!fileExtension || !validExtensions.includes(fileExtension)) {
+    errors.file = 'Invalid file type. Please upload .xls or .xlsx file'
     return false
   }
 
-  // Check file size (max 10MB)
   const maxSize = 10 * 1024 * 1024
   if (file.size > maxSize) {
     errors.file = 'File size exceeds 10MB limit'
     return false
   }
 
+  errors.file = ''
   return true
 }
 
-/* File handling */
-const handleDrop = (event) => {
+const handleFileSelect = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (file && validateFile(file)) {
+    selectedFile.value = file
+  }
+}
+
+const handleDrop = (event: DragEvent) => {
   isDragging.value = false
-  const files = event.dataTransfer.files
-  
-  if (files.length > 0) {
-    const file = files[0]
-    if (validateFile(file)) {
-      selectedFile.value = file
-    }
+  const file = event.dataTransfer?.files?.[0]
+  if (file && validateFile(file)) {
+    selectedFile.value = file
   }
-}
-
-const handleFileSelect = (event) => {
-  const files = event.target.files
-  if (files.length > 0) {
-    const file = files[0]
-    if (validateFile(file)) {
-      selectedFile.value = file
-    }
-  }
-}
-
-const triggerFileInput = () => {
-  fileInputRef.value?.click()
 }
 
 const removeFile = () => {
@@ -306,15 +328,37 @@ const removeFile = () => {
 }
 
 /* Download template */
-const downloadTemplate = () => {
-  console.log('Download template clicked - implementation needed')
-  // Implement template download logic here
-  // Example: window.open('/path/to/template.xlsx', '_blank')
+const downloadTemplate = async () => {
+  try {
+    const response = await fetch('/api/order/download-template', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to download template')
+    }
+
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'order_import_template.xlsx'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('Error downloading template:', error)
+    errors.submit = 'Failed to download template. Please try again.'
+  }
 }
 
 /* Upload file */
 const uploadFile = async () => {
-  if (!validateFile(selectedFile.value)) {
+  if (!selectedFile.value || !validateFile(selectedFile.value)) {
     return
   }
 
@@ -326,9 +370,15 @@ const uploadFile = async () => {
     const formData = new FormData()
     formData.append('file', selectedFile.value)
 
+    // Get auth token
+    const token = localStorage.getItem('token')
+
     // Make the API call
-    const response = await fetch('/api/inventory/import', {
+    const response = await fetch('/api/order/bulk-import', {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
       body: formData
     })
 
@@ -340,74 +390,66 @@ const uploadFile = async () => {
     const data = await response.json()
     console.log('Upload response:', data)
 
-    uploadSuccess.value = 'File uploaded successfully!'
+    // Show detailed results
+    if (data.success) {
+      uploadSuccess.value = `Successfully imported ${data.successCount} shipment(s)!`
+    } else {
+      const errorMessage = []
+      if (data.errorCount > 0) {
+        errorMessage.push(`${data.errorCount} error(s)`)
+      }
+      if (data.skipped && data.skipped.length > 0) {
+        errorMessage.push(`${data.skipped.length} skipped (duplicates)`)
+      }
+
+      if (data.successCount > 0) {
+        uploadSuccess.value = `Partially completed: ${data.successCount} created, ${errorMessage.join(', ')}`
+      } else {
+        throw new Error(`Import failed: ${errorMessage.join(', ')}. Check console for details.`)
+      }
+    }
+
+    // Log detailed errors for debugging
+    if (data.errors && data.errors.length > 0) {
+      console.error('Import errors:', data.errors)
+    }
 
     // Wait a moment to show success message
     setTimeout(async () => {
       await closeModal()
       // Emit event to parent component with success status
       emit('file-uploaded', { success: true, data })
-    }, 1500)
+    }, 2000)
 
   } catch (error) {
     console.error('Error uploading file:', error)
-    errors.submit = error.message || 'Failed to upload file. Please try again.'
+    const errorMessage = error instanceof Error ? error.message : 'Failed to upload file. Please try again.'
+    errors.submit = errorMessage
     // Emit event to parent component with error status
-    emit('file-uploaded', { success: false, error: error.message || 'Failed to upload file' })
+    emit('file-uploaded', { success: false, error: errorMessage })
   } finally {
     isUploading.value = false
   }
 }
 
-/* open/close modal */
-const openModal = async () => {
-  selectedFile.value = null
-  errors.file = ''
-  errors.submit = ''
-  uploadSuccess.value = ''
-  isDragging.value = false
-
-  if (fileInputRef.value) {
-    fileInputRef.value.value = ''
-  }
-
-  isOpen.value = true
-  lockScroll()
-  await nextTick()
-}
-
-const closeModal = async () => {
-  isOpen.value = false
-
-  await nextTick()
-  selectedFile.value = null
-  errors.file = ''
-  errors.submit = ''
-  uploadSuccess.value = ''
-  isDragging.value = false
-
-  if (fileInputRef.value) {
-    fileInputRef.value.value = ''
+/* Keyboard handling */
+const handleEscape = (event: KeyboardEvent) => {
+  if (event.key === 'Escape' && isOpen.value && !isUploading.value) {
+    closeModal()
   }
 }
 
-/* lifecycle */
 onMounted(() => {
-  // Add any necessary event listeners here
+  document.addEventListener('keydown', handleEscape)
 })
 
 onBeforeUnmount(() => {
-  if (isOpen.value) {
-    unlockScroll()
-  }
+  document.removeEventListener('keydown', handleEscape)
+  unlockScroll()
 })
 
-/* expose to parent */
-defineExpose({ openModal, closeModal })
+defineExpose({
+  openModal,
+  closeModal
+})
 </script>
-
-<style scoped>
-[role="dialog"] > .bg-white {
-  transform-origin: center;
-}
-</style>

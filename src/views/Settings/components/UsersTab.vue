@@ -8,7 +8,7 @@
       </div>
       <button
         @click="openCreateModal"
-        class="btn btn-primary flex items-center gap-2"
+        class="btn bg-brand-500 border-none flex items-center gap-2"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -58,9 +58,9 @@
     </div>
 
     <!-- Users Table -->
-    <div v-else class="card bg-white dark:bg-gray-800 shadow-xl">
+    <div v-else class="card bg-white dark:bg-gray-800 shadow-md">
       <div class="overflow-x-auto">
-        <table class="table table-zebra">
+        <table class="table table-zebra mb-3">
           <thead>
             <tr class="text-gray-900 dark:text-white">
               <th>User</th>

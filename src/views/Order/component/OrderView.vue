@@ -59,7 +59,7 @@
                         <th class="px-3 py-2">Product</th>
                         <th class="px-3 py-2">Quantity</th>
                         <th class="px-3 py-2">Unit</th>
-                        <th class="px-3 py-2">Location Code</th>
+                        <th v-if="order.orderType === 'SO'" class="px-3 py-2">Location Code</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -67,7 +67,7 @@
                         <td class="px-3 py-2 align-top">{{ idx + 1 }}</td>
                         <td class="px-3 py-2 align-top">
                           <button
-                            v-if="order.orderType === 'SO' && item.allocatedEpcs && item.allocatedEpcs.length > 0"
+                            v-if="order.orderType === 'SO'"
                             @click="showProductEPC(item)"
                             class="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer text-left"
                           >
@@ -77,7 +77,7 @@
                         </td>
                         <td class="px-3 py-2 align-top">{{ item.quantity ?? '-' }}</td>
                         <td class="px-3 py-2 align-top">{{ item.unit || 'pcs' }}</td>
-                        <td class="px-3 py-2 align-top">{{ item.locationCode ?? '-' }}</td>
+                        <td v-if="order.orderType === 'SO'" class="px-3 py-2 align-top">{{ item.locationCode ?? '-' }}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -108,6 +108,7 @@ import { ref } from 'vue'
 import QRCodeIcon from '@/icons/QRCodeIcon.vue'
 import OrderQRModal from './OrderQRModal.vue'
 import OrderProductEPCModal from './OrderProductEPCModal.vue'
+import authenticatedFetch from '@/utils/authenticatedFetch'
 
 const isOpen = ref(false)
 const order = ref<any>({})
@@ -207,15 +208,98 @@ const showQRCode = () => {
   }
 }
 
-const showProductEPC = (item: any) => {
-  if (productEPCModalRef.value) {
-    const productData = {
-      productName: item.product?.name || item.productName || item.productId || '-',
-      quantity: item.quantity,
-      allocatedEpcs: item.allocatedEpcs || [],
-      remarks: item.remarks
+const loadingInventory = ref<Record<string, boolean>>({})
+
+const showProductEPC = async (item: any) => {
+  if (!item) return
+
+  // If allocatedEpcs already present, open modal immediately
+  if (item.allocatedEpcs && item.allocatedEpcs.length > 0) {
+    if (productEPCModalRef.value) {
+      const productData = {
+        productName: item.product?.name || item.productName || item.productId || '-',
+        quantity: item.quantity,
+        allocatedEpcs: item.allocatedEpcs || [],
+        remarks: item.remarks
+      }
+      productEPCModalRef.value.openModal(order.value.orderNo, productData)
     }
-    productEPCModalRef.value.openModal(order.value.orderNo, productData)
+    return
+  }
+
+  // Otherwise for SO orders, compute allocations using inventory endpoint (same logic as EditOrder)
+  if (order.value?.orderType === 'SO' && item.productId) {
+    const pid = String(item.productId)
+    loadingInventory.value[pid] = true
+    try {
+      const response = await authenticatedFetch('/api/inventory/available-epcs/list')
+      if (!response.ok) throw new Error('Failed to load inventory')
+      const allInventory = await response.json()
+
+      const allEpcs: any[] = []
+      allInventory.forEach((inv: any) => {
+        const productId = inv.product?.id
+        if (productId?.toString() === item.productId.toString()) {
+          const inboundEpcs = inv.product?.epcs?.filter((epc: any) => epc.status === 'INBOUND') || []
+          inboundEpcs.forEach((epc: any) => {
+            allEpcs.push({
+              epcCode: epc.epcCode,
+              warehouseCode: epc.warehouse?.warehouseCode || '-',
+              locationCode: epc.location?.locationCode || '-',
+              inboundDate: epc.inboundDate || inv.lastUpdatedAt
+            })
+          })
+        }
+      })
+
+      allEpcs.sort((a, b) => new Date(a.inboundDate).getTime() - new Date(b.inboundDate).getTime())
+
+      // Exclude EPCs already allocated in other items of this order
+      const usedEpcCodes = new Set<string>()
+      if (Array.isArray(order.value.orderItems)) {
+        order.value.orderItems.forEach((other: any) => {
+          if (other === item) return
+          (other.allocatedEpcs || []).forEach((alloc: any) => usedEpcCodes.add(alloc.epcCode))
+        })
+      }
+
+      const availableEpcs = allEpcs.filter(epc => !usedEpcCodes.has(epc.epcCode))
+      const allocatedEpcs = availableEpcs.slice(0, item.quantity)
+
+      const productData = {
+        productName: item.product?.name || item.productName || item.productId || '-',
+        quantity: item.quantity,
+        allocatedEpcs,
+        remarks: item.remarks
+      }
+
+      if (productEPCModalRef.value) {
+        productEPCModalRef.value.openModal(order.value.orderNo, productData)
+      }
+    } catch (e) {
+      console.error('Error loading EPC allocations:', e)
+      // open modal with empty allocations to show message
+      if (productEPCModalRef.value) {
+        productEPCModalRef.value.openModal(order.value.orderNo, {
+          productName: item.product?.name || item.productName || item.productId || '-',
+          quantity: item.quantity,
+          allocatedEpcs: [],
+          remarks: item.remarks
+        })
+      }
+    } finally {
+      loadingInventory.value[pid] = false
+    }
+  } else {
+    // not SO or no productId, open modal with whatever data exists
+    if (productEPCModalRef.value) {
+      productEPCModalRef.value.openModal(order.value.orderNo, {
+        productName: item.product?.name || item.productName || item.productId || '-',
+        quantity: item.quantity,
+        allocatedEpcs: item.allocatedEpcs || [],
+        remarks: item.remarks
+      })
+    }
   }
 }
 
