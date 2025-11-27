@@ -439,6 +439,13 @@ interface OrderItem {
     locationCode: string
     inboundDate: string
   }>
+  originalAllocatedEpcs?: Array<{
+    epcCode: string
+    warehouseCode: string
+    locationCode: string
+    inboundDate: string
+    status?: string
+  }>
 }
 
 const emit = defineEmits(['order-updated', 'close'])
@@ -465,7 +472,7 @@ const formData = reactive({
   customerId: null as number | null,
   supplierId: null as number | null,
   itemStatus: 'Pending',
-  orderItems: [{ productId: '', quantity: 1, status: 'Pending', remarks: '', availableStock: undefined, allocatedEpcs: [] }] as OrderItem[]
+  orderItems: [{ productId: '', quantity: 1, status: 'Pending', remarks: '', availableStock: undefined, allocatedEpcs: [], originalAllocatedEpcs: [] }] as OrderItem[]
 })
 
 const errors = reactive<Record<string, string>>({})
@@ -541,7 +548,7 @@ const prefillOrder = (order: any) => {
   formData.status = order.status || 'PENDING'
   formData.picName = order.picName || ''
   formData.orderRemarks = order.orderRemarks || ''
-  
+
   if (order.estimatedDeliveryTime) {
     formData.estimatedDeliveryTime = order.estimatedDeliveryTime.split('T')[0]
   }
@@ -558,22 +565,15 @@ const prefillOrder = (order: any) => {
       quantity: item.quantity || 1,
       status: item.status || 'Pending',
       remarks: item.remarks || '',
-      availableStock: undefined,
-      allocatedEpcs: item.allocatedEpcs || []
+      availableStock: undefined, // Will be calculated when fetchProductInventory is called
+      allocatedEpcs: item.allocatedEpcs || [],
+      originalAllocatedEpcs: item.allocatedEpcs || [] // Store original allocation from backend
     }))
 
     productMenuStyles.length = 0
     formData.orderItems.forEach(() => productMenuStyles.push({}))
-
-    if (formData.orderType === 'SO') {
-      formData.orderItems.forEach((item, index) => {
-        if (item.productId) {
-          fetchProductInventory(index)
-        }
-      })
-    }
   } else {
-    formData.orderItems = [{ productId: '', quantity: 1, status: 'Pending', remarks: '', availableStock: undefined, allocatedEpcs: [] }]
+    formData.orderItems = [{ productId: '', quantity: 1, status: 'Pending', remarks: '', availableStock: undefined, allocatedEpcs: [], originalAllocatedEpcs: [] }]
     productMenuStyles.push({})
   }
 }
@@ -587,6 +587,15 @@ const openModal = async (order: any) => {
 
   await nextTick()
   initializeFlatpickr()
+
+  // Fetch inventory for SO orders after prefilling to get available stock count
+  if (formData.orderType === 'SO') {
+    formData.orderItems.forEach((item, index) => {
+      if (item.productId) {
+        fetchProductInventory(index)
+      }
+    })
+  }
 }
 
 const closeModal = async (force = false) => {
@@ -720,7 +729,7 @@ const availableProducts = (index: number) => {
 }
 
 const addOrderItem = () => {
-  formData.orderItems.push({ productId: '', quantity: 1, status: formData.itemStatus || 'Pending', remarks: '', availableStock: undefined, allocatedEpcs: [] })
+  formData.orderItems.push({ productId: '', quantity: 1, status: formData.itemStatus || 'Pending', remarks: '', availableStock: undefined, allocatedEpcs: [], originalAllocatedEpcs: [] })
   productMenuStyles.push({})
 }
 
@@ -736,52 +745,84 @@ const fetchProductInventory = async (index: number) => {
 
   loadingInventory.value[index] = true
   try {
+    // Get EPCs originally allocated to this order item (from backend when modal opened)
+    // Use originalAllocatedEpcs instead of allocatedEpcs to preserve the original allocation
+    const originallyAllocatedEpcCodes = new Set(
+      (item.originalAllocatedEpcs || []).map(epc => epc.epcCode)
+    )
+
+    const allEpcs: any[] = []
+
+    // First, add all originally allocated EPCs (from backend)
+    if (item.originalAllocatedEpcs && item.originalAllocatedEpcs.length > 0) {
+      item.originalAllocatedEpcs.forEach((epc: any) => {
+        allEpcs.push({
+          epcCode: epc.epcCode,
+          warehouseCode: epc.warehouseCode || '-',
+          locationCode: epc.locationCode || '-',
+          inboundDate: epc.inboundDate || new Date().toISOString(),
+          status: epc.status,
+          isPreviouslyAllocated: true
+        })
+      })
+    }
+
+    // Then fetch available EPCs from inventory to see what else is available
     const response = await authenticatedFetch('/api/inventory/available-epcs/list')
     if (response.ok) {
       const allInventory = await response.json()
 
-      const allEpcs: any[] = []
-
       allInventory.forEach((inv: any) => {
         const productId = inv.product?.id
         if (productId?.toString() === item.productId.toString()) {
-          const inboundEpcs = inv.product?.epcs?.filter((epc: any) => epc.status === 'INBOUND') || []
-          inboundEpcs.forEach((epc: any) => {
+          const relevantEpcs = inv.product?.epcs?.filter((epc: any) => {
+            // Only include INBOUND EPCs that are NOT already in our original allocated list
+            return epc.status === 'INBOUND' && !originallyAllocatedEpcCodes.has(epc.epcCode)
+          }) || []
+
+          relevantEpcs.forEach((epc: any) => {
             allEpcs.push({
               epcCode: epc.epcCode,
               warehouseCode: epc.warehouse?.warehouseCode || '-',
               locationCode: epc.location?.locationCode || '-',
-              inboundDate: epc.inboundDate || inv.lastUpdatedAt
+              inboundDate: epc.inboundDate || inv.lastUpdatedAt,
+              status: epc.status,
+              isPreviouslyAllocated: false
             })
           })
         }
       })
-
-      allEpcs.sort((a, b) => {
-        return new Date(a.inboundDate).getTime() - new Date(b.inboundDate).getTime()
-      })
-
-      const availableEpcs = allEpcs.filter(epc => {
-        const isAlreadyUsed = formData.orderItems.some((otherItem, idx) => {
-          if (idx === index) return false
-          return otherItem.allocatedEpcs?.some(allocated => allocated.epcCode === epc.epcCode)
-        })
-        return !isAlreadyUsed
-      })
-
-      item.availableStock = availableEpcs.length
-
-      if (item.quantity > availableEpcs.length) {
-        item.quantity = availableEpcs.length || 1
-      }
-
-      const allocatedEpcs = availableEpcs.slice(0, item.quantity)
-      item.allocatedEpcs = allocatedEpcs
     }
+
+    // Sort: Previously allocated EPCs first, then FIFO
+    allEpcs.sort((a, b) => {
+      if (a.isPreviouslyAllocated && !b.isPreviouslyAllocated) return -1
+      if (!a.isPreviouslyAllocated && b.isPreviouslyAllocated) return 1
+      return new Date(a.inboundDate).getTime() - new Date(b.inboundDate).getTime()
+    })
+
+    // Filter out EPCs used in OTHER items of this order
+    const availableEpcs = allEpcs.filter(epc => {
+      const isUsedInOtherItems = formData.orderItems.some((otherItem, idx) => {
+        if (idx === index) return false
+        return otherItem.allocatedEpcs?.some(allocated => allocated.epcCode === epc.epcCode)
+      })
+      return !isUsedInOtherItems
+    })
+
+    item.availableStock = availableEpcs.length
+
+    if (item.quantity > availableEpcs.length) {
+      item.quantity = availableEpcs.length || 1
+    }
+
+    // Allocate: previously allocated EPCs first, then FIFO
+    const allocatedEpcs = availableEpcs.slice(0, item.quantity)
+    item.allocatedEpcs = allocatedEpcs
   } catch (error) {
     console.error('Error fetching inventory:', error)
-    item.allocatedEpcs = []
-    item.availableStock = 0
+    // Keep the existing allocatedEpcs if fetch fails, use original as fallback
+    item.availableStock = item.originalAllocatedEpcs?.length || 0
   } finally {
     loadingInventory.value[index] = false
   }
@@ -797,7 +838,7 @@ const formatDate = (dateString: string) => {
   })
 }
 
-const increaseQuantity = (index: number) => {
+const increaseQuantity = async (index: number) => {
   const item = formData.orderItems[index]
 
   if (formData.orderType === 'SO' && item.availableStock !== undefined) {
@@ -808,15 +849,15 @@ const increaseQuantity = (index: number) => {
 
   formData.orderItems[index].quantity++
   if (formData.orderType === 'SO' && formData.orderItems[index].productId) {
-    fetchProductInventory(index)
+    await fetchProductInventory(index)
   }
 }
 
-const decreaseQuantity = (index: number) => {
+const decreaseQuantity = async (index: number) => {
   if (formData.orderItems[index].quantity > 1) {
     formData.orderItems[index].quantity--
     if (formData.orderType === 'SO' && formData.orderItems[index].productId) {
-      fetchProductInventory(index)
+      await fetchProductInventory(index)
     }
   }
 }
@@ -895,7 +936,7 @@ const repositionOpenProductMenus = () => {
 
 const submitForm = async () => {
   if (!validateStep(currentStep.value)) return
-  
+
   if (!formData.id) {
     console.error('Order ID is missing')
     return
