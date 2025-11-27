@@ -183,6 +183,12 @@
                     Status
                   </th>
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Quality
+                  </th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Available
+                  </th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Reserved
                   </th>
                 </tr>
@@ -238,6 +244,27 @@
                       getStatusClass(epc.status)
                     ]">
                       {{ String(formatStatus(epc.status) ?? '--').toUpperCase() }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-4">
+                    <span :class="[
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                      epc.qualityStatus === 'GOOD' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200' :
+                      epc.qualityStatus === 'DEFECTIVE' ? 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200' :
+                      epc.qualityStatus === 'DAMAGED' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200' :
+                      'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                    ]">
+                      {{ epc.qualityStatus || 'N/A' }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-4">
+                    <span :class="[
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                      epc.isAvailableForSale
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200'
+                        : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+                    ]">
+                      {{ epc.isAvailableForSale ? 'YES' : 'NO' }}
                     </span>
                   </td>
                   <td class="px-4 py-4">

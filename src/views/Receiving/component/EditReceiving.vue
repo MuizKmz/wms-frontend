@@ -104,38 +104,18 @@
                   <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Status & Receiving Details</h3>
                   <div class="space-y-4">
 
-                    <!-- Status Selection (Prominent) -->
+                    <!-- Status Display (Read-only) -->
                     <div class="bg-brand-50 dark:bg-brand-900/20 p-4 rounded-lg border border-brand-200 dark:border-brand-800">
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                        Receiving Status <span class="text-red-500">*</span>
+                        Receiving Status
                       </label>
-                      <div class="grid grid-cols-2 gap-3">
-                        <label
-                          v-for="status in statusOptions"
-                          :key="status"
-                          class="flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all"
-                          :class="[
-                            formData.status === status
-                              ? getStatusBorderClass(status)
-                              : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
-                          ]"
-                        >
-                          <input
-                            v-model="formData.status"
-                            type="radio"
-                            :value="status"
-                            class="radio radio-primary"
-                            :disabled="isViewMode"
-                          />
-                          <span class="flex-1">
-                            <span :class="['badge text-white font-medium', getStatusBadgeClass(status)]">
-                              {{ status }}
-                            </span>
-                          </span>
-                        </label>
+                      <div class="p-3 bg-white dark:bg-gray-800 rounded-lg border-2" :class="getStatusBorderClass(formData.status)">
+                        <span :class="['badge text-white font-medium px-3 py-1.5 text-sm', getStatusBadgeClass(formData.status)]">
+                          {{ formData.status || 'PENDING' }}
+                        </span>
                       </div>
-                      <p class="text-xs text-gray-500 mt-2">
-                        ℹ️ Update the receiving status. Mark as COMPLETED when all items are received.
+                      <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                        ℹ️ Status is automatically managed by the stock-in process. It updates to COMPLETED when all EPCs are scanned.
                       </p>
                     </div>
 

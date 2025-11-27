@@ -129,6 +129,34 @@
                 {{ formatDate(getCellValue(row, col)) }}
               </span>
 
+              <!-- Status Badge -->
+              <span
+                v-else-if="col === 'status'"
+                :class="[
+                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                  getStatusClass(getCellValue(row, col))
+                ]"
+              >
+                {{ getCellValue(row, col) || 'PENDING' }}
+              </span>
+
+              <!-- Fulfillment Percentage -->
+              <div v-else-if="col === 'fulfillment'" class="text-sm">
+                <div class="flex items-center gap-2">
+                  <span :class="[
+                    'font-medium',
+                    row.receivedQuantity >= row.expectedQuantity
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-orange-600 dark:text-orange-400'
+                  ]">
+                    {{ row.receivedQuantity || 0 }} / {{ row.expectedQuantity || 0 }}
+                  </span>
+                  <span class="text-xs text-gray-500">
+                    ({{ row.expectedQuantity > 0 ? Math.round((row.receivedQuantity / row.expectedQuantity) * 100) : 0 }}%)
+                  </span>
+                </div>
+              </div>
+
               <!-- Receiving Purpose - Format enum values -->
               <span
                 v-else-if="col === 'receivingPurpose'"
@@ -315,9 +343,11 @@ const allowedColumns = [
   'poNumber',
   'receivingCode',
   'doNumber',
+  'status',
   'productName',
   'expectedQuantity',
   'receivedQuantity',
+  'fulfillment',
   'receivingPurpose',
   'receivedBy',
   'dateReceived',
@@ -328,9 +358,11 @@ const fieldAliases = {
   poNumber: ['poNumber', 'orderNumber', 'purchaseOrderNumber'],
   receivingCode: ['receivingCode', 'code'],
   doNumber: ['doNumber', 'deliveryOrderNumber'],
+  status: ['status'],
   productName: ['productName'],
   expectedQuantity: ['expectedQuantity'],
   receivedQuantity: ['receivedQuantity'],
+  fulfillment: ['fulfillment'],
   receivingPurpose: ['receivingPurpose', 'purpose'],
   receivedBy: ['receivedBy', 'receiver'],
   dateReceived: ['dateReceived', 'receivingDate'],
@@ -668,7 +700,7 @@ const paginatedData = computed(() => {
 // Generate visible rows - Group by PO, collapse shows different receiving records
 const visibleRows = computed(() => {
   const rows = []
-  
+
   // Group receivings by PO number
   const groupedByPO = new Map()
   paginatedData.value.forEach((receiving) => {
@@ -902,6 +934,17 @@ const formatDate = (dateString) => {
     month: '2-digit',
     year: 'numeric',
   })
+}
+
+// Get status badge color classes
+const getStatusClass = (status: string) => {
+  const statusMap = {
+    'PENDING': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+    'IN_PROGRESS': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+    'COMPLETED': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    'CLOSED': 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
+  }
+  return statusMap[status] || statusMap['PENDING']
 }
 
 // Format purpose value for display

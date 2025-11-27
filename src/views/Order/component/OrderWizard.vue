@@ -913,20 +913,29 @@ const fetchProductInventory = async (index: number) => {
       allInventory.forEach((inv: any) => {
         const productId = inv.product?.id
         if (productId?.toString() === item.productId.toString()) {
-          const inboundEpcs = inv.product?.epcs?.filter((epc: any) => epc.status === 'INBOUND') || []
+          // Filter EPCs that are available for sale (FIFO eligible)
+          const inboundEpcs = inv.product?.epcs?.filter((epc: any) =>
+            epc.status === 'INBOUND' &&
+            epc.isAvailableForSale === true &&
+            epc.qualityStatus === 'GOOD'
+          ) || []
           inboundEpcs.forEach((epc: any) => {
             allEpcs.push({
               epcCode: epc.epcCode,
               warehouseCode: epc.warehouse?.warehouseCode || '-',
               locationCode: epc.location?.locationCode || '-',
-              inboundDate: epc.inboundDate || inv.lastUpdatedAt
+              inboundDate: epc.inboundDate || inv.lastUpdatedAt,
+              returnCount: epc.returnCount || 0
             })
           })
         }
       })
 
-      // Sort by inbound date ascending (FIFO - First In First Out)
+      // Sort by returnCount (prefer never-returned), then inbound date (FIFO)
       allEpcs.sort((a, b) => {
+        if (a.returnCount !== b.returnCount) {
+          return a.returnCount - b.returnCount
+        }
         return new Date(a.inboundDate).getTime() - new Date(b.inboundDate).getTime()
       })
 
