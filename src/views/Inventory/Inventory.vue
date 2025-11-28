@@ -239,8 +239,16 @@ const handleStatusFileUploaded = (result: UploadResult) => {
  */
 const handleViewInventory = (item: InventoryItem) => {
   console.log('Viewing inventory:', item)
-  if (inventoryDetailsModalRef.value) {
-    inventoryDetailsModalRef.value.openModal(item)
+  try {
+    if (inventoryDetailsModalRef.value && typeof (inventoryDetailsModalRef.value as any).openModal === 'function') {
+      ;(inventoryDetailsModalRef.value as any).openModal(item)
+    } else {
+      console.error('InventoryDetails modal ref or openModal method is missing', inventoryDetailsModalRef.value)
+      showToastMessage('Cannot open inventory details modal. See console for details.', 'error', 4000)
+    }
+  } catch (e) {
+    console.error('Error while trying to open InventoryDetails modal', e)
+    showToastMessage('Failed to open inventory details modal. Check console for error.', 'error', 4000)
   }
 }
 
