@@ -183,6 +183,16 @@
 
         <!-- EPC Table -->
         <div class="flex-1 overflow-y-auto p-6">
+          <!-- Search -->
+          <div class="mb-4 flex items-center gap-2">
+            <input
+              v-model="tableSearch"
+              type="search"
+              placeholder="Search any column..."
+              class="input input-sm w-full max-w-md"
+              aria-label="Search EPCs"
+            />
+          </div>
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead class="bg-gray-50 dark:bg-gray-900/50">
@@ -202,9 +212,7 @@
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Tag Flow
                   </th>
-                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Tag Type
-                  </th>
+                  <!-- Tag Type removed -->
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     SKU Code
                   </th>
@@ -233,7 +241,7 @@
               </thead>
               <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 <tr
-                  v-for="epc in epcList"
+                  v-for="epc in paginatedEpcs"
                   :key="epc.id"
                   class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                 >
@@ -261,9 +269,6 @@
                   <td class="px-4 py-4 text-sm text-gray-900 dark:text-white">
                     EPC
                   </td>
-                  <td class="px-4 py-4 text-sm text-gray-900 dark:text-white">
-                    Excel
-                  </td>
                   <td class="px-4 py-4 text-sm font-mono text-gray-900 dark:text-white">
                     {{ inventoryData?.product?.skuCode || '--' }}
                   </td>
@@ -276,17 +281,17 @@
                   <td class="px-4 py-4 text-sm text-gray-900 dark:text-white">
                     {{ formatDate(epc.inboundDate) }}
                   </td>
-                  <td class="px-4 py-4">
+                  <td class="px-4 py-4 text-center">
                     <span :class="[
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                      'inline-flex items-center justify-center mx-auto px-2.5 py-0.5 rounded-full text-xs font-medium',
                       getStatusClass(epc.status)
                     ]">
-                      {{ String(formatStatus(epc.status) ?? '--').toUpperCase() }}
+                      {{ formatStatus(epc.status).toUpperCase() }}
                     </span>
                   </td>
-                  <td class="px-4 py-4">
+                  <td class="px-4 py-4 text-center">
                     <span :class="[
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                      'inline-flex items-center justify-center mx-auto px-2.5 py-0.5 rounded-full text-xs font-medium',
                       epc.qualityStatus === 'GOOD' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200' :
                       epc.qualityStatus === 'DEFECTIVE' ? 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200' :
                       epc.qualityStatus === 'DAMAGED' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200' :
@@ -295,9 +300,9 @@
                       {{ epc.qualityStatus || 'N/A' }}
                     </span>
                   </td>
-                  <td class="px-4 py-4">
+                  <td class="px-4 py-4 text-center">
                     <span :class="[
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                      'inline-flex items-center justify-center mx-auto px-2.5 py-0.5 rounded-full text-xs font-medium',
                       epc.isAvailableForSale
                         ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200'
                         : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
@@ -305,9 +310,9 @@
                       {{ epc.isAvailableForSale ? 'YES' : 'NO' }}
                     </span>
                   </td>
-                  <td class="px-4 py-4">
+                  <td class="px-4 py-4 text-center">
                     <span :class="[
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                      'inline-flex items-center justify-center mx-auto px-2.5 py-0.5 rounded-full text-xs font-medium',
                       epc.isReserved
                         ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200'
                         : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
@@ -327,6 +332,43 @@
               <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No EPC records found</p>
               <p class="text-sm text-gray-500 dark:text-gray-400">This inventory item has no associated EPCs</p>
             </div>
+          </div>
+          <!-- Pagination -->
+          <div class="mt-4 flex justify-center">
+            <nav class="flex items-center gap-x-2">
+              <button
+                type="button"
+                class="btn btn-sm btn-outline dark:text-gray-300"
+                :disabled="currentPage === 1"
+                @click="changePage(currentPage - 1)"
+              >
+                Previous
+              </button>
+
+              <div class="flex items-center gap-x-1">
+                <template v-for="page in displayPages" :key="page">
+                  <span v-if="page === -1" class="px-2" aria-hidden="true">...</span>
+                  <button
+                    v-else
+                    type="button"
+                    class="btn btn-sm btn-outline min-w-[40px]"
+                    :class="page === currentPage ? '!bg-blue-100 !text-blue-600 !border-blue-300 !border' : 'text-gray-700 border-gray-300 hover:bg-blue-50 hover:text-blue-600'"
+                    @click="changePage(page)"
+                  >
+                    {{ page }}
+                  </button>
+                </template>
+              </div>
+
+              <button
+                type="button"
+                class="btn btn-sm btn-outline dark:text-gray-300"
+                :disabled="currentPage === totalPages"
+                @click="changePage(currentPage + 1)"
+              >
+                Next
+              </button>
+            </nav>
           </div>
         </div>
       </div>
@@ -359,7 +401,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { authenticatedFetch } from '@/utils/authenticatedFetch'
 import ViewEPC from '@/views/EPC/component/ViewEPC.vue'
 import * as XLSX from 'xlsx'
@@ -385,6 +427,67 @@ const statusOptions = ref([
 
 const openDropdowns = ref({
   bulkStatus: false,
+})
+
+// Table search + pagination
+const tableSearch = ref('')
+const currentPage = ref(1)
+const itemsPerPage = ref(8)
+
+const filteredEpcs = computed(() => {
+  const q = tableSearch.value.trim().toLowerCase()
+  if (!q) return epcList.value
+
+  return epcList.value.filter(epc => {
+    const values = [
+      epc.epcCode,
+      String(epc.id),
+      inventoryData.value?.product?.skuCode,
+      epc.warehouse?.warehouseCode,
+      epc.location?.locationCode,
+      formatStatus(epc.status),
+      epc.qualityStatus,
+      epc.isAvailableForSale ? 'YES' : 'NO',
+      epc.isReserved ? 'YES' : 'NO'
+    ]
+    return values.some(v => String(v || '').toLowerCase().includes(q))
+  })
+})
+
+const paginatedEpcs = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  return filteredEpcs.value.slice(start, start + itemsPerPage.value)
+})
+
+const totalPages = computed(() => Math.ceil(filteredEpcs.value.length / itemsPerPage.value) || 1)
+
+const displayPages = computed(() => {
+  const total = totalPages.value
+  if (total <= 0) return []
+  const current = currentPage.value
+  const range = []
+  if (total === 1) return [1]
+  if (current > 2) {
+    range.push(1)
+    if (current > 3) range.push(-1)
+  }
+  if (current > 1) range.push(current - 1)
+  range.push(current)
+  if (current < total) range.push(current + 1)
+  if (current < total - 1) {
+    if (current < total - 2) range.push(-1)
+    range.push(total)
+  }
+  return range
+})
+
+const changePage = (page) => {
+  if (page >= 1 && page <= totalPages.value) currentPage.value = page
+}
+
+// reset page when search or inventory data changes
+watch([() => tableSearch.value, () => inventoryData.value], () => {
+  currentPage.value = 1
 })
 
 const bulkStatusDropdownRef = ref(null)
@@ -499,19 +602,23 @@ const toggleEpcSelection = (epcId) => {
 }
 
 const getStatusClass = (status) => {
-  const s = String(status || '').toUpperCase()
+  // Normalize status so both `RETURN_TO_SUPPLIER` and `RETURN TO SUPPLIER` match
+  const s = String(status || '').toUpperCase().replace(/\s+/g, '_')
   const statusMap = {
     GENERATED: 'bg-gray-100 text-gray-800 dark:bg-gray-700/30 dark:text-gray-300',
     INBOUND: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
     OUTBOUND: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+    QUARANTINE: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+    RETURN_TO_SUPPLIER: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200',
   }
   return statusMap[s] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
 }
 
 const formatStatus = (status) => {
   if (!status) return '--'
-  // Capitalize first letter and make rest lowercase
-  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
+  // Replace underscores with spaces and title-case each word
+  const cleaned = String(status).replace(/_/g, ' ').toLowerCase()
+  return cleaned.split(' ').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ')
 }
 
 const formatDate = (dateString) => {

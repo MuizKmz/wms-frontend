@@ -129,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import authenticatedFetch from '@/utils/authenticatedFetch'
 
@@ -171,19 +171,44 @@ const fetchQRCode = async (orderNo: string) => {
     }
 }
 
-onMounted(() => {
+onMounted(async () => {
     const storedData = sessionStorage.getItem('orderPrintData')
     if (storedData) {
         orderData.value = JSON.parse(storedData)
         sessionStorage.removeItem('orderPrintData')
 
         if (orderData.value.orderNo) {
-            fetchQRCode(orderData.value.orderNo)
+            // fetch the QR code and wait for it to appear before printing
+            // but don't hang forever — use a max wait timeout
+            await fetchQRCode(orderData.value.orderNo)
+
+            // wait until qrCodeUrl is populated or max 2s timeout
+            await new Promise((resolve) => {
+                const maxWait = setTimeout(() => {
+                    stopWatcher && stopWatcher()
+                    resolve(undefined)
+                }, 2000)
+
+                let stopWatcher: (() => void) | null = null
+                if (qrCodeUrl.value) {
+                    clearTimeout(maxWait)
+                    resolve(undefined)
+                    return
+                }
+                stopWatcher = watch(qrCodeUrl, (val) => {
+                    if (val) {
+                        clearTimeout(maxWait)
+                        stopWatcher && stopWatcher()
+                        resolve(undefined)
+                    }
+                })
+            })
         }
 
+        // small delay to ensure DOM paints
         setTimeout(() => {
             window.print()
-        }, 1000)
+        }, 300)
     }
 })
 </script>
